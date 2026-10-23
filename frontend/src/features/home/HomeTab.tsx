@@ -17,6 +17,7 @@ export function HomeTab() {
   const later = t("home.later");
   return (
     <div className="home">
+      <img className="home-logo" src="/logo.png" alt="" width={96} height={96} />
       <h1 className="home-title">KVM Studio</h1>
       <div className="home-tiles">
         <Tile icon={Plus} label={t("home.create")} hint={later} />

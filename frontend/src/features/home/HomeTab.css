@@ -2,7 +2,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 56px 24px;
+  padding: 40px 24px;
+}
+
+.home-logo {
+  margin-bottom: 10px;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .home-title {

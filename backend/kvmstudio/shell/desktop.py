@@ -13,6 +13,10 @@ from ..config import Config
 from ..libvirt_conn import LibvirtConnection
 from .server import BackgroundServer, bind_loopback
 
+# Must match packaging/desktop/kvm-studio.desktop: on Wayland the compositor
+# takes the window icon from the desktop entry with this id.
+DESKTOP_ID = "kvm-studio"
+
 
 def _has_module(name: str) -> bool:
     try:
@@ -38,6 +42,17 @@ def _pick_gui() -> Literal["qt", "gtk"] | None:
     return None
 
 
+def _set_app_id(gui: Literal["qt", "gtk"]) -> None:
+    if gui == "qt":
+        from qtpy.QtGui import QGuiApplication
+
+        QGuiApplication.setDesktopFileName(DESKTOP_ID)
+    else:
+        from gi.repository import GLib
+
+        GLib.set_prgname(DESKTOP_ID)
+
+
 def run(config: Config) -> int:
     try:
         import webview
@@ -54,9 +69,13 @@ def run(config: Config) -> int:
         )
         return 1
 
+    _set_app_id(gui)
+    frontend_dir = find_frontend_dir()
+    icon = frontend_dir / "logo.png" if frontend_dir else None
+
     token = new_token()
     conn = LibvirtConnection(config.libvirt.uri)
-    app = create_app(config, conn, token, mode="desktop", frontend_dir=find_frontend_dir())
+    app = create_app(config, conn, token, mode="desktop", frontend_dir=frontend_dir)
     server = BackgroundServer(app, bind_loopback(0))
     server.start()
     try:
@@ -67,7 +86,7 @@ def run(config: Config) -> int:
             height=800,
             min_size=(900, 600),
         )
-        webview.start(gui=gui)
+        webview.start(gui=gui, icon=str(icon) if icon and icon.is_file() else None)
     finally:
         server.stop()
         conn.close()

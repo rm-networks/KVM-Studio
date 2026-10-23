@@ -82,6 +82,17 @@
   width: 440px;
 }
 
+.about-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.about-head p {
+  margin: 0 !important;
+}
+
 .about-name {
   font-size: 18px;
   font-weight: 600;

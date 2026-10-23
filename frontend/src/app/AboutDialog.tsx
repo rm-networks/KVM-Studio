@@ -24,8 +24,13 @@ export function AboutDialog({ open, onOpenChange, version }: Props) {
             </Dialog.Close>
           </div>
           <div className="dialog-body">
-            <p className="about-name">KVM Studio</p>
-            {version && <p className="about-version">{t("about.version", { version })}</p>}
+            <div className="about-head">
+              <img src="/logo.png" alt="" width={56} height={56} />
+              <div>
+                <p className="about-name">KVM Studio</p>
+                {version && <p className="about-version">{t("about.version", { version })}</p>}
+              </div>
+            </div>
             <Dialog.Description>{t("about.description")}</Dialog.Description>
             <p>{t("about.license")}</p>
             <p className="about-notice">{t("about.notice")}</p>

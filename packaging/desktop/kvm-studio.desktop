@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=KVM Studio
+GenericName=Virtual Machine Manager
+GenericName[fr]=Gestionnaire de machines virtuelles
+Comment=Create and run QEMU/KVM virtual machines
+Comment[fr]=Créer et piloter des machines virtuelles QEMU/KVM
+Exec=kvm-studio
+Icon=kvm-studio
+Terminal=false
+Categories=System;Emulator;
+Keywords=vm;virtual;machine;kvm;qemu;libvirt;
+StartupNotify=true
+StartupWMClass=kvm-studio

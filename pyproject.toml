@@ -22,7 +22,7 @@ files = ["backend/kvmstudio", "tests"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = ["gi", "gi.*"]
+module = ["gi", "gi.*", "qtpy", "qtpy.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

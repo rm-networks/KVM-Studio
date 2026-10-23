@@ -83,6 +83,16 @@ Diagnostic de la configuration et de l'hôte :
 kvm-studio --check
 ```
 
+### Icône du lanceur (facultatif)
+
+Sous Wayland, KDE prend l'icône de la fenêtre dans l'entrée de menu
+`kvm-studio.desktop`. Le paquet l'installera ; depuis les sources, on peut
+l'installer pour son seul compte :
+
+```bash
+cp -r packaging/desktop/icons ~/.local/share/ && cp packaging/desktop/kvm-studio.desktop ~/.local/share/applications/
+```
+
 ## Développement
 
 Deux terminaux. Le premier lance l'API, qui redémarre à chaque modification du
