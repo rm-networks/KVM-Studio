@@ -1,0 +1,158 @@
+.library {
+  display: flex;
+  flex-direction: column;
+  width: var(--library-width);
+  flex: none;
+  background: var(--surface);
+}
+
+.library-header {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: var(--tabbar-height);
+  padding: 0 4px 0 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-sunken);
+}
+
+.library-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.library-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.library-button:not(:disabled):hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.library-content {
+  flex: 1;
+  overflow: auto;
+  padding: 4px 0;
+}
+
+.library-content > .error-message {
+  margin: 4px 6px;
+}
+
+.library-note {
+  margin: 6px 10px;
+  color: var(--text-muted);
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tree,
+.tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tree:focus-visible {
+  outline: none;
+}
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 21px;
+  padding: 0 8px 0 4px;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.tree-leaf {
+  padding-left: 22px;
+}
+
+.tree-row:hover {
+  background: var(--hover);
+}
+
+.tree-row.selected {
+  background: var(--selection);
+  color: var(--selection-text);
+}
+
+.tree:focus-visible .tree-row.selected {
+  outline: 1px dotted var(--focus);
+  outline-offset: -1px;
+}
+
+.tree-twisty {
+  display: inline-flex;
+  width: 14px;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.tree-icon {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.tree-row.selected .tree-icon {
+  color: inherit;
+}
+
+.tree-vm-icon {
+  position: relative;
+  display: inline-flex;
+}
+
+.tree-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-empty {
+  padding: 2px 0 2px 26px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.state-dot {
+  position: absolute;
+  right: -2px;
+  bottom: -1px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--surface);
+  border-radius: 50%;
+}
+
+.state-running {
+  background: var(--state-running);
+}
+
+.state-paused,
+.state-suspended {
+  background: var(--state-paused);
+}
+
+.state-crashed {
+  background: var(--state-crashed);
+}

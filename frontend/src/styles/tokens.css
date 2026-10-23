@@ -1,0 +1,122 @@
+:root {
+  --font-ui: system-ui, "Noto Sans", "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "Noto Sans Mono", monospace;
+  --font-size: 13px;
+  --font-size-small: 12px;
+
+  --radius: 3px;
+  --menubar-height: 26px;
+  --toolbar-height: 34px;
+  --statusbar-height: 24px;
+  --tabbar-height: 30px;
+  --library-width: 240px;
+
+  --bg: #ecedef;
+  --surface: #ffffff;
+  --surface-alt: #f5f6f7;
+  --surface-sunken: #e2e4e7;
+  --border: #c9ccd1;
+  --border-strong: #aeb2b9;
+  --text: #1c1e21;
+  --text-muted: #5e636b;
+  --text-disabled: #a0a4ab;
+  --accent: #2b6f8e;
+  --accent-text: #ffffff;
+  --selection: #cfe3ec;
+  --selection-text: #10303e;
+  --focus: #2b6f8e;
+  --hover: rgba(0, 0, 0, 0.06);
+
+  --state-running: #2e8540;
+  --state-paused: #b7791f;
+  --state-crashed: #b3261e;
+  --state-off: #8a8f97;
+
+  --danger-bg: #fbeaea;
+  --danger-border: #e4b4b1;
+  --danger-text: #8c1d18;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1b1d20;
+    --surface: #24272b;
+    --surface-alt: #2a2d32;
+    --surface-sunken: #181a1d;
+    --border: #393d43;
+    --border-strong: #4b5058;
+    --text: #e3e5e8;
+    --text-muted: #9aa0a8;
+    --text-disabled: #5d636b;
+    --accent: #4d9ec2;
+    --accent-text: #0d1b22;
+    --selection: #234556;
+    --selection-text: #e6f3f9;
+    --focus: #5fb0d4;
+    --hover: rgba(255, 255, 255, 0.06);
+    --state-off: #7b818a;
+    --danger-bg: #3a1f1e;
+    --danger-border: #6b3431;
+    --danger-text: #f2b8b5;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1b1d20;
+  --surface: #24272b;
+  --surface-alt: #2a2d32;
+  --surface-sunken: #181a1d;
+  --border: #393d43;
+  --border-strong: #4b5058;
+  --text: #e3e5e8;
+  --text-muted: #9aa0a8;
+  --text-disabled: #5d636b;
+  --accent: #4d9ec2;
+  --accent-text: #0d1b22;
+  --selection: #234556;
+  --selection-text: #e6f3f9;
+  --focus: #5fb0d4;
+  --hover: rgba(255, 255, 255, 0.06);
+  --state-off: #7b818a;
+  --danger-bg: #3a1f1e;
+  --danger-border: #6b3431;
+  --danger-text: #f2b8b5;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--font-size);
+  line-height: 1.35;
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: -1px;
+}

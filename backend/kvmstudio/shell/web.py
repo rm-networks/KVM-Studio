@@ -34,7 +34,7 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
         os.environ["KVMSTUDIO_TOKEN"] = token
         if config_path is not None:
             os.environ["KVMSTUDIO_CONFIG"] = str(config_path)
-        print(f"KVM Studio (development): {url}")
+        print(f"KVM Studio (development): {url}", flush=True)
         uvicorn.run(
             "kvmstudio.app:create_app_from_env",
             factory=True,
@@ -56,7 +56,7 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
     server = BackgroundServer(app, sock)
     server.start()
     print(f"KVM Studio is listening on 127.0.0.1:{port}")
-    print(f"Open this link (it contains the session token): {url}")
+    print(f"Open this link (it contains the session token): {url}", flush=True)
     if open_browser:
         webbrowser.open(url)
     try:
