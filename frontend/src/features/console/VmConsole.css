@@ -1,0 +1,22 @@
+.console {
+  position: relative;
+  height: 100%;
+  background: #111214;
+}
+
+.console-screen {
+  position: absolute;
+  inset: 0;
+}
+
+.console-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #c9ccd1;
+  background: rgba(17, 18, 20, 0.85);
+}

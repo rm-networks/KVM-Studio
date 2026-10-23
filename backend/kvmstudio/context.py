@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import socket
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Annotated, Literal, cast
 
-from fastapi import Depends, Request
+from fastapi import Depends
+from starlette.requests import HTTPConnection
 
 from .config import Config
 from .libvirt_conn import LibvirtConnection
@@ -17,10 +20,11 @@ class AppContext:
     conn: LibvirtConnection
     token: str
     mode: Mode
+    open_console: Callable[[LibvirtConnection, str], socket.socket]
 
 
-def get_context(request: Request) -> AppContext:
-    return cast(AppContext, request.app.state.context)
+def get_context(conn: HTTPConnection) -> AppContext:
+    return cast(AppContext, conn.app.state.context)
 
 
 Context = Annotated[AppContext, Depends(get_context)]

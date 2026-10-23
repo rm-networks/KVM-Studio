@@ -100,7 +100,9 @@
       "auth_failed": "libvirt a refusé la connexion. Votre compte fait-il partie du groupe libvirt ?",
       "denied": "Opération refusée par libvirt.",
       "no_domain": "Cette machine virtuelle n'existe plus.",
-      "error": "libvirt a renvoyé une erreur."
+      "error": "libvirt a renvoyé une erreur.",
+      "invalid_state": "Opération impossible dans l'état actuel de la machine virtuelle.",
+      "unsupported": "Cette opération n'est pas prise en charge par la version de libvirt installée."
     },
     "network": {
       "unreachable": "Le serveur interne de KVM Studio ne répond pas."
@@ -124,5 +126,14 @@
     "Shift": "Maj",
     "Enter": "Entrée",
     "PrintScreen": "Impr"
+  },
+  "console": {
+    "connecting": "Connexion à la console…",
+    "disconnected": "Console déconnectée.",
+    "reconnect": "Reconnecter",
+    "poweredOff": "La machine virtuelle est éteinte."
+  },
+  "tabs": {
+    "close": "Fermer l'onglet"
   }
 }

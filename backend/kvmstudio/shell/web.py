@@ -41,6 +41,7 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
             host="127.0.0.1",
             port=port,
             reload=True,
+            ws="websockets-sansio",
             reload_dirs=[str(Path(__file__).resolve().parents[1])],
         )
         return 0

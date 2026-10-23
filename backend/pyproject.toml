@@ -12,9 +12,13 @@ requires-python = ">=3.11"
 # python3-gobject), so they are not listed here.
 dependencies = [
     "fastapi>=0.115,<1",
-    "uvicorn>=0.30,<1",
+    "uvicorn>=0.35,<1",
     "pydantic>=2.7,<3",
     "pywebview>=5,<7",
+    # WebSocket support in uvicorn (console proxy, live events).
+    "websockets>=12",
+    # Domain XML builders; also packaged by every distribution (python3-lxml).
+    "lxml>=5",
 ]
 
 [project.optional-dependencies]
@@ -24,6 +28,7 @@ dev = [
     "httpx>=0.27",
     "ruff>=0.15",
     "mypy>=1.18",
+    "lxml-stubs",
 ]
 
 [project.scripts]

@@ -15,6 +15,7 @@ from . import __version__
 from .api import system, vms
 from .auth.token import require_token
 from .config import Config, load_config
+from .console.vnc import ConsoleOpener, open_vnc_socket, vnc_console
 from .context import AppContext, Mode
 from .errors import ApiError, ApiException, api_exception_handler, libvirt_error_handler
 from .libvirt_conn import LibvirtConnection
@@ -46,9 +47,12 @@ def create_app(
     token: str,
     mode: Mode,
     frontend_dir: Path | None = None,
+    open_console: ConsoleOpener = open_vnc_socket,
 ) -> FastAPI:
     app = FastAPI(title="KVM Studio", version=__version__, docs_url=None, redoc_url=None)
-    app.state.context = AppContext(config=config, conn=conn, token=token, mode=mode)
+    app.state.context = AppContext(
+        config=config, conn=conn, token=token, mode=mode, open_console=open_console
+    )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=LOOPBACK_HOSTS)
     app.add_exception_handler(libvirt.libvirtError, libvirt_error_handler)
     app.add_exception_handler(ApiException, api_exception_handler)
@@ -64,6 +68,8 @@ def create_app(
 
     app.include_router(public)
     app.include_router(private)
+    # WebSockets check the token themselves (see console.vnc).
+    app.add_api_websocket_route("/api/vms/{uuid}/console", vnc_console)
 
     if frontend_dir is not None:
         app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")

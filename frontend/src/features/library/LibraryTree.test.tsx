@@ -9,9 +9,15 @@ function vm(name: string, state: VmSummary["state"] = "shutoff"): VmSummary {
   return { uuid: `uuid-${name}`, name, state, vcpus: 2, memory_mib: 2048, persistent: true };
 }
 
-function Harness({ vms }: { vms: VmSummary[] }) {
+function Harness({
+  vms,
+  onOpen = () => undefined,
+}: {
+  vms: VmSummary[];
+  onOpen?: (uuid: string) => void;
+}) {
   const [selected, setSelected] = useState<string | null>(null);
-  return <LibraryTree vms={vms} selected={selected} onSelect={setSelected} />;
+  return <LibraryTree vms={vms} selected={selected} onSelect={setSelected} onOpen={onOpen} />;
 }
 
 const labels = () =>
@@ -53,5 +59,15 @@ describe("LibraryTree", () => {
     expect(screen.queryByText("a")).toBeNull();
     fireEvent.keyDown(tree, { key: "ArrowRight" });
     expect(screen.getByText("a")).toBeTruthy();
+  });
+
+  it("opens a VM with Enter or a double click", () => {
+    const opened: string[] = [];
+    render(<Harness vms={[vm("a"), vm("b")]} onOpen={(uuid) => opened.push(uuid)} />);
+    const tree = screen.getByRole("tree");
+    fireEvent.keyDown(tree, { key: "ArrowDown" });
+    fireEvent.keyDown(tree, { key: "Enter" });
+    fireEvent.doubleClick(screen.getByText("b"));
+    expect(opened).toEqual(["uuid-a", "uuid-b"]);
   });
 });

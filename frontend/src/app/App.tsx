@@ -4,10 +4,11 @@ import { useTranslation } from "react-i18next";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { HomeTab } from "../features/home/HomeTab";
 import { LibraryPanel } from "../features/library/LibraryPanel";
+import { VmTab } from "../features/vm/VmTab";
 import { AboutDialog } from "./AboutDialog";
 import { MenuBar } from "./MenuBar";
 import { StatusBar } from "./StatusBar";
-import { TabBar } from "./TabBar";
+import { HOME_TAB, TabBar } from "./TabBar";
 import { Toolbar } from "./Toolbar";
 import { useAppData } from "./useAppData";
 import "./App.css";
@@ -24,6 +25,8 @@ export function App() {
   const [layout, setLayout] = useState<Layout>({ library: true, toolbar: true, statusBar: true });
   const [selectedVm, setSelectedVm] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [openVms, setOpenVms] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
 
   useEffect(() => {
     if (!info) return;
@@ -43,6 +46,21 @@ export function App() {
 
   const toggle = (key: keyof Layout) => setLayout((l) => ({ ...l, [key]: !l[key] }));
 
+  const openVm = (uuid: string) => {
+    setOpenVms((tabs) => (tabs.includes(uuid) ? tabs : [...tabs, uuid]));
+    setActiveTab(uuid);
+  };
+
+  const closeTab = (uuid: string) => {
+    const index = openVms.indexOf(uuid);
+    const rest = openVms.filter((id) => id !== uuid);
+    setOpenVms(rest);
+    if (activeTab === uuid) setActiveTab(rest[Math.min(index, rest.length - 1)] ?? HOME_TAB);
+  };
+
+  const vmByUuid = new Map((vms ?? []).map((vm) => [vm.uuid, vm]));
+  const tabs = openVms.map((uuid) => ({ id: uuid, label: vmByUuid.get(uuid)?.name ?? uuid }));
+
   return (
     <div className="app">
       <MenuBar layout={layout} onToggle={toggle} onAbout={() => setAboutOpen(true)} />
@@ -57,15 +75,22 @@ export function App() {
             error={error}
             selected={selectedVm}
             onSelect={setSelectedVm}
+            onOpen={openVm}
             onRefresh={refresh}
             onClose={() => toggle("library")}
           />
         )}
         <main className="workspace">
-          <TabBar />
-          <div className="workspace-content">
+          <TabBar tabs={tabs} active={activeTab} onActivate={setActiveTab} onClose={closeTab} />
+          <div className="workspace-content" hidden={activeTab !== HOME_TAB}>
             <HomeTab />
           </div>
+          {/* VM tabs stay mounted so their console keeps its connection. */}
+          {openVms.map((uuid) => (
+            <div key={uuid} className="workspace-content" hidden={activeTab !== uuid}>
+              <VmTab vm={vmByUuid.get(uuid)} />
+            </div>
+          ))}
         </main>
       </div>
       {layout.statusBar && <StatusBar info={info} vms={vms} />}

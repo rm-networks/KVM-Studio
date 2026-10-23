@@ -12,6 +12,7 @@ interface Props {
   error: ApiError | null;
   selected: string | null;
   onSelect: (id: string) => void;
+  onOpen: (uuid: string) => void;
   onRefresh: () => void;
   onClose: () => void;
 }
@@ -22,6 +23,7 @@ export function LibraryPanel({
   error,
   selected,
   onSelect,
+  onOpen,
   onRefresh,
   onClose,
 }: Props) {
@@ -54,7 +56,9 @@ export function LibraryPanel({
       <div className="library-content">
         {error && <ErrorMessage error={error} onRetry={onRefresh} />}
         {!error && vms === null && <p className="library-note">{t("library.loading")}</p>}
-        {vms !== null && <LibraryTree vms={vms} selected={selected} onSelect={onSelect} />}
+        {vms !== null && (
+          <LibraryTree vms={vms} selected={selected} onSelect={onSelect} onOpen={onOpen} />
+        )}
       </div>
     </aside>
   );

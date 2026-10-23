@@ -26,6 +26,8 @@ _LIBVIRT_CODES: dict[int, tuple[int, str]] = {
     libvirt.VIR_ERR_OPERATION_DENIED: (403, "libvirt.denied"),
     libvirt.VIR_ERR_ACCESS_DENIED: (403, "libvirt.denied"),
     libvirt.VIR_ERR_NO_DOMAIN: (404, "libvirt.no_domain"),
+    libvirt.VIR_ERR_OPERATION_INVALID: (409, "libvirt.invalid_state"),
+    libvirt.VIR_ERR_NO_SUPPORT: (501, "libvirt.unsupported"),
 }
 
 

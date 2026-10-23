@@ -11,6 +11,7 @@ from ..app import create_app, find_frontend_dir
 from ..auth.token import new_token
 from ..config import Config
 from ..libvirt_conn import LibvirtConnection
+from .clipboard import DesktopApi, make_clipboard
 from .server import BackgroundServer, bind_loopback
 
 # Must match packaging/desktop/kvm-studio.desktop: on Wayland the compositor
@@ -70,6 +71,7 @@ def run(config: Config) -> int:
         return 1
 
     _set_app_id(gui)
+    api = DesktopApi(make_clipboard(gui))
     frontend_dir = find_frontend_dir()
     icon = frontend_dir / "logo.png" if frontend_dir else None
 
@@ -85,6 +87,7 @@ def run(config: Config) -> int:
             width=1280,
             height=800,
             min_size=(900, 600),
+            js_api=api,
         )
         webview.start(gui=gui, icon=str(icon) if icon and icon.is_file() else None)
     finally:

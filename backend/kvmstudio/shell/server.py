@@ -30,7 +30,9 @@ class BackgroundServer:
     def __init__(self, app: FastAPI, sock: socket.socket) -> None:
         self.port: int = sock.getsockname()[1]
         self._sock = sock
-        self._server = uvicorn.Server(uvicorn.Config(app, log_level="warning"))
+        self._server = uvicorn.Server(
+            uvicorn.Config(app, log_level="warning", ws="websockets-sansio")
+        )
         self._thread = threading.Thread(
             target=self._server.run, kwargs={"sockets": [sock]}, daemon=True
         )

@@ -127,6 +127,14 @@ ruff check . && ruff format --check . && mypy && pytest
 cd frontend && npm run lint && npm test
 ```
 
+Tests d'intégration avec un vrai QEMU (console et presse-papiers UTF-8). Ils
+démarrent une VM temporaire sans disque dans `qemu:///session`, qui disparaît à
+la fin du test :
+
+```bash
+KVMSTUDIO_QEMU_TESTS=1 pytest tests/backend/test_qemu_clipboard.py tests/backend/test_qemu_console.py
+```
+
 ## Sécurité du serveur interne
 
 Dans les deux modes, le serveur n'écoute que sur 127.0.0.1. Chaque lancement

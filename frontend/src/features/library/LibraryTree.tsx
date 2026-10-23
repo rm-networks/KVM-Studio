@@ -11,11 +11,12 @@ interface Props {
   vms: VmSummary[];
   selected: string | null;
   onSelect: (id: string) => void;
+  onOpen: (uuid: string) => void;
 }
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 
-export function LibraryTree({ vms, selected, onSelect }: Props) {
+export function LibraryTree({ vms, selected, onSelect, onOpen }: Props) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const sorted = useMemo(() => [...vms].sort((a, b) => collator.compare(a.name, b.name)), [vms]);
@@ -51,6 +52,10 @@ export function LibraryTree({ vms, selected, onSelect }: Props) {
       case "ArrowLeft":
         if (current === ROOT_ID) setExpanded(false);
         else onSelect(ROOT_ID);
+        break;
+      case "Enter":
+        if (current === ROOT_ID) setExpanded((v) => !v);
+        else onOpen(current);
         break;
       default:
         return;
@@ -106,6 +111,7 @@ export function LibraryTree({ vms, selected, onSelect }: Props) {
                   }
                   title={`${vm.name} (${t(`state.${vm.state}`)})`}
                   onClick={() => onSelect(vm.uuid)}
+                  onDoubleClick={() => onOpen(vm.uuid)}
                 >
                   <span className="tree-icon tree-vm-icon">
                     <Monitor size={14} strokeWidth={1.75} />
