@@ -101,7 +101,7 @@ login_max_attempts = 5    # blocage temporaire au-delà
 uri = "qemu:///system"
 
 [storage]
-# vm_default_location = "/srv/vm"     # un dossier par VM, choisi au premier lancement
+# vm_default_location = "/srv/vm"     # choisi au premier lancement ; les VMs vont dans <emplacement>/KVM-Studio/VM
 default_iso_folder = "~/ISO"
 
 [[iso_libraries]]
@@ -202,16 +202,29 @@ Chaque fonctionnalité porte un identifiant (F-xx) repris dans la priorisation.
 ### 6.1 Bibliothèque de VMs
 
 - **F-01** Lister tous les domaines libvirt (actifs et inactifs), y compris ceux créés hors de KVM Studio.
-- **F-02** Dossiers de bibliothèque imbriqués (ex. « Masters », « Labs »), stockés dans `<metadata>`.
+- **F-02** Dossiers de bibliothèque synchronisés avec le système de fichiers (détail en 6.1.1).
 - **F-03** Recherche, filtre (toutes / allumées), tri.
 - **F-04** État en temps réel via les événements libvirt.
 - **F-05** Rechercher des machines virtuelles : scanner un dossier pour retrouver des XML ou disques non inscrits.
+
+#### 6.1.1 Dossiers de bibliothèque synchronisés (F-02)
+
+Les dossiers de la bibliothèque sont de vrais dossiers sur le disque : ce que l'utilisateur voit dans l'arbre correspond à ce qu'il trouve dans son gestionnaire de fichiers.
+
+- **Arborescence.** `<emplacement choisi>/KVM-Studio/VM/<dossiers>/<nom de la VM>/<disques>`. Exemple : `…/KVM-Studio/VM/Labs/SRV-WS22/SRV-WS22.qcow2`. Disques suivants : `SRV-WS22-2.qcow2`, `SRV-WS22-3.qcow2`… La NVRAM UEFI est aussi dans le dossier de la VM. Dossiers imbriqués autorisés.
+- **Dossiers.** Créer, renommer ou supprimer un dossier dans la bibliothèque fait la même chose sur le disque.
+- **Déplacement.** Déplacer une VM vers un autre dossier (menu ou glisser-déposer) déplace ses fichiers et met à jour les chemins dans le XML libvirt. Uniquement VM éteinte.
+- **Suppression.** Supprimer une VM ou un dossier entier supprime les fichiers associés, après une confirmation qui liste exactement ce qui sera effacé.
+- **Sécurités.** Jamais de suppression ni de déplacement d'un fichier hors de la racine `KVM-Studio`, d'un disque utilisé par une autre VM, ni d'une ISO. Clones liés (backing file) : la chaîne est mise à jour, sinon l'action est bloquée avec un message clair.
+- **VMs créées hors de KVM Studio** (virt-manager, disques ailleurs) : jamais déplacées automatiquement. Elles peuvent être rangées dans un dossier de la bibliothèque (rangement virtuel, noté dans `<metadata>`), avec une action « Déplacer les fichiers dans KVM Studio ».
+- **Reconstruction.** Le dossier de bibliothèque de chaque VM est aussi noté dans `<metadata>`, pour que la bibliothèque se reconstruise même si des fichiers ont été déplacés à la main. En cas d'écart entre `<metadata>` et l'emplacement réel, KVM Studio le signale et ne corrige pas seul.
+- **Compte invité (V1)** : peut créer, ranger et supprimer dans cette arborescence, toujours confiné à la racine `KVM-Studio`.
 
 ### 6.2 Cycle de vie
 
 - **F-10** Démarrer, arrêter l'invité (ACPI), forcer l'arrêt, redémarrer, réinitialiser.
 - **F-11** Pause (gel en RAM) et Suspendre (état sauvegardé sur disque), comme Workstation.
-- **F-12** Renommer, supprimer (désinscrire seulement ou supprimer aussi les disques).
+- **F-12** Renommer, supprimer (désinscrire seulement ou supprimer aussi les disques, après une confirmation qui liste les fichiers).
 - **F-13** Configurer le démarrage auto des VMs avec l'hôte, avec délai entre VMs.
 
 ### 6.3 Assistant Nouvelle VM
@@ -231,7 +244,7 @@ Chaque fonctionnalité porte un identifiant (F-xx) repris dans la priorisation.
 - **F-32** Cache des métadonnées (taille, date, OS détecté), rafraîchissement à la demande.
 - **F-33** Vérification des droits de lecture par QEMU, bouton « Corriger » via le helper.
 - **F-34** Changer ou éjecter l'ISO d'une VM allumée.
-- **F-35** Emplacement par défaut des VMs modifiable ; une VM = un dossier contenant ses disques et sa NVRAM, comme Workstation.
+- **F-35** Emplacement des VMs modifiable (racine `<emplacement>/KVM-Studio/VM`) ; une VM = un dossier contenant ses disques et sa NVRAM, rangé dans l'arborescence des dossiers de bibliothèque (F-02).
 
 ### 6.5 Disques virtuels
 
@@ -304,7 +317,7 @@ Chaque fonctionnalité porte un identifiant (F-xx) repris dans la priorisation.
 - **F-100** Un compte invité unique, mot de passe défini par le propriétaire dans Préférences > Interface, utilisable par plusieurs personnes en même temps.
 - **F-101** L'invité gère les VMs comme le propriétaire : créer, supprimer, modifier les paramètres, démarrer/arrêter, console, snapshots, clones.
 - **F-102** L'invité ne touche pas à l'hôte : pas d'accès aux Préférences, à l'éditeur de réseaux, aux bibliothèques ISO ni au partage LAN ; pas d'éditeur XML brut ; pas de passthrough (disque physique, USB, PCI).
-- **F-103** Confinement des chemins : un invité ne peut attacher que des disques du dossier des VMs et des ISO des bibliothèques déclarées. Vérifié côté backend, pas seulement dans l'interface.
+- **F-103** Confinement des chemins : un invité ne peut attacher que des disques de la racine `KVM-Studio` et des ISO des bibliothèques déclarées. Vérifié côté backend, pas seulement dans l'interface.
 - **F-104** Console partagée : plusieurs personnes sur la même VM voient le même écran et partagent clavier et souris ; indicateur « N personnes connectées ».
 - **F-105** Sécurité de connexion : HTTPS auto-signé, mot de passe hashé, blocage temporaire après 5 échecs, sessions expirées après inactivité.
 - **F-106** Ouverture et fermeture automatiques du port dans le pare-feu (firewalld ou ufw) quand le partage LAN est activé ou coupé.
@@ -316,12 +329,12 @@ Le MVP est l'outil perso de Romain sur Fedora : installé par le .rpm, il permet
 | Phase | Public | Fonctionnalités | Critère de sortie |
 | --- | --- | --- | --- |
 | Phase 0 : socle | Romain | Backend + frontend, config TOML, connexion libvirt, fenêtre pywebview, CI GitHub Actions, tests sur `test:///default` | La fenêtre KVM Studio liste les domaines de l'hôte |
-| MVP | Romain, Fedora | F-01, F-03, F-04, F-10, F-12, F-20, F-22, F-24, F-30, F-31, F-33, F-34, F-35, F-40, F-41, F-52, F-53, F-60, F-61, F-62, F-64, F-70, F-71, F-72, F-73 (sans redirection de ports), F-76, F-77, F-90, F-93, F-94 (logiciel + web local), F-95 (.rpm + premier lancement) | Lab OPNsense 3 NIC + Windows 11 installés, outils invités en un clic, copier-coller OK, applet réseau propre |
-| V1 | Amis, Fedora + Debian/Ubuntu | F-02, F-05, F-11, F-13, F-21, F-23, F-25, F-26 (Installation simplifiée), F-42 à F-45, F-50, F-51, F-54, F-55, F-63, F-65, F-73 (redirection de ports), F-78, F-80 à F-82, F-91, F-92, F-95 (.deb), F-100 à F-106 (partage LAN + compte invité) | Un ami installe le .deb ou le .rpm et monte son lab seul ; travail à plusieurs sur le LAN |
+| MVP | Romain, Fedora | F-01, F-02, F-03, F-04, F-10, F-12, F-20, F-22, F-24, F-30, F-31, F-33, F-34, F-35, F-40, F-41, F-52, F-53, F-60, F-61, F-62, F-64, F-70, F-71, F-72, F-73 (sans redirection de ports), F-76, F-77, F-90, F-93, F-94 (logiciel + web local), F-95 (.rpm + premier lancement) | Lab OPNsense 3 NIC + Windows 11 installés, outils invités en un clic, copier-coller OK, applet réseau propre |
+| V1 | Amis, Fedora + Debian/Ubuntu | F-05, F-11, F-13, F-21, F-23, F-25, F-26 (Installation simplifiée), F-42 à F-45, F-50, F-51, F-54, F-55, F-63, F-65, F-73 (redirection de ports), F-78, F-80 à F-82, F-91, F-92, F-95 (.deb), F-100 à F-106 (partage LAN + compte invité) | Un ami installe le .deb ou le .rpm et monte son lab seul ; travail à plusieurs sur le LAN |
 | V2 | Public | F-44 (montage hôte), F-46, F-56, F-57 (USB), F-66, F-67, F-74 et F-75 (Bridged), F-79, F-83 à F-86, dépôts COPR/APT, connexion à un serveur distant | Un ancien utilisateur de Workstation migre ses VMs sans retour arrière |
 | Plus tard | Public | Autres distros (Arch, openSUSE), PCI passthrough, modèles de labs partageables | - |
 
-Ordre conseillé dans le MVP : socle → liste et états → cycle de vie → kvmnet + masquage → sélecteur ISO → assistant → console + copier-coller + outils invités → multi-NIC → paquet .rpm.
+Ordre conseillé dans le MVP : socle → prototype copier-coller UTF-8 → liste et états → cycle de vie → dossiers de bibliothèque → kvmnet + masquage → sélecteur ISO → assistant → console + copier-coller + outils invités → multi-NIC → paquet .rpm.
 
 ## 8. Exigences non fonctionnelles et recette
 
@@ -341,6 +354,7 @@ Ordre conseillé dans le MVP : socle → liste et états → cycle de vie → kv
 - [ ] Installation du .rpm par double-clic, assistant de premier lancement déroulé sans commande manuelle.
 - [ ] kvmnet1 et kvmnet8 créés ; l'applet réseau de Plasma ne montre que le Wi-Fi et la carte filaire.
 - [ ] Deux bibliothèques ISO configurées dans Préférences, navigation sur 3 niveaux de sous-dossiers.
+- [ ] Dossiers de bibliothèque : créer « Labs », y déplacer une VM éteinte, les fichiers suivent sur le disque et la VM démarre ; suppression avec liste des fichiers.
 - [ ] VM Windows 11 (UEFI, Secure Boot, TPM) installée ; « Installer les outils invités » en un clic ; copier-coller de texte dans les deux sens.
 - [ ] OPNsense à 3 NIC (kvmnet8 + 2 segments Host-only), accès console.
 - [ ] VM créée dans KVM Studio visible et démarrable dans virt-manager, et inversement.
