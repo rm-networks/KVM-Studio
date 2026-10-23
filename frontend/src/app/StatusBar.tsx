@@ -1,0 +1,38 @@
+import { useTranslation } from "react-i18next";
+
+import type { AppInfo, VmSummary } from "../api/client";
+import "./StatusBar.css";
+
+interface Props {
+  info: AppInfo | null;
+  vms: VmSummary[] | null;
+}
+
+export function StatusBar({ info, vms }: Props) {
+  const { t } = useTranslation();
+  const running = vms?.filter((vm) => vm.state === "running").length ?? 0;
+
+  return (
+    <footer className="statusbar">
+      <span className={info ? "statusbar-dot" : "statusbar-dot statusbar-dot-off"} />
+      <span>
+        {info ? t("status.connected", { uri: info.libvirt.uri }) : t("status.disconnected")}
+      </span>
+      {info && (
+        <span className="statusbar-muted">
+          {t("status.versions", {
+            libvirt: info.libvirt.libvirt_version,
+            driver: info.libvirt.driver,
+            hypervisor: info.libvirt.hypervisor_version,
+          })}
+        </span>
+      )}
+      <span className="statusbar-spacer" />
+      {vms && (
+        <span>
+          {t("status.vmCount", { count: vms.length })}, {t("status.running", { count: running })}
+        </span>
+      )}
+    </footer>
+  );
+}

@@ -1,0 +1,126 @@
+{
+  "menu": {
+    "file": "File",
+    "edit": "Edit",
+    "view": "View",
+    "vm": "VM",
+    "tabs": "Tabs",
+    "help": "Help",
+    "newVm": "New Virtual Machine…",
+    "open": "Open…",
+    "scan": "Scan for Virtual Machines…",
+    "autostart": "Configure VM Autostart…",
+    "closeTab": "Close Tab",
+    "connect": "Connect to Server…",
+    "exportOvf": "Export to OVF…",
+    "quit": "Quit",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "networkEditor": "Virtual Network Editor…",
+    "preferences": "Preferences…",
+    "fullscreen": "Full Screen",
+    "consoleView": "Console View",
+    "fitGuest": "Fit Guest Now",
+    "fitWindow": "Fit Window Now",
+    "autosize": "Autosize",
+    "customize": "Customize",
+    "library": "Library",
+    "toolbar": "Toolbar",
+    "statusBar": "Status Bar",
+    "power": "Power",
+    "removable": "Removable Devices",
+    "pause": "Pause",
+    "sendCad": "Send Ctrl+Alt+Del",
+    "grab": "Grab Input",
+    "snapshot": "Snapshot",
+    "capture": "Capture Screen",
+    "manage": "Manage",
+    "guestTools": "Install Guest Tools…",
+    "settings": "Settings…",
+    "goHome": "Go to Home Tab",
+    "nextTab": "Next Tab",
+    "previousTab": "Previous Tab",
+    "docs": "Documentation",
+    "shortcuts": "Keyboard Shortcuts",
+    "about": "About KVM Studio",
+    "bug": "Report a Bug"
+  },
+  "toolbar": {
+    "start": "Start",
+    "powerMenu": "More power actions",
+    "sendCad": "Send Ctrl+Alt+Del",
+    "snapshot": "Take a snapshot",
+    "revert": "Revert to snapshot",
+    "snapshotManager": "Snapshot Manager",
+    "library": "Show or hide the library",
+    "thumbnails": "Thumbnails",
+    "fullscreen": "Full screen",
+    "console": "Console view"
+  },
+  "library": {
+    "title": "Library",
+    "close": "Close the library",
+    "refresh": "Refresh",
+    "myComputer": "My Computer",
+    "empty": "No virtual machines",
+    "loading": "Loading…"
+  },
+  "state": {
+    "running": "Running",
+    "paused": "Paused",
+    "shutting_down": "Shutting down",
+    "shutoff": "Powered off",
+    "crashed": "Crashed",
+    "suspended": "Suspended",
+    "unknown": "Unknown state"
+  },
+  "home": {
+    "tab": "Home",
+    "create": "Create a Virtual Machine",
+    "open": "Open a Virtual Machine",
+    "connect": "Connect to a Server",
+    "later": "Available in a future version"
+  },
+  "status": {
+    "connected": "Connected to {{uri}}",
+    "versions": "libvirt {{libvirt}}, {{driver}} {{hypervisor}}",
+    "vmCount_one": "{{count}} virtual machine",
+    "vmCount_other": "{{count}} virtual machines",
+    "running_one": "{{count}} running",
+    "running_other": "{{count}} running",
+    "disconnected": "Not connected"
+  },
+  "errors": {
+    "auth": {
+      "invalid_token": "Invalid session. Restart KVM Studio or, in web mode, open the link printed in the terminal."
+    },
+    "libvirt": {
+      "unreachable": "Cannot reach libvirt. Check that the service is running: systemctl status virtqemud.socket",
+      "auth_failed": "libvirt refused the connection. Is your account in the libvirt group?",
+      "denied": "Operation denied by libvirt.",
+      "no_domain": "This virtual machine no longer exists.",
+      "error": "libvirt returned an error."
+    },
+    "network": {
+      "unreachable": "The KVM Studio internal server is not responding."
+    },
+    "http": {
+      "error": "Unexpected server error."
+    },
+    "details": "Original message",
+    "retry": "Retry",
+    "sessionTitle": "Session expired"
+  },
+  "about": {
+    "title": "About KVM Studio",
+    "version": "Version {{version}}",
+    "description": "Virtual machine manager for Linux, built on QEMU/KVM and libvirt.",
+    "license": "Released under the GPL-3.0 license.",
+    "notice": "KVM Studio is a community project inspired by the interface and features of VMware Workstation. It is not affiliated with VMware or Broadcom and does not reuse any of their code or graphical elements.",
+    "close": "Close"
+  },
+  "keys": {
+    "PrintScreen": "PrtScn"
+  }
+}

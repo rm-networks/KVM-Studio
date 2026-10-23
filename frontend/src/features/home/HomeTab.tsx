@@ -1,0 +1,28 @@
+import { FolderOpen, type LucideIcon, Plus, Server } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+import "./HomeTab.css";
+
+function Tile({ icon: Icon, label, hint }: { icon: LucideIcon; label: string; hint: string }) {
+  return (
+    <button type="button" className="home-tile" disabled title={hint}>
+      <Icon size={30} strokeWidth={1.25} />
+      <span>{label}</span>
+    </button>
+  );
+}
+
+export function HomeTab() {
+  const { t } = useTranslation();
+  const later = t("home.later");
+  return (
+    <div className="home">
+      <h1 className="home-title">KVM Studio</h1>
+      <div className="home-tiles">
+        <Tile icon={Plus} label={t("home.create")} hint={later} />
+        <Tile icon={FolderOpen} label={t("home.open")} hint={later} />
+        <Tile icon={Server} label={t("home.connect")} hint={later} />
+      </div>
+    </div>
+  );
+}

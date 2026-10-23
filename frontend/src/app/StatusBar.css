@@ -1,0 +1,31 @@
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--statusbar-height);
+  padding: 0 10px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+}
+
+.statusbar-dot {
+  width: 7px;
+  height: 7px;
+  margin-right: -4px;
+  border-radius: 50%;
+  background: var(--state-running);
+}
+
+.statusbar-dot-off {
+  background: var(--state-off);
+}
+
+.statusbar-muted {
+  color: var(--text-muted);
+}
+
+.statusbar-spacer {
+  flex: 1;
+}

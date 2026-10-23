@@ -1,0 +1,196 @@
+import * as Menubar from "@radix-ui/react-menubar";
+import { Check, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+import type { Layout } from "./App";
+import "./MenuBar.css";
+
+type Entry =
+  | { kind: "item"; label: string; keys?: string[]; onSelect?: () => void }
+  | { kind: "sub"; label: string; entries?: Entry[] }
+  | { kind: "check"; label: string; checked: boolean; onChange: () => void }
+  | { kind: "sep" };
+
+const item = (label: string, keys?: string[], onSelect?: () => void): Entry => ({
+  kind: "item",
+  label,
+  keys,
+  onSelect,
+});
+const sub = (label: string, entries?: Entry[]): Entry => ({ kind: "sub", label, entries });
+const sep: Entry = { kind: "sep" };
+
+interface Props {
+  layout: Layout;
+  onToggle: (key: keyof Layout) => void;
+  onAbout: () => void;
+}
+
+export function MenuBar({ layout, onToggle, onAbout }: Props) {
+  const { t } = useTranslation();
+  const m = (key: string) => t(`menu.${key}`);
+  const check = (key: keyof Layout): Entry => ({
+    kind: "check",
+    label: m(key),
+    checked: layout[key],
+    onChange: () => onToggle(key),
+  });
+
+  // Entries without a handler are shown disabled until their feature lands.
+  const menus: [string, Entry[]][] = [
+    [
+      "file",
+      [
+        item(m("newVm"), ["Ctrl", "N"]),
+        item(m("open"), ["Ctrl", "O"]),
+        item(m("scan")),
+        item(m("autostart")),
+        sep,
+        item(m("closeTab"), ["Ctrl", "W"]),
+        sep,
+        item(m("connect"), ["Ctrl", "L"]),
+        item(m("exportOvf")),
+        sep,
+        item(m("quit")),
+      ],
+    ],
+    [
+      "edit",
+      [
+        item(m("cut"), ["Ctrl", "X"]),
+        item(m("copy"), ["Ctrl", "C"]),
+        item(m("paste"), ["Ctrl", "V"]),
+        sep,
+        item(m("networkEditor")),
+        item(m("preferences"), ["Ctrl", "P"]),
+      ],
+    ],
+    [
+      "view",
+      [
+        item(m("fullscreen"), ["Ctrl", "Alt", "Enter"]),
+        item(m("consoleView")),
+        sep,
+        item(m("fitGuest")),
+        item(m("fitWindow")),
+        sub(m("autosize")),
+        sep,
+        sub(m("customize"), [check("library"), check("toolbar"), check("statusBar")]),
+      ],
+    ],
+    [
+      "vm",
+      [
+        sub(m("power")),
+        sub(m("removable")),
+        item(m("pause"), ["Ctrl", "Shift", "P"]),
+        sep,
+        item(m("sendCad")),
+        item(m("grab"), ["Ctrl", "G"]),
+        sep,
+        sub(m("snapshot")),
+        item(m("capture"), ["Ctrl", "Alt", "PrintScreen"]),
+        sep,
+        sub(m("manage")),
+        item(m("guestTools")),
+        sep,
+        item(m("settings"), ["Ctrl", "D"]),
+      ],
+    ],
+    [
+      "tabs",
+      [
+        item(`1  ${t("home.tab")}`, undefined, () => undefined),
+        sep,
+        item(m("goHome"), undefined, () => undefined),
+        sep,
+        item(m("nextTab"), ["Ctrl", "Tab"]),
+        item(m("previousTab"), ["Ctrl", "Shift", "Tab"]),
+      ],
+    ],
+    [
+      "help",
+      [
+        item(m("docs")),
+        item(m("shortcuts")),
+        sep,
+        item(m("about"), undefined, onAbout),
+        sep,
+        item(m("bug")),
+      ],
+    ],
+  ];
+
+  const formatKeys = (keys: string[]) =>
+    keys.map((k) => t(`keys.${k}`, { defaultValue: k })).join("+");
+
+  const renderEntries = (entries: Entry[]) =>
+    entries.map((entry, i) => {
+      switch (entry.kind) {
+        case "sep":
+          return <Menubar.Separator key={i} className="menu-separator" />;
+        case "item":
+          return (
+            <Menubar.Item
+              key={i}
+              className="menu-item"
+              disabled={!entry.onSelect}
+              onSelect={entry.onSelect}
+            >
+              <span className="menu-indicator" />
+              <span className="menu-label">{entry.label}</span>
+              {entry.keys && <span className="menu-keys">{formatKeys(entry.keys)}</span>}
+            </Menubar.Item>
+          );
+        case "check":
+          return (
+            <Menubar.CheckboxItem
+              key={i}
+              className="menu-item"
+              checked={entry.checked}
+              onCheckedChange={entry.onChange}
+              onSelect={(e) => e.preventDefault()}
+            >
+              <span className="menu-indicator">
+                <Menubar.ItemIndicator>
+                  <Check size={13} />
+                </Menubar.ItemIndicator>
+              </span>
+              <span className="menu-label">{entry.label}</span>
+            </Menubar.CheckboxItem>
+          );
+        case "sub":
+          return (
+            <Menubar.Sub key={i}>
+              <Menubar.SubTrigger className="menu-item" disabled={!entry.entries}>
+                <span className="menu-indicator" />
+                <span className="menu-label">{entry.label}</span>
+                <ChevronRight size={13} className="menu-chevron" />
+              </Menubar.SubTrigger>
+              {entry.entries && (
+                <Menubar.Portal>
+                  <Menubar.SubContent className="menu" sideOffset={-2} alignOffset={-4}>
+                    {renderEntries(entry.entries)}
+                  </Menubar.SubContent>
+                </Menubar.Portal>
+              )}
+            </Menubar.Sub>
+          );
+      }
+    });
+
+  return (
+    <Menubar.Root className="menubar">
+      {menus.map(([key, entries]) => (
+        <Menubar.Menu key={key}>
+          <Menubar.Trigger className="menubar-trigger">{m(key)}</Menubar.Trigger>
+          <Menubar.Portal>
+            <Menubar.Content className="menu" align="start" sideOffset={0}>
+              {renderEntries(entries)}
+            </Menubar.Content>
+          </Menubar.Portal>
+        </Menubar.Menu>
+      ))}
+    </Menubar.Root>
+  );
+}

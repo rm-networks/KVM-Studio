@@ -1,0 +1,128 @@
+{
+  "menu": {
+    "file": "Fichier",
+    "edit": "Édition",
+    "view": "Affichage",
+    "vm": "VM",
+    "tabs": "Onglets",
+    "help": "Aide",
+    "newVm": "Nouvelle machine virtuelle…",
+    "open": "Ouvrir…",
+    "scan": "Rechercher des machines virtuelles…",
+    "autostart": "Configurer le démarrage auto des VMs…",
+    "closeTab": "Fermer l'onglet",
+    "connect": "Se connecter à un serveur…",
+    "exportOvf": "Exporter en OVF…",
+    "quit": "Quitter",
+    "cut": "Couper",
+    "copy": "Copier",
+    "paste": "Coller",
+    "networkEditor": "Éditeur de réseaux virtuels…",
+    "preferences": "Préférences…",
+    "fullscreen": "Plein écran",
+    "consoleView": "Vue console",
+    "fitGuest": "Ajuster l'invité maintenant",
+    "fitWindow": "Ajuster la fenêtre maintenant",
+    "autosize": "Redimensionnement auto",
+    "customize": "Personnaliser",
+    "library": "Bibliothèque",
+    "toolbar": "Barre d'outils",
+    "statusBar": "Barre d'état",
+    "power": "Alimentation",
+    "removable": "Périphériques amovibles",
+    "pause": "Pause",
+    "sendCad": "Envoyer Ctrl+Alt+Suppr",
+    "grab": "Capturer la saisie",
+    "snapshot": "Snapshot",
+    "capture": "Capture d'écran",
+    "manage": "Gérer",
+    "guestTools": "Installer les outils invités…",
+    "settings": "Paramètres…",
+    "goHome": "Aller à l'onglet Accueil",
+    "nextTab": "Onglet suivant",
+    "previousTab": "Onglet précédent",
+    "docs": "Documentation",
+    "shortcuts": "Raccourcis clavier",
+    "about": "À propos de KVM Studio",
+    "bug": "Signaler un bug"
+  },
+  "toolbar": {
+    "start": "Démarrer",
+    "powerMenu": "Autres actions d'alimentation",
+    "sendCad": "Envoyer Ctrl+Alt+Suppr",
+    "snapshot": "Prendre un snapshot",
+    "revert": "Revenir au snapshot",
+    "snapshotManager": "Gestionnaire de snapshots",
+    "library": "Afficher ou masquer la bibliothèque",
+    "thumbnails": "Miniatures",
+    "fullscreen": "Plein écran",
+    "console": "Vue console"
+  },
+  "library": {
+    "title": "Bibliothèque",
+    "close": "Fermer la bibliothèque",
+    "refresh": "Actualiser",
+    "myComputer": "Mon ordinateur",
+    "empty": "Aucune machine virtuelle",
+    "loading": "Chargement…"
+  },
+  "state": {
+    "running": "Allumée",
+    "paused": "En pause",
+    "shutting_down": "Arrêt en cours",
+    "shutoff": "Éteinte",
+    "crashed": "Plantée",
+    "suspended": "Suspendue",
+    "unknown": "État inconnu"
+  },
+  "home": {
+    "tab": "Accueil",
+    "create": "Créer une machine virtuelle",
+    "open": "Ouvrir une machine virtuelle",
+    "connect": "Se connecter à un serveur",
+    "later": "Disponible dans une prochaine version"
+  },
+  "status": {
+    "connected": "Connecté à {{uri}}",
+    "versions": "libvirt {{libvirt}}, {{driver}} {{hypervisor}}",
+    "vmCount_one": "{{count}} machine virtuelle",
+    "vmCount_other": "{{count}} machines virtuelles",
+    "running_one": "{{count}} allumée",
+    "running_other": "{{count}} allumées",
+    "disconnected": "Non connecté"
+  },
+  "errors": {
+    "auth": {
+      "invalid_token": "Session invalide. Relancez KVM Studio ou, en mode web, ouvrez le lien affiché dans le terminal."
+    },
+    "libvirt": {
+      "unreachable": "Impossible de joindre libvirt. Vérifiez que le service tourne : systemctl status virtqemud.socket",
+      "auth_failed": "libvirt a refusé la connexion. Votre compte fait-il partie du groupe libvirt ?",
+      "denied": "Opération refusée par libvirt.",
+      "no_domain": "Cette machine virtuelle n'existe plus.",
+      "error": "libvirt a renvoyé une erreur."
+    },
+    "network": {
+      "unreachable": "Le serveur interne de KVM Studio ne répond pas."
+    },
+    "http": {
+      "error": "Erreur inattendue du serveur."
+    },
+    "details": "Message d'origine",
+    "retry": "Réessayer",
+    "sessionTitle": "Session expirée"
+  },
+  "about": {
+    "title": "À propos de KVM Studio",
+    "version": "Version {{version}}",
+    "description": "Gestionnaire de machines virtuelles pour Linux, basé sur QEMU/KVM et libvirt.",
+    "license": "Distribué sous licence GPL-3.0.",
+    "notice": "KVM Studio est un projet communautaire inspiré de l'interface et des fonctionnalités de VMware Workstation. Il n'est affilié ni à VMware ni à Broadcom et ne reprend aucun de leurs codes ou éléments graphiques.",
+    "close": "Fermer"
+  },
+  "keys": {
+    "Shift": "Maj",
+    "Enter": "Entrée",
+    "PrintScreen": "Impr"
+  }
+}

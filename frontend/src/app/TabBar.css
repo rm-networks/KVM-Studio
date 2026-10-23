@@ -1,0 +1,26 @@
+.tabbar {
+  display: flex;
+  align-items: flex-end;
+  height: var(--tabbar-height);
+  padding: 0 6px;
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 25px;
+  margin-bottom: -1px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--border);
+  border-bottom-color: var(--surface-alt);
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--surface-alt);
+}
+
+.tab[aria-selected="true"] {
+  font-weight: 600;
+  box-shadow: inset 0 2px 0 var(--accent);
+}

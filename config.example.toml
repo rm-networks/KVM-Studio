@@ -1,0 +1,42 @@
+# KVM Studio configuration
+# Location: $XDG_CONFIG_HOME/kvm-studio/config.toml (usually ~/.config/kvm-studio/)
+# Every key is optional; missing keys take the value shown here.
+# Details: docs/CONFIGURATION.md
+
+[interface]
+# "desktop" (native window) or "web" (browser). Applied on restart.
+mode = "desktop"
+
+[web]
+port = 8765
+# LAN sharing arrives in V1. Must stay false for now.
+share_on_lan = false
+tls = "auto"
+guest_enabled = true
+login_max_attempts = 5
+
+[libvirt]
+uri = "qemu:///system"
+
+[storage]
+# Folder where each VM gets its own subfolder. No default: set it here or in
+# the first-run assistant.
+# vm_default_location = "/srv/vm"
+default_iso_folder = "~/ISO"
+
+# ISO libraries, browsed read-only. Repeat the block for each folder.
+# [[iso_libraries]]
+# name = "Main ISO"
+# path = "/srv/iso"
+# recursive = true
+# extensions = [".iso", ".img"]
+
+[defaults]
+firmware = "uefi"        # "uefi" | "bios"
+disk_bus = "virtio"      # "virtio" | "scsi" | "sata" | "nvme" | "ide"
+nic_model = "virtio"     # "virtio" | "e1000e" | "rtl8139" | "vmxnet3"
+# virtio_win_iso = "/srv/iso/drivers/virtio-win.iso"
+
+[ui]
+theme = "system"         # "system" | "light" | "dark"
+language = "fr"          # "fr" | "en"

@@ -1,0 +1,77 @@
+# Configuration
+
+KVM Studio lit `$XDG_CONFIG_HOME/kvm-studio/config.toml`, soit en général
+`~/.config/kvm-studio/config.toml`. Le fichier est facultatif et chaque clé
+aussi : une clé absente prend sa valeur par défaut. Un modèle commenté se trouve
+dans [config.example.toml](../config.example.toml).
+
+Une clé inconnue ou une valeur invalide empêche le démarrage, avec un message qui
+indique la clé fautive. `kvm-studio --check` valide le fichier sans rien lancer.
+`--config CHEMIN` permet d'utiliser un autre fichier.
+
+## [interface]
+
+| Clé | Défaut | Description |
+| --- | --- | --- |
+| `mode` | `"desktop"` | `"desktop"` : fenêtre native. `"web"` : navigateur. Appliqué au redémarrage. L'option `--mode` de la ligne de commande a priorité. |
+
+## [web]
+
+| Clé | Défaut | Description |
+| --- | --- | --- |
+| `port` | `8765` | Port d'écoute du mode web, entre 1024 et 65535. Le mode fenêtre utilise un port aléatoire. |
+| `share_on_lan` | `false` | Partage sur le réseau local (V1). Doit rester à `false` : KVM Studio refuse de démarrer sinon. |
+| `tls` | `"auto"` | Certificat auto-signé pour le partage LAN (V1). |
+| `guest_enabled` | `true` | Compte invité du partage LAN (V1). |
+| `login_max_attempts` | `5` | Échecs de connexion avant blocage temporaire (V1). |
+
+## [libvirt]
+
+| Clé | Défaut | Description |
+| --- | --- | --- |
+| `uri` | `"qemu:///system"` | URI de connexion libvirt. `qemu:///session` fonctionne mais sans réseaux virtuels kvmnet. |
+
+## [storage]
+
+| Clé | Défaut | Description |
+| --- | --- | --- |
+| `vm_default_location` | aucun | Dossier où chaque VM reçoit son propre sous-dossier. À choisir au premier lancement. `~` est accepté. |
+| `default_iso_folder` | `"~/ISO"` | Dossier proposé par défaut pour chercher une ISO. |
+
+## [[iso_libraries]]
+
+Bibliothèques d'ISO, parcourues en lecture seule. Répéter le bloc pour chaque
+dossier.
+
+| Clé | Défaut | Description |
+| --- | --- | --- |
+| `name` | requis | Nom affiché. |
+| `path` | requis | Dossier racine. |
+| `recursive` | `true` | Parcourir les sous-dossiers. |
+| `extensions` | `[".iso", ".img"]` | Extensions reconnues. |
+
+## [defaults]
+
+Valeurs proposées par l'assistant de création de VM.
+
+| Clé | Défaut | Valeurs |
+| --- | --- | --- |
+| `firmware` | `"uefi"` | `"uefi"`, `"bios"` |
+| `disk_bus` | `"virtio"` | `"virtio"`, `"scsi"`, `"sata"`, `"nvme"`, `"ide"` |
+| `nic_model` | `"virtio"` | `"virtio"`, `"e1000e"`, `"rtl8139"`, `"vmxnet3"` |
+| `virtio_win_iso` | aucun | ISO des pilotes virtio pour Windows, montée en second lecteur. |
+
+## [ui]
+
+| Clé | Défaut | Valeurs |
+| --- | --- | --- |
+| `theme` | `"system"` | `"system"`, `"light"`, `"dark"` |
+| `language` | `"fr"` | `"fr"`, `"en"` |
+
+## Variables d'environnement
+
+| Variable | Rôle |
+| --- | --- |
+| `XDG_CONFIG_HOME` | Emplacement du dossier de configuration. |
+| `KVMSTUDIO_FRONTEND_DIR` | Dossier de l'interface compilée, si elle n'est pas à l'emplacement habituel. |
+| `KVMSTUDIO_BACKEND` | Développement : adresse de l'API pour le serveur Vite (défaut `http://127.0.0.1:8765`). |
