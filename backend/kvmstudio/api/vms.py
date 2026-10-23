@@ -1,17 +1,21 @@
 from __future__ import annotations
 
+import contextlib
 import re
 from typing import Annotated, Literal
 
 import libvirt
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Query, Request, Response
 from pydantic import AfterValidator, BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from ..context import Context
 from ..errors import ApiException
+from ..events import EventHub
 from ..libvirt_conn import DomainState
-from ..services import deletion
+from ..paths import is_strictly_within, library_root
+from ..services import deletion, library, vm_view
+from ..services.library import Drift
 
 router = APIRouter(prefix="/vms", tags=["vms"])
 
@@ -37,6 +41,18 @@ class VmSummary(BaseModel):
     vcpus: int
     memory_mib: int
     persistent: bool
+    folder: str
+    managed: bool
+    drift: list[Drift]
+
+
+class MoveRequest(BaseModel):
+    folder: str
+
+
+class ImportResult(BaseModel):
+    copied: list[str]
+    originals: list[str]
 
 
 class VmUpdate(BaseModel):
@@ -61,17 +77,7 @@ class DeletionResult(BaseModel):
 
 @router.get("")
 def list_vms(ctx: Context) -> list[VmSummary]:
-    return [
-        VmSummary(
-            uuid=d.uuid,
-            name=d.name,
-            state=d.state,
-            vcpus=d.vcpus,
-            memory_mib=d.memory_mib,
-            persistent=d.persistent,
-        )
-        for d in ctx.conn.list_domains()
-    ]
+    return [VmSummary.model_validate(e.as_dict()) for e in vm_view.all_vms(ctx.conn, ctx.config)]
 
 
 @router.post("/{uuid}/power/{action}", status_code=204)
@@ -111,15 +117,48 @@ async def deletion_plan(ctx: Context, uuid: str) -> DeletionPlan:
     )
 
 
+def _library_changed(request: Request) -> None:
+    hub: EventHub = request.app.state.events
+    hub.broadcast({"type": "library.changed"})
+
+
 @router.delete("/{uuid}")
 async def delete(
-    ctx: Context, uuid: str, files: Annotated[bool, Query()] = False
+    ctx: Context, request: Request, uuid: str, files: Annotated[bool, Query()] = False
 ) -> DeletionResult:
-    plan, report = await run_in_threadpool(
-        lambda: deletion.delete_vm(ctx.conn, uuid, ctx.config, delete_files=files)
-    )
+    def run() -> tuple[deletion.DeletionPlan, deletion.DeletionReport]:
+        place = library.placement_of(ctx.conn, ctx.config, uuid)
+        result = deletion.delete_vm(ctx.conn, uuid, ctx.config, delete_files=files)
+        root = library_root(ctx.config)
+        # The VM's own folder goes too once it is empty (never a library folder).
+        vm_dir = place.vm_dir
+        if files and place.managed and vm_dir and root and is_strictly_within(vm_dir, root):
+            with contextlib.suppress(OSError):
+                vm_dir.rmdir()
+        return result
+
+    plan, report = await run_in_threadpool(run)
+    _library_changed(request)
     return DeletionResult(
         deleted=report.deleted,
         failed=report.failed,
         keep=[KeptFile(path=k.path, reason=k.reason) for k in plan.keep],
     )
+
+
+@router.post("/{uuid}/move", status_code=204)
+async def move(ctx: Context, request: Request, uuid: str, body: MoveRequest) -> Response:
+    await run_in_threadpool(library.move_vm, ctx.conn, ctx.config, uuid, body.folder)
+    _library_changed(request)
+    return Response(status_code=204)
+
+
+@router.post("/{uuid}/import")
+async def import_files(
+    ctx: Context, request: Request, uuid: str, body: MoveRequest
+) -> ImportResult:
+    result = await run_in_threadpool(
+        library.import_vm_files, ctx.conn, ctx.config, uuid, body.folder
+    )
+    _library_changed(request)
+    return ImportResult(copied=result.copied, originals=result.originals)

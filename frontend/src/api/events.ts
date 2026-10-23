@@ -4,6 +4,7 @@ import { getToken } from "./token";
 export type ServerEvent =
   | { type: "vm.changed"; vm: VmSummary }
   | { type: "vm.removed"; uuid: string }
+  | { type: "library.changed" }
   | { type: "connection"; state: "lost" | "restored" };
 
 interface Handlers {

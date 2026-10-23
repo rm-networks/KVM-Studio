@@ -3,14 +3,16 @@ import { Check, ListFilter, RefreshCw, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { ApiError, VmSummary } from "../../api/client";
+import type { ApiError, LibraryInfo, VmSummary } from "../../api/client";
 import { ErrorMessage } from "../../components/ErrorMessage";
-import { type VmFilter, type VmSort, visibleVms } from "./filter";
+import type { VmFilter, VmSort } from "./filter";
 import { LibraryTree } from "./LibraryTree";
+import { buildTree } from "./tree";
 import "./LibraryPanel.css";
 
 interface Props {
   vms: VmSummary[] | null;
+  library: LibraryInfo | null;
   loading: boolean;
   error: ApiError | null;
   selected: string | null;
@@ -35,6 +37,7 @@ function RadioItem({ value, label }: { value: string; label: string }) {
 
 export function LibraryPanel({
   vms,
+  library,
   loading,
   error,
   selected,
@@ -47,11 +50,12 @@ export function LibraryPanel({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<VmFilter>("all");
   const [sort, setSort] = useState<VmSort>("name");
-  const shown = useMemo(
-    () => (vms ? visibleVms(vms, query, filter, sort) : null),
-    [vms, query, filter, sort],
-  );
   const narrowed = query.trim() !== "" || filter !== "all";
+  const tree = useMemo(
+    () => (vms ? buildTree(library?.folders ?? [], vms, query, filter, sort) : null),
+    [vms, library, query, filter, sort],
+  );
+  const vmsByUuid = useMemo(() => new Map((vms ?? []).map((vm) => [vm.uuid, vm])), [vms]);
 
   return (
     <aside className="library" aria-label={t("library.title")}>
@@ -123,14 +127,16 @@ export function LibraryPanel({
       </div>
       <div className="library-content">
         {error && <ErrorMessage error={error} onRetry={onRefresh} />}
-        {!error && shown === null && <p className="library-note">{t("library.loading")}</p>}
-        {shown !== null && (
+        {!error && tree === null && <p className="library-note">{t("library.loading")}</p>}
+        {tree !== null && (
           <LibraryTree
-            vms={shown}
+            root={tree}
             selected={selected}
             onSelect={onSelect}
             onOpen={onOpen}
+            forceOpen={narrowed}
             emptyLabel={narrowed ? t("library.noMatch") : undefined}
+            vmsByUuid={vmsByUuid}
           />
         )}
       </div>

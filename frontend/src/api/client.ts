@@ -8,6 +8,10 @@ export type DeletionPlan = components["schemas"]["DeletionPlan"];
 export type DeletionResult = components["schemas"]["DeletionResult"];
 export type KeepReason = components["schemas"]["KeptFile"]["reason"];
 export type PowerAction = "start" | "shutdown" | "reboot" | "reset" | "poweroff";
+export type LibraryInfo = components["schemas"]["LibraryInfo"];
+export type FolderDeletionPlan = components["schemas"]["FolderDeletionPlan"];
+export type ImportResult = components["schemas"]["ImportResult"];
+export type Drift = VmSummary["drift"][number];
 type ApiErrorBody = components["schemas"]["ApiError"];
 
 export class ApiError extends Error {
@@ -71,4 +75,23 @@ export const api = {
   deletionPlan: (uuid: string) => request<DeletionPlan>("GET", `${vmPath(uuid)}/deletion-plan`),
   deleteVm: (uuid: string, files: boolean) =>
     request<DeletionResult>("DELETE", `${vmPath(uuid)}?files=${files}`),
+  moveVm: (uuid: string, folder: string) =>
+    request<undefined>("POST", `${vmPath(uuid)}/move`, { folder }),
+  importVm: (uuid: string, folder: string) =>
+    request<ImportResult>("POST", `${vmPath(uuid)}/import`, { folder }),
+  library: () => request<LibraryInfo>("GET", "/api/library"),
+  createFolder: (path: string) =>
+    request<{ path: string }>("POST", "/api/library/folders", { path }),
+  renameFolder: (path: string, name: string) =>
+    request<{ path: string }>("POST", "/api/library/folders/rename", { path, name }),
+  folderDeletionPlan: (path: string) =>
+    request<FolderDeletionPlan>(
+      "GET",
+      `/api/library/folders/deletion-plan?path=${encodeURIComponent(path)}`,
+    ),
+  deleteFolder: (path: string) =>
+    request<{ failed: string[] }>(
+      "DELETE",
+      `/api/library/folders?path=${encodeURIComponent(path)}`,
+    ),
 };

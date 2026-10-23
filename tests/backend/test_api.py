@@ -40,7 +40,19 @@ def test_list_vms(client: TestClient, auth: dict[str, str]) -> None:
     (vm,) = response.json()
     assert vm["name"] == "test"
     assert vm["state"] == "running"
-    assert set(vm) == {"uuid", "name", "state", "vcpus", "memory_mib", "persistent"}
+    assert set(vm) == {
+        "uuid",
+        "name",
+        "state",
+        "vcpus",
+        "memory_mib",
+        "persistent",
+        "folder",
+        "managed",
+        "drift",
+    }
+    assert vm["folder"] == ""
+    assert vm["managed"] is False
 
 
 def test_info(client: TestClient, auth: dict[str, str]) -> None:

@@ -26,6 +26,11 @@ VIR_ERR_NO_SUPPORT: int
 
 VIR_DOMAIN_OPEN_GRAPHICS_SKIPAUTH: int
 VIR_DOMAIN_EVENT_ID_LIFECYCLE: int
+VIR_DOMAIN_AFFECT_CONFIG: int
+VIR_DOMAIN_AFFECT_LIVE: int
+VIR_DOMAIN_METADATA_ELEMENT: int
+VIR_DOMAIN_XML_INACTIVE: int
+VIR_ERR_NO_DOMAIN_METADATA: int
 VIR_DOMAIN_UNDEFINE_MANAGED_SAVE: int
 VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA: int
 VIR_DOMAIN_UNDEFINE_NVRAM: int
@@ -65,6 +70,10 @@ class virDomain:
     def reset(self, flags: int = 0) -> int: ...
     def rename(self, new_name: str, flags: int = 0) -> int: ...
     def XMLDesc(self, flags: int = 0) -> str: ...
+    def setMetadata(
+        self, type: int, metadata: str | None, key: str | None, uri: str | None, flags: int = 0
+    ) -> int: ...
+    def metadata(self, type: int, uri: str | None, flags: int = 0) -> str: ...
 
 class virConnect:
     def listAllDomains(self, flags: int = 0) -> list[virDomain]: ...

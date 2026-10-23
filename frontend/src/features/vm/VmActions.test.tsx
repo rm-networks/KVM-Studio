@@ -3,18 +3,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { VmSummary } from "../../api/client";
 import { NotificationProvider } from "../../components/Notifications";
+import { makeVm } from "../../test/fixtures";
 import { powerAllowed } from "./power";
 import { VmActionsProvider } from "./VmActions";
 import { useVmActions } from "./vmActionsContext";
 
-const off: VmSummary = {
-  uuid: "u1",
-  name: "SRV-WS22",
-  state: "shutoff",
-  vcpus: 2,
-  memory_mib: 4096,
-  persistent: true,
-};
+const off: VmSummary = makeVm({ uuid: "u1", name: "SRV-WS22" });
 const on: VmSummary = { ...off, state: "running" };
 
 type Call = { method: string; path: string; body?: string };

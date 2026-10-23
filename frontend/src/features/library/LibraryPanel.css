@@ -84,10 +84,6 @@
   cursor: default;
 }
 
-.tree-leaf {
-  padding-left: 22px;
-}
-
 .tree-row:hover {
   background: var(--hover);
 }
@@ -129,7 +125,7 @@
 }
 
 .tree-empty {
-  padding: 2px 0 2px 26px;
+  padding: 2px 0 2px 40px;
   color: var(--text-muted);
   font-style: italic;
 }
@@ -193,4 +189,16 @@
 
 .library-button.active {
   color: var(--accent);
+}
+
+.tree-row.drop-target {
+  outline: 1px dashed var(--accent);
+  outline-offset: -1px;
+  background: var(--hover);
+}
+
+.tree-drift {
+  flex: none;
+  margin-left: auto;
+  color: var(--state-paused);
 }

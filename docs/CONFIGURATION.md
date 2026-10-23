@@ -35,7 +35,7 @@ indique la clé fautive. `kvm-studio --check` valide le fichier sans rien lancer
 
 | Clé | Défaut | Description |
 | --- | --- | --- |
-| `vm_default_location` | aucun | Dossier où chaque VM reçoit son propre sous-dossier. À choisir au premier lancement. `~` est accepté. |
+| `vm_default_location` | aucun | Emplacement choisi pour les VMs. KVM Studio y range tout sous `KVM-Studio/VM/` : `<emplacement>/KVM-Studio/VM/<dossiers>/<nom de la VM>/<disques>`. À choisir au premier lancement. `~` est accepté. |
 | `default_iso_folder` | `"~/ISO"` | Dossier proposé par défaut pour chercher une ISO. |
 
 ## [[iso_libraries]]
@@ -75,3 +75,21 @@ Valeurs proposées par l'assistant de création de VM.
 | `XDG_CONFIG_HOME` | Emplacement du dossier de configuration. |
 | `KVMSTUDIO_FRONTEND_DIR` | Dossier de l'interface compilée, si elle n'est pas à l'emplacement habituel. |
 | `KVMSTUDIO_BACKEND` | Développement : adresse de l'API pour le serveur Vite (défaut `http://127.0.0.1:8765`). |
+
+## Dossiers de la bibliothèque
+
+Les dossiers de la bibliothèque sont de vrais dossiers sous
+`<emplacement>/KVM-Studio/VM/`. Créer, renommer ou supprimer un dossier dans
+KVM Studio fait la même chose sur le disque ; déplacer une VM éteinte déplace
+son dossier et met à jour les chemins dans libvirt.
+
+KVM Studio n'efface ni ne déplace jamais un fichier situé hors de
+`KVM-Studio/`, une image ISO, un disque utilisé par une autre VM ou le disque de
+base d'un clone lié. Les VMs créées ailleurs (virt-manager) sont seulement
+rangées dans la bibliothèque, sans toucher à leurs fichiers.
+
+Le dossier de chaque VM est aussi noté dans son XML libvirt
+(`<metadata>`, espace de noms `https://github.com/rm-networks/kvm-studio/ns/1.0`).
+Si des fichiers ont été déplacés à la main, la VM reste affichée à sa place
+notée, avec un triangle d'avertissement : KVM Studio signale l'écart sans le
+corriger.

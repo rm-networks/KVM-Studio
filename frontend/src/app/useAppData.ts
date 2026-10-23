@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { api, ApiError, type AppInfo, type VmSummary } from "../api/client";
+import { api, ApiError, type AppInfo, type LibraryInfo, type VmSummary } from "../api/client";
 import { type ServerEvent, subscribeEvents } from "../api/events";
 
 export interface AppData {
   info: AppInfo | null;
   vms: VmSummary[] | null;
+  library: LibraryInfo | null;
   error: ApiError | null;
   loading: boolean;
   /** libvirt dropped and the backend is trying to reconnect. */
@@ -31,6 +32,7 @@ function applyEvent(vms: VmSummary[] | null, event: ServerEvent): VmSummary[] | 
 export function useAppData(): AppData {
   const [info, setInfo] = useState<AppInfo | null>(null);
   const [vms, setVms] = useState<VmSummary[] | null>(null);
+  const [library, setLibrary] = useState<LibraryInfo | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const [loading, setLoading] = useState(true);
   const [libvirtLost, setLibvirtLost] = useState(false);
@@ -38,11 +40,12 @@ export function useAppData(): AppData {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([api.info(), api.listVms()])
-      .then(([nextInfo, nextVms]) => {
+    Promise.all([api.info(), api.listVms(), api.library()])
+      .then(([nextInfo, nextVms, nextLibrary]) => {
         if (cancelled) return;
         setInfo(nextInfo);
         setVms(nextVms);
+        setLibrary(nextLibrary);
         setError(null);
       })
       .catch((err: unknown) => {
@@ -65,6 +68,10 @@ export function useAppData(): AppData {
     () =>
       subscribeEvents({
         onEvent: (event) => {
+          if (event.type === "library.changed") {
+            refresh();
+            return;
+          }
           if (event.type === "connection") {
             setLibvirtLost(event.state === "lost");
             if (event.state === "restored") refresh();
@@ -77,5 +84,5 @@ export function useAppData(): AppData {
     [refresh],
   );
 
-  return { info, vms, error, loading, libvirtLost, refresh };
+  return { info, vms, library, error, loading, libvirtLost, refresh };
 }

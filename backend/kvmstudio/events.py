@@ -5,6 +5,7 @@ the new state of the domain and broadcast a small JSON message:
 
     {"type": "vm.changed", "vm": {...VmSummary...}}
     {"type": "vm.removed", "uuid": "..."}
+    {"type": "library.changed"}  (folders created, renamed, deleted, VMs moved)
     {"type": "connection", "state": "lost" | "restored"}
 """
 
@@ -13,7 +14,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
-from dataclasses import asdict
+from collections.abc import Callable
 from typing import Any
 
 import libvirt
@@ -29,11 +30,13 @@ RECONNECT_INTERVAL = 3.0
 QUEUE_SIZE = 256
 
 Message = dict[str, Any]
+Describe = Callable[[str], Message | None]
 
 
 class EventHub:
-    def __init__(self, conn: LibvirtConnection) -> None:
+    def __init__(self, conn: LibvirtConnection, describe: Describe) -> None:
         self._conn = conn
+        self._describe = describe
         self._loop: asyncio.AbstractEventLoop | None = None
         self._subscribers: set[asyncio.Queue[Message]] = set()
         self._connected = False
@@ -81,13 +84,16 @@ class EventHub:
             self.broadcast({"type": "vm.removed", "uuid": uuid})
             return
         try:
-            summary = await run_in_threadpool(self._conn.domain_summary, uuid)
+            vm = await run_in_threadpool(self._describe, uuid)
         except libvirt.libvirtError as exc:
             if exc.get_error_code() == libvirt.VIR_ERR_NO_DOMAIN:
-                # A transient domain that stopped no longer exists.
                 self.broadcast({"type": "vm.removed", "uuid": uuid})
             return
-        self.broadcast({"type": "vm.changed", "vm": asdict(summary)})
+        if vm is None:
+            # A transient domain that stopped no longer exists.
+            self.broadcast({"type": "vm.removed", "uuid": uuid})
+        else:
+            self.broadcast({"type": "vm.changed", "vm": vm})
 
     def _lost(self) -> None:
         if self._connected:

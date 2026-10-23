@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import __version__
-from .api import system, vms
+from .api import library, system, vms
 from .auth.token import require_token
 from .config import Config, load_config
 from .console.vnc import ConsoleOpener, open_vnc_socket, vnc_console
@@ -29,6 +29,7 @@ from .errors import (
 )
 from .events import EventHub, events_socket
 from .libvirt_conn import LibvirtConnection
+from .services import vm_view
 
 # Only loopback names are accepted, which defeats DNS rebinding.
 LOOPBACK_HOSTS = ["127.0.0.1", "localhost"]
@@ -61,7 +62,11 @@ def create_app(
     frontend_dir: Path | None = None,
     open_console: ConsoleOpener = open_vnc_socket,
 ) -> FastAPI:
-    hub = EventHub(conn)
+    def describe(uuid: str) -> dict[str, object] | None:
+        entry = vm_view.one_vm(conn, config, uuid)
+        return entry.as_dict() if entry else None
+
+    hub = EventHub(conn, describe)
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
@@ -89,6 +94,7 @@ def create_app(
     )
     private.add_api_route("/info", system.info, methods=["GET"], tags=["system"])
     private.include_router(vms.router)
+    private.include_router(library.router)
 
     app.include_router(public)
     app.include_router(private)

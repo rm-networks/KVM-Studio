@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { VmSummary } from "../../api/client";
+import { makeVm } from "../../test/fixtures";
 import { visibleVms } from "./filter";
 
 function vm(name: string, state: VmSummary["state"] = "shutoff"): VmSummary {
-  return { uuid: name, name, state, vcpus: 1, memory_mib: 512, persistent: true };
+  return makeVm({ name, state });
 }
 
 const vms = [vm("win-10"), vm("Debian", "running"), vm("win-2", "paused"), vm("Élysée", "running")];

@@ -3,11 +3,12 @@ from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
 
+import libvirt
 import pytest
 from fastapi.testclient import TestClient
 
 from kvmstudio.app import create_app
-from kvmstudio.config import Config, LibvirtSettings
+from kvmstudio.config import Config, IsoLibrary, LibvirtSettings, StorageSettings
 from kvmstudio.libvirt_conn import LibvirtConnection
 
 TEST_URI = "test:///default"
@@ -41,3 +42,40 @@ def client(config: Config, conn: LibvirtConnection, frontend_dir: Path) -> TestC
 @pytest.fixture
 def auth() -> dict[str, str]:
     return {"Authorization": f"Bearer {TOKEN}"}
+
+
+@pytest.fixture
+def library(tmp_path: Path) -> Path:
+    root = tmp_path / "data" / "KVM-Studio" / "VM"
+    root.mkdir(parents=True)
+    return root
+
+
+@pytest.fixture
+def lib_config(tmp_path: Path, library: Path) -> Config:
+    iso = tmp_path / "iso"
+    iso.mkdir()
+    return Config(
+        libvirt=LibvirtSettings(uri=TEST_URI),
+        storage=StorageSettings(vm_default_location=tmp_path / "data"),
+        iso_libraries=[IsoLibrary(name="ISO", path=iso)],
+    )
+
+
+@pytest.fixture
+def lib_client(lib_config: Config, conn: LibvirtConnection, frontend_dir: Path) -> TestClient:
+    app = create_app(lib_config, conn, TOKEN, mode="web", frontend_dir=frontend_dir)
+    return TestClient(app, base_url="http://127.0.0.1")
+
+
+@pytest.fixture
+def define(conn: LibvirtConnection) -> Iterator[list[libvirt.virDomain]]:
+    created: list[libvirt.virDomain] = []
+    yield created
+    for dom in created:
+        try:
+            if dom.isActive():
+                dom.destroy()
+            dom.undefine()
+        except libvirt.libvirtError:
+            pass

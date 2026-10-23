@@ -77,7 +77,38 @@
     "sortBy": "Sort by",
     "sortName": "Name",
     "sortState": "State",
-    "noMatch": "No results"
+    "noMatch": "No results",
+    "newFolder": "New Folder…",
+    "newFolderTitle": "New Folder",
+    "renameFolderTitle": "Rename Folder",
+    "deleteFolder": "Delete Folder…",
+    "deleteFolderTitle": "Delete Folder",
+    "deleteFolderIntro": "The folder \"{{folder}}\", its virtual machines and their files will be deleted. Here is the exact list.",
+    "create": "Create",
+    "folderName": "Folder name",
+    "inFolder": "In: {{folder}}",
+    "moveTo": "Move to…",
+    "importFiles": "Move Files into KVM Studio…",
+    "moveTitle": "Move Virtual Machine",
+    "importTitle": "Move Files into KVM Studio",
+    "move": "Move",
+    "copying": "Copying…",
+    "destination": "Destination folder",
+    "moveIntroFiles": "The folder of \"{{name}}\" and its files will be moved on disk. The virtual machine must be powered off.",
+    "moveIntroVirtual": "The files of \"{{name}}\" are not in the KVM Studio folder: only its place in the library changes.",
+    "importIntro": "The disks of \"{{name}}\" will be copied into the chosen KVM Studio folder, then the virtual machine will use the copies. The original files are not erased: you can remove them yourself.",
+    "imported": "{{name}} now uses its files inside KVM Studio",
+    "originalsKept": "Original files kept:\n{{files}}",
+    "moveFailed": "Could not move {{name}}",
+    "deletePartial": "Folder \"{{folder}}\" deleted, but some files remain",
+    "powerOffFirst": "Power off first: {{names}}",
+    "vmsRemoved_one": "{{count}} virtual machine will be deleted",
+    "vmsRemoved_other": "{{count}} virtual machines will be deleted",
+    "noVmInFolder": "No virtual machine in this folder.",
+    "drift": {
+      "missing_files": "Some files of this virtual machine cannot be found (moved by hand?).",
+      "folder_mismatch": "The recorded folder does not match where the files really are."
+    }
   },
   "state": {
     "running": "Running",
@@ -135,6 +166,19 @@
     },
     "path": {
       "not_allowed": "This path is outside the allowed folders."
+    },
+    "library": {
+      "no_location": "No virtual machine location is configured.",
+      "exists": "This name already exists.",
+      "invalid_name": "Invalid name.",
+      "vms_running": "Some virtual machines in this folder are running.",
+      "backing_in_use": "Linked clones depend on these files: cannot move.",
+      "drift": "Files were moved by hand; fix the gap before moving.",
+      "no_folder": "The destination folder does not exist.",
+      "move_failed": "The move failed.",
+      "copy_failed": "Copying the disks failed.",
+      "unreadable": "A disk cannot be read with your permissions.",
+      "already_inside": "The disks are already in the KVM Studio folder."
     }
   },
   "about": {

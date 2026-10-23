@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { captureToken } from "../api/token";
 import { FakeWebSocket } from "../test/fakeWebSocket";
+import { makeVm } from "../test/fixtures";
 import { App } from "./App";
 
 const info = {
@@ -19,9 +20,16 @@ const info = {
 };
 
 const vms = [
-  { uuid: "1", name: "FW-VYOS", state: "running", vcpus: 2, memory_mib: 1024, persistent: true },
-  { uuid: "2", name: "CLT-DEB13", state: "shutoff", vcpus: 2, memory_mib: 2048, persistent: true },
+  makeVm({ uuid: "1", name: "FW-VYOS", state: "running" }),
+  makeVm({ uuid: "2", name: "CLT-DEB13" }),
 ];
+const library = { root: null, folders: [] };
+
+function apiResponse(path: string): unknown {
+  if (path === "/api/info") return info;
+  if (path === "/api/library") return library;
+  return vms;
+}
 
 function mockFetch(handler: (path: string, init?: RequestInit) => [number, unknown]) {
   const fetchMock = vi.fn((path: string, init?: RequestInit) => {
@@ -48,7 +56,7 @@ describe("App", () => {
     captureToken();
     expect(window.location.hash).toBe("");
 
-    const fetchMock = mockFetch((path) => [200, path === "/api/info" ? info : vms]);
+    const fetchMock = mockFetch((path) => [200, apiResponse(path)]);
     render(<App />);
 
     expect(await screen.findByText("FW-VYOS")).toBeTruthy();
@@ -81,7 +89,7 @@ describe("App", () => {
   });
 
   it("follows live state changes from the event socket", async () => {
-    mockFetch((path) => [200, path === "/api/info" ? info : vms]);
+    mockFetch((path) => [200, apiResponse(path)]);
     render(<App />);
     await screen.findByText("2 machines virtuelles, 1 allumée");
     const socket = eventSocket();

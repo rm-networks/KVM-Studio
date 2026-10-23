@@ -51,7 +51,7 @@ def _snapshot(conn: LibvirtConnection, uuid: str) -> tuple[str, int, list[str]]:
     return conn.run(op)
 
 
-def _used_elsewhere(other_xmls: list[str], config: Config, own: set[str]) -> set[str]:
+def used_elsewhere(other_xmls: list[str], config: Config, own: set[str]) -> set[str]:
     """Every file another domain needs: its disks, their backing chains, its NVRAM."""
     used: set[str] = set()
     for xml in other_xmls:
@@ -75,14 +75,14 @@ def _used_elsewhere(other_xmls: list[str], config: Config, own: set[str]) -> set
 
 def plan_deletion(conn: LibvirtConnection, uuid: str, config: Config) -> DeletionPlan:
     xml, _state, others = _snapshot(conn, uuid)
-    return _plan(xml, others, config)
+    return plan_files(xml, others, config)
 
 
-def _plan(xml: str, others: list[str], config: Config) -> DeletionPlan:
+def plan_files(xml: str, others: list[str], config: Config) -> DeletionPlan:
     plan = DeletionPlan()
     disks = domain_xml.disks(xml)
     own = {str(resolve(d.path)) for d in disks if d.path}
-    used = _used_elsewhere(others, config, own)
+    used = used_elsewhere(others, config, own)
     has_library = library_root(config) is not None
     seen: set[str] = set()
 
@@ -131,7 +131,7 @@ def delete_vm(
     xml, state, others = _snapshot(conn, uuid)
     if state != libvirt.VIR_DOMAIN_SHUTOFF:
         raise ApiException(409, "vm.not_shut_off", "Power the virtual machine off first")
-    plan = _plan(xml, others, config) if delete_files else DeletionPlan()
+    plan = plan_files(xml, others, config) if delete_files else DeletionPlan()
 
     flags = (
         libvirt.VIR_DOMAIN_UNDEFINE_MANAGED_SAVE

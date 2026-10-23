@@ -1,0 +1,36 @@
+.folder-choices {
+  max-height: 220px;
+  margin: 8px 0 0;
+  padding: 2px 0;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  list-style: none;
+}
+
+.folder-choices li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 21px;
+  padding-right: 8px;
+  cursor: default;
+}
+
+.folder-choices li:hover {
+  background: var(--hover);
+}
+
+.folder-choices li.selected {
+  background: var(--selection);
+  color: var(--selection-text);
+}
+
+.folder-choices svg {
+  color: var(--text-muted);
+}
+
+.dialog-muted {
+  color: var(--text-muted);
+}

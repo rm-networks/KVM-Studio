@@ -4,46 +4,62 @@ import { describe, expect, it } from "vitest";
 
 import type { VmSummary } from "../../api/client";
 import { NotificationProvider } from "../../components/Notifications";
+import { makeVm } from "../../test/fixtures";
 import { VmActionsProvider } from "../vm/VmActions";
-import { LibraryTree, ROOT_ID } from "./LibraryTree";
+import { LibraryActionsProvider } from "./LibraryActions";
+import { LibraryTree } from "./LibraryTree";
+import { buildTree, ROOT_ID } from "./tree";
 
-function vm(name: string, state: VmSummary["state"] = "shutoff"): VmSummary {
-  return { uuid: `uuid-${name}`, name, state, vcpus: 2, memory_mib: 2048, persistent: true };
+interface HarnessProps {
+  vms: VmSummary[];
+  folders?: string[];
+  onOpen?: (uuid: string) => void;
 }
 
-function Harness({
-  vms,
-  onOpen = () => undefined,
-}: {
-  vms: VmSummary[];
-  onOpen?: (uuid: string) => void;
-}) {
+function Harness({ vms, folders = [], onOpen = () => undefined }: HarnessProps) {
   const [selected, setSelected] = useState<string | null>(null);
   return (
     <NotificationProvider>
       <VmActionsProvider>
-        <LibraryTree vms={vms} selected={selected} onSelect={setSelected} onOpen={onOpen} />
+        <LibraryActionsProvider library={{ root: "/data/KVM-Studio/VM", folders }}>
+          <LibraryTree
+            root={buildTree(folders, vms, "", "all", "name")}
+            selected={selected}
+            onSelect={setSelected}
+            onOpen={onOpen}
+            forceOpen={false}
+            vmsByUuid={new Map(vms.map((v) => [v.uuid, v]))}
+          />
+        </LibraryActionsProvider>
       </VmActionsProvider>
     </NotificationProvider>
   );
 }
 
-const labels = () =>
-  screen
-    .getAllByRole("treeitem")
-    .slice(1)
-    .map((el) => el.textContent);
+const labels = () => screen.getAllByRole("treeitem").map((el) => el.textContent);
 
 describe("LibraryTree", () => {
-  it("lists VMs under My Computer in the given order", () => {
-    render(<Harness vms={[vm("win-10"), vm("Debian"), vm("alpine")]} />);
-    expect(screen.getByText("Mon ordinateur")).toBeTruthy();
-    expect(labels()).toEqual(["win-10", "Debian", "alpine"]);
+  it("shows folders before VMs under My Computer", () => {
+    render(
+      <Harness
+        vms={[makeVm({ name: "win-10" }), makeVm({ name: "srv", folder: "Labs" })]}
+        folders={["Labs"]}
+      />,
+    );
+    expect(labels()).toEqual(["Mon ordinateur", "Labs", "win-10"]);
   });
 
-  it("marks running VMs", () => {
-    render(<Harness vms={[vm("fw", "running"), vm("client")]} />);
+  it("marks running VMs and files moved by hand", () => {
+    render(
+      <Harness
+        vms={[
+          makeVm({ name: "fw", state: "running" }),
+          makeVm({ name: "lost", drift: ["missing_files"] }),
+        ]}
+      />,
+    );
     expect(screen.getAllByRole("img", { name: "Allumée" })).toHaveLength(1);
+    expect(screen.getByRole("img", { name: /introuvables/ })).toBeTruthy();
   });
 
   it("shows an empty state", () => {
@@ -51,31 +67,45 @@ describe("LibraryTree", () => {
     expect(screen.getByText("Aucune machine virtuelle")).toBeTruthy();
   });
 
-  it("is usable with the keyboard", () => {
-    render(<Harness vms={[vm("a"), vm("b")]} />);
+  it("is usable with the keyboard, folders included", () => {
+    render(
+      <Harness
+        vms={[makeVm({ name: "a" }), makeVm({ name: "b", folder: "Labs" })]}
+        folders={["Labs"]}
+      />,
+    );
     const tree = screen.getByRole("tree");
-    expect(tree.getAttribute("aria-activedescendant")).toBe(`tree-${ROOT_ID}`);
+    const active = () => tree.getAttribute("aria-activedescendant");
+    expect(active()).toBe(`tree-${ROOT_ID}`);
 
     fireEvent.keyDown(tree, { key: "ArrowDown" });
-    expect(tree.getAttribute("aria-activedescendant")).toBe("tree-uuid-a");
-    fireEvent.keyDown(tree, { key: "End" });
-    expect(tree.getAttribute("aria-activedescendant")).toBe("tree-uuid-b");
+    expect(active()).toBe("tree-f:Labs");
+    expect(screen.queryByText("b")).toBeNull();
+    fireEvent.keyDown(tree, { key: "ArrowRight" });
+    expect(screen.getByText("b")).toBeTruthy();
+    fireEvent.keyDown(tree, { key: "ArrowRight" });
+    expect(active()).toBe("tree-v:b");
     fireEvent.keyDown(tree, { key: "ArrowLeft" });
-    expect(tree.getAttribute("aria-activedescendant")).toBe(`tree-${ROOT_ID}`);
-
+    expect(active()).toBe("tree-f:Labs");
+    fireEvent.keyDown(tree, { key: "End" });
+    expect(active()).toBe("tree-v:a");
+    fireEvent.keyDown(tree, { key: "Home" });
     fireEvent.keyDown(tree, { key: "ArrowLeft" });
     expect(screen.queryByText("a")).toBeNull();
-    fireEvent.keyDown(tree, { key: "ArrowRight" });
-    expect(screen.getByText("a")).toBeTruthy();
   });
 
   it("opens a VM with Enter or a double click", () => {
     const opened: string[] = [];
-    render(<Harness vms={[vm("a"), vm("b")]} onOpen={(uuid) => opened.push(uuid)} />);
+    render(
+      <Harness
+        vms={[makeVm({ name: "a" }), makeVm({ name: "b" })]}
+        onOpen={(uuid) => opened.push(uuid)}
+      />,
+    );
     const tree = screen.getByRole("tree");
     fireEvent.keyDown(tree, { key: "ArrowDown" });
     fireEvent.keyDown(tree, { key: "Enter" });
     fireEvent.doubleClick(screen.getByText("b"));
-    expect(opened).toEqual(["uuid-a", "uuid-b"]);
+    expect(opened).toEqual(["a", "b"]);
   });
 });

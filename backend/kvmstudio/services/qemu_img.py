@@ -6,6 +6,7 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Any
 
 QCOW2_MAGIC = b"QFI\xfb"
 TIMEOUT = 30
@@ -51,3 +52,41 @@ def backing_files(path: Path) -> list[str] | None:
             base = Path(image.get("filename", str(path))).parent
             chain.append(str((base / backing).resolve()))
     return chain
+
+
+def _run(args: list[str], timeout: float = TIMEOUT) -> str:
+    try:
+        return subprocess.run(  # noqa: S603
+            [_qemu_img(), *args], capture_output=True, text=True, timeout=timeout, check=True
+        ).stdout
+    except subprocess.CalledProcessError as exc:
+        raise QemuImgError(exc.stderr.strip() or str(exc)) from exc
+
+
+def image_info(path: Path) -> dict[str, Any] | None:
+    try:
+        info = json.loads(_run(["info", "--output=json", "-U", str(path)]))
+    except (QemuImgError, subprocess.SubprocessError, OSError, ValueError):
+        return None
+    return info if isinstance(info, dict) else None
+
+
+def rebase_unsafe(overlay: Path, backing: Path, backing_format: str | None) -> None:
+    """Point overlay at backing without touching data (the backing file only moved)."""
+    args = ["rebase", "-u", "-b", str(backing)]
+    if backing_format:
+        args += ["-F", backing_format]
+    _run([*args, str(overlay)])
+
+
+def convert(src: Path, dest: Path, fmt: str) -> None:
+    """Copy a disk image, keeping it sparse (no time limit: disks can be large)."""
+    try:
+        subprocess.run(  # noqa: S603
+            [_qemu_img(), "convert", "-p", "-O", fmt, str(src), str(dest)],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        raise QemuImgError(exc.stderr.strip() or str(exc)) from exc

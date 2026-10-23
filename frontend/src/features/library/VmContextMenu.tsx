@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import type { VmSummary } from "../../api/client";
 import { POWER_ACTIONS, powerAllowed } from "../vm/power";
 import { useVmActions } from "../vm/vmActionsContext";
+import { useLibraryActions } from "./libraryActionsContext";
 
 interface Props {
   vm: VmSummary;
@@ -32,6 +33,7 @@ function Item({
 export function VmContextMenu({ vm, onOpen, children }: Props) {
   const { t } = useTranslation();
   const actions = useVmActions();
+  const library = useLibraryActions();
   return (
     <ContextMenu.Root>
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
@@ -49,6 +51,14 @@ export function VmContextMenu({ vm, onOpen, children }: Props) {
           ))}
           <ContextMenu.Separator className="menu-separator" />
           <Item label={t("menu.rename")} onSelect={() => actions.rename(vm)} />
+          <Item label={t("library.moveTo")} onSelect={() => library.moveVm(vm)} />
+          {!vm.managed && (
+            <Item
+              label={t("library.importFiles")}
+              disabled={!library.available}
+              onSelect={() => library.importVm(vm)}
+            />
+          )}
           <Item label={t("menu.removeFromLibrary")} onSelect={() => actions.remove(vm, false)} />
           <Item label={t("menu.deleteFromDisk")} onSelect={() => actions.remove(vm, true)} />
         </ContextMenu.Content>
