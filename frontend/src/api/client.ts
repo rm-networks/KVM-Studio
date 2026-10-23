@@ -4,6 +4,10 @@ import { getToken } from "./token";
 export type AppInfo = components["schemas"]["AppInfo"];
 export type VmSummary = components["schemas"]["VmSummary"];
 export type VmState = VmSummary["state"];
+export type DeletionPlan = components["schemas"]["DeletionPlan"];
+export type DeletionResult = components["schemas"]["DeletionResult"];
+export type KeepReason = components["schemas"]["KeptFile"]["reason"];
+export type PowerAction = "start" | "shutdown" | "reboot" | "reset" | "poweroff";
 type ApiErrorBody = components["schemas"]["ApiError"];
 
 export class ApiError extends Error {
@@ -28,29 +32,43 @@ function isErrorBody(value: unknown): value is ApiErrorBody {
   );
 }
 
-async function get<T>(path: string): Promise<T> {
-  const headers: HeadersInit = {};
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = {};
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
+  if (body !== undefined) headers["Content-Type"] = "application/json";
 
   let response: Response;
   try {
-    response = await fetch(path, { headers });
+    response = await fetch(path, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
   } catch (err) {
     throw new ApiError(0, "network.unreachable", String(err));
   }
 
-  const body: unknown = await response.json().catch(() => null);
+  if (response.status === 204) return undefined as T;
+  const data: unknown = await response.json().catch(() => null);
   if (!response.ok) {
-    if (isErrorBody(body)) {
-      throw new ApiError(response.status, body.error.code, body.error.detail);
+    if (isErrorBody(data)) {
+      throw new ApiError(response.status, data.error.code, data.error.detail);
     }
     throw new ApiError(response.status, "http.error", `HTTP ${response.status}`);
   }
-  return body as T;
+  return data as T;
 }
 
+const vmPath = (uuid: string) => `/api/vms/${encodeURIComponent(uuid)}`;
+
 export const api = {
-  info: () => get<AppInfo>("/api/info"),
-  listVms: () => get<VmSummary[]>("/api/vms"),
+  info: () => request<AppInfo>("GET", "/api/info"),
+  listVms: () => request<VmSummary[]>("GET", "/api/vms"),
+  power: (uuid: string, action: PowerAction) =>
+    request<undefined>("POST", `${vmPath(uuid)}/power/${action}`),
+  rename: (uuid: string, name: string) => request<undefined>("PATCH", vmPath(uuid), { name }),
+  deletionPlan: (uuid: string) => request<DeletionPlan>("GET", `${vmPath(uuid)}/deletion-plan`),
+  deleteVm: (uuid: string, files: boolean) =>
+    request<DeletionResult>("DELETE", `${vmPath(uuid)}?files=${files}`),
 };

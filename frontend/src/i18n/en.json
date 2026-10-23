@@ -44,7 +44,11 @@
     "docs": "Documentation",
     "shortcuts": "Keyboard Shortcuts",
     "about": "About KVM Studio",
-    "bug": "Report a Bug"
+    "bug": "Report a Bug",
+    "rename": "Rename…",
+    "removeFromLibrary": "Remove from Library…",
+    "deleteFromDisk": "Delete from Disk…",
+    "openTab": "Open in a Tab"
   },
   "toolbar": {
     "start": "Start",
@@ -122,7 +126,16 @@
     },
     "details": "Original message",
     "retry": "Retry",
-    "sessionTitle": "Session expired"
+    "sessionTitle": "Session expired",
+    "vm": {
+      "not_shut_off": "Power the virtual machine off first."
+    },
+    "request": {
+      "invalid": "Invalid request."
+    },
+    "path": {
+      "not_allowed": "This path is outside the allowed folders."
+    }
   },
   "about": {
     "title": "About KVM Studio",
@@ -143,5 +156,63 @@
   },
   "tabs": {
     "close": "Close tab"
+  },
+  "power": {
+    "start": "Start",
+    "shutdown": "Shut Down Guest",
+    "reboot": "Restart Guest",
+    "poweroff": "Power Off",
+    "reset": "Reset",
+    "confirm": {
+      "poweroff": "Power off \"{{name}}\"? Unsaved data in the virtual machine will be lost.",
+      "reset": "Reset \"{{name}}\"? This is like pressing the reset button: unsaved data will be lost."
+    }
+  },
+  "actions": {
+    "failed": "\"{{action}}\" failed for {{name}}"
+  },
+  "rename": {
+    "title": "Rename Virtual Machine",
+    "label": "New name",
+    "confirm": "Rename",
+    "mustBeOff": "The virtual machine must be powered off to be renamed.",
+    "invalid": "Invalid name: at most 64 characters, no / or \\, no leading dot or space.",
+    "failed": "Could not rename {{name}}"
+  },
+  "delete": {
+    "titleRemove": "Remove from Library",
+    "titleFiles": "Delete from Disk",
+    "introRemove": "\"{{name}}\" will be removed from the library and from libvirt. Its files stay on disk.",
+    "introFiles": "\"{{name}}\" will be removed from the library and from libvirt, and the files below will be permanently erased.",
+    "confirmRemove": "Remove",
+    "confirmFiles": "Delete permanently",
+    "mustBeOff": "Power the virtual machine off first.",
+    "willDelete_one": "{{count}} file will be erased",
+    "willDelete_other": "{{count}} files will be erased",
+    "nothingToDelete": "No file will be erased.",
+    "willKeep": "Files kept",
+    "partial": "{{name}} was removed, but some files could not be erased",
+    "failed": "Could not delete {{name}}",
+    "reason": {
+      "no_library": "no KVM Studio location configured",
+      "outside_library": "outside the KVM Studio folder",
+      "iso": "ISO image",
+      "shared": "used by another virtual machine",
+      "backing": "base disk of a linked clone",
+      "not_a_file": "not a file"
+    }
+  },
+  "summary": {
+    "start": "Power on this virtual machine",
+    "devices": "Devices",
+    "memory": "Memory",
+    "processors": "Processors"
+  },
+  "units": {
+    "gib": "{{value}} GiB",
+    "mib": "{{value}} MiB"
+  },
+  "common": {
+    "cancel": "Cancel"
   }
 }

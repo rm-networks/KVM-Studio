@@ -3,6 +3,8 @@ import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
 import type { VmSummary } from "../../api/client";
+import { NotificationProvider } from "../../components/Notifications";
+import { VmActionsProvider } from "../vm/VmActions";
 import { LibraryTree, ROOT_ID } from "./LibraryTree";
 
 function vm(name: string, state: VmSummary["state"] = "shutoff"): VmSummary {
@@ -17,7 +19,13 @@ function Harness({
   onOpen?: (uuid: string) => void;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
-  return <LibraryTree vms={vms} selected={selected} onSelect={setSelected} onOpen={onOpen} />;
+  return (
+    <NotificationProvider>
+      <VmActionsProvider>
+        <LibraryTree vms={vms} selected={selected} onSelect={setSelected} onOpen={onOpen} />
+      </VmActionsProvider>
+    </NotificationProvider>
+  );
 }
 
 const labels = () =>

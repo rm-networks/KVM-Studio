@@ -3,6 +3,7 @@ import { type KeyboardEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { VmSummary } from "../../api/client";
+import { VmContextMenu } from "./VmContextMenu";
 import { StateDot } from "./StateDot";
 
 export const ROOT_ID = "my-computer";
@@ -107,20 +108,23 @@ export function LibraryTree({ vms, selected, onSelect, onOpen, emptyLabel }: Pro
                 role="treeitem"
                 aria-selected={current === vm.uuid}
               >
-                <div
-                  className={
-                    current === vm.uuid ? "tree-row tree-leaf selected" : "tree-row tree-leaf"
-                  }
-                  title={`${vm.name} (${t(`state.${vm.state}`)})`}
-                  onClick={() => onSelect(vm.uuid)}
-                  onDoubleClick={() => onOpen(vm.uuid)}
-                >
-                  <span className="tree-icon tree-vm-icon">
-                    <Monitor size={14} strokeWidth={1.75} />
-                    <StateDot state={vm.state} />
-                  </span>
-                  <span className="tree-label">{vm.name}</span>
-                </div>
+                <VmContextMenu vm={vm} onOpen={onOpen}>
+                  <div
+                    className={
+                      current === vm.uuid ? "tree-row tree-leaf selected" : "tree-row tree-leaf"
+                    }
+                    title={`${vm.name} (${t(`state.${vm.state}`)})`}
+                    onClick={() => onSelect(vm.uuid)}
+                    onContextMenu={() => onSelect(vm.uuid)}
+                    onDoubleClick={() => onOpen(vm.uuid)}
+                  >
+                    <span className="tree-icon tree-vm-icon">
+                      <Monitor size={14} strokeWidth={1.75} />
+                      <StateDot state={vm.state} />
+                    </span>
+                    <span className="tree-label">{vm.name}</span>
+                  </div>
+                </VmContextMenu>
               </li>
             ))}
           </ul>

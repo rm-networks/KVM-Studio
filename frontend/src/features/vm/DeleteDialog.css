@@ -1,0 +1,39 @@
+.delete-heading {
+  margin: 12px 0 4px;
+  font-size: var(--font-size);
+  font-weight: 600;
+}
+
+.delete-files {
+  max-height: 160px;
+  margin: 0;
+  padding: 4px 8px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-small);
+  list-style: none;
+}
+
+.delete-files li {
+  padding: 1px 0;
+  word-break: break-all;
+}
+
+.delete-files-danger {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.delete-reason {
+  margin-left: 8px;
+  font-family: var(--font-ui);
+  color: var(--text-muted);
+}
+
+.delete-muted {
+  color: var(--text-muted);
+}

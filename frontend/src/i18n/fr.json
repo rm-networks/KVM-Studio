@@ -44,7 +44,11 @@
     "docs": "Documentation",
     "shortcuts": "Raccourcis clavier",
     "about": "À propos de KVM Studio",
-    "bug": "Signaler un bug"
+    "bug": "Signaler un bug",
+    "rename": "Renommer…",
+    "removeFromLibrary": "Retirer de la bibliothèque…",
+    "deleteFromDisk": "Supprimer du disque…",
+    "openTab": "Ouvrir dans un onglet"
   },
   "toolbar": {
     "start": "Démarrer",
@@ -122,7 +126,16 @@
     },
     "details": "Message d'origine",
     "retry": "Réessayer",
-    "sessionTitle": "Session expirée"
+    "sessionTitle": "Session expirée",
+    "vm": {
+      "not_shut_off": "Éteignez d'abord la machine virtuelle."
+    },
+    "request": {
+      "invalid": "Requête invalide."
+    },
+    "path": {
+      "not_allowed": "Ce chemin est hors des dossiers autorisés."
+    }
   },
   "about": {
     "title": "À propos de KVM Studio",
@@ -145,5 +158,63 @@
   },
   "tabs": {
     "close": "Fermer l'onglet"
+  },
+  "power": {
+    "start": "Démarrer",
+    "shutdown": "Arrêter l'invité",
+    "reboot": "Redémarrer l'invité",
+    "poweroff": "Forcer l'arrêt",
+    "reset": "Réinitialiser",
+    "confirm": {
+      "poweroff": "Couper l'alimentation de « {{name}} » ? Les données non enregistrées dans la machine virtuelle seront perdues.",
+      "reset": "Réinitialiser « {{name}} » ? C'est l'équivalent d'un appui sur le bouton reset : les données non enregistrées seront perdues."
+    }
+  },
+  "actions": {
+    "failed": "« {{action}} » a échoué pour {{name}}"
+  },
+  "rename": {
+    "title": "Renommer la machine virtuelle",
+    "label": "Nouveau nom",
+    "confirm": "Renommer",
+    "mustBeOff": "La machine virtuelle doit être éteinte pour être renommée.",
+    "invalid": "Nom invalide : 64 caractères au plus, sans / ni \\, sans point ni espace au début.",
+    "failed": "Impossible de renommer {{name}}"
+  },
+  "delete": {
+    "titleRemove": "Retirer de la bibliothèque",
+    "titleFiles": "Supprimer du disque",
+    "introRemove": "« {{name}} » sera retirée de la bibliothèque et de libvirt. Ses fichiers restent sur le disque.",
+    "introFiles": "« {{name}} » sera retirée de la bibliothèque et de libvirt, et les fichiers ci-dessous seront définitivement effacés.",
+    "confirmRemove": "Retirer",
+    "confirmFiles": "Supprimer définitivement",
+    "mustBeOff": "Éteignez d'abord la machine virtuelle.",
+    "willDelete_one": "{{count}} fichier sera effacé",
+    "willDelete_other": "{{count}} fichiers seront effacés",
+    "nothingToDelete": "Aucun fichier ne sera effacé.",
+    "willKeep": "Fichiers conservés",
+    "partial": "{{name}} a été retirée, mais certains fichiers n'ont pas pu être effacés",
+    "failed": "Impossible de supprimer {{name}}",
+    "reason": {
+      "no_library": "aucun emplacement KVM Studio configuré",
+      "outside_library": "hors du dossier KVM Studio",
+      "iso": "image ISO",
+      "shared": "utilisé par une autre machine virtuelle",
+      "backing": "disque de base d'un clone lié",
+      "not_a_file": "pas un fichier"
+    }
+  },
+  "summary": {
+    "start": "Démarrer cette machine virtuelle",
+    "devices": "Périphériques",
+    "memory": "Mémoire",
+    "processors": "Processeurs"
+  },
+  "units": {
+    "gib": "{{value}} Gio",
+    "mib": "{{value}} Mio"
+  },
+  "common": {
+    "cancel": "Annuler"
   }
 }

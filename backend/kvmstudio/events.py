@@ -40,13 +40,15 @@ class EventHub:
         self._was_connected = False
         self._watchdog: asyncio.Task[None] | None = None
         self._pending: set[asyncio.Task[None]] = set()
+        self._registrations: list[tuple[libvirt.virConnect, int]] = []
         conn.add_connect_hook(self._register)
 
     # Runs in whichever thread opens the connection.
     def _register(self, conn: libvirt.virConnect) -> None:
-        conn.domainEventRegisterAny(
+        callback_id = conn.domainEventRegisterAny(
             None, libvirt.VIR_DOMAIN_EVENT_ID_LIFECYCLE, self._on_lifecycle, None
         )
+        self._registrations.append((conn, callback_id))
         with contextlib.suppress(libvirt.libvirtError):
             conn.registerCloseCallback(self._on_close, None)
 
@@ -57,12 +59,16 @@ class EventHub:
         self._post(dom.UUIDString(), event)
 
     def _on_close(self, _conn: libvirt.virConnect, _reason: int, _opaque: Any) -> None:
-        if self._loop is not None:
-            self._loop.call_soon_threadsafe(self._lost)
+        self._call_soon(self._lost)
 
     def _post(self, uuid: str, event: int) -> None:
-        if self._loop is not None:
-            self._loop.call_soon_threadsafe(self._spawn, uuid, event)
+        self._call_soon(self._spawn, uuid, event)
+
+    def _call_soon(self, fn: Any, *args: Any) -> None:
+        loop = self._loop
+        if loop is not None:
+            with contextlib.suppress(RuntimeError):  # loop already closed
+                loop.call_soon_threadsafe(fn, *args)
 
     # Asyncio side.
     def _spawn(self, uuid: str, event: int) -> None:
@@ -114,6 +120,11 @@ class EventHub:
                 await self._watchdog
         for task in list(self._pending):
             task.cancel()
+        self._loop = None
+        for conn, callback_id in self._registrations:
+            with contextlib.suppress(libvirt.libvirtError):
+                conn.domainEventDeregisterAny(callback_id)
+        self._registrations.clear()
 
     def subscribe(self) -> asyncio.Queue[Message]:
         queue: asyncio.Queue[Message] = asyncio.Queue(QUEUE_SIZE)

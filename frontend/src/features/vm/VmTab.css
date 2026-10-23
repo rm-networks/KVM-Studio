@@ -1,9 +1,65 @@
 .vm-tab-note {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   height: 100%;
+  color: var(--text-muted);
+}
+
+.vm-summary {
+  max-width: 560px;
+  padding: 20px 28px;
+}
+
+.vm-summary-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.vm-summary-state {
+  margin: 2px 0 14px;
+  color: var(--text-muted);
+}
+
+.vm-summary-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.vm-summary-action:hover {
+  text-decoration: underline;
+}
+
+.vm-summary-heading {
+  margin: 18px 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--font-size);
+  font-weight: 600;
+}
+
+.vm-summary-devices {
+  border-collapse: collapse;
+}
+
+.vm-summary-devices td {
+  padding: 2px 24px 2px 0;
+}
+
+.vm-summary-devices td:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.vm-summary-devices svg {
   color: var(--text-muted);
 }

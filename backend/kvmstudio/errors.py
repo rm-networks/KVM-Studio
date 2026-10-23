@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import libvirt
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -62,3 +64,11 @@ async def api_exception_handler(_request: Request, exc: Exception) -> JSONRespon
     if not isinstance(exc, ApiException):
         raise exc
     return error_response(exc.status, exc.code, exc.detail)
+
+
+async def validation_error_handler(_request: Request, exc: Exception) -> JSONResponse:
+    errors: list[dict[str, Any]] = getattr(exc, "errors", list)()
+    detail = "; ".join(
+        f"{'.'.join(str(p) for p in e.get('loc', ())[1:])}: {e.get('msg', '')}" for e in errors
+    )
+    return error_response(422, "request.invalid", detail or "invalid request")

@@ -1,0 +1,58 @@
+import * as ContextMenu from "@radix-ui/react-context-menu";
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+
+import type { VmSummary } from "../../api/client";
+import { POWER_ACTIONS, powerAllowed } from "../vm/power";
+import { useVmActions } from "../vm/vmActionsContext";
+
+interface Props {
+  vm: VmSummary;
+  onOpen: (uuid: string) => void;
+  children: ReactNode;
+}
+
+function Item({
+  label,
+  onSelect,
+  disabled,
+}: {
+  label: string;
+  onSelect: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <ContextMenu.Item className="menu-item" disabled={disabled} onSelect={onSelect}>
+      <span className="menu-indicator" />
+      <span className="menu-label">{label}</span>
+    </ContextMenu.Item>
+  );
+}
+
+export function VmContextMenu({ vm, onOpen, children }: Props) {
+  const { t } = useTranslation();
+  const actions = useVmActions();
+  return (
+    <ContextMenu.Root>
+      <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
+      <ContextMenu.Portal>
+        <ContextMenu.Content className="menu">
+          <Item label={t("menu.openTab")} onSelect={() => onOpen(vm.uuid)} />
+          <ContextMenu.Separator className="menu-separator" />
+          {POWER_ACTIONS.map((action) => (
+            <Item
+              key={action}
+              label={t(`power.${action}`)}
+              disabled={!powerAllowed(vm.state, action)}
+              onSelect={() => actions.power(vm, action)}
+            />
+          ))}
+          <ContextMenu.Separator className="menu-separator" />
+          <Item label={t("menu.rename")} onSelect={() => actions.rename(vm)} />
+          <Item label={t("menu.removeFromLibrary")} onSelect={() => actions.remove(vm, false)} />
+          <Item label={t("menu.deleteFromDisk")} onSelect={() => actions.remove(vm, true)} />
+        </ContextMenu.Content>
+      </ContextMenu.Portal>
+    </ContextMenu.Root>
+  );
+}

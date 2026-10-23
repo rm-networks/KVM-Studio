@@ -9,6 +9,7 @@ from pathlib import Path
 
 import libvirt
 from fastapi import APIRouter, Depends, FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -19,7 +20,13 @@ from .auth.token import require_token
 from .config import Config, load_config
 from .console.vnc import ConsoleOpener, open_vnc_socket, vnc_console
 from .context import AppContext, Mode
-from .errors import ApiError, ApiException, api_exception_handler, libvirt_error_handler
+from .errors import (
+    ApiError,
+    ApiException,
+    api_exception_handler,
+    libvirt_error_handler,
+    validation_error_handler,
+)
 from .events import EventHub, events_socket
 from .libvirt_conn import LibvirtConnection
 
@@ -29,6 +36,8 @@ LOOPBACK_HOSTS = ["127.0.0.1", "localhost"]
 _ERROR_RESPONSES: dict[int | str, dict[str, object]] = {
     401: {"model": ApiError},
     403: {"model": ApiError},
+    404: {"model": ApiError},
+    409: {"model": ApiError},
     500: {"model": ApiError},
     503: {"model": ApiError},
 }
@@ -70,6 +79,7 @@ def create_app(
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=LOOPBACK_HOSTS)
     app.add_exception_handler(libvirt.libvirtError, libvirt_error_handler)
     app.add_exception_handler(ApiException, api_exception_handler)
+    app.add_exception_handler(RequestValidationError, validation_error_handler)
 
     public = APIRouter(prefix="/api")
     public.add_api_route("/health", system.health, methods=["GET"], tags=["system"])

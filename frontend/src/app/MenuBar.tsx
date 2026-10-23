@@ -2,6 +2,9 @@ import * as Menubar from "@radix-ui/react-menubar";
 import { Check, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import type { VmSummary } from "../api/client";
+import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
+import { useVmActions } from "../features/vm/vmActionsContext";
 import type { Layout } from "./App";
 import "./MenuBar.css";
 
@@ -24,11 +27,26 @@ interface Props {
   layout: Layout;
   onToggle: (key: keyof Layout) => void;
   onAbout: () => void;
+  vm: VmSummary | null;
 }
 
-export function MenuBar({ layout, onToggle, onAbout }: Props) {
+export function MenuBar({ layout, onToggle, onAbout, vm }: Props) {
   const { t } = useTranslation();
   const m = (key: string) => t(`menu.${key}`);
+  const actions = useVmActions();
+  const powerEntries: Entry[] = POWER_ACTIONS.map((action) =>
+    item(
+      t(`power.${action}`),
+      undefined,
+      vm && powerAllowed(vm.state, action) ? () => actions.power(vm, action) : undefined,
+    ),
+  );
+  const manageEntries: Entry[] = [
+    item(m("rename"), undefined, vm ? () => actions.rename(vm) : undefined),
+    sep,
+    item(m("removeFromLibrary"), undefined, vm ? () => actions.remove(vm, false) : undefined),
+    item(m("deleteFromDisk"), undefined, vm ? () => actions.remove(vm, true) : undefined),
+  ];
   const check = (key: keyof Layout): Entry => ({
     kind: "check",
     label: m(key),
@@ -81,7 +99,7 @@ export function MenuBar({ layout, onToggle, onAbout }: Props) {
     [
       "vm",
       [
-        sub(m("power")),
+        sub(m("power"), vm ? powerEntries : undefined),
         sub(m("removable")),
         item(m("pause"), ["Ctrl", "Shift", "P"]),
         sep,
@@ -91,7 +109,7 @@ export function MenuBar({ layout, onToggle, onAbout }: Props) {
         sub(m("snapshot")),
         item(m("capture"), ["Ctrl", "Alt", "PrintScreen"]),
         sep,
-        sub(m("manage")),
+        sub(m("manage"), vm ? manageEntries : undefined),
         item(m("guestTools")),
         sep,
         item(m("settings"), ["Ctrl", "D"]),

@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ErrorMessage } from "../components/ErrorMessage";
+import { NotificationProvider } from "../components/Notifications";
 import { HomeTab } from "../features/home/HomeTab";
 import { LibraryPanel } from "../features/library/LibraryPanel";
+import { VmActionsProvider } from "../features/vm/VmActions";
 import { VmTab } from "../features/vm/VmTab";
 import { AboutDialog } from "./AboutDialog";
 import { MenuBar } from "./MenuBar";
@@ -20,6 +22,16 @@ export interface Layout {
 }
 
 export function App() {
+  return (
+    <NotificationProvider>
+      <VmActionsProvider>
+        <MainWindow />
+      </VmActionsProvider>
+    </NotificationProvider>
+  );
+}
+
+function MainWindow() {
   const { i18n } = useTranslation();
   const { info, vms, error, loading, libvirtLost, refresh } = useAppData();
   const [layout, setLayout] = useState<Layout>({ library: true, toolbar: true, statusBar: true });
@@ -60,12 +72,23 @@ export function App() {
 
   const vmByUuid = new Map((vms ?? []).map((vm) => [vm.uuid, vm]));
   const tabs = openVms.map((uuid) => ({ id: uuid, label: vmByUuid.get(uuid)?.name ?? uuid }));
+  // Menu and toolbar act on the VM of the active tab, else on the library selection.
+  const currentVm = vmByUuid.get(activeTab !== HOME_TAB ? activeTab : (selectedVm ?? "")) ?? null;
 
   return (
     <div className="app">
-      <MenuBar layout={layout} onToggle={toggle} onAbout={() => setAboutOpen(true)} />
+      <MenuBar
+        layout={layout}
+        onToggle={toggle}
+        onAbout={() => setAboutOpen(true)}
+        vm={currentVm}
+      />
       {layout.toolbar && (
-        <Toolbar libraryVisible={layout.library} onToggleLibrary={() => toggle("library")} />
+        <Toolbar
+          libraryVisible={layout.library}
+          onToggleLibrary={() => toggle("library")}
+          vm={currentVm}
+        />
       )}
       <div className="app-body">
         {layout.library && (

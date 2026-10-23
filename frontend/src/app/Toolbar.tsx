@@ -11,13 +11,19 @@ import {
   RotateCcw,
   SquareTerminal,
 } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useTranslation } from "react-i18next";
+
+import type { VmSummary } from "../api/client";
+import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
+import { useVmActions } from "../features/vm/vmActionsContext";
 
 import "./Toolbar.css";
 
 interface Props {
   libraryVisible: boolean;
   onToggleLibrary: () => void;
+  vm: VmSummary | null;
 }
 
 interface ToolProps {
@@ -44,14 +50,44 @@ function Tool({ icon: Icon, label, onClick, pressed, narrow }: ToolProps) {
   );
 }
 
-export function Toolbar({ libraryVisible, onToggleLibrary }: Props) {
+export function Toolbar({ libraryVisible, onToggleLibrary, vm }: Props) {
   const { t } = useTranslation();
+  const actions = useVmActions();
   const l = (key: string) => t(`toolbar.${key}`);
+  const canStart = vm !== null && powerAllowed(vm.state, "start");
 
   return (
     <div className="toolbar" role="toolbar">
-      <Tool icon={Play} label={l("start")} />
-      <Tool icon={ChevronDown} label={l("powerMenu")} narrow />
+      <Tool
+        icon={Play}
+        label={l("start")}
+        onClick={canStart && vm ? () => actions.power(vm, "start") : undefined}
+      />
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger
+          className="tool tool-narrow"
+          title={l("powerMenu")}
+          aria-label={l("powerMenu")}
+          disabled={!vm}
+        >
+          <ChevronDown size={12} strokeWidth={1.75} />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content className="menu" align="start" sideOffset={2}>
+            {POWER_ACTIONS.map((action) => (
+              <DropdownMenu.Item
+                key={action}
+                className="menu-item"
+                disabled={!vm || !powerAllowed(vm.state, action)}
+                onSelect={() => vm && actions.power(vm, action)}
+              >
+                <span className="menu-indicator" />
+                <span className="menu-label">{t(`power.${action}`)}</span>
+              </DropdownMenu.Item>
+            ))}
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
       <span className="toolbar-separator" />
       <Tool icon={Keyboard} label={l("sendCad")} />
       <span className="toolbar-separator" />
