@@ -156,3 +156,41 @@
 .state-crashed {
   background: var(--state-crashed);
 }
+
+.library-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 4px 4px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.library-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.library-search input {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 0 6px 0 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+  user-select: text;
+}
+
+.library-search input:focus {
+  border-color: var(--focus);
+}
+
+.library-button.active {
+  color: var(--accent);
+}

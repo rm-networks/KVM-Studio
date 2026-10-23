@@ -119,8 +119,8 @@ def test_device_xml() -> None:
 
 
 def test_token_is_found_in_an_unsplit_header() -> None:
-    from kvmstudio.console.vnc import _has_token
+    from kvmstudio.auth.token import token_in_subprotocols as has
 
-    assert _has_token([f"binary, kvmstudio.{TOKEN}"], TOKEN)
-    assert _has_token(["binary", f"kvmstudio.{TOKEN}"], TOKEN)
-    assert not _has_token(["binary, kvmstudio.nope"], TOKEN)
+    assert has([f"binary, kvmstudio.{TOKEN}"], TOKEN)
+    assert has(["binary", f"kvmstudio.{TOKEN}"], TOKEN)
+    assert not has(["binary, kvmstudio.nope"], TOKEN)

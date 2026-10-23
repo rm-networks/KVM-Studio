@@ -81,3 +81,9 @@
   margin: 3px 0 3px 26px;
   background: var(--border);
 }
+
+.menu-group-label {
+  padding: 4px 12px 2px 26px;
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}

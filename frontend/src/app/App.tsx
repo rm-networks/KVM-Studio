@@ -21,7 +21,7 @@ export interface Layout {
 
 export function App() {
   const { i18n } = useTranslation();
-  const { info, vms, error, loading, refresh } = useAppData();
+  const { info, vms, error, loading, libvirtLost, refresh } = useAppData();
   const [layout, setLayout] = useState<Layout>({ library: true, toolbar: true, statusBar: true });
   const [selectedVm, setSelectedVm] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -93,7 +93,7 @@ export function App() {
           ))}
         </main>
       </div>
-      {layout.statusBar && <StatusBar info={info} vms={vms} />}
+      {layout.statusBar && <StatusBar info={info} vms={vms} libvirtLost={libvirtLost} />}
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} version={info?.version} />
     </div>
   );

@@ -27,10 +27,10 @@ const labels = () =>
     .map((el) => el.textContent);
 
 describe("LibraryTree", () => {
-  it("sorts VMs naturally under My Computer", () => {
-    render(<Harness vms={[vm("win-10"), vm("Debian"), vm("win-2"), vm("alpine")]} />);
+  it("lists VMs under My Computer in the given order", () => {
+    render(<Harness vms={[vm("win-10"), vm("Debian"), vm("alpine")]} />);
     expect(screen.getByText("Mon ordinateur")).toBeTruthy();
-    expect(labels()).toEqual(["alpine", "Debian", "win-2", "win-10"]);
+    expect(labels()).toEqual(["win-10", "Debian", "alpine"]);
   });
 
   it("marks running VMs", () => {

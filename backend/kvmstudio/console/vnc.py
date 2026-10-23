@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import secrets
 import socket
 from collections.abc import Callable
 
@@ -16,13 +15,11 @@ import libvirt
 from fastapi import WebSocket
 from starlette.concurrency import run_in_threadpool
 
+from ..auth.token import token_in_subprotocols
 from ..context import get_context
 from ..errors import classify
 from ..libvirt_conn import LibvirtConnection
 
-# The browser cannot set headers on a WebSocket, so the session token travels
-# as an extra subprotocol next to "binary" (the one we accept).
-TOKEN_PROTOCOL_PREFIX = "kvmstudio."  # noqa: S105 (a prefix, not a secret)
 ACCEPTED_PROTOCOL = "binary"
 
 ConsoleOpener = Callable[[LibvirtConnection, str], socket.socket]
@@ -34,20 +31,6 @@ def open_vnc_socket(conn: LibvirtConnection, uuid: str) -> socket.socket:
         return dom.openGraphicsFD(0, libvirt.VIR_DOMAIN_OPEN_GRAPHICS_SKIPAUTH)
 
     return socket.socket(fileno=conn.run(op))
-
-
-def _offered_protocols(raw: list[str]) -> list[str]:
-    # Some uvicorn backends pass the header unsplit ("binary, kvmstudio.x").
-    return [p.strip() for entry in raw for p in entry.split(",") if p.strip()]
-
-
-def _has_token(protocols: list[str], expected: str) -> bool:
-    for proto in _offered_protocols(protocols):
-        if proto.startswith(TOKEN_PROTOCOL_PREFIX):
-            given = proto.removeprefix(TOKEN_PROTOCOL_PREFIX).encode()
-            if secrets.compare_digest(given, expected.encode()):
-                return True
-    return False
 
 
 async def _pump(websocket: WebSocket, sock: socket.socket) -> None:
@@ -85,7 +68,7 @@ async def _pump(websocket: WebSocket, sock: socket.socket) -> None:
 
 async def vnc_console(websocket: WebSocket, uuid: str) -> None:
     ctx = get_context(websocket)
-    if not _has_token(websocket.scope.get("subprotocols", []), ctx.token):
+    if not token_in_subprotocols(websocket.scope.get("subprotocols", []), ctx.token):
         await websocket.close(code=4401)
         return
     try:

@@ -6,17 +6,30 @@ import "./StatusBar.css";
 interface Props {
   info: AppInfo | null;
   vms: VmSummary[] | null;
+  libvirtLost: boolean;
 }
 
-export function StatusBar({ info, vms }: Props) {
+export function StatusBar({ info, vms, libvirtLost }: Props) {
   const { t } = useTranslation();
   const running = vms?.filter((vm) => vm.state === "running").length ?? 0;
 
   return (
     <footer className="statusbar">
-      <span className={info ? "statusbar-dot" : "statusbar-dot statusbar-dot-off"} />
+      <span
+        className={
+          libvirtLost
+            ? "statusbar-dot statusbar-dot-lost"
+            : info
+              ? "statusbar-dot"
+              : "statusbar-dot statusbar-dot-off"
+        }
+      />
       <span>
-        {info ? t("status.connected", { uri: info.libvirt.uri }) : t("status.disconnected")}
+        {libvirtLost
+          ? t("status.lost")
+          : info
+            ? t("status.connected", { uri: info.libvirt.uri })
+            : t("status.disconnected")}
       </span>
       {info && (
         <span className="statusbar-muted">

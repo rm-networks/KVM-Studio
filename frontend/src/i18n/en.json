@@ -64,7 +64,16 @@
     "refresh": "Refresh",
     "myComputer": "My Computer",
     "empty": "No virtual machines",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "search": "Search",
+    "filter": "Filter and sort",
+    "show": "Show",
+    "allVms": "All machines",
+    "runningVms": "Running machines",
+    "sortBy": "Sort by",
+    "sortName": "Name",
+    "sortState": "State",
+    "noMatch": "No results"
   },
   "state": {
     "running": "Running",
@@ -89,7 +98,8 @@
     "vmCount_other": "{{count}} virtual machines",
     "running_one": "{{count}} running",
     "running_other": "{{count}} running",
-    "disconnected": "Not connected"
+    "disconnected": "Not connected",
+    "lost": "Lost connection to libvirt, retrying…"
   },
   "errors": {
     "auth": {

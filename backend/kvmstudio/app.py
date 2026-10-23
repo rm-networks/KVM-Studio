@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import libvirt
@@ -18,6 +20,7 @@ from .config import Config, load_config
 from .console.vnc import ConsoleOpener, open_vnc_socket, vnc_console
 from .context import AppContext, Mode
 from .errors import ApiError, ApiException, api_exception_handler, libvirt_error_handler
+from .events import EventHub, events_socket
 from .libvirt_conn import LibvirtConnection
 
 # Only loopback names are accepted, which defeats DNS rebinding.
@@ -49,7 +52,18 @@ def create_app(
     frontend_dir: Path | None = None,
     open_console: ConsoleOpener = open_vnc_socket,
 ) -> FastAPI:
-    app = FastAPI(title="KVM Studio", version=__version__, docs_url=None, redoc_url=None)
+    hub = EventHub(conn)
+
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        await hub.start()
+        yield
+        await hub.stop()
+
+    app = FastAPI(
+        title="KVM Studio", version=__version__, docs_url=None, redoc_url=None, lifespan=lifespan
+    )
+    app.state.events = hub
     app.state.context = AppContext(
         config=config, conn=conn, token=token, mode=mode, open_console=open_console
     )
@@ -70,6 +84,7 @@ def create_app(
     app.include_router(private)
     # WebSockets check the token themselves (see console.vnc).
     app.add_api_websocket_route("/api/vms/{uuid}/console", vnc_console)
+    app.add_api_websocket_route("/ws/events", events_socket)
 
     if frontend_dir is not None:
         app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")

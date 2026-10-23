@@ -64,7 +64,16 @@
     "refresh": "Actualiser",
     "myComputer": "Mon ordinateur",
     "empty": "Aucune machine virtuelle",
-    "loading": "Chargement…"
+    "loading": "Chargement…",
+    "search": "Rechercher",
+    "filter": "Filtrer et trier",
+    "show": "Afficher",
+    "allVms": "Toutes les machines",
+    "runningVms": "Machines allumées",
+    "sortBy": "Trier par",
+    "sortName": "Nom",
+    "sortState": "État",
+    "noMatch": "Aucun résultat"
   },
   "state": {
     "running": "Allumée",
@@ -89,7 +98,8 @@
     "vmCount_other": "{{count}} machines virtuelles",
     "running_one": "{{count}} allumée",
     "running_other": "{{count}} allumées",
-    "disconnected": "Non connecté"
+    "disconnected": "Non connecté",
+    "lost": "Connexion à libvirt perdue, nouvelle tentative…"
   },
   "errors": {
     "auth": {

@@ -30,6 +30,29 @@ _STATES: dict[int, DomainState] = {
 # By default libvirt-python prints every error on stderr, even the ones we handle.
 libvirt.registerErrorHandler(lambda _ctx, _err: None, None)
 
+_event_loop_lock = threading.Lock()
+_event_loop_started = False
+
+
+def start_event_loop() -> None:
+    """Run libvirt's default event loop in a daemon thread (once per process).
+
+    It delivers domain events and keepalives. It must be registered before the
+    first connection is opened, which LibvirtConnection guarantees.
+    """
+    global _event_loop_started
+    with _event_loop_lock:
+        if _event_loop_started:
+            return
+        libvirt.virEventRegisterDefaultImpl()
+
+        def loop() -> None:
+            while True:
+                libvirt.virEventRunDefaultImpl()
+
+        threading.Thread(target=loop, name="libvirt-events", daemon=True).start()
+        _event_loop_started = True
+
 
 @dataclass(frozen=True, slots=True)
 class DomainSummary:
@@ -62,19 +85,37 @@ def _alive(conn: libvirt.virConnect) -> bool:
         return False
 
 
+ConnectHook = Callable[[libvirt.virConnect], None]
+
+
 class LibvirtConnection:
     def __init__(self, uri: str) -> None:
+        start_event_loop()
         self.uri = uri
         self._conn: libvirt.virConnect | None = None
         self._lock = threading.Lock()
+        self._hooks: list[ConnectHook] = []
+
+    def add_connect_hook(self, hook: ConnectHook) -> None:
+        """Call hook on every new connection (event registrations live there)."""
+        with self._lock:
+            self._hooks.append(hook)
+            if self._conn is not None:
+                hook(self._conn)
 
     def _get(self) -> libvirt.virConnect:
         with self._lock:
             if self._conn is not None and _alive(self._conn):
                 return self._conn
             self._discard()
-            self._conn = libvirt.open(self.uri)
-            return self._conn
+            conn = libvirt.open(self.uri)
+            with contextlib.suppress(libvirt.libvirtError):
+                # Detects a dead daemon within ~15 s; unsupported by some drivers.
+                conn.setKeepAlive(5, 3)
+            for hook in self._hooks:
+                hook(conn)
+            self._conn = conn
+            return conn
 
     def _discard(self) -> None:
         if self._conn is not None:
@@ -111,22 +152,27 @@ class LibvirtConnection:
     def list_domains(self) -> list[DomainSummary]:
         return self.run(_list_domains)
 
+    def domain_summary(self, uuid: str) -> DomainSummary:
+        return self.run(lambda c: summarize(c.lookupByUUIDString(uuid)))
+
+
+def summarize(dom: libvirt.virDomain) -> DomainSummary:
+    state, max_mem_kib, _mem, vcpus, _cpu_time = dom.info()
+    return DomainSummary(
+        uuid=dom.UUIDString(),
+        name=dom.name(),
+        state=_STATES.get(state, "unknown"),
+        vcpus=vcpus,
+        memory_mib=max_mem_kib // 1024,
+        persistent=dom.isPersistent() == 1,
+    )
+
 
 def _list_domains(conn: libvirt.virConnect) -> list[DomainSummary]:
     domains = []
     for dom in conn.listAllDomains():
         try:
-            state, max_mem_kib, _mem, vcpus, _cpu_time = dom.info()
-            domains.append(
-                DomainSummary(
-                    uuid=dom.UUIDString(),
-                    name=dom.name(),
-                    state=_STATES.get(state, "unknown"),
-                    vcpus=vcpus,
-                    memory_mib=max_mem_kib // 1024,
-                    persistent=dom.isPersistent() == 1,
-                )
-            )
+            domains.append(summarize(dom))
         except libvirt.libvirtError as exc:
             # The domain was undefined between the listing and the lookup.
             if exc.get_error_code() != libvirt.VIR_ERR_NO_DOMAIN:

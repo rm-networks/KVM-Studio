@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight, Monitor, MonitorSmartphone } from "lucide-react";
-import { type KeyboardEvent, useMemo, useState } from "react";
+import { type KeyboardEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { VmSummary } from "../../api/client";
@@ -12,14 +12,14 @@ interface Props {
   selected: string | null;
   onSelect: (id: string) => void;
   onOpen: (uuid: string) => void;
+  /** Shown under My Computer when the list is empty. */
+  emptyLabel?: string;
 }
 
-const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
-
-export function LibraryTree({ vms, selected, onSelect, onOpen }: Props) {
+export function LibraryTree({ vms, selected, onSelect, onOpen, emptyLabel }: Props) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
-  const sorted = useMemo(() => [...vms].sort((a, b) => collator.compare(a.name, b.name)), [vms]);
+  const sorted = vms;
 
   const visible = expanded ? [ROOT_ID, ...sorted.map((vm) => vm.uuid)] : [ROOT_ID];
   const current = selected && visible.includes(selected) ? selected : ROOT_ID;
@@ -97,7 +97,9 @@ export function LibraryTree({ vms, selected, onSelect, onOpen }: Props) {
         </div>
         {expanded && (
           <ul role="group">
-            {sorted.length === 0 && <li className="tree-empty">{t("library.empty")}</li>}
+            {sorted.length === 0 && (
+              <li className="tree-empty">{emptyLabel ?? t("library.empty")}</li>
+            )}
             {sorted.map((vm) => (
               <li
                 key={vm.uuid}

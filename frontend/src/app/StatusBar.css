@@ -29,3 +29,7 @@
 .statusbar-spacer {
   flex: 1;
 }
+
+.statusbar-dot-lost {
+  background: var(--state-crashed);
+}

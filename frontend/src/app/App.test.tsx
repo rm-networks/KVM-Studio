@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { captureToken } from "../api/token";
+import { FakeWebSocket } from "../test/fakeWebSocket";
 import { App } from "./App";
 
 const info = {
@@ -34,6 +35,12 @@ function mockFetch(handler: (path: string, init?: RequestInit) => [number, unkno
 afterEach(() => {
   vi.unstubAllGlobals();
 });
+
+function eventSocket(): FakeWebSocket {
+  const socket = FakeWebSocket.instances.find((s) => s.url.endsWith("/ws/events"));
+  if (!socket) throw new Error("no event socket");
+  return socket;
+}
 
 describe("App", () => {
   it("sends the token from the URL and lists the VMs", async () => {
@@ -71,5 +78,26 @@ describe("App", () => {
     expect(await screen.findByText(/Impossible de joindre libvirt/)).toBeTruthy();
     expect(screen.getByText("Failed to connect socket")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Réessayer" })).toBeTruthy();
+  });
+
+  it("follows live state changes from the event socket", async () => {
+    mockFetch((path) => [200, path === "/api/info" ? info : vms]);
+    render(<App />);
+    await screen.findByText("2 machines virtuelles, 1 allumée");
+    const socket = eventSocket();
+    expect(socket.protocols[0]).toBe("kvmstudio.events");
+
+    act(() => {
+      socket.open();
+      socket.push({ type: "vm.changed", vm: { ...vms[1], state: "running" } });
+    });
+    expect(screen.getByText("2 machines virtuelles, 2 allumées")).toBeTruthy();
+
+    act(() => socket.push({ type: "vm.removed", uuid: "1" }));
+    expect(screen.queryByText("FW-VYOS")).toBeNull();
+    expect(screen.getByText("1 machine virtuelle, 1 allumée")).toBeTruthy();
+
+    act(() => socket.push({ type: "connection", state: "lost" }));
+    expect(screen.getByText(/Connexion à libvirt perdue/)).toBeTruthy();
   });
 });
