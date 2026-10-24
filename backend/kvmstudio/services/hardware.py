@@ -281,8 +281,13 @@ def add_cdrom(conn: LibvirtConnection, config: Config, uuid: str, iso: str | Non
         path = str(confine(iso, config))
         if not in_iso_library(path, config):
             raise ApiException(403, "path.not_allowed", f"{iso} is not in an ISO library")
+    return add_cdrom_drive(conn, uuid, path)[1]
 
-    def op(c: libvirt.virConnect) -> bool:
+
+def add_cdrom_drive(conn: LibvirtConnection, uuid: str, path: str | None) -> tuple[str, bool]:
+    """Add a SATA CD/DVD drive to the config; returns its target and whether a restart is due."""
+
+    def op(c: libvirt.virConnect) -> tuple[str, bool]:
         dom, root = _domain(c, uuid)
         devices = root.find("devices")
         if devices is None:
@@ -302,9 +307,46 @@ def add_cdrom(conn: LibvirtConnection, config: Config, uuid: str, iso: str | Non
             devices.insert(0, disk)
         c.defineXML(etree.tostring(root).decode())
         # SATA drives cannot be added to a running machine.
-        return bool(dom.isActive())
+        return target, bool(dom.isActive())
 
     return conn.run(op)
+
+
+def set_media(conn: LibvirtConnection, uuid: str, target: str, path: str | None) -> None:
+    """Insert or eject the image of a CD/DVD drive, live when the drive is live.
+
+    Callers check where path may come from (ISO libraries, guest tools folder).
+    """
+
+    def drive(xml: str) -> etree._Element | None:
+        root = etree.fromstring(xml.encode(), parser=_PARSER)
+        for disk in root.iterfind("devices/disk[@device='cdrom']"):
+            t = disk.find("target")
+            if t is not None and t.get("dev") == target:
+                return disk
+        return None
+
+    def op(c: libvirt.virConnect) -> None:
+        dom = c.lookupByUUIDString(uuid)
+        live = drive(dom.XMLDesc(0)) if dom.isActive() else None
+        config = drive(dom.XMLDesc(libvirt.VIR_DOMAIN_XML_INACTIVE)) if dom.isPersistent() else None
+        for disk, flag in (
+            (live, libvirt.VIR_DOMAIN_AFFECT_LIVE),
+            (config, libvirt.VIR_DOMAIN_AFFECT_CONFIG),
+        ):
+            if disk is None:
+                continue
+            for old in disk.findall("source"):
+                disk.remove(old)
+            if path is not None:
+                source = etree.Element("source", file=path)
+                driver = disk.find("driver")
+                disk.insert(list(disk).index(driver) + 1 if driver is not None else 0, source)
+            dom.updateDeviceFlags(etree.tostring(disk).decode(), flag)
+        if live is None and config is None:
+            raise ApiException(404, "vm.no_cdrom", f"No CD/DVD drive {target}")
+
+    conn.run(op)
 
 
 def remove_cdrom(conn: LibvirtConnection, uuid: str, target: str) -> bool:

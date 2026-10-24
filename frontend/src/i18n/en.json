@@ -242,6 +242,12 @@
     "uninstall": {
       "plan_changed": "Something changed since it was shown (a file or a virtual machine). Start the assistant again.",
       "not_packaged": "KVM Studio was not installed from the package."
+    },
+    "guest": {
+      "no_xorriso": "xorriso is not installed: the tools CD cannot be made.",
+      "iso_failed": "Making the tools CD failed.",
+      "no_virtio_iso": "Choose the virtio-win ISO in Preferences > Virtual machines.",
+      "unsupported": "No automatic guest tools for this system."
     }
   },
   "about": {
@@ -581,22 +587,29 @@
     "confirmRemoveCdrom": "Remove this CD/DVD drive from the virtual machine?"
   },
   "guestTools": {
-    "title": "Install Guest Tools: {{name}}",
+    "title": "Install the guest tools: {{name}}",
     "family": "Guest system",
-    "layout": "Guest keyboard layout",
-    "layoutFr": "French (AZERTY)",
-    "layoutUs": "US English (QWERTY)",
-    "install": "Install",
-    "mustRun": "Start the virtual machine and log in before running the installation.",
-    "alreadyOk": "The guest agent already responds. You can run the installation again to repair or update it.",
-    "helpLinux": "Open a terminal in the guest and click into it. The install command will be typed there; you only have to enter the sudo password.",
-    "helpWindows": "The Windows desktop must be showing. The virtio-win ISO is inserted, then its installer starts from Run: you only have to accept the User Account Control prompt.",
-    "noVirtio": "No virtio-win ISO is set in an ISO library. Set it in Preferences > Virtual Machines.",
-    "waitLinux": "Command typed. Enter the sudo password in the guest, then wait for the installation…",
-    "waitWindows": "Installer started. Accept the User Account Control prompt and follow the wizard in the guest…",
-    "done": "Guest tools are installed: the agent responds.",
-    "timeout": "The agent still does not respond after 10 minutes. Check the installation in the guest (qemu-guest-agent service).",
-    "failed": "Could not install the guest tools"
+    "insert": "Insert the tools CD",
+    "eject": "Eject the CD",
+    "intro": "KVM Studio inserts a small CD in the virtual machine. You start the installation from the VM: nothing is typed for you.",
+    "step": {
+      "inserted": "The CD is inserted.",
+      "run": "In the VM, start the installation.",
+      "wait": "Waiting for the guest agent…",
+      "done": "The guest agent answers: the tools are installed."
+    },
+    "linuxHow": "Double-click install.sh on the KS_TOOLS CD, or paste this command in a terminal of the VM:",
+    "windowsHow": "Accept the autorun prompt of the KS_TOOLS CD, or open it and run Install-Tools.bat. Then accept the User Account Control prompt.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "restart": "A CD/DVD drive or the agent channel was added: restart the virtual machine for it to take effect.",
+    "notRunning": "The virtual machine is off: waiting for the agent starts when it runs.",
+    "alreadyOk": "The guest agent already answers. You can install again to repair or update.",
+    "noVirtio": "No virtio-win ISO is set in a library. Choose it in Preferences > Virtual machines.",
+    "unsupported": "No automatic guest tools for this system.",
+    "timeout": "The agent still does not answer after 10 minutes. Check the installation in the guest (qemu-guest-agent service).",
+    "failed": "Could not insert the guest tools CD",
+    "ejectFailed": "Could not eject the guest tools CD"
   },
   "firstRun": {
     "title": "Welcome to KVM Studio",

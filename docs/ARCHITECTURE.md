@@ -118,11 +118,13 @@ de personnes connectées.
   Options > Isolation le désactive. Le presse-papiers de l'hôte est relié à noVNC
   par l'API pywebview en mode logiciel et par `navigator.clipboard` en mode web
   (contexte sécurisé : 127.0.0.1 ou HTTPS).
-- **Installation des outils invités.** L'ISO nécessaire est montée (virtio-win
-  pour Windows), puis la commande d'installation est tapée dans la console par
-  `virDomainSendKey`, en tenant compte de la disposition clavier de l'invité.
-  L'utilisateur ne valide que l'UAC ou sudo. qemu-guest-agent confirme ensuite
-  que l'agent répond.
+- **Installation des outils invités.** KVM Studio fabrique avec `xorriso` un
+  petit CD `KS_TOOLS` dans `<emplacement>/KVM-Studio/Tools` et l'insère dans un
+  lecteur de la VM (virtio-win en plus, dans un second lecteur, pour Windows).
+  L'utilisateur lance l'installation dans la VM : `Install-Tools.bat` sous
+  Windows, `install.sh` sous Linux. Rien n'est tapé à sa place, la disposition
+  du clavier ne compte donc pas. qemu-guest-agent confirme ensuite que l'agent
+  répond, et l'éjection remet ce que les lecteurs contenaient avant.
 - **Installation simplifiée.** L'assistant collecte utilisateur, mot de passe,
   langue, clavier et clé produit facultative, puis génère le fichier de réponse
   (autounattend.xml, kickstart, preseed, autoinstall) sur une petite ISO séparée.
@@ -156,7 +158,7 @@ kvm-studio/
 │   ├── services/
 │   ├── xml/                 # builders domaine et réseau, profils d'OS
 │   ├── unattended/          # modèles de fichiers de réponse, génération d'ISO
-│   ├── guesttools/          # montage d'ISO, injection clavier
+│   ├── guesttools/          # CD des outils invités (scripts, fabrication, insertion)
 │   ├── isolib/              # scan des ISO, cache, contrôle des droits
 │   ├── paths.py             # confinement des chemins
 │   ├── console/             # proxy WebSocket VNC et série

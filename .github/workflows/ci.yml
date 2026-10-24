@@ -14,7 +14,7 @@ jobs:
     container: fedora:44
     steps:
       - name: Install system packages
-        run: dnf install -y --setopt=install_weak_deps=False git python3 python3-pip python3-libvirt qemu-img libvirt-client python3-pyqt6-webengine python3-QtPy
+        run: dnf install -y --setopt=install_weak_deps=False git python3 python3-pip python3-libvirt qemu-img xorriso libvirt-client python3-pyqt6-webengine python3-QtPy
 
       - uses: actions/checkout@v5
 

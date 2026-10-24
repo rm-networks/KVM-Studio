@@ -35,7 +35,8 @@ export type IsoLibrary = components["schemas"]["IsoLibrary"];
 export type Preferences = components["schemas"]["Preferences"] & { config: Config };
 export type SaveResult = components["schemas"]["SaveResult"];
 export type GuestToolsInfo = components["schemas"]["GuestToolsInfo"];
-export type InstallRequest = components["schemas"]["InstallRequest"];
+export type GuestFamily = components["schemas"]["InsertRequest"]["family"];
+export type InsertResult = components["schemas"]["InsertResult"];
 export type SetupStatus = components["schemas"]["SetupStatus"];
 export type GroupState = SetupStatus["libvirt_group"];
 export type UninstallPlan = components["schemas"]["UninstallPlan"];
@@ -156,8 +157,10 @@ export const api = {
     request<undefined>("PUT", `${vmPath(uuid)}/cdroms/${encodeURIComponent(target)}`, { path }),
   display: (uuid: string) => request<DisplayInfo>("GET", `${vmPath(uuid)}/display`),
   guestTools: (uuid: string) => request<GuestToolsInfo>("GET", `${vmPath(uuid)}/guest-tools`),
-  installGuestTools: (uuid: string, body: InstallRequest) =>
-    request<{ typed: boolean; drive: string | null }>("POST", `${vmPath(uuid)}/guest-tools`, body),
+  insertGuestTools: (uuid: string, family: GuestFamily) =>
+    request<InsertResult>("POST", `${vmPath(uuid)}/guest-tools`, { family }),
+  ejectGuestTools: (uuid: string) =>
+    request<{ drives: string[] }>("POST", `${vmPath(uuid)}/guest-tools/eject`),
   agentStatus: (uuid: string) => request<{ responding: boolean }>("GET", `${vmPath(uuid)}/agent`),
   addVnc: (uuid: string) =>
     request<{ restart_required: boolean }>("POST", `${vmPath(uuid)}/display/vnc`),

@@ -71,7 +71,7 @@ VERSION=0.1.0 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
 Hyperviseur et bindings Python fournis par la distribution :
 
 ```bash
-sudo dnf install libvirt-daemon-kvm qemu-kvm python3-libvirt python3-gobject libosinfo
+sudo dnf install libvirt-daemon-kvm qemu-kvm python3-libvirt python3-gobject libosinfo xorriso
 ```
 
 Moteur de la fenêtre native (Qt WebEngine) :

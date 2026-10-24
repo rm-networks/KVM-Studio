@@ -583,8 +583,25 @@ export interface paths {
     /** Info */
     get: operations["info_api_vms__uuid__guest_tools_get"];
     put?: never;
-    /** Run Install */
-    post: operations["run_install_api_vms__uuid__guest_tools_post"];
+    /** Insert */
+    post: operations["insert_api_vms__uuid__guest_tools_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/vms/{uuid}/guest-tools/eject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Eject */
+    post: operations["eject_api_vms__uuid__guest_tools_eject_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -956,6 +973,11 @@ export interface components {
       /** Format */
       format: string | null;
     };
+    /** EjectResult */
+    EjectResult: {
+      /** Drives */
+      drives: string[];
+    };
     /** ErrorBody */
     ErrorBody: {
       /** Code */
@@ -1017,12 +1039,14 @@ export interface components {
       active: boolean;
       /** Family */
       family: ("windows" | "linux" | "bsd" | "other") | null;
-      /** Layout */
-      layout: ("fr" | "us") | null;
       /** Agent */
       agent: boolean;
+      /** Inserted */
+      inserted: boolean;
       /** Virtio Win */
       virtio_win: string | null;
+      /** Linux Command */
+      linux_command: string;
     };
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -1099,25 +1123,20 @@ export interface components {
       /** Originals */
       originals: string[];
     };
-    /** InstallRequest */
-    InstallRequest: {
+    /** InsertRequest */
+    InsertRequest: {
       /**
        * Family
        * @enum {string}
        */
       family: "windows" | "linux" | "bsd" | "other";
-      /**
-       * Layout
-       * @enum {string}
-       */
-      layout: "fr" | "us";
     };
-    /** InstallResult */
-    InstallResult: {
-      /** Typed */
-      typed: boolean;
-      /** Drive */
-      drive: string | null;
+    /** InsertResult */
+    InsertResult: {
+      /** Drives */
+      drives: string[];
+      /** Restart Required */
+      restart_required: boolean;
     };
     /** InterfaceSettings */
     InterfaceSettings: {
@@ -5240,7 +5259,7 @@ export interface operations {
       };
     };
   };
-  run_install_api_vms__uuid__guest_tools_post: {
+  insert_api_vms__uuid__guest_tools_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -5251,7 +5270,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["InstallRequest"];
+        "application/json": components["schemas"]["InsertRequest"];
       };
     };
     responses: {
@@ -5261,7 +5280,92 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["InstallResult"];
+          "application/json": components["schemas"]["InsertResult"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  eject_api_vms__uuid__guest_tools_eject_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        uuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EjectResult"];
         };
       };
       /** @description Unauthorized */

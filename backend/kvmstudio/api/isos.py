@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Annotated
 
-import libvirt
 from fastapi import APIRouter, Query, Response
 from lxml import etree
 from pydantic import BaseModel
@@ -13,6 +12,7 @@ from ..context import Context
 from ..errors import ApiException
 from ..isolib import access, scan
 from ..paths import confine, in_iso_library
+from ..services import hardware
 
 router = APIRouter(tags=["isos"])
 
@@ -149,26 +149,7 @@ async def change_media(ctx: Context, uuid: str, target: str, body: MediaChange) 
         if path is not None and not in_iso_library(path, ctx.config):
             raise ApiException(403, "path.not_allowed", f"{path} is not in an ISO library")
 
-        def op(c: libvirt.virConnect) -> None:
-            dom = c.lookupByUUIDString(uuid)
-            drives = [d for d in _cdroms(dom.XMLDesc(0)) if d[1].target == target]
-            if not drives:
-                raise ApiException(404, "vm.no_cdrom", f"No CD/DVD drive {target}")
-            disk = drives[0][0]
-            for old in disk.findall("source"):
-                disk.remove(old)
-            if path is not None:
-                source = etree.Element("source", file=path)
-                driver = disk.find("driver")
-                disk.insert(list(disk).index(driver) + 1 if driver is not None else 0, source)
-            flags = 0
-            if dom.isActive():
-                flags |= libvirt.VIR_DOMAIN_AFFECT_LIVE
-            if dom.isPersistent():
-                flags |= libvirt.VIR_DOMAIN_AFFECT_CONFIG
-            dom.updateDeviceFlags(etree.tostring(disk).decode(), flags)
-
-        ctx.conn.run(op)
+        hardware.set_media(ctx.conn, uuid, target, path)
 
     await run_in_threadpool(run)
     return Response(status_code=204)

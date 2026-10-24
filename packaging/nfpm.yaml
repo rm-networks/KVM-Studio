@@ -36,6 +36,7 @@ overrides:
       - libvirt-daemon-config-network
       - qemu-kvm
       - qemu-img
+      - xorriso
       - libosinfo
       - edk2-ovmf
       - swtpm-tools

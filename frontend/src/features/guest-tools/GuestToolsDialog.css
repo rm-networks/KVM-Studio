@@ -33,3 +33,48 @@
   gap: 8px;
   margin: 4px 0;
 }
+
+.guest-tools-steps {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.guest-tools-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  color: var(--text-muted);
+}
+
+.guest-tools-step.done {
+  color: var(--text);
+}
+
+.guest-tools-step.done svg {
+  color: var(--state-running);
+}
+
+.guest-tools-dot {
+  display: inline-block;
+  width: 14px;
+}
+
+.guest-tools-command {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.guest-tools-command code {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-small);
+  word-break: break-all;
+  user-select: text;
+}

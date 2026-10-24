@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import shutil
+import subprocess
 import uuid as uuidlib
 from collections.abc import Iterator
 from pathlib import Path
@@ -8,48 +11,15 @@ from typing import Any
 import libvirt
 import pytest
 from fastapi.testclient import TestClient
+from lxml import etree
 
 from kvmstudio.config import Config
-from kvmstudio.guesttools import install
-from kvmstudio.guesttools.keymaps import ALTGR, KEY, SHIFT, UnsupportedCharacter, strokes
+from kvmstudio.guesttools import tools
 from kvmstudio.services.library import metadata_values
 
 from .helpers import AUTH, touch
 
-
-def test_azerty_and_qwerty_tables() -> None:
-    assert strokes("a", "fr") == [(KEY["Q"],)]
-    assert strokes("a", "us") == [(KEY["A"],)]
-    assert strokes("M", "fr") == [(SHIFT, KEY["SEMICOLON"])]
-    assert strokes("1", "fr") == [(SHIFT, KEY["1"])]
-    assert strokes("1", "us") == [(KEY["1"],)]
-    assert strokes("./", "fr") == [(SHIFT, KEY["COMMA"]), (SHIFT, KEY["DOT"])]
-    assert strokes("\\|", "fr") == [(ALTGR, KEY["8"]), (ALTGR, KEY["6"])]
-    assert strokes("\\|", "us") == [(KEY["BACKSLASH"],), (SHIFT, KEY["BACKSLASH"])]
-
-
-@pytest.mark.parametrize("layout", ["fr", "us"])
-@pytest.mark.parametrize("command", [install.LINUX_COMMAND, install.WINDOWS_COMMAND])
-def test_install_commands_can_be_typed(command: str, layout: str) -> None:
-    assert len(strokes(command, layout)) == len(command)  # type: ignore[arg-type]
-
-
-def test_unknown_characters_are_refused() -> None:
-    with pytest.raises(UnsupportedCharacter, match="€"):
-        strokes("5 €", "us")
-
-
-def test_type_text_sends_one_stroke_per_character() -> None:
-    sent: list[list[int]] = []
-    install.type_text(sent.append, "ls -l\n", "fr", lambda _s: None)
-    assert sent == [
-        [KEY["L"]],
-        [KEY["S"]],
-        [KEY["SPACE"]],
-        [KEY["6"]],
-        [KEY["L"]],
-        [KEY["ENTER"]],
-    ]
+needs_xorriso = pytest.mark.skipif(shutil.which("xorriso") is None, reason="needs xorriso")
 
 
 def test_family_guesses() -> None:
@@ -58,93 +28,156 @@ def test_family_guesses() -> None:
         "'https://github.com/rm-networks/kvm-studio/ns/1.0'><kvmstudio:profile>windows11"
         "</kvmstudio:profile></kvmstudio:vm></metadata></domain>"
     )
-    assert install.guess_family(ours) == "windows"
+    assert tools.guess_family(ours) == "windows"
     virt_manager = (
         "<domain><metadata><libosinfo:libosinfo xmlns:libosinfo="
         "'http://libosinfo.org/xmlns/libvirt/domain/1.0'><libosinfo:os "
         "id='http://debian.org/debian/13'/></libosinfo:libosinfo></metadata></domain>"
     )
-    assert install.guess_family(virt_manager) == "linux"
-    assert install.guess_family("<domain/>") is None
+    assert tools.guess_family(virt_manager) == "linux"
+    assert tools.guess_family("<domain/>") is None
 
 
-@pytest.fixture
-def no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kvmstudio.guesttools.install.time.sleep", lambda _s: None)
+def iso_listing(iso: Path) -> str:
+    out = subprocess.run(  # noqa: S603
+        ["xorriso", "-indev", str(iso), "-pvd_info", "-lsl", "/"],  # noqa: S607
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return out.stdout + out.stderr
 
 
-@pytest.fixture
-def cd_vm(conn: Any) -> Iterator[libvirt.virDomain]:
+@needs_xorriso
+def test_linux_cd(tmp_path: Path) -> None:
+    iso = tools.build_iso("linux", tmp_path / "Tools" / "linux.iso")
+    listing = iso_listing(iso)
+    assert "Volume Id    : KS_TOOLS" in listing
+    assert "-r-xr-xr-x" in listing
+    assert "install.sh" in listing
+    # The script reaches every supported package manager.
+    script = (tools.FILES / "linux" / "install.sh").read_text()
+    for manager in ("apt-get", "dnf", "zypper", "pacman"):
+        assert manager in script
+    assert "qemu-guest-agent spice-vdagent" in script
+
+
+@needs_xorriso
+def test_windows_cd(tmp_path: Path) -> None:
+    listing = iso_listing(tools.build_iso("windows", tmp_path / "windows.iso"))
+    assert "autorun.inf" in listing
+    assert "Install-Tools.bat" in listing
+    bat = (tools.FILES / "windows" / "Install-Tools.bat").read_bytes()
+    assert b"\r\n" in bat
+    assert b"/quiet /norestart" in bat
+    assert b"-Verb RunAs" in bat
+    assert b"open=Install-Tools.bat" in (tools.FILES / "windows" / "autorun.inf").read_bytes()
+
+
+def make_vm(conn: Any, drives: list[str | None], *, start: bool) -> libvirt.virDomain:
+    disks = "".join(
+        "<disk type='file' device='cdrom'><driver name='qemu' type='raw'/>"
+        + (f"<source file='{path}'/>" if path else "")
+        + f"<target dev='sd{chr(97 + i)}' bus='sata'/><readonly/></disk>"
+        for i, path in enumerate(drives)
+    )
     xml = (
         f"<domain type='test'><name>gt-{uuidlib.uuid4().hex[:6]}</name><memory>65536</memory>"
-        "<os><type>hvm</type></os><devices>"
-        "<disk type='file' device='cdrom'><target dev='sda' bus='sata'/><readonly/></disk>"
-        "</devices></domain>"
+        f"<os><type>hvm</type></os><devices>{disks}</devices></domain>"
     )
-    dom = conn.run(lambda c: c.defineXML(xml))
-    dom.create()
-    yield dom
-    dom.destroy()
-    dom.undefine()
+    dom: libvirt.virDomain = conn.run(lambda c: c.defineXML(xml))
+    if start:
+        dom.create()
+    return dom
 
 
-def test_linux_install_types_and_remembers_the_layout(
-    lib_client: TestClient, conn: Any, no_sleep: None
+@pytest.fixture
+def vms(conn: Any) -> Iterator[list[libvirt.virDomain]]:
+    created: list[libvirt.virDomain] = []
+    yield created
+    for dom in created:
+        if dom.isActive():
+            dom.destroy()
+        dom.undefine()
+
+
+def media(dom: libvirt.virDomain, flags: int = 0) -> dict[str, str | None]:
+    root = etree.fromstring(dom.XMLDesc(flags).encode())
+    result: dict[str, str | None] = {}
+    for disk in root.iterfind("devices/disk[@device='cdrom']"):
+        source = disk.find("source")
+        target = disk.find("target")
+        assert target is not None
+        result[target.get("dev", "")] = source.get("file") if source is not None else None
+    return result
+
+
+@needs_xorriso
+def test_linux_insert_and_eject(
+    lib_client: TestClient, conn: Any, vms: list[libvirt.virDomain], tmp_path: Path
 ) -> None:
-    uuid = conn.run(lambda c: c.lookupByName("test").UUIDString())
-    body = {"family": "linux", "layout": "fr"}
-    result = lib_client.post(f"/api/vms/{uuid}/guest-tools", headers=AUTH, json=body).json()
-    assert result == {"typed": True, "drive": None}
-    xml = conn.run(lambda c: c.lookupByUUIDString(uuid).XMLDesc(0))
-    assert metadata_values(xml)["keyboard"] == "fr"
-    info = lib_client.get(f"/api/vms/{uuid}/guest-tools", headers=AUTH).json()
-    assert (info["family"], info["layout"], info["agent"]) == ("linux", "fr", False)
+    previous = touch(tmp_path / "iso" / "debian.iso")
+    dom = make_vm(conn, [str(previous)], start=True)
+    vms.append(dom)
+    url = f"/api/vms/{dom.UUIDString()}/guest-tools"
+    result = lib_client.post(url, headers=AUTH, json={"family": "linux"}).json()
+    # No agent channel: added to the config, so a restart is due.
+    assert result == {"drives": ["sda"], "restart_required": True}
+    cd = tmp_path / "data" / "KVM-Studio" / "Tools" / "kvmstudio-tools-linux.iso"
+    assert media(dom) == {"sda": str(cd)}
+    assert tools.has_agent_channel(dom.XMLDesc(libvirt.VIR_DOMAIN_XML_INACTIVE))
+    info = lib_client.get(url, headers=AUTH).json()
+    assert info["inserted"] is True
+    assert "LABEL=KS_TOOLS" in info["linux_command"]
+    assert json.loads(metadata_values(dom.XMLDesc(0))["tools_media"]) == {"sda": str(previous)}
+
+    assert lib_client.post(f"{url}/eject", headers=AUTH).json() == {"drives": ["sda"]}
+    assert media(dom) == {"sda": str(previous)}
+    assert lib_client.get(url, headers=AUTH).json()["inserted"] is False
+
+
+@needs_xorriso
+def test_windows_adds_a_second_drive_for_virtio_win(
+    lib_client: TestClient,
+    lib_config: Config,
+    conn: Any,
+    vms: list[libvirt.virDomain],
+    tmp_path: Path,
+) -> None:
+    virtio = touch(tmp_path / "iso" / "drivers" / "virtio-win.iso")
+    lib_config.defaults.virtio_win_iso = virtio
+    dom = make_vm(conn, [None], start=False)
+    vms.append(dom)
+    url = f"/api/vms/{dom.UUIDString()}/guest-tools"
+    result = lib_client.post(url, headers=AUTH, json={"family": "windows"}).json()
+    assert result == {"drives": ["sda", "sdb"], "restart_required": False}
+    cd = tmp_path / "data" / "KVM-Studio" / "Tools" / "kvmstudio-tools-windows.iso"
+    assert media(dom) == {"sda": str(cd), "sdb": str(virtio)}
+    lib_client.post(f"{url}/eject", headers=AUTH)
+    # The added drive stays, empty.
+    assert media(dom) == {"sda": None, "sdb": None}
 
 
 def test_windows_needs_the_virtio_iso(
-    lib_client: TestClient, cd_vm: libvirt.virDomain, no_sleep: None
+    lib_client: TestClient, conn: Any, vms: list[libvirt.virDomain]
 ) -> None:
-    body = {"family": "windows", "layout": "fr"}
+    dom = make_vm(conn, [None], start=False)
+    vms.append(dom)
     response = lib_client.post(
-        f"/api/vms/{cd_vm.UUIDString()}/guest-tools", headers=AUTH, json=body
+        f"/api/vms/{dom.UUIDString()}/guest-tools", headers=AUTH, json={"family": "windows"}
     )
     assert response.json()["error"]["code"] == "guest.no_virtio_iso"
 
 
-def test_windows_inserts_virtio_win(
-    lib_client: TestClient,
-    lib_config: Config,
-    cd_vm: libvirt.virDomain,
-    tmp_path: Path,
-    no_sleep: None,
+def test_unsupported_family(
+    lib_client: TestClient, conn: Any, vms: list[libvirt.virDomain]
 ) -> None:
-    iso = touch(tmp_path / "iso" / "drivers" / "virtio-win.iso")
-    lib_config.defaults.virtio_win_iso = iso
-    body = {"family": "windows", "layout": "us"}
-    url = f"/api/vms/{cd_vm.UUIDString()}/guest-tools"
-    result = lib_client.post(url, headers=AUTH, json=body)
-    assert result.json() == {"typed": True, "drive": "sda"}
-    assert str(iso) in cd_vm.XMLDesc(0)
-
-
-def test_install_refusals(lib_client: TestClient, conn: Any, no_sleep: None) -> None:
-    xml = (
-        "<domain type='test'><name>gt-off</name><memory>65536</memory>"
-        "<os><type>hvm</type></os></domain>"
+    dom = make_vm(conn, [None], start=False)
+    vms.append(dom)
+    response = lib_client.post(
+        f"/api/vms/{dom.UUIDString()}/guest-tools", headers=AUTH, json={"family": "bsd"}
     )
-    dom = conn.run(lambda c: c.defineXML(xml))
-    try:
-        uuid = dom.UUIDString()
-        off = lib_client.post(
-            f"/api/vms/{uuid}/guest-tools", headers=AUTH, json={"family": "linux", "layout": "fr"}
-        )
-        assert off.json()["error"]["code"] == "vm.not_running"
-        bsd = lib_client.post(
-            f"/api/vms/{uuid}/guest-tools", headers=AUTH, json={"family": "bsd", "layout": "fr"}
-        )
-        assert bsd.json()["error"]["code"] == "guest.unsupported"
-    finally:
-        dom.undefine()
+    assert response.json()["error"]["code"] == "guest.unsupported"
 
 
 def test_agent_status_without_agent(lib_client: TestClient, conn: Any) -> None:

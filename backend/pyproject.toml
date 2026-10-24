@@ -40,4 +40,4 @@ kvm-studio = "kvmstudio.__main__:main"
 include = ["kvmstudio*"]
 
 [tool.setuptools.package-data]
-kvmstudio = ["py.typed"]
+kvmstudio = ["py.typed", "guesttools/files/*/*"]
