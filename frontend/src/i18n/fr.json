@@ -147,7 +147,8 @@
       "no_domain": "Cette machine virtuelle n'existe plus.",
       "error": "libvirt a renvoyé une erreur.",
       "invalid_state": "Opération impossible dans l'état actuel de la machine virtuelle.",
-      "unsupported": "Cette opération n'est pas prise en charge par la version de libvirt installée."
+      "unsupported": "Cette opération n'est pas prise en charge par la version de libvirt installée.",
+      "no_network": "Ce réseau n'existe plus."
     },
     "network": {
       "unreachable": "Le serveur interne de KVM Studio ne répond pas."
@@ -166,6 +167,24 @@
     },
     "path": {
       "not_allowed": "Ce chemin est hors des dossiers autorisés."
+    },
+    "net": {
+      "nat_needs_adapter": "Un réseau NAT a toujours une adresse sur l'hôte.",
+      "subnet_required": "Indiquez un sous-réseau.",
+      "bad_prefix": "Utilisez un préfixe entre /8 et /30.",
+      "not_private": "Utilisez une plage d'adresses privée (10.x, 172.16-31.x, 192.168.x).",
+      "dhcp_needs_adapter": "Le DHCP de libvirt a besoin de la carte virtuelle de l'hôte.",
+      "bad_dhcp": "Plage DHCP invalide : elle doit tenir dans le sous-réseau sans inclure l'adresse de l'hôte.",
+      "bad_subnet": "Sous-réseau invalide.",
+      "overlap": "Ce sous-réseau chevauche un réseau existant ou le réseau local.",
+      "no_free_subnet": "Aucun sous-réseau 192.168.x.0/24 libre.",
+      "no_free_number": "Tous les numéros kvmnet sont pris.",
+      "bad_name": "Nom de réseau invalide.",
+      "bad_number": "Ce numéro kvmnet est réservé.",
+      "exists": "Un réseau porte déjà ce nom.",
+      "bridge_taken": "Ce pont kvmnet est déjà utilisé.",
+      "not_editable": "Ce réseau n'est ni Host-only ni NAT : modifiez-le dans virt-manager.",
+      "in_use": "Des machines virtuelles utilisent ce réseau."
     },
     "library": {
       "no_location": "Aucun emplacement des machines virtuelles n'est configuré.",
@@ -259,6 +278,62 @@
     "mib": "{{value}} Mio"
   },
   "common": {
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "ok": "OK",
+    "apply": "Appliquer"
+  },
+  "networks": {
+    "title": "Éditeur de réseaux virtuels",
+    "col": {
+      "name": "Nom",
+      "type": "Type",
+      "external": "Connexion externe",
+      "host": "Connexion hôte",
+      "dhcp": "DHCP",
+      "subnet": "Sous-réseau"
+    },
+    "kind": {
+      "host_only": "Host-only",
+      "nat": "NAT",
+      "other": "Autre ({{mode}})"
+    },
+    "connected": "Connecté",
+    "enabled": "Activé",
+    "stopped": "arrêté",
+    "add": "Ajouter un réseau",
+    "remove": "Supprimer le réseau",
+    "rename": "Renommer le réseau",
+    "newName": "Nouveau nom",
+    "info": "Réseau {{name}}",
+    "bridged": "Bridged (relié directement au réseau externe)",
+    "bridgedLater": "Disponible dans une prochaine version",
+    "natLabel": "NAT (partage l'adresse IP de l'hôte avec les machines virtuelles)",
+    "hostOnlyLabel": "Host-only (réseau privé entre les machines virtuelles)",
+    "hostAdapter": "Connecter une carte virtuelle de l'hôte à ce réseau",
+    "bridgeName": "Nom de la carte hôte : {{bridge}}",
+    "dhcp": "Utiliser le service DHCP local pour distribuer des adresses IP",
+    "dhcpNeedsAdapter": "Le service DHCP de libvirt a besoin de la carte virtuelle de l'hôte.",
+    "dhcpStart": "Première adresse",
+    "dhcpEnd": "Dernière adresse",
+    "subnetIp": "Adresse du sous-réseau",
+    "subnetMask": "Masque",
+    "started": "Démarré",
+    "autostart": "Démarrage automatique avec l'hôte",
+    "usedBy": "Utilisé par : {{names}}",
+    "notEditable": "Réseau libvirt de type « {{mode}} » : ses réglages se modifient dans virt-manager. Il peut être démarré, arrêté, renommé ou supprimé ici.",
+    "restore": "Restaurer les valeurs par défaut",
+    "confirmRestore": "kvmnet1 (Host-only) et kvmnet8 (NAT) seront créés s'ils n'existent pas, ou remis à leurs réglages par défaut. Les autres réseaux ne changent pas.",
+    "confirmRemove": "Supprimer le réseau « {{name}} » ? Les machines virtuelles qui l'utilisent empêchent la suppression.",
+    "import": "Importer…",
+    "export": "Exporter…",
+    "imported_one": "{{count}} réseau importé",
+    "imported_other": "{{count}} réseaux importés",
+    "skipped": "Déjà présents ou refusés : {{names}}",
+    "applyFailed": "Impossible de modifier {{name}}",
+    "invalid": {
+      "subnet": "Adresse ou masque de sous-réseau invalide (préfixe entre /8 et /30).",
+      "dhcp": "Indiquez la première et la dernière adresse DHCP.",
+      "name": "Lettres, chiffres, point, tiret et souligné, 50 caractères au plus."
+    }
   }
 }

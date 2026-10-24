@@ -147,7 +147,8 @@
       "no_domain": "This virtual machine no longer exists.",
       "error": "libvirt returned an error.",
       "invalid_state": "Not possible in the current state of the virtual machine.",
-      "unsupported": "This operation is not supported by the installed libvirt version."
+      "unsupported": "This operation is not supported by the installed libvirt version.",
+      "no_network": "This network no longer exists."
     },
     "network": {
       "unreachable": "The KVM Studio internal server is not responding."
@@ -166,6 +167,24 @@
     },
     "path": {
       "not_allowed": "This path is outside the allowed folders."
+    },
+    "net": {
+      "nat_needs_adapter": "A NAT network always has an address on the host.",
+      "subnet_required": "Enter a subnet.",
+      "bad_prefix": "Use a prefix between /8 and /30.",
+      "not_private": "Use a private address range (10.x, 172.16-31.x, 192.168.x).",
+      "dhcp_needs_adapter": "libvirt's DHCP needs the host virtual adapter.",
+      "bad_dhcp": "Invalid DHCP range: it must fit in the subnet without the host address.",
+      "bad_subnet": "Invalid subnet.",
+      "overlap": "This subnet overlaps an existing network or the local network.",
+      "no_free_subnet": "No free 192.168.x.0/24 subnet.",
+      "no_free_number": "Every kvmnet number is taken.",
+      "bad_name": "Invalid network name.",
+      "bad_number": "This kvmnet number is reserved.",
+      "exists": "A network already has this name.",
+      "bridge_taken": "This kvmnet bridge is already used.",
+      "not_editable": "This network is neither host-only nor NAT: edit it in virt-manager.",
+      "in_use": "Virtual machines use this network."
     },
     "library": {
       "no_location": "No virtual machine location is configured.",
@@ -257,6 +276,62 @@
     "mib": "{{value}} MiB"
   },
   "common": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "ok": "OK",
+    "apply": "Apply"
+  },
+  "networks": {
+    "title": "Virtual Network Editor",
+    "col": {
+      "name": "Name",
+      "type": "Type",
+      "external": "External Connection",
+      "host": "Host Connection",
+      "dhcp": "DHCP",
+      "subnet": "Subnet Address"
+    },
+    "kind": {
+      "host_only": "Host-only",
+      "nat": "NAT",
+      "other": "Other ({{mode}})"
+    },
+    "connected": "Connected",
+    "enabled": "Enabled",
+    "stopped": "stopped",
+    "add": "Add Network",
+    "remove": "Remove Network",
+    "rename": "Rename Network",
+    "newName": "New name",
+    "info": "Network {{name}}",
+    "bridged": "Bridged (connect VMs directly to the external network)",
+    "bridgedLater": "Available in a future version",
+    "natLabel": "NAT (shares the host's IP address with the VMs)",
+    "hostOnlyLabel": "Host-only (private network between the VMs)",
+    "hostAdapter": "Connect a host virtual adapter to this network",
+    "bridgeName": "Host adapter name: {{bridge}}",
+    "dhcp": "Use the local DHCP service to give IP addresses to VMs",
+    "dhcpNeedsAdapter": "libvirt's DHCP service needs the host virtual adapter.",
+    "dhcpStart": "First address",
+    "dhcpEnd": "Last address",
+    "subnetIp": "Subnet IP",
+    "subnetMask": "Subnet mask",
+    "started": "Started",
+    "autostart": "Start with the host",
+    "usedBy": "Used by: {{names}}",
+    "notEditable": "libvirt network of type \"{{mode}}\": edit its settings in virt-manager. It can be started, stopped, renamed or removed here.",
+    "restore": "Restore Defaults",
+    "confirmRestore": "kvmnet1 (Host-only) and kvmnet8 (NAT) will be created if missing, or reset to their default settings. Other networks are left alone.",
+    "confirmRemove": "Remove the network \"{{name}}\"? Virtual machines that use it prevent the removal.",
+    "import": "Import…",
+    "export": "Export…",
+    "imported_one": "{{count}} network imported",
+    "imported_other": "{{count}} networks imported",
+    "skipped": "Already present or refused: {{names}}",
+    "applyFailed": "Could not change {{name}}",
+    "invalid": {
+      "subnet": "Invalid subnet address or mask (prefix between /8 and /30).",
+      "dhcp": "Enter the first and last DHCP addresses.",
+      "name": "Letters, digits, dot, dash and underscore, 50 characters at most."
+    }
   }
 }

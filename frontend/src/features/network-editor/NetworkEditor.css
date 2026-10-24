@@ -1,0 +1,129 @@
+.net-table-wrap {
+  height: 170px;
+  overflow: auto;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+
+.net-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size);
+}
+
+.net-table th {
+  position: sticky;
+  top: 0;
+  padding: 3px 8px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-alt);
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.net-table td {
+  padding: 1px 8px;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.net-table tbody tr:hover {
+  background: var(--hover);
+}
+
+.net-table tbody tr.selected {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.net-table tbody tr.selected .net-muted {
+  color: inherit;
+}
+
+.net-row-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 6px 0 10px;
+}
+
+.net-panel {
+  margin: 0;
+  padding: 6px 12px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.net-panel legend {
+  padding: 0 4px;
+}
+
+.net-panel hr {
+  margin: 6px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.net-radio,
+.net-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+}
+
+.net-disabled {
+  color: var(--text-disabled);
+}
+
+.net-indent {
+  margin: 0 0 4px 22px;
+}
+
+.net-grid {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.net-grid label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.net-grid input {
+  width: 130px;
+  height: 22px;
+  padding: 0 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-family: var(--font-mono);
+  user-select: text;
+}
+
+.net-grid input:disabled {
+  opacity: 0.5;
+}
+
+.net-state {
+  display: flex;
+  gap: 18px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.net-muted {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+}
+
+.net-spacer {
+  flex: 1;
+}

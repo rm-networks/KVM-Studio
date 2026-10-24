@@ -27,10 +27,11 @@ interface Props {
   layout: Layout;
   onToggle: (key: keyof Layout) => void;
   onAbout: () => void;
+  onNetworkEditor: () => void;
   vm: VmSummary | null;
 }
 
-export function MenuBar({ layout, onToggle, onAbout, vm }: Props) {
+export function MenuBar({ layout, onToggle, onAbout, onNetworkEditor, vm }: Props) {
   const { t } = useTranslation();
   const m = (key: string) => t(`menu.${key}`);
   const actions = useVmActions();
@@ -79,7 +80,7 @@ export function MenuBar({ layout, onToggle, onAbout, vm }: Props) {
         item(m("copy"), ["Ctrl", "C"]),
         item(m("paste"), ["Ctrl", "V"]),
         sep,
-        item(m("networkEditor")),
+        item(m("networkEditor"), undefined, onNetworkEditor),
         item(m("preferences"), ["Ctrl", "P"]),
       ],
     ],

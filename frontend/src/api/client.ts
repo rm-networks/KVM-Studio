@@ -12,6 +12,13 @@ export type LibraryInfo = components["schemas"]["LibraryInfo"];
 export type FolderDeletionPlan = components["schemas"]["FolderDeletionPlan"];
 export type ImportResult = components["schemas"]["ImportResult"];
 export type Drift = VmSummary["drift"][number];
+export type Network = components["schemas"]["Network"];
+export type NetworkSettings = components["schemas"]["NetworkSettings"];
+export type NetworkCreate = components["schemas"]["NetworkCreate"];
+export type NetworkSuggestion = components["schemas"]["Suggestion"];
+export type NetworkExport = components["schemas"]["NetworkExport-Output"];
+export type NetworkImport = components["schemas"]["NetworkExport-Input"];
+export type ImportReport = components["schemas"]["ImportReport"];
 type ApiErrorBody = components["schemas"]["ApiError"];
 
 export class ApiError extends Error {
@@ -89,6 +96,23 @@ export const api = {
       "GET",
       `/api/library/folders/deletion-plan?path=${encodeURIComponent(path)}`,
     ),
+  networks: () => request<Network[]>("GET", "/api/networks"),
+  networkSuggestion: () => request<NetworkSuggestion>("GET", "/api/networks/suggestion"),
+  createNetwork: (body: NetworkCreate) => request<Network>("POST", "/api/networks", body),
+  updateNetwork: (name: string, body: NetworkSettings) =>
+    request<undefined>("PUT", `/api/networks/${encodeURIComponent(name)}`, body),
+  renameNetwork: (name: string, newName: string) =>
+    request<undefined>("POST", `/api/networks/${encodeURIComponent(name)}/rename`, {
+      name: newName,
+    }),
+  setNetworkState: (name: string, state: { active?: boolean; autostart?: boolean }) =>
+    request<undefined>("PATCH", `/api/networks/${encodeURIComponent(name)}`, state),
+  deleteNetwork: (name: string) =>
+    request<undefined>("DELETE", `/api/networks/${encodeURIComponent(name)}`),
+  restoreDefaultNetworks: () => request<string[]>("POST", "/api/networks/defaults"),
+  exportNetworks: () => request<NetworkExport>("GET", "/api/networks/export"),
+  importNetworks: (body: NetworkImport) =>
+    request<ImportReport>("POST", "/api/networks/import", body),
   deleteFolder: (path: string) =>
     request<{ failed: string[] }>(
       "DELETE",

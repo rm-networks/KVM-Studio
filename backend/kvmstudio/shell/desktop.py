@@ -89,6 +89,8 @@ def run(config: Config) -> int:
             min_size=(900, 600),
             js_api=api,
         )
+        # Lets the network editor export its JSON file.
+        webview.settings["ALLOW_DOWNLOADS"] = True
         webview.start(gui=gui, icon=str(icon) if icon and icon.is_file() else None)
     finally:
         server.stop()
