@@ -44,7 +44,14 @@ redémarre le réseau : c'est refusé tant qu'une VM allumée l'utilise.
 
 Le paquet installe `/etc/NetworkManager/conf.d/90-kvm-studio.conf`, qui rend
 les ponts `kvmnet*` et les cartes des VMs `ks-*` invisibles dans l'applet réseau
-du bureau. Depuis les sources, on peut l'installer à la main :
+du bureau. Il déclare une section `[device-kvm-studio]` (`managed=0`) plutôt que
+la clé `[keyfile] unmanaged-devices` : un autre fichier de `conf.d` qui définit
+cette clé (par exemple pour `virbr*`) la remplacerait, alors que les sections
+`[device-*]` s'additionnent. À l'installation, le paquet libère aussi les ponts
+et cartes que NetworkManager avait déjà pris (« connecté (en externe) ») et
+supprime les profils restés sur ces interfaces.
+
+Depuis les sources, on peut l'installer à la main :
 
 ```bash
 sudo cp packaging/networkmanager/90-kvm-studio.conf /etc/NetworkManager/conf.d/

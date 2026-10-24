@@ -95,7 +95,7 @@ def _check_networkmanager(conf_dir: Path = NM_CONF_DIR) -> Result | None:
         content = installed.read_text()
     except OSError:
         content = ""
-    if "interface-name:kvmnet*" in content:
+    if "[device-kvm-studio]" in content and "interface-name:kvmnet*" in content:
         return Result("ok", item, f"{installed} hides kvmnet* and ks-* interfaces")
     source = _packaged_nm_conf()
     command = (
@@ -106,7 +106,7 @@ def _check_networkmanager(conf_dir: Path = NM_CONF_DIR) -> Result | None:
     return Result(
         "warn",
         item,
-        f"{installed} is missing: KVM Studio networks show up in the network applet.\n"
+        f"{installed} is missing or outdated: KVM Studio networks show up in the network applet.\n"
         f"       To fix it: {command}",
     )
 

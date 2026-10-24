@@ -17,6 +17,7 @@ import re
 import shlex
 import stat
 import struct
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -153,3 +154,27 @@ def check(path: str, who: Identity | None, *, selinux: bool | None = None) -> Ac
         report.readable = False
         report.problems.append(("no_labels", path))
     return report
+
+
+def grant_search_on_own_folders(report: AccessReport, who: Identity) -> list[str]:
+    """Let QEMU traverse the folders of the report that belong to this user.
+
+    Folders above an ISO library (the home folder, say) are the user's own:
+    the user may change their ACL without the helper. Returns the folders done.
+    """
+    done = []
+    for kind, path in report.problems:
+        folder = Path(path)
+        if kind != "no_search" or not folder.is_dir() or folder.stat().st_uid != os.getuid():
+            continue
+        try:
+            result = subprocess.run(  # noqa: S603
+                ["setfacl", "-m", f"u:{who.uid}:x", "--", str(folder)],  # noqa: S607
+                capture_output=True,
+                check=False,
+            )
+        except OSError:
+            break  # no setfacl: the dialog still shows the command
+        if result.returncode == 0:
+            done.append(path)
+    return done

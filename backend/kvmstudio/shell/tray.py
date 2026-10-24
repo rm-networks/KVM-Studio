@@ -62,6 +62,9 @@ def run_tray(
 
     gui.QGuiApplication.setDesktopFileName("kvm-studio")
     app = widgets.QApplication.instance() or widgets.QApplication([])
+    # The StatusNotifierItem title the desktop shows next to the icon.
+    app.setApplicationName("kvm-studio")
+    app.setApplicationDisplayName("KVM Studio")
     if not widgets.QSystemTrayIcon.isSystemTrayAvailable():
         return None
     app.setQuitOnLastWindowClosed(False)

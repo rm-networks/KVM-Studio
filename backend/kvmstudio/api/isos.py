@@ -108,7 +108,12 @@ async def fix_access(ctx: Context, body: AccessFix) -> AccessReport:
     def run() -> AccessReport:
         if not in_iso_library(body.path, ctx.config):
             raise ApiException(403, "path.not_allowed", f"{body.path} is not in an ISO library")
-        helper_client.call("iso_acl", {"path": str(confine(body.path, ctx.config))})
+        target = str(confine(body.path, ctx.config))
+        helper_client.call("iso_acl", {"path": target})
+        # The folders above the library that the user owns: no root needed.
+        who = _qemu_identity(ctx)
+        if who is not None:
+            access.grant_search_on_own_folders(access.check(target, who), who)
         return _report(ctx, body.path)
 
     return await run_in_threadpool(run)

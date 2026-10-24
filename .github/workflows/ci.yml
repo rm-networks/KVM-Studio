@@ -99,6 +99,7 @@ jobs:
           python3 -c "import socket; s = socket.socket(socket.AF_UNIX); s.connect('/tmp/h.sock'); s.sendall(b'{\"op\": \"exec\", \"params\": {}}\n'); a = s.makefile().readline(); print(a); assert 'unknown_operation' in a"
           dnf remove -y kvm-studio
           test ! -e /opt/kvm-studio
+          test ! -e /etc/kvm-studio
 
       - uses: actions/upload-artifact@v4
         with:

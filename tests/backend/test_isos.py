@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import struct
 import threading
 import uuid as uuidlib
@@ -281,3 +282,18 @@ def test_fix_access_without_helper(
         "/api/isos/access/fix", json={"path": str(isos / "debian-13.iso")}, headers=AUTH
     )
     assert (r.status_code, r.json()["error"]["code"]) == (503, "helper.unavailable")
+
+
+def test_own_parent_folders_get_search_access(tmp_path: Path) -> None:
+    if shutil.which("setfacl") is None:
+        pytest.skip("needs setfacl")
+    home = tmp_path / "home"
+    library = home / "iso"
+    iso = touch(library / "x.iso")
+    home.chmod(0o700)
+    who = access.Identity(65534, 65534, frozenset({65534}), "nobody")
+    report = access.check(str(iso), who, selinux=False)
+    assert ("no_search", str(home)) in report.problems
+    done = access.grant_search_on_own_folders(report, who)
+    assert str(home) in done
+    assert access.allowed(home, who, access.X)

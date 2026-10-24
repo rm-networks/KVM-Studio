@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
 
 from kvmstudio.__main__ import main
+
+PACKAGED_NM_CONF = (
+    Path(__file__).resolve().parents[2] / "packaging" / "networkmanager" / "90-kvm-studio.conf"
+)
 
 
 def write_config(tmp_path: Path, body: str) -> Path:
@@ -79,9 +84,14 @@ def test_networkmanager_rule_is_checked(tmp_path: Path) -> None:
     assert "sudo install -m 644" in missing.message
     assert "packaging/networkmanager/90-kvm-studio.conf" in missing.message
 
+    # The former [keyfile] rule can be replaced by another file: outdated.
     (conf_dir / NM_CONF_NAME).write_text(
         "[keyfile]\nunmanaged-devices=interface-name:kvmnet*;interface-name:ks-*\n"
     )
+    outdated = _check_networkmanager(conf_dir)
+    assert outdated is not None
+    assert outdated.level == "warn"
+    shutil.copy(PACKAGED_NM_CONF, conf_dir / NM_CONF_NAME)
     found = _check_networkmanager(conf_dir)
     assert found is not None
     assert found.level == "ok"
