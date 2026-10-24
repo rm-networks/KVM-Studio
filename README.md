@@ -21,6 +21,10 @@ Voir [docs/INSTALL.md](docs/INSTALL.md).
 - [Cahier des charges](docs/SPECIFICATIONS.md)
 - [Installation](docs/INSTALL.md)
 - [Configuration](docs/CONFIGURATION.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Réseaux virtuels](docs/NETWORKING.md)
+- [Interface](docs/INTERFACE.md)
+- [Feuille de route](docs/ROADMAP.md)
 
 ## Licence
 
