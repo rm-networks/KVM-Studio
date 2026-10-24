@@ -165,7 +165,14 @@
     "sessionTitle": "Session expirée",
     "vm": {
       "not_shut_off": "Éteignez d'abord la machine virtuelle.",
-      "no_cdrom": "Cette machine virtuelle n'a pas ce lecteur CD/DVD."
+      "no_cdrom": "Cette machine virtuelle n'a pas ce lecteur CD/DVD.",
+      "bad_name": "Nom de machine virtuelle invalide.",
+      "bad_profile": "Profil inconnu.",
+      "too_many_nics": "Dix cartes réseau au plus.",
+      "bad_format": "Format de disque inconnu.",
+      "secure_boot_needs_uefi": "Secure Boot demande l'UEFI.",
+      "exists": "Une machine virtuelle porte déjà ce nom.",
+      "disk_failed": "La création du disque a échoué."
     },
     "request": {
       "invalid": "Requête invalide."
@@ -303,7 +310,8 @@
     "mib": "{{value}} Mio",
     "mb": "Mo",
     "gb": "Go",
-    "kb": "Ko"
+    "kb": "Ko",
+    "mibShort": "Mio"
   },
   "common": {
     "cancel": "Annuler",
@@ -445,5 +453,72 @@
     },
     "fixWithCommands": "Pour corriger, lancez (le bouton « Corriger » arrivera avec le paquet) :",
     "changeFailed": "Impossible de changer le média de {{name}}"
+  },
+  "wizard": {
+    "title": "Nouvelle machine virtuelle",
+    "back": "< Précédent",
+    "next": "Suivant >",
+    "finish": "Terminer",
+    "creating": "Création…",
+    "failed": "Impossible de créer {{name}}",
+    "step": {
+      "source": "Installation",
+      "os": "Système invité",
+      "name": "Nom et emplacement",
+      "disk": "Disque",
+      "summary": "Récapitulatif"
+    },
+    "sourceIntro": "Comment installer le système d'exploitation ?",
+    "sourceIso": "Depuis une image ISO",
+    "noIso": "Aucune image choisie",
+    "chooseIso": "Choisir…",
+    "sourceLater": "J'installerai le système plus tard (disque vierge, lecteur CD vide)",
+    "sourceExisting": "Utiliser un disque existant (appliance, disque copié)",
+    "existingHint": "Le disque doit se trouver dans le dossier KVM Studio ; il est utilisé tel quel, sans copie.",
+    "osIntro": "Quel système va tourner dans cette machine virtuelle ? Le matériel proposé en dépend.",
+    "profile": {
+      "windows11": "Windows 11",
+      "windows10": "Windows 10",
+      "windows-server": "Windows Server",
+      "linux": "Linux",
+      "firewall": "Firewall / BSD",
+      "nested": "Hyperviseur imbriqué",
+      "other": "Autre système"
+    },
+    "profileHint": {
+      "windows11": "UEFI, Secure Boot et TPM 2.0, disque SATA",
+      "windows10": "UEFI, disque SATA",
+      "windows-server": "UEFI et Secure Boot, disque SATA",
+      "linux": "Debian, Ubuntu, Fedora, RHEL… avec virtio",
+      "firewall": "OPNsense, pfSense, FortiGate, Stormshield : 3 cartes réseau et console série",
+      "nested": "Proxmox, ESXi : processeur de l'hôte avec la virtualisation",
+      "other": "Matériel standard très compatible"
+    },
+    "noLibrary": "Aucun emplacement des machines virtuelles : choisissez-en un dans Édition > Préférences > Espace de travail.",
+    "vmName": "Nom de la machine virtuelle",
+    "folder": "Dossier de la bibliothèque",
+    "location": "Emplacement",
+    "diskSize": "Taille maximale du disque",
+    "diskBus": "Contrôleur",
+    "diskFormat": "Format",
+    "qcow2": "qcow2 (snapshots, place prise à l'usage)",
+    "raw": "raw (performances brutes, pas de snapshot)",
+    "preallocate": "Allouer tout l'espace maintenant",
+    "preallocated": "préalloué",
+    "windowsSata": "SATA est reconnu par l'installation de Windows sans pilote. VirtIO est plus rapide mais demande les pilotes virtio-win.",
+    "bus": {
+      "virtio": "VirtIO",
+      "scsi": "SCSI (virtio-scsi)",
+      "sata": "SATA",
+      "nvme": "NVMe",
+      "ide": "IDE"
+    },
+    "disk": "Disque",
+    "network": "Cartes réseau",
+    "firmware": "Firmware",
+    "customize": "Personnaliser le matériel…",
+    "addNic": "Ajouter une carte",
+    "removeNic": "Retirer la carte",
+    "startAfter": "Démarrer la machine virtuelle après sa création"
   }
 }

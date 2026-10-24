@@ -25,6 +25,9 @@ export type IsoListing = components["schemas"]["IsoListing"];
 export type IsoFile = components["schemas"]["IsoFile"];
 export type AccessReport = components["schemas"]["AccessReport"];
 export type CdromDevice = components["schemas"]["CdromDevice"];
+export type ProfileInfo = components["schemas"]["ProfileInfo"];
+export type HostCapabilities = components["schemas"]["HostInfo"];
+export type NewVmRequest = components["schemas"]["NewVmRequest"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
 export type Preferences = components["schemas"]["Preferences"] & { config: Config };
 export type SaveResult = components["schemas"]["SaveResult"];
@@ -105,6 +108,11 @@ export const api = {
       "GET",
       `/api/library/folders/deletion-plan?path=${encodeURIComponent(path)}`,
     ),
+  profiles: () => request<ProfileInfo[]>("GET", "/api/profiles"),
+  guessProfile: (iso: string) =>
+    request<{ profile: string }>("GET", `/api/profiles/guess?iso=${encodeURIComponent(iso)}`),
+  host: () => request<HostCapabilities>("GET", "/api/host"),
+  createVm: (body: NewVmRequest) => request<{ uuid: string }>("POST", "/api/vms", body),
   isos: () => request<IsoListing>("GET", "/api/isos"),
   isoAccess: (path: string) =>
     request<AccessReport>("GET", `/api/isos/access?path=${encodeURIComponent(path)}`),

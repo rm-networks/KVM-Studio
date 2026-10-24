@@ -58,6 +58,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/profiles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Profiles */
+    get: operations["profiles_api_profiles_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/profiles/guess": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Guess */
+    get: operations["guess_api_profiles_guess_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/host": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Host */
+    get: operations["host_api_host_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/vms": {
     parameters: {
       query?: never;
@@ -68,7 +119,8 @@ export interface paths {
     /** List Vms */
     get: operations["list_vms_api_vms_get"];
     put?: never;
-    post?: never;
+    /** Create Vm */
+    post: operations["create_vm_api_vms_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -547,6 +599,11 @@ export interface components {
       defaults?: components["schemas"]["DefaultsSettings"];
       ui?: components["schemas"]["UiSettings"];
     };
+    /** Created */
+    Created: {
+      /** Uuid */
+      uuid: string;
+    };
     /** DefaultsSettings */
     DefaultsSettings: {
       /**
@@ -651,6 +708,11 @@ export interface components {
       /** Name */
       name: string;
     };
+    /** Guess */
+    Guess: {
+      /** Profile */
+      profile: string;
+    };
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -664,6 +726,23 @@ export interface components {
        * @constant
        */
       status: "ok";
+    };
+    /** HostInfo */
+    HostInfo: {
+      /** Cpus */
+      cpus: number;
+      /** Memory Mib */
+      memory_mib: number;
+      /** Disk Buses */
+      disk_buses: ("virtio" | "scsi" | "sata" | "nvme" | "ide")[];
+      /** Nic Models */
+      nic_models: ("virtio" | "e1000e" | "rtl8139" | "vmxnet3")[];
+      /** Uefi */
+      uefi: boolean;
+      /** Secure Boot */
+      secure_boot: boolean;
+      /** Tpm */
+      tpm: boolean;
     };
     /** ImportReport */
     ImportReport: {
@@ -898,6 +977,78 @@ export interface components {
       /** Autostart */
       autostart?: boolean | null;
     };
+    /** NewVmRequest */
+    NewVmRequest: {
+      /** Name */
+      name: string;
+      /**
+       * Folder
+       * @default
+       */
+      folder: string;
+      /** Profile */
+      profile: string;
+      /** Iso */
+      iso?: string | null;
+      /** Existing Disk */
+      existing_disk?: string | null;
+      /** Disk Gib */
+      disk_gib: number;
+      /**
+       * Disk Bus
+       * @enum {string}
+       */
+      disk_bus: "virtio" | "scsi" | "sata" | "nvme" | "ide";
+      /**
+       * Disk Format
+       * @default qcow2
+       */
+      disk_format: string;
+      /**
+       * Preallocate
+       * @default false
+       */
+      preallocate: boolean;
+      /** Memory Mib */
+      memory_mib: number;
+      /** Vcpus */
+      vcpus: number;
+      /**
+       * Nics
+       * @default []
+       */
+      nics: components["schemas"]["NicChoice"][];
+      /**
+       * Uefi
+       * @default true
+       */
+      uefi: boolean;
+      /**
+       * Secure Boot
+       * @default false
+       */
+      secure_boot: boolean;
+      /**
+       * Tpm
+       * @default false
+       */
+      tpm: boolean;
+      /**
+       * Start
+       * @default false
+       */
+      start: boolean;
+    };
+    /** NicChoice */
+    NicChoice: {
+      /** Network */
+      network: string;
+      /**
+       * Model
+       * @enum {string}
+       */
+      model: "virtio" | "e1000e" | "rtl8139" | "vmxnet3";
+    };
     /** Preferences */
     Preferences: {
       config: components["schemas"]["Config"];
@@ -905,6 +1056,44 @@ export interface components {
       config_path: string | null;
       /** Library Root */
       library_root: string | null;
+    };
+    /** ProfileInfo */
+    ProfileInfo: {
+      /** Id */
+      id: string;
+      /**
+       * Family
+       * @enum {string}
+       */
+      family: "windows" | "linux" | "bsd" | "other";
+      /** Memory Mib */
+      memory_mib: number;
+      /** Vcpus */
+      vcpus: number;
+      /** Disk Gib */
+      disk_gib: number;
+      /**
+       * Disk Bus
+       * @enum {string}
+       */
+      disk_bus: "virtio" | "scsi" | "sata" | "nvme" | "ide";
+      /**
+       * Nic Model
+       * @enum {string}
+       */
+      nic_model: "virtio" | "e1000e" | "rtl8139" | "vmxnet3";
+      /** Nics */
+      nics: number;
+      /** Uefi */
+      uefi: boolean;
+      /** Secure Boot */
+      secure_boot: boolean;
+      /** Tpm */
+      tpm: boolean;
+      /** Serial */
+      serial: boolean;
+      /** Nested */
+      nested: boolean;
     };
     /** Restarting */
     Restarting: {
@@ -1230,6 +1419,239 @@ export interface operations {
       };
     };
   };
+  profiles_api_profiles_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProfileInfo"][];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  guess_api_profiles_guess_get: {
+    parameters: {
+      query: {
+        iso: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Guess"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  host_api_host_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HostInfo"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
   list_vms_api_vms_get: {
     parameters: {
       query?: never;
@@ -1282,6 +1704,93 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  create_vm_api_vms_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["NewVmRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Created"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
       /** @description Internal Server Error */

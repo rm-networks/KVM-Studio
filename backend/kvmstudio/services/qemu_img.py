@@ -90,3 +90,11 @@ def convert(src: Path, dest: Path, fmt: str) -> None:
         )
     except subprocess.CalledProcessError as exc:
         raise QemuImgError(exc.stderr.strip() or str(exc)) from exc
+
+
+def create(path: Path, fmt: str, size_gib: int, *, preallocate: bool) -> None:
+    """New disk image; preallocation reserves the space now (falloc: fast, no zero fill)."""
+    args = ["create", "-q", "-f", fmt]
+    if preallocate:
+        args += ["-o", "preallocation=falloc"]
+    _run([*args, str(path), f"{size_gib}G"], timeout=600)

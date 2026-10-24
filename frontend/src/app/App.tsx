@@ -12,6 +12,7 @@ import { VmActionsProvider } from "../features/vm/VmActions";
 import { NetworkEditor } from "../features/network-editor/NetworkEditor";
 import { PreferencesDialog } from "../features/preferences/PreferencesDialog";
 import { IsoPicker } from "../features/iso-picker/IsoPicker";
+import { NewVmWizard } from "../features/wizard/NewVmWizard";
 import { useCdroms } from "../features/vm/useCdroms";
 import { VmTab } from "../features/vm/VmTab";
 import { AboutDialog } from "./AboutDialog";
@@ -48,6 +49,7 @@ function MainWindow() {
   const [networkEditorOpen, setNetworkEditorOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<string | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [openVms, setOpenVms] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
 
@@ -105,6 +107,7 @@ function MainWindow() {
           onAbout={() => setAboutOpen(true)}
           onNetworkEditor={() => setNetworkEditorOpen(true)}
           onPreferences={() => setPreferencesOpen(true)}
+          onNewVm={() => setWizardOpen(true)}
           drives={drives}
           onChangeMedia={setMediaTarget}
           onEject={(target) => setMedia(target, null)}
@@ -134,7 +137,7 @@ function MainWindow() {
           <main className="workspace">
             <TabBar tabs={tabs} active={activeTab} onActivate={setActiveTab} onClose={closeTab} />
             <div className="workspace-content" hidden={activeTab !== HOME_TAB}>
-              <HomeTab />
+              <HomeTab onNewVm={() => setWizardOpen(true)} />
             </div>
             {/* VM tabs stay mounted so their console keeps its connection. */}
             {openVms.map((uuid) => (
@@ -147,6 +150,18 @@ function MainWindow() {
         {layout.statusBar && <StatusBar info={info} vms={vms} libvirtLost={libvirtLost} />}
         <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} version={info?.version} />
         {networkEditorOpen && <NetworkEditor onClose={() => setNetworkEditorOpen(false)} />}
+        {wizardOpen && (
+          <NewVmWizard
+            library={library}
+            vms={vms ?? []}
+            initialFolder={selectedNode?.startsWith("f:") ? selectedNode.slice(2) : ""}
+            onCreated={(uuid) => {
+              refresh();
+              openVm(uuid);
+            }}
+            onClose={() => setWizardOpen(false)}
+          />
+        )}
         {mediaTarget && currentVm && (
           <IsoPicker
             title={t("iso.titleFor", { name: currentVm.name, target: mediaTarget })}

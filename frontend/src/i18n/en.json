@@ -165,7 +165,14 @@
     "sessionTitle": "Session expired",
     "vm": {
       "not_shut_off": "Power the virtual machine off first.",
-      "no_cdrom": "This virtual machine has no such CD/DVD drive."
+      "no_cdrom": "This virtual machine has no such CD/DVD drive.",
+      "bad_name": "Invalid virtual machine name.",
+      "bad_profile": "Unknown profile.",
+      "too_many_nics": "Ten network cards at most.",
+      "bad_format": "Unknown disk format.",
+      "secure_boot_needs_uefi": "Secure Boot needs UEFI.",
+      "exists": "A virtual machine already has this name.",
+      "disk_failed": "Creating the disk failed."
     },
     "request": {
       "invalid": "Invalid request."
@@ -301,7 +308,8 @@
     "mib": "{{value}} MiB",
     "mb": "MB",
     "gb": "GB",
-    "kb": "KB"
+    "kb": "KB",
+    "mibShort": "MiB"
   },
   "common": {
     "cancel": "Cancel",
@@ -443,5 +451,72 @@
     },
     "fixWithCommands": "To fix it, run (the Fix button comes with the package):",
     "changeFailed": "Could not change the media of {{name}}"
+  },
+  "wizard": {
+    "title": "New Virtual Machine",
+    "back": "< Back",
+    "next": "Next >",
+    "finish": "Finish",
+    "creating": "Creating…",
+    "failed": "Could not create {{name}}",
+    "step": {
+      "source": "Installation",
+      "os": "Guest system",
+      "name": "Name and location",
+      "disk": "Disk",
+      "summary": "Summary"
+    },
+    "sourceIntro": "How will the operating system be installed?",
+    "sourceIso": "From an ISO image",
+    "noIso": "No image chosen",
+    "chooseIso": "Choose…",
+    "sourceLater": "I will install the system later (blank disk, empty CD drive)",
+    "sourceExisting": "Use an existing disk (appliance, copied disk)",
+    "existingHint": "The disk must be in the KVM Studio folder; it is used as is, not copied.",
+    "osIntro": "Which system will run in this virtual machine? The suggested hardware depends on it.",
+    "profile": {
+      "windows11": "Windows 11",
+      "windows10": "Windows 10",
+      "windows-server": "Windows Server",
+      "linux": "Linux",
+      "firewall": "Firewall / BSD",
+      "nested": "Nested hypervisor",
+      "other": "Other system"
+    },
+    "profileHint": {
+      "windows11": "UEFI, Secure Boot and TPM 2.0, SATA disk",
+      "windows10": "UEFI, SATA disk",
+      "windows-server": "UEFI and Secure Boot, SATA disk",
+      "linux": "Debian, Ubuntu, Fedora, RHEL… with virtio",
+      "firewall": "OPNsense, pfSense, FortiGate, Stormshield: 3 network cards and a serial console",
+      "nested": "Proxmox, ESXi: host CPU with virtualization",
+      "other": "Standard, very compatible hardware"
+    },
+    "noLibrary": "No virtual machine location: choose one in Edit > Preferences > Workspace.",
+    "vmName": "Virtual machine name",
+    "folder": "Library folder",
+    "location": "Location",
+    "diskSize": "Maximum disk size",
+    "diskBus": "Controller",
+    "diskFormat": "Format",
+    "qcow2": "qcow2 (snapshots, space used as needed)",
+    "raw": "raw (raw speed, no snapshots)",
+    "preallocate": "Allocate all disk space now",
+    "preallocated": "preallocated",
+    "windowsSata": "Windows setup knows SATA without drivers. VirtIO is faster but needs the virtio-win drivers.",
+    "bus": {
+      "virtio": "VirtIO",
+      "scsi": "SCSI (virtio-scsi)",
+      "sata": "SATA",
+      "nvme": "NVMe",
+      "ide": "IDE"
+    },
+    "disk": "Disk",
+    "network": "Network cards",
+    "firmware": "Firmware",
+    "customize": "Customize Hardware…",
+    "addNic": "Add a card",
+    "removeNic": "Remove the card",
+    "startAfter": "Power on the virtual machine once created"
   }
 }

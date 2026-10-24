@@ -29,6 +29,7 @@ interface Props {
   onAbout: () => void;
   onNetworkEditor: () => void;
   onPreferences: () => void;
+  onNewVm: () => void;
   drives: CdromDevice[];
   onChangeMedia: (target: string) => void;
   onEject: (target: string) => void;
@@ -41,6 +42,7 @@ export function MenuBar({
   onAbout,
   onNetworkEditor,
   onPreferences,
+  onNewVm,
   drives,
   onChangeMedia,
   onEject,
@@ -86,7 +88,7 @@ export function MenuBar({
     [
       "file",
       [
-        item(m("newVm"), ["Ctrl", "N"]),
+        item(m("newVm"), ["Ctrl", "N"], onNewVm),
         item(m("open"), ["Ctrl", "O"]),
         item(m("scan")),
         item(m("autostart")),
