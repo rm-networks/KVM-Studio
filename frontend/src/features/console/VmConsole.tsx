@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { api, type DisplayInfo } from "../../api/client";
 import { getToken } from "../../api/token";
+import { LoadingCubes } from "../../components/LoadingCubes";
 import { useNotifier } from "../../components/notifier";
 import { hostClipboard } from "../../platform/hostClipboard";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
@@ -57,8 +58,8 @@ export function VmConsole({ uuid }: { uuid: string }) {
   if (display === null) {
     return (
       <div className="console">
-        <div className="console-overlay">
-          <span>{t("console.connecting")}</span>
+        <div className="console-overlay console-loading">
+          <LoadingCubes message={t("console.connecting")} />
         </div>
       </div>
     );
@@ -254,9 +255,13 @@ function VncScreen({ uuid, children }: { uuid: string; children?: ReactNode }) {
       <div className="console-screen" ref={screenRef} />
       {children}
       {status !== "connected" && (
-        <div className="console-overlay">
+        <div
+          className={
+            status === "connecting" ? "console-overlay console-loading" : "console-overlay"
+          }
+        >
           {status === "connecting" ? (
-            <span>{t("console.connecting")}</span>
+            <LoadingCubes message={t("console.connecting")} />
           ) : (
             <>
               <span>{status === "timeout" ? t("console.timeout") : t("console.disconnected")}</span>

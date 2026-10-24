@@ -753,5 +753,8 @@
     "failedFiles": "These files could not be deleted:",
     "keptNetworks": "Networks kept because still in use: {{names}}",
     "finished": "Uninstall finished."
+  },
+  "loading": {
+    "brand": "KVM Studio"
   }
 }

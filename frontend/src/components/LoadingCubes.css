@@ -1,0 +1,22 @@
+.loading-cubes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.loading-cubes img {
+  display: block;
+}
+
+.loading-cubes-name {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.loading-cubes-message {
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}

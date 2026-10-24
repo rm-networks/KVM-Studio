@@ -755,5 +755,8 @@
     "failedFiles": "Ces fichiers n'ont pas pu être supprimés :",
     "keptNetworks": "Réseaux conservés car encore utilisés : {{names}}",
     "finished": "Désinstallation terminée."
+  },
+  "loading": {
+    "brand": "KVM Studio"
   }
 }

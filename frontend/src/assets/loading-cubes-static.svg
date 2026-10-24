@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="114 74 272 272">
+  <defs>
+    <linearGradient id="cubeTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4e79ff" />
+      <stop offset="100%" stop-color="#00c6ff" />
+    </linearGradient>
+    <linearGradient id="cubeLeftGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00a8ff" />
+      <stop offset="100%" stop-color="#0072ff" />
+    </linearGradient>
+    <linearGradient id="cubeRightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d2ff" />
+      <stop offset="100%" stop-color="#0055ff" />
+    </linearGradient>
+    <g id="single-cube">
+      <polygon points="100,20 160,50 100,80 40,50" fill="url(#cubeTopGrad)" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" />
+      <polygon points="40,50 100,80 100,150 40,120" fill="url(#cubeLeftGrad)" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" />
+      <polygon points="100,80 160,50 160,120 100,150" fill="url(#cubeRightGrad)" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" />
+    </g>
+  </defs>
+  <g>
+    <use href="#single-cube" x="150" y="70" />
+    <use href="#single-cube" x="150" y="180" />
+  </g>
+</svg>

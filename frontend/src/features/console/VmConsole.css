@@ -21,6 +21,11 @@
   background: rgba(17, 18, 20, 0.85);
 }
 
+/* Theme colours while connecting, so the name under the cubes follows the theme. */
+.console-loading {
+  background: var(--surface);
+}
+
 .console-notice span {
   max-width: 460px;
   text-align: center;
