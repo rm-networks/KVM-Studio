@@ -69,6 +69,8 @@ contents:
 
   - src: packaging/desktop/kvm-studio.desktop
     dst: /usr/share/applications/kvm-studio.desktop
+  - src: packaging/desktop/kvm-studio-uninstall.desktop
+    dst: /usr/share/applications/kvm-studio-uninstall.desktop
   - src: packaging/desktop/icons/hicolor/16x16/apps/kvm-studio.png
     dst: /usr/share/icons/hicolor/16x16/apps/kvm-studio.png
   - src: packaging/desktop/icons/hicolor/32x32/apps/kvm-studio.png

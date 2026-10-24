@@ -33,6 +33,7 @@ def test_only_intended_methods_are_public() -> None:
     public = [name for name in dir(DesktopApi) if not name.startswith("_")]
     assert public == [
         "choose_folder",
+        "close_window",
         "read_clipboard",
         "toggle_fullscreen",
         "write_clipboard",

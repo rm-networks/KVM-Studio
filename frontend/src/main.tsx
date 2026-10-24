@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 
 import { captureToken } from "./api/token";
 import { App } from "./app/App";
+import { NotificationProvider } from "./components/Notifications";
+import { UninstallWizard } from "./features/uninstall/UninstallWizard";
 import "./i18n";
 import "./styles/tokens.css";
 
@@ -18,7 +20,14 @@ const root = document.getElementById("root");
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      <App />
+      {/* "Uninstall KVM Studio" opens a window on this page alone. */}
+      {new URLSearchParams(window.location.search).get("page") === "uninstall" ? (
+        <NotificationProvider>
+          <UninstallWizard />
+        </NotificationProvider>
+      ) : (
+        <App />
+      )}
     </StrictMode>,
   );
 }

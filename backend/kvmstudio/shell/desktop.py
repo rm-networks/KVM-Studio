@@ -61,7 +61,7 @@ def _set_app_id(gui: Literal["qt", "gtk"]) -> None:
         GLib.set_prgname(DESKTOP_ID)
 
 
-def run(config: Config, config_path: Path | None = None) -> int:
+def run(config: Config, config_path: Path | None = None, page: str | None = None) -> int:
     try:
         import webview
     except ImportError:
@@ -91,12 +91,14 @@ def run(config: Config, config_path: Path | None = None) -> int:
         return 1
     restart = threading.Event()
     try:
+        query = f"?page={page}" if page else ""
+        width, height = (760, 600) if page else (1280, 800)
         window = webview.create_window(
             "KVM Studio",
-            f"http://127.0.0.1:{port}/#token={token}",
-            width=1280,
-            height=800,
-            min_size=(900, 600),
+            f"http://127.0.0.1:{port}/{query}#token={token}",
+            width=width,
+            height=height,
+            min_size=(700, 520) if page else (900, 600),
             js_api=api,
         )
         if window is None:

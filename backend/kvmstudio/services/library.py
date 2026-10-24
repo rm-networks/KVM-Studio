@@ -452,40 +452,52 @@ def delete_folder(conn: LibvirtConnection, config: Config, folder: str) -> list[
             raise ApiException(
                 409, "library.vms_running", "Power off first: " + ", ".join(plan.running)
             )
-        failed: list[str] = []
-
-        def undefine(c: libvirt.virConnect) -> None:
-            for vm in plan.vms:
-                flags = (
-                    libvirt.VIR_DOMAIN_UNDEFINE_MANAGED_SAVE
-                    | libvirt.VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA
-                )
-                dom = c.lookupByUUIDString(vm.uuid)
-                if domain_xml.nvram_path(dom.XMLDesc(0)):
-                    flags |= (
-                        libvirt.VIR_DOMAIN_UNDEFINE_NVRAM
-                        if vm.delete_nvram
-                        else libvirt.VIR_DOMAIN_UNDEFINE_KEEP_NVRAM
-                    )
-                dom.undefineFlags(flags)
-
-        conn.run(undefine)
-        for path in [p for vm in plan.vms for p in vm.delete] + plan.extra_files:
-            if not in_library(path, config):
-                failed.append(path)
-                continue
-            try:
-                os.remove(path)
-            except FileNotFoundError:
-                pass
-            except OSError:
-                failed.append(path)
-        folder_dir = _folder_dir(root, plan.folder)
-        if folder_dir.is_dir():
-            for current, _dirs, _files in os.walk(resolve(folder_dir), topdown=False):
-                with contextlib.suppress(OSError):
-                    Path(current).rmdir()  # only succeeds on empty folders
+        undefine_vms(conn, plan.vms)
+        failed = remove_files([p for vm in plan.vms for p in vm.delete] + plan.extra_files, config)
+        remove_empty_dirs(_folder_dir(root, plan.folder))
         return failed
+
+
+def undefine_vms(conn: LibvirtConnection, vms: Iterable[VmDeletion]) -> None:
+    def op(c: libvirt.virConnect) -> None:
+        for vm in vms:
+            flags = (
+                libvirt.VIR_DOMAIN_UNDEFINE_MANAGED_SAVE
+                | libvirt.VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA
+            )
+            dom = c.lookupByUUIDString(vm.uuid)
+            if domain_xml.nvram_path(dom.XMLDesc(0)):
+                flags |= (
+                    libvirt.VIR_DOMAIN_UNDEFINE_NVRAM
+                    if vm.delete_nvram
+                    else libvirt.VIR_DOMAIN_UNDEFINE_KEEP_NVRAM
+                )
+            dom.undefineFlags(flags)
+
+    conn.run(op)
+
+
+def remove_files(paths: Iterable[str], config: Config) -> list[str]:
+    """Delete planned files, each checked again inside the library; return failures."""
+    failed: list[str] = []
+    for path in paths:
+        if not in_library(path, config):
+            failed.append(path)
+            continue
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            pass
+        except OSError:
+            failed.append(path)
+    return failed
+
+
+def remove_empty_dirs(top: Path) -> None:
+    if top.is_dir():
+        for current, _dirs, _files in os.walk(resolve(top), topdown=False):
+            with contextlib.suppress(OSError):
+                Path(current).rmdir()  # only succeeds on empty folders
 
 
 # Moving a VM

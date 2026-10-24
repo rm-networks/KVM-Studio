@@ -6,6 +6,12 @@ case "$1" in
     *) exit 0 ;;
 esac
 
+# Only the package files go: virtual machines, kvmnet networks and settings stay.
+case "${LANG:-}" in
+    fr*) echo "KVM Studio : VMs, réseaux kvmnet et réglages conservés. Pour les retirer aussi, utilisez « Désinstaller KVM Studio » dans le menu des applications." ;;
+    *) echo "KVM Studio: virtual machines, kvmnet networks and settings are kept. To remove them too, use \"Uninstall KVM Studio\" in the applications menu." ;;
+esac
+
 if [ -d /run/systemd/system ]; then
     systemctl disable --now kvmstudio-helper.socket kvmstudio-helper.service || :
 fi

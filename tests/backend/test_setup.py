@@ -65,6 +65,8 @@ def test_status_and_default_networks(client: TestClient) -> None:
     assert client.post("/api/setup/networks", headers=AUTH).json() == []
     status = client.get("/api/setup", headers=AUTH).json()
     assert all(n["exists"] for n in status["networks"])
+    for name in ("kvmnet1", "kvmnet8"):
+        assert client.delete(f"/api/networks/{name}", headers=AUTH).status_code == 204
 
 
 def test_session_uri_needs_no_group() -> None:

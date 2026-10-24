@@ -42,7 +42,8 @@ aux paramètres validés, chacune autorisée par polkit :
 - ouverture et fermeture du port web (firewalld ou ufw) ;
 - redirection de ports NAT (table nftables `inet kvmstudio`) ;
 - correctifs de droits sur les ISO (contexte SELinux `virt_content_t` ou ACL).
-- ajout du compte de l'appelant au groupe `libvirt`.
+- ajout du compte de l'appelant au groupe `libvirt` ;
+- retrait du paquet en fin de désinstallation.
 
 Il n'existe pas d'opération générique d'exécution de commande.
 
@@ -69,6 +70,7 @@ Fonctionnement :
 | --- | --- | --- |
 | `iso_acl` | `org.kvmstudio.helper.iso-acl` | ACL `u:<qemu>:x` sur les dossiers de la bibliothèque jusqu'à l'image, `u:<qemu>:r` sur l'image |
 | `join_libvirt` | `org.kvmstudio.helper.join-libvirt` | ajoute l'appelant au groupe `libvirt` ; aucun paramètre, refusé pour root et les UID inférieurs à 1000, mot de passe administrateur à chaque appel |
+| `remove_package` | `org.kvmstudio.helper.remove-package` | retire le paquet `kvm-studio` dans une unité systemd transitoire ; aucun paramètre, mot de passe administrateur à chaque appel |
 
 Les dossiers situés au-dessus de la racine d'une bibliothèque ne sont jamais
 modifiés : le sélecteur d'ISO indique la commande à lancer. Le masquage
@@ -163,7 +165,7 @@ kvm-studio/
 │   ├── server.py            # socket Unix, opérations nommées
 │   ├── paths.py             # résolution, confinement, ouverture sans course
 │   ├── polkit.py            # identité de l'appelant, pkcheck
-│   └── ops/                 # iso_acl, join_libvirt (puis firewall_port, nat_portfwd)
+│   └── ops/                 # iso_acl, join_libvirt, remove_package (puis firewall_port, nat_portfwd)
 ├── frontend/src/
 │   ├── app/                 # menus, barre d'outils, bibliothèque, onglets, barre d'état
 │   ├── features/            # un dossier par écran ou dialogue
@@ -199,10 +201,30 @@ simulées.
 Le paquet installe `/opt/kvm-studio`, le lanceur `.desktop`, le service
 `kvmstudio-helper`, les règles polkit, le fichier NetworkManager et le service
 firewalld. Les dépendances Python absentes des dépôts sont embarquées dans
-`/opt/kvm-studio/vendor`. La désinstallation retire aussi les réseaux `kvmnet`
-et la règle de pare-feu, et demande s'il faut garder les VMs. Flatpak et Snap
+`/opt/kvm-studio/vendor`. Flatpak et Snap
 ne sont pas proposés : leur bac à sable est incompatible avec libvirt système,
 le helper et polkit.
+
+### Désinstallation
+
+L'entrée « Désinstaller KVM Studio » lance `kvm-studio --uninstall-wizard`,
+une fenêtre qui n'affiche que l'assistant de désinstallation ;
+`kvm-studio --uninstall` pose les mêmes questions dans un terminal.
+
+1. Le backend calcule un plan (`GET /api/uninstall/plan`) : VMs dont les
+   fichiers sont dans `KVM-Studio/VM`, fichiers exacts à supprimer et fichiers
+   conservés avec leur raison, réseaux `kvmnet` et VMs qui les utilisent,
+   fichiers de réglages.
+2. L'exécution (`POST /api/uninstall`) reçoit l'empreinte du plan affiché et
+   la refuse si quoi que ce soit a changé entre-temps. Les règles sont celles
+   de la suppression d'une VM ; un réseau encore utilisé par une VM conservée
+   reste en place.
+3. Le paquet est retiré par l'opération helper `remove_package`, qui lance
+   `dnf remove` (ou `apt-get remove`) dans une unité systemd transitoire
+   `kvm-studio-removal` : retirer le paquet arrête le helper lui-même.
+
+Un `dnf remove` direct ne retire que les fichiers du paquet et affiche une
+ligne qui renvoie vers l'entrée « Désinstaller KVM Studio ».
 
 L'assistant de premier lancement enchaîne : bienvenue et licence, vérification
 (VT-x/AMD-V, module KVM, nested, service libvirt), ajout au groupe `libvirt`,

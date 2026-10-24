@@ -26,6 +26,7 @@ from .api import (
     preferences,
     setup,
     system,
+    uninstall,
     vms,
 )
 from .auth.token import require_token
@@ -119,6 +120,7 @@ def create_app(
     private.include_router(guest.router)
     private.include_router(isos.router)
     private.include_router(setup.router)
+    private.include_router(uninstall.router)
 
     app.include_router(public)
     app.include_router(private)

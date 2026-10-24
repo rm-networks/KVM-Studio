@@ -36,6 +36,11 @@ class DesktopApi:
         if self._window is not None:
             self._window.toggle_fullscreen()
 
+    def close_window(self) -> None:
+        """Lets the uninstall assistant close its own window."""
+        if self._window is not None:
+            self._window.destroy()
+
     def choose_folder(self, start: str | None = None) -> str | None:
         """Native folder picker (Preferences, ISO libraries)."""
         if self._window is None:

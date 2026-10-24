@@ -131,3 +131,53 @@ def test_missing_group(accounts: object, monkeypatch: pytest.MonkeyPatch) -> Non
 
     monkeypatch.setattr(join_libvirt, "group_by_name", no_group)
     assert call(JOIN)[0]["error"] == "failed"
+
+
+# remove_package: same shape, no parameters, fixed package name
+
+
+@pytest.mark.parametrize(
+    ("tools", "expected"),
+    [
+        ({"dnf"}, ["--", "dnf", "remove", "-y", "kvm-studio"]),
+        (
+            {"apt-get"},
+            [
+                "--setenv=DEBIAN_FRONTEND=noninteractive",
+                "--",
+                "apt-get",
+                "remove",
+                "-y",
+                "kvm-studio",
+            ],
+        ),
+    ],
+)
+def test_remove_package_runs_outside_the_helper(
+    monkeypatch: pytest.MonkeyPatch, tools: set[str], expected: list[str]
+) -> None:
+    from kvmstudio_helper.ops import remove_package
+
+    monkeypatch.setattr(remove_package, "which", lambda name: name if name in tools else None)
+    answer, ran, asked = call({"op": "remove_package", "params": {}})
+    assert answer == {"ok": True, "result": {"unit": "kvm-studio-removal"}}
+    assert ran == [["systemd-run", "--unit=kvm-studio-removal", "--collect", "--quiet", *expected]]
+    assert asked == ["org.kvmstudio.helper.remove-package"]
+
+
+@pytest.mark.parametrize(
+    "params", [{"package": "systemd"}, {"package": "kvm-studio"}, {"command": "rm -rf /"}]
+)
+def test_remove_package_takes_no_parameter(params: dict[str, object]) -> None:
+    answer, ran, asked = call({"op": "remove_package", "params": params})
+    assert answer["error"] == "invalid_params"
+    assert (ran, asked) == ([], [])
+
+
+def test_remove_package_refused_runs_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
+    from kvmstudio_helper.ops import remove_package
+
+    monkeypatch.setattr(remove_package, "which", lambda name: name)
+    answer, ran, _ = call({"op": "remove_package", "params": {}}, allow=False)
+    assert answer["error"] == "not_authorized"
+    assert ran == []

@@ -238,6 +238,10 @@
       "failed": "The fix failed.",
       "bad_answer": "Unexpected answer from the kvmstudio-helper service.",
       "not_allowed": "This account cannot be added to the libvirt group (system account or root)."
+    },
+    "uninstall": {
+      "plan_changed": "Something changed since it was shown (a file or a virtual machine). Start the assistant again.",
+      "not_packaged": "KVM Studio was not installed from the package."
     }
   },
   "about": {
@@ -671,5 +675,66 @@
     "applying": "Applying…",
     "failed": "Could not save the settings",
     "close": "Close"
+  },
+  "uninstall": {
+    "title": "Uninstall KVM Studio",
+    "step": {
+      "welcome": "Welcome",
+      "vms": "Virtual machines",
+      "networks": "Networks",
+      "settings": "Settings",
+      "summary": "Summary",
+      "progress": "Uninstalling",
+      "done": "Done"
+    },
+    "welcome": {
+      "intro": "This assistant removes KVM Studio from this computer.",
+      "choices": "You will choose what happens to the virtual machines, the kvmnet networks and your settings. Nothing is deleted before the summary."
+    },
+    "vms": {
+      "none": "No virtual machine created by KVM Studio.",
+      "keep": "Keep the virtual machines and their files",
+      "delete_one": "Delete the virtual machine created by KVM Studio and its files",
+      "delete_other": "Delete the {{count}} virtual machines created by KVM Studio and their files",
+      "extra": "Other files in the KVM Studio folder",
+      "kept": "Kept in any case",
+      "running": "Power off first: {{names}}",
+      "confirm_one": "I confirm this file is deleted for good",
+      "confirm_other": "I confirm these {{count}} files are deleted for good",
+      "foreign": "Virtual machines created outside KVM Studio, always kept: {{names}}"
+    },
+    "networks": {
+      "none": "No kvmnet network.",
+      "keep": "Keep the kvmnet networks",
+      "delete": "Delete the kvmnet networks no kept virtual machine uses",
+      "usedBy": "kept, used by {{names}}"
+    },
+    "settings": {
+      "none": "No saved settings.",
+      "keep": "Keep my settings",
+      "delete": "Delete my settings"
+    },
+    "keep": "keep",
+    "delete": "delete",
+    "packageRemove": "remove (administrator password asked)",
+    "notPackaged": "nothing to remove (running from the sources)",
+    "run": "Uninstall",
+    "task": {
+      "vms": "Virtual machines",
+      "networks": "kvmnet networks",
+      "settings": "Settings",
+      "package": "kvm-studio package"
+    },
+    "state": {
+      "pending": "waiting",
+      "running": "in progress…",
+      "done": "done",
+      "skipped": "kept",
+      "failed": "failed"
+    },
+    "packageWait": "The package manager is removing KVM Studio. This can take a minute.",
+    "failedFiles": "These files could not be deleted:",
+    "keptNetworks": "Networks kept because still in use: {{names}}",
+    "finished": "Uninstall finished."
   }
 }

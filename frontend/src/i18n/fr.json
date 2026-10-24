@@ -238,6 +238,10 @@
       "failed": "La correction a échoué.",
       "bad_answer": "Réponse inattendue du service kvmstudio-helper.",
       "not_allowed": "Ce compte ne peut pas être ajouté au groupe libvirt (compte système ou root)."
+    },
+    "uninstall": {
+      "plan_changed": "Quelque chose a changé depuis l'affichage (fichier ou machine virtuelle). Relancez l'assistant.",
+      "not_packaged": "KVM Studio n'est pas installé par le paquet."
     }
   },
   "about": {
@@ -673,5 +677,66 @@
     "applying": "Application…",
     "failed": "Impossible d'enregistrer les réglages",
     "close": "Fermer"
+  },
+  "uninstall": {
+    "title": "Désinstaller KVM Studio",
+    "step": {
+      "welcome": "Bienvenue",
+      "vms": "Machines virtuelles",
+      "networks": "Réseaux",
+      "settings": "Réglages",
+      "summary": "Récapitulatif",
+      "progress": "Désinstallation",
+      "done": "Terminé"
+    },
+    "welcome": {
+      "intro": "Cet assistant retire KVM Studio de cet ordinateur.",
+      "choices": "Vous allez choisir ce que deviennent les machines virtuelles, les réseaux kvmnet et vos réglages. Rien n'est supprimé avant le récapitulatif."
+    },
+    "vms": {
+      "none": "Aucune machine virtuelle créée par KVM Studio.",
+      "keep": "Garder les machines virtuelles et leurs fichiers",
+      "delete_one": "Supprimer la machine virtuelle créée par KVM Studio et ses fichiers",
+      "delete_other": "Supprimer les {{count}} machines virtuelles créées par KVM Studio et leurs fichiers",
+      "extra": "Autres fichiers du dossier KVM Studio",
+      "kept": "Conservés dans tous les cas",
+      "running": "Éteignez d'abord : {{names}}",
+      "confirm_one": "Je confirme la suppression définitive de ce fichier",
+      "confirm_other": "Je confirme la suppression définitive de ces {{count}} fichiers",
+      "foreign": "Machines virtuelles créées hors de KVM Studio, toujours conservées : {{names}}"
+    },
+    "networks": {
+      "none": "Aucun réseau kvmnet.",
+      "keep": "Garder les réseaux kvmnet",
+      "delete": "Supprimer les réseaux kvmnet qu'aucune machine virtuelle conservée n'utilise",
+      "usedBy": "conservé, utilisé par {{names}}"
+    },
+    "settings": {
+      "none": "Aucun réglage enregistré.",
+      "keep": "Garder mes réglages",
+      "delete": "Supprimer mes réglages"
+    },
+    "keep": "garder",
+    "delete": "supprimer",
+    "packageRemove": "retirer (mot de passe administrateur demandé)",
+    "notPackaged": "rien à retirer (lancé depuis les sources)",
+    "run": "Désinstaller",
+    "task": {
+      "vms": "Machines virtuelles",
+      "networks": "Réseaux kvmnet",
+      "settings": "Réglages",
+      "package": "Paquet kvm-studio"
+    },
+    "state": {
+      "pending": "en attente",
+      "running": "en cours…",
+      "done": "fait",
+      "skipped": "conservé",
+      "failed": "échec"
+    },
+    "packageWait": "Le gestionnaire de paquets retire KVM Studio. Cela peut prendre une minute.",
+    "failedFiles": "Ces fichiers n'ont pas pu être supprimés :",
+    "keptNetworks": "Réseaux conservés car encore utilisés : {{names}}",
+    "finished": "Désinstallation terminée."
   }
 }

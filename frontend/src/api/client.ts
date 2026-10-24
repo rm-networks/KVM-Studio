@@ -38,6 +38,10 @@ export type GuestToolsInfo = components["schemas"]["GuestToolsInfo"];
 export type InstallRequest = components["schemas"]["InstallRequest"];
 export type SetupStatus = components["schemas"]["SetupStatus"];
 export type GroupState = SetupStatus["libvirt_group"];
+export type UninstallPlan = components["schemas"]["UninstallPlan"];
+export type UninstallRequest = components["schemas"]["UninstallRequest"];
+export type UninstallReport = components["schemas"]["UninstallReport"];
+export type PackageState = components["schemas"]["PackageState"];
 type ApiErrorBody = components["schemas"]["ApiError"];
 
 export class ApiError extends Error {
@@ -178,6 +182,10 @@ export const api = {
   joinLibvirtGroup: () =>
     request<{ libvirt_group: GroupState }>("POST", "/api/setup/libvirt-group"),
   createDefaultNetworks: () => request<string[]>("POST", "/api/setup/networks"),
+  uninstallPlan: () => request<UninstallPlan>("GET", "/api/uninstall/plan"),
+  uninstall: (body: UninstallRequest) => request<UninstallReport>("POST", "/api/uninstall", body),
+  removePackage: () => request<PackageState>("POST", "/api/uninstall/package"),
+  packageState: () => request<PackageState>("GET", "/api/uninstall/package"),
   exportNetworks: () => request<NetworkExport>("GET", "/api/networks/export"),
   importNetworks: (body: NetworkImport) =>
     request<ImportReport>("POST", "/api/networks/import", body),

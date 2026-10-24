@@ -44,7 +44,7 @@ libvirt est la seule source de vérité, et KVM Studio ne laisse sur le poste qu
 | Compatibilité | Domaines, réseaux et volumes créés via l'API libvirt standard, visibles et modifiables dans virt-manager et virsh. |
 | Métadonnées | Données propres à l'appli (dossier de bibliothèque, notes, options) dans `<metadata>` du XML libvirt, namespace dédié. |
 | Portabilité | Aucun chemin, pool, réseau ou URI en dur : tout est réglable dans les Préférences et stocké dans la config. |
-| Poste propre | Aucune interface virtuelle dans l'applet réseau (NetworkManager configuré pour les ignorer). Pas de Docker, pas de service tiers. Tous les fichiers système appartiennent au paquet : `dnf remove` / `apt remove` retire tout ; le désinstalleur du paquet retire aussi les réseaux kvmnet et la règle pare-feu, en demandant s'il faut garder les VMs. |
+| Poste propre | Aucune interface virtuelle dans l'applet réseau (NetworkManager configuré pour les ignorer). Pas de Docker, pas de service tiers. Tous les fichiers système appartiennent au paquet. L'assistant de désinstallation retire, au choix, les VMs, les réseaux kvmnet et les réglages, puis le paquet. |
 | Non destructif | Dossiers ISO en lecture seule : aucune copie, aucun déplacement, aucun renommage. |
 | Sécurité | Mode logiciel : serveur interne accessible uniquement par la fenêtre (loopback + jeton). Mode web : 127.0.0.1 par défaut, avec jeton ; partage LAN = HTTPS auto-signé + compte invité à mot de passe, aux droits limités aux VMs (section 6.11). |
 | Distribution | MVP : Fedora. V1 : Fedora, Debian, Ubuntu. Autres distros plus tard. |
@@ -129,9 +129,11 @@ language = "fr"
 2. Double-clic : Discover ou la Logithèque l'installe avec ses dépendances (libvirt, qemu, python3-libvirt, edk2/OVMF, swtpm…). En ligne de commande : `sudo dnf install ./kvm-studio-*.rpm` ou `sudo apt install ./kvm-studio_*.deb`.
 3. Le paquet installe `/opt/kvm-studio` (code + frontend), le lanceur et l'icône, le service `kvmstudio-helper`, les règles polkit, le fichier NetworkManager de masquage et la définition de service pare-feu.
 4. Mises à jour : nouveau paquet depuis les Releases ; plus tard, dépôts COPR (Fedora) et APT (Debian/Ubuntu) pour des mises à jour automatiques.
-5. Désinstallation : `sudo dnf remove kvm-studio` ou `sudo apt remove kvm-studio` ; le script du paquet retire aussi les réseaux kvmnet et propose de garder les VMs.
+5. Désinstallation : assistant « Désinstaller KVM Studio » (voir ci-dessous) ; un `dnf remove` / `apt remove` direct ne retire que les fichiers du paquet.
 
 **Assistant de premier lancement** (équivalent de l'assistant d'installation de Workstation) : Bienvenue et licence → Vérification (VT-x/AMD-V, module KVM, virtualisation imbriquée, service libvirt) → Ajout au groupe `libvirt` → Emplacements (VMs, bibliothèques ISO) → Mode d'interface → Création de kvmnet1 et kvmnet8 → Terminé. Il se relance depuis Aide.
+
+**Désinstallation** (équivalent du désinstalleur de Workstation) : entrée « Désinstaller KVM Studio » dans le menu des applications, qui ouvre un assistant (Suivant / Précédent / Annuler) : Bienvenue → Machines virtuelles (garder, ou supprimer avec la liste exacte des fichiers et une case de confirmation) → Réseaux kvmnet créés par KVM Studio (garder ou supprimer) → Réglages (garder ou supprimer) → Récapitulatif → Désinstallation en cours → Terminé. À la fin, le paquet est retiré par le helper après authentification polkit, sans terminal. Mêmes règles que la suppression d'une VM : aucun fichier supprimé hors de `KVM-Studio/VM`, jamais d'ISO, jamais un fichier dont une VM conservée a besoin ; les VMs créées hors de KVM Studio et les réseaux qu'elles utilisent sont toujours conservés. `kvm-studio --uninstall` pose les mêmes questions dans un terminal. Un `dnf remove` / `apt remove` direct ne retire que les fichiers du paquet (VMs, réseaux et réglages conservés) et le signale par une ligne qui renvoie vers l'entrée « Désinstaller KVM Studio ».
 
 Une doc INSTALL.md couvre aussi l'installation depuis le dépôt et le dépannage.
 

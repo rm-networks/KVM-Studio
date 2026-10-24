@@ -25,6 +25,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--no-browser", action="store_true", help="web mode: do not open the browser"
     )
+    parser.add_argument(
+        "--uninstall", action="store_true", help="uninstall KVM Studio (asks what to remove)"
+    )
+    parser.add_argument(
+        "--uninstall-wizard", action="store_true", help="open the uninstall assistant window"
+    )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return parser
 
@@ -42,6 +48,16 @@ def main(argv: list[str] | None = None) -> int:
         from . import check
 
         return check.run(config, config_path)
+
+    if args.uninstall:
+        from . import uninstall_cli
+
+        return uninstall_cli.run(config)
+
+    if args.uninstall_wizard:
+        from .shell import desktop
+
+        return desktop.run(config, args.config, page="uninstall")
 
     mode = args.mode or config.interface.mode
     if mode == "web":

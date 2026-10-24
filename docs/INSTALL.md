@@ -16,6 +16,7 @@ Contenu :
 | `/opt/kvm-studio` | application, interface compilée, modules Python absents des dépôts (`vendor/`) |
 | `/usr/bin/kvm-studio` | lanceur |
 | `/usr/share/applications/kvm-studio.desktop` | entrée du menu des applications |
+| `/usr/share/applications/kvm-studio-uninstall.desktop` | entrée « Désinstaller KVM Studio » |
 | `kvmstudio-helper.socket` / `.service` | helper root, démarré à la demande |
 | `/usr/share/polkit-1/actions/org.kvmstudio.helper.policy` | autorisations du helper |
 | `/etc/kvm-studio/helper.toml` | bibliothèques ISO que le helper peut corriger |
@@ -36,12 +37,16 @@ Vérifier que le socket du helper écoute :
 systemctl status kvmstudio-helper.socket
 ```
 
-La désinstallation arrête le helper, retire le service pare-feu de toutes les
-zones et ne touche pas aux VMs :
+Pour désinstaller, utiliser l'entrée « Désinstaller KVM Studio » du menu des
+applications : elle demande quoi faire des VMs, des réseaux `kvmnet` et des
+réglages, puis retire le paquet. Même chose dans un terminal :
 
 ```bash
-sudo dnf remove kvm-studio
+kvm-studio --uninstall
 ```
+
+Un `dnf remove` direct ne retire que les fichiers du paquet (helper arrêté,
+service pare-feu retiré de toutes les zones) ; VMs, réseaux et réglages restent.
 
 ### Construire le paquet
 
