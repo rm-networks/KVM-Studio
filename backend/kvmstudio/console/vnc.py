@@ -13,11 +13,12 @@ from collections.abc import Callable
 
 import libvirt
 from fastapi import WebSocket
+from lxml import etree
 from starlette.concurrency import run_in_threadpool
 
 from ..auth.token import token_in_subprotocols
 from ..context import get_context
-from ..errors import classify
+from ..errors import ApiException, classify
 from ..libvirt_conn import LibvirtConnection
 
 ACCEPTED_PROTOCOL = "binary"
@@ -25,10 +26,20 @@ ACCEPTED_PROTOCOL = "binary"
 ConsoleOpener = Callable[[LibvirtConnection, str], socket.socket]
 
 
+def graphics_types(xml: str) -> list[str]:
+    """Types of the <graphics> devices, in order ("vnc", "spice"...)."""
+    root = etree.fromstring(xml.encode(), parser=etree.XMLParser(resolve_entities=False))
+    return [g.get("type", "") for g in root.iterfind("devices/graphics")]
+
+
 def open_vnc_socket(conn: LibvirtConnection, uuid: str) -> socket.socket:
     def op(c: libvirt.virConnect) -> int:
         dom = c.lookupByUUIDString(uuid)
-        return dom.openGraphicsFD(0, libvirt.VIR_DOMAIN_OPEN_GRAPHICS_SKIPAUTH)
+        # VMs made in virt-manager often have SPICE first: pick the VNC display.
+        types = graphics_types(dom.XMLDesc(0))
+        if "vnc" not in types:
+            raise ApiException(409, "console.no_vnc", "The virtual machine has no VNC display")
+        return dom.openGraphicsFD(types.index("vnc"), libvirt.VIR_DOMAIN_OPEN_GRAPHICS_SKIPAUTH)
 
     return socket.socket(fileno=conn.run(op))
 
@@ -77,6 +88,10 @@ async def vnc_console(websocket: WebSocket, uuid: str) -> None:
         status, code = classify(exc)
         await websocket.accept(subprotocol=ACCEPTED_PROTOCOL)
         await websocket.close(code=4000 + status, reason=code)
+        return
+    except ApiException as exc:
+        await websocket.accept(subprotocol=ACCEPTED_PROTOCOL)
+        await websocket.close(code=4000 + exc.status, reason=exc.code)
         return
     await websocket.accept(subprotocol=ACCEPTED_PROTOCOL)
     try:

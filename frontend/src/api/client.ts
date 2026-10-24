@@ -20,6 +20,7 @@ export type NetworkExport = components["schemas"]["NetworkExport-Output"];
 export type NetworkImport = components["schemas"]["NetworkExport-Input"];
 export type ImportReport = components["schemas"]["ImportReport"];
 export type Config = Required<components["schemas"]["Config"]>;
+export type DisplayInfo = components["schemas"]["DisplayInfo"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
 export type Preferences = components["schemas"]["Preferences"] & { config: Config };
 export type SaveResult = components["schemas"]["SaveResult"];
@@ -100,6 +101,9 @@ export const api = {
       "GET",
       `/api/library/folders/deletion-plan?path=${encodeURIComponent(path)}`,
     ),
+  display: (uuid: string) => request<DisplayInfo>("GET", `${vmPath(uuid)}/display`),
+  addVnc: (uuid: string) =>
+    request<{ restart_required: boolean }>("POST", `${vmPath(uuid)}/display/vnc`),
   preferences: () => request<Preferences>("GET", "/api/preferences"),
   savePreferences: (config: Config) => request<SaveResult>("PUT", "/api/preferences", config),
   networks: () => request<Network[]>("GET", "/api/networks"),

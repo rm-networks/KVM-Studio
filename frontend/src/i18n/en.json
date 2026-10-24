@@ -205,6 +205,9 @@
       "location_missing": "This folder does not exist.",
       "iso_missing": "The folder of an ISO library does not exist.",
       "location_not_writable": "Cannot create the KVM-Studio folder there: your account must be able to write to it."
+    },
+    "console": {
+      "no_vnc": "This virtual machine has no VNC display."
     }
   },
   "about": {
@@ -222,7 +225,14 @@
     "connecting": "Connecting to the console…",
     "disconnected": "Console disconnected.",
     "reconnect": "Reconnect",
-    "poweredOff": "The virtual machine is powered off."
+    "poweredOff": "The virtual machine is powered off.",
+    "title": "Console",
+    "timeout": "The console is not responding.",
+    "spiceOnly": "This virtual machine only has a SPICE display (made by virt-manager). The built-in console uses VNC.",
+    "noDisplay": "This virtual machine has no graphical display.",
+    "addVnc": "Add a VNC Display",
+    "addVncConfirm": "A VNC display will be added to the virtual machine's configuration, next to the existing one: virt-manager keeps working. It becomes active the next time the VM starts.",
+    "restartForVnc": "The VNC display is configured. Shut the virtual machine down and start it again to use it."
   },
   "tabs": {
     "close": "Close tab"

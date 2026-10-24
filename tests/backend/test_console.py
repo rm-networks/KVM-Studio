@@ -124,3 +124,50 @@ def test_token_is_found_in_an_unsplit_header() -> None:
     assert has([f"binary, kvmstudio.{TOKEN}"], TOKEN)
     assert has(["binary", f"kvmstudio.{TOKEN}"], TOKEN)
     assert not has(["binary, kvmstudio.nope"], TOKEN)
+
+
+SPICE_VM = (
+    "<domain type='test'><name>spice-vm</name><memory>65536</memory>"
+    "<os><type>hvm</type></os><devices>"
+    "<graphics type='spice' autoport='yes'><listen type='address'/></graphics>"
+    "</devices></domain>"
+)
+
+
+def test_vm_without_vnc_is_explained(
+    config: Config, conn: LibvirtConnection, frontend_dir: Path
+) -> None:
+    from kvmstudio.console.vnc import open_vnc_socket
+
+    client = make_client(config, conn, frontend_dir, open_vnc_socket)
+    uuid = conn.run(lambda c: c.lookupByName("test").UUIDString())
+    with client.websocket_connect(
+        f"ws://127.0.0.1/api/vms/{uuid}/console", subprotocols=PROTOCOLS
+    ) as ws:
+        message = ws.receive()
+        assert message["code"] == 4409
+        assert message["reason"] == "console.no_vnc"
+
+
+def test_display_info_and_adding_vnc(
+    config: Config, conn: LibvirtConnection, frontend_dir: Path
+) -> None:
+    client = make_client(config, conn, frontend_dir, echo_opener)
+    auth = {"Authorization": f"Bearer {TOKEN}"}
+    dom = conn.run(lambda c: c.defineXML(SPICE_VM))
+    try:
+        uuid = dom.UUIDString()
+        info = client.get(f"/api/vms/{uuid}/display", headers=auth).json()
+        assert info == {"live": [], "config": ["spice"], "clipboard": False, "active": False}
+        result = client.post(f"/api/vms/{uuid}/display/vnc", headers=auth).json()
+        assert result == {"restart_required": False}
+        info = client.get(f"/api/vms/{uuid}/display", headers=auth).json()
+        assert info["config"] == ["spice", "vnc"]
+        # Adding twice changes nothing.
+        client.post(f"/api/vms/{uuid}/display/vnc", headers=auth)
+        assert client.get(f"/api/vms/{uuid}/display", headers=auth).json()["config"] == [
+            "spice",
+            "vnc",
+        ]
+    finally:
+        dom.undefine()

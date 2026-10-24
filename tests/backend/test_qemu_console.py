@@ -33,7 +33,7 @@ pytestmark = pytest.mark.skipif(
 SESSION_URI = "qemu:///session"
 
 
-def domain_xml(name: str) -> str:
+def domain_xml(name: str, *, spice_first: bool = False) -> str:
     domain = etree.Element("domain", type="kvm" if os.access("/dev/kvm", os.W_OK) else "qemu")
     etree.SubElement(domain, "name").text = name
     etree.SubElement(domain, "uuid").text = str(uuid.uuid4())
@@ -41,15 +41,20 @@ def domain_xml(name: str) -> str:
     os_el = etree.SubElement(domain, "os")
     etree.SubElement(os_el, "type", machine="q35").text = "hvm"
     devices = etree.SubElement(domain, "devices")
+    if spice_first:
+        # Like VMs made in virt-manager: SPICE is display 0.
+        spice = etree.SubElement(devices, "graphics", type="spice", autoport="yes")
+        etree.SubElement(spice, "listen", type="none")
     devices.append(vnc_graphics())
     devices.append(vdagent_channel())
     return etree.tostring(domain).decode()
 
 
-@pytest.fixture
-def running_domain() -> Iterator[str]:
+@pytest.fixture(params=[False, True], ids=["vnc-only", "spice-first"])
+def running_domain(request: pytest.FixtureRequest) -> Iterator[str]:
     conn = libvirt.open(SESSION_URI)
-    dom = conn.createXML(domain_xml(f"kvmstudio-test-{uuid.uuid4().hex[:8]}"))
+    name = f"kvmstudio-test-{uuid.uuid4().hex[:8]}"
+    dom = conn.createXML(domain_xml(name, spice_first=request.param))
     try:
         yield dom.UUIDString()
     finally:

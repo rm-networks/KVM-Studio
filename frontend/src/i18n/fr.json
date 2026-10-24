@@ -205,6 +205,9 @@
       "location_missing": "Ce dossier n'existe pas.",
       "iso_missing": "Le dossier d'une bibliothèque ISO n'existe pas.",
       "location_not_writable": "Impossible de créer le dossier KVM-Studio à cet emplacement : votre compte doit pouvoir y écrire."
+    },
+    "console": {
+      "no_vnc": "Cette machine virtuelle n'a pas d'affichage VNC."
     }
   },
   "about": {
@@ -224,7 +227,14 @@
     "connecting": "Connexion à la console…",
     "disconnected": "Console déconnectée.",
     "reconnect": "Reconnecter",
-    "poweredOff": "La machine virtuelle est éteinte."
+    "poweredOff": "La machine virtuelle est éteinte.",
+    "title": "Console",
+    "timeout": "La console ne répond pas.",
+    "spiceOnly": "Cette machine virtuelle n'a qu'un affichage SPICE (créé par virt-manager). La console intégrée utilise VNC.",
+    "noDisplay": "Cette machine virtuelle n'a pas d'affichage graphique.",
+    "addVnc": "Ajouter un affichage VNC",
+    "addVncConfirm": "Un affichage VNC sera ajouté à la configuration de la machine virtuelle, à côté de l'affichage existant : virt-manager continue de fonctionner. Il sera actif au prochain démarrage de la VM.",
+    "restartForVnc": "L'affichage VNC est configuré. Arrêtez puis redémarrez la machine virtuelle pour l'utiliser."
   },
   "tabs": {
     "close": "Fermer l'onglet"

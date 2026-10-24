@@ -20,3 +20,8 @@
   color: #c9ccd1;
   background: rgba(17, 18, 20, 0.85);
 }
+
+.console-notice span {
+  max-width: 460px;
+  text-align: center;
+}
