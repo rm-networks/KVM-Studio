@@ -8,7 +8,8 @@
 mode = "desktop"
 
 [web]
-port = 8765
+port = 60080         # HTTP, this computer only
+https_port = 60443   # HTTPS, for sharing on the local network (V1)
 # LAN sharing arrives in V1. Must stay false for now.
 share_on_lan = false
 tls = "auto"

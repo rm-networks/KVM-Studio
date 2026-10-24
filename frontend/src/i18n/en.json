@@ -208,6 +208,9 @@
     },
     "console": {
       "no_vnc": "This virtual machine has no VNC display."
+    },
+    "restart": {
+      "unavailable": "Restart KVM Studio yourself."
     }
   },
   "about": {
@@ -386,7 +389,7 @@
     "interfaceMode": "Interface mode",
     "modeDesktop": "Desktop: native window",
     "modeWeb": "Web: in the browser, on this computer",
-    "port": "Port",
+    "port": "HTTP port (access on this computer)",
     "shareLan": "Share on the local network (next version)",
     "appliedOnRestart": "Mode and port changes apply the next time KVM Studio starts.",
     "appearance": "Appearance",
@@ -399,7 +402,15 @@
     "libvirtUri": "URI",
     "libvirtHint": "qemu:///system by default. qemu:///session works without kvmnet networks. Applied on restart.",
     "saved": "Preferences saved",
-    "restartRequired": "Restart KVM Studio to apply the new mode, port or URI.",
-    "saveFailed": "Preferences not saved"
+    "restartRequired": "KVM Studio must restart to apply the new port or URI.",
+    "saveFailed": "Preferences not saved",
+    "httpsPort": "HTTPS port (sharing on the local network)",
+    "restartTitle": "Restart KVM Studio",
+    "restartNow": "Restart Now",
+    "restartLater": "Later",
+    "restartToWeb": "KVM Studio will restart in web mode.\nAccess on this computer: http://127.0.0.1:{{http}} (HTTP)\nSharing on the local network: port {{https}} over HTTPS (next version)\nThe page will open in your default browser, and an icon in the notification area will show that KVM Studio is running.",
+    "restartToDesktop": "KVM Studio will restart in window mode. This browser tab will no longer be used.",
+    "restarting": "KVM Studio is restarting…",
+    "restartingToDesktop": "KVM Studio is restarting in window mode. You can close this tab."
   }
 }

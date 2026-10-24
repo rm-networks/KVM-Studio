@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from typing import Literal
 
+from fastapi import Request
 from pydantic import BaseModel
 
 from .. import __version__
 from ..context import Context, Mode
+from ..errors import ApiException
 
 
 class Health(BaseModel):
@@ -50,3 +52,16 @@ def info(ctx: Context) -> AppInfo:
         ),
         ui=UiPreferences(theme=ctx.config.ui.theme, language=ctx.config.ui.language),
     )
+
+
+class Restarting(BaseModel):
+    restarting: Literal[True] = True
+
+
+def restart(request: Request) -> Restarting:
+    """Restart the whole app (after an interface mode change, for instance)."""
+    on_restart = request.app.state.on_restart
+    if on_restart is None:
+        raise ApiException(409, "restart.unavailable", "Restart KVM Studio by hand")
+    on_restart()
+    return Restarting()

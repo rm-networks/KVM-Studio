@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig(({ mode }) => {
   // In development the API runs separately: kvm-studio --mode web --reload
   const env = loadEnv(mode, ".", "KVMSTUDIO_");
-  const backend = env.KVMSTUDIO_BACKEND ?? "http://127.0.0.1:8765";
+  const backend = env.KVMSTUDIO_BACKEND ?? "http://127.0.0.1:60080";
 
   return {
     plugins: [react()],

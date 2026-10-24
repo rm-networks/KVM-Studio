@@ -7,7 +7,14 @@ import { PreferencesDialog } from "./PreferencesDialog";
 
 const config: Config = {
   interface: { mode: "desktop" },
-  web: { port: 8765, share_on_lan: false, tls: "auto", guest_enabled: true, login_max_attempts: 5 },
+  web: {
+    port: 60080,
+    https_port: 60443,
+    share_on_lan: false,
+    tls: "auto",
+    guest_enabled: true,
+    login_max_attempts: 5,
+  },
   libvirt: { uri: "qemu:///system" },
   storage: { vm_default_location: null },
   iso_libraries: [],
@@ -81,13 +88,17 @@ describe("PreferencesDialog", () => {
     ).toBeTruthy();
   });
 
-  it("tells when a restart is needed", async () => {
+  it("offers to restart with the web ports", async () => {
     mockApi(true);
+    document.documentElement.dataset.mode = "desktop";
     open();
     await screen.findByPlaceholderText("/srv/vm");
     fireEvent.click(screen.getByText("Interface"));
     fireEvent.click(screen.getByLabelText(/Web : dans le navigateur/));
     fireEvent.click(screen.getByRole("button", { name: "Appliquer" }));
-    expect(await screen.findByText(/Redémarrez KVM Studio/)).toBeTruthy();
+    expect(await screen.findByText(/http:\/\/127\.0\.0\.1:60080/)).toBeTruthy();
+    expect(screen.getByText(/port 60443 en HTTPS/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Redémarrer maintenant" }));
+    expect(await screen.findByText("KVM Studio redémarre…")).toBeTruthy();
   });
 });

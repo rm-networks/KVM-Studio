@@ -73,13 +73,14 @@ interface Props {
 
 export function PreferencesDialog({ onClose, onSaved }: Props) {
   const { t } = useTranslation();
-  const { notify, notifyError } = useNotifier();
+  const { notifyError } = useNotifier();
   const [section, setSection] = useState<Section>("workspace");
   const [config, setConfig] = useState<Config | null>(null);
   const [saved, setSaved] = useState<string>("");
   const [libraryRoot, setLibraryRoot] = useState<string | null>(null);
   const [selectedIso, setSelectedIso] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [restartPrompt, setRestartPrompt] = useState<Config | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,7 +118,7 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
       setSaved(JSON.stringify(config));
       setLibraryRoot(result.library_root ?? null);
       onSaved();
-      if (result.restart_required) notify(t("prefs.saved"), t("prefs.restartRequired"));
+      if (result.restart_required) setRestartPrompt(config);
       return true;
     } catch (err) {
       notifyError(t("prefs.saveFailed"), err);
@@ -128,6 +129,10 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
   };
 
   const iso = config?.iso_libraries[selectedIso];
+
+  if (restartPrompt) {
+    return <RestartPrompt next={restartPrompt} onClose={onClose} />;
+  }
 
   return (
     <Dialog
@@ -370,8 +375,19 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                   min={1024}
                   max={65535}
                   value={config.web.port}
-                  disabled={config.interface.mode !== "web"}
                   onChange={(e) => update("web", { ...config.web, port: Number(e.target.value) })}
+                />
+              </label>
+              <label className="prefs-field prefs-inline prefs-indent">
+                <span>{t("prefs.httpsPort")}</span>
+                <input
+                  type="number"
+                  min={1024}
+                  max={65535}
+                  value={config.web.https_port}
+                  onChange={(e) =>
+                    update("web", { ...config.web, https_port: Number(e.target.value) })
+                  }
                 />
               </label>
               <label className="prefs-check prefs-indent" title={t("networks.bridgedLater")}>
@@ -430,6 +446,57 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
           )}
         </div>
       </div>
+    </Dialog>
+  );
+}
+
+function RestartPrompt({ next, onClose }: { next: Config; onClose: () => void }) {
+  const { t } = useTranslation();
+  const { notifyError } = useNotifier();
+  const [restarting, setRestarting] = useState(false);
+  const current = document.documentElement.dataset.mode;
+  const toWeb = next.interface.mode === "web" && current !== "web";
+  const toDesktop = next.interface.mode === "desktop" && current !== "desktop";
+
+  const message = restarting
+    ? toDesktop
+      ? t("prefs.restartingToDesktop")
+      : t("prefs.restarting")
+    : toWeb
+      ? t("prefs.restartToWeb", { http: next.web.port, https: next.web.https_port })
+      : toDesktop
+        ? t("prefs.restartToDesktop")
+        : t("prefs.restartRequired");
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => !open && !restarting && onClose()}
+      title={t("prefs.restartTitle")}
+      buttons={
+        restarting ? null : (
+          <>
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => {
+                setRestarting(true);
+                api.restart().catch((err: unknown) => {
+                  setRestarting(false);
+                  notifyError(t("prefs.restartTitle"), err);
+                });
+              }}
+            >
+              {t("prefs.restartNow")}
+            </button>
+            <button type="button" className="button" onClick={onClose}>
+              {t("prefs.restartLater")}
+            </button>
+          </>
+        )
+      }
+    >
+      <p className="prefs-restart">{message}</p>
     </Dialog>
   );
 }

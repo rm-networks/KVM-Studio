@@ -22,6 +22,8 @@ import time
 from pathlib import Path
 from typing import Literal
 
+from .restart import RESTART_EXIT
+
 READY_PREFIX = "READY "
 START_TIMEOUT = 30.0
 TOKEN_ENV = "KVMSTUDIO_TOKEN"  # noqa: S105 (a variable name, not a secret)
@@ -48,6 +50,7 @@ class BackendProcess:
         ]
         self._token = token
         self._proc: subprocess.Popen[str] | None = None
+        self._last_code: int | None = None
         self.port = 0
 
     def start(self, timeout: float = START_TIMEOUT) -> int:
@@ -80,6 +83,13 @@ class BackendProcess:
     def alive(self) -> bool:
         return self._proc is not None and self._proc.poll() is None
 
+    @property
+    def returncode(self) -> int | None:
+        return self._proc.poll() if self._proc is not None else self._last_code
+
+    def wants_restart(self) -> bool:
+        return self.returncode == RESTART_EXIT
+
     def stop(self) -> None:
         proc = self._proc
         if proc is None:
@@ -95,6 +105,7 @@ class BackendProcess:
                 proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 proc.kill()
+        self._last_code = proc.returncode
         self._proc = None
 
 
@@ -121,6 +132,11 @@ def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int
         print(f"{exc}. Change the port in Preferences > Interface.", file=sys.stderr)
         return 1
     conn = LibvirtConnection(config.libvirt.uri)
+
+    def request_restart() -> None:
+        # Let the HTTP answer leave first; the parent sees the status and restarts.
+        threading.Timer(0.3, os._exit, args=(RESTART_EXIT,)).start()
+
     app = create_app(
         config,
         conn,
@@ -128,6 +144,7 @@ def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int
         mode=mode,
         frontend_dir=find_frontend_dir(),
         config_path=config_path,
+        on_restart=request_restart,
     )
     server = BackgroundServer(app, sock)
     server.start()

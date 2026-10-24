@@ -208,6 +208,9 @@
     },
     "console": {
       "no_vnc": "Cette machine virtuelle n'a pas d'affichage VNC."
+    },
+    "restart": {
+      "unavailable": "Redémarrez KVM Studio vous-même."
     }
   },
   "about": {
@@ -388,7 +391,7 @@
     "interfaceMode": "Mode d'interface",
     "modeDesktop": "Logiciel : fenêtre native",
     "modeWeb": "Web : dans le navigateur, sur cet ordinateur",
-    "port": "Port",
+    "port": "Port HTTP (accès sur cet ordinateur)",
     "shareLan": "Partager sur le réseau local (prochaine version)",
     "appliedOnRestart": "Le changement de mode et de port s'applique au prochain lancement de KVM Studio.",
     "appearance": "Apparence",
@@ -401,7 +404,15 @@
     "libvirtUri": "URI",
     "libvirtHint": "qemu:///system par défaut. qemu:///session fonctionne sans les réseaux kvmnet. Appliqué au redémarrage.",
     "saved": "Préférences enregistrées",
-    "restartRequired": "Redémarrez KVM Studio pour appliquer le nouveau mode, le port ou l'URI.",
-    "saveFailed": "Préférences non enregistrées"
+    "restartRequired": "KVM Studio doit redémarrer pour appliquer le nouveau port ou la nouvelle URI.",
+    "saveFailed": "Préférences non enregistrées",
+    "httpsPort": "Port HTTPS (partage sur le réseau local)",
+    "restartTitle": "Redémarrer KVM Studio",
+    "restartNow": "Redémarrer maintenant",
+    "restartLater": "Plus tard",
+    "restartToWeb": "KVM Studio va redémarrer en mode web.\nAccès sur cet ordinateur : http://127.0.0.1:{{http}} (HTTP)\nPartage sur le réseau local : port {{https}} en HTTPS (prochaine version)\nLa page s'ouvrira dans votre navigateur par défaut, et une icône dans la zone de notification indiquera que KVM Studio tourne.",
+    "restartToDesktop": "KVM Studio va redémarrer en mode fenêtre. Cet onglet du navigateur ne servira plus.",
+    "restarting": "KVM Studio redémarre…",
+    "restartingToDesktop": "KVM Studio redémarre en mode fenêtre. Vous pouvez fermer cet onglet."
   }
 }

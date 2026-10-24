@@ -11,8 +11,11 @@ from pathlib import Path
 import uvicorn
 
 from ..auth.token import new_token
-from ..config import Config, default_config_path
+from ..config import Config, default_config_path, load_config, save_config
+from ..frontend import find_frontend_dir
 from .backend_process import BackendError, BackendProcess
+from .restart import exec_restart
+from .tray import run_tray
 
 
 def run(config: Config, config_path: Path | None, *, open_browser: bool, reload: bool) -> int:
@@ -45,7 +48,8 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
         )
         return 0
 
-    backend = BackendProcess(config_path or default_config_path(), "web", token, port)
+    path = config_path or default_config_path()
+    backend = BackendProcess(path, "web", token, port)
     try:
         backend.start()
     except BackendError as exc:
@@ -54,12 +58,35 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
     print(f"KVM Studio is listening on 127.0.0.1:{port}")
     print(f"Open this link (it contains the session token): {url}", flush=True)
     if open_browser:
+        # The default browser (xdg-open on Linux desktops), as if a link was clicked.
         webbrowser.open(url)
-    try:
-        while backend.alive():
-            time.sleep(0.5)
-    except KeyboardInterrupt:
-        pass
-    finally:
+
+    frontend = find_frontend_dir()
+    icon = frontend / "logo.png" if frontend else None
+    outcome = run_tray(url, icon, config.ui.language, backend.alive)
+    if outcome is None:
+        # No notification area (GNOME without AppIndicator, no display): just wait.
+        try:
+            while backend.alive():
+                time.sleep(0.5)
+        except KeyboardInterrupt:
+            outcome = "quit"
+        else:
+            outcome = "backend_exited"
+
+    if outcome == "desktop":
+        switch_to_desktop(path)
         backend.stop()
+        exec_restart()
+    restart = outcome == "backend_exited" and backend.wants_restart()
+    backend.stop()
+    if restart:
+        exec_restart()
     return 0
+
+
+def switch_to_desktop(config_path: Path) -> None:
+    """Save interface mode = desktop, as Preferences would."""
+    config = load_config(config_path)
+    config.interface.mode = "desktop"
+    save_config(config, config_path)

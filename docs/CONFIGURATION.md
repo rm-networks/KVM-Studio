@@ -23,7 +23,8 @@ indique la clé fautive. `kvm-studio --check` valide le fichier sans rien lancer
 
 | Clé | Défaut | Description |
 | --- | --- | --- |
-| `port` | `8765` | Port d'écoute du mode web, entre 1024 et 65535. Le mode fenêtre utilise un port aléatoire. |
+| `port` | `60080` | Port HTTP du mode web (accès local, 127.0.0.1), entre 1024 et 65535. Le mode fenêtre utilise un port aléatoire. |
+| `https_port` | `60443` | Port HTTPS du partage sur le réseau local (V1). |
 | `share_on_lan` | `false` | Partage sur le réseau local (V1). Doit rester à `false` : KVM Studio refuse de démarrer sinon. |
 | `tls` | `"auto"` | Certificat auto-signé pour le partage LAN (V1). |
 | `guest_enabled` | `true` | Compte invité du partage LAN (V1). |
@@ -77,7 +78,7 @@ Valeurs proposées par l'assistant de création de VM.
 | --- | --- |
 | `XDG_CONFIG_HOME` | Emplacement du dossier de configuration. |
 | `KVMSTUDIO_FRONTEND_DIR` | Dossier de l'interface compilée, si elle n'est pas à l'emplacement habituel. |
-| `KVMSTUDIO_BACKEND` | Développement : adresse de l'API pour le serveur Vite (défaut `http://127.0.0.1:8765`). |
+| `KVMSTUDIO_BACKEND` | Développement : adresse de l'API pour le serveur Vite (défaut `http://127.0.0.1:60080`). |
 
 ## Dossiers de la bibliothèque
 

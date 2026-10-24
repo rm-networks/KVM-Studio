@@ -62,6 +62,7 @@ Un backend Python unique pilote libvirt ; le même frontend s'affiche soit dans 
 | XML | lxml, générateurs par profil d'OS | XML conforme au schéma libvirt, testable |
 | Frontend | React + TypeScript + Vite, Radix UI, Lucide | Interface dense type logiciel de bureau |
 | Mode logiciel | pywebview (Qt WebEngine, repli GTK WebKit) | Vraie fenêtre, lanceur dans le menu des applis, presse-papiers natif |
+| Processus | La fenêtre (ou l'icône de notification en mode web) seule dans le processus principal ; serveur, libvirt et sa boucle d'événements dans un sous-processus | La boucle libvirt et Qt partagent le contexte GLib par défaut : dans un même processus, la fenêtre plante |
 | Mode web | Même frontend servi en HTTPS, compte invité | Travail à plusieurs sur le LAN |
 | Console graphique | noVNC + canal QEMU `qemu-vdagent`, VNC en mode partagé | Copier-coller de texte natif ; plusieurs personnes sur la même console |
 | Console série | xterm.js | Firewalls et appliances sans GUI |
@@ -74,7 +75,8 @@ Un backend Python unique pilote libvirt ; le même frontend s'affiche soit dans 
 **Modes d'interface (exclusifs).** Choisis dans Préférences > Interface, appliqués au redémarrage de l'appli.
 
 - *Logiciel* (défaut) : le backend écoute sur 127.0.0.1, port aléatoire, jeton par session. Rien n'est joignable hors de la fenêtre.
-- *Web* : port fixe sur 127.0.0.1, accès par un lien à jeton affiché au lancement. Option « Partager sur le réseau local » : écoute sur le LAN, HTTPS auto-signé, ouverture du port dans firewalld ou ufw, connexion par compte invité. Le propriétaire utilise lui aussi le navigateur dans ce mode.
+- *Web* : HTTP sur 127.0.0.1, port 60080 par défaut ; HTTPS port 60443 pour le partage sur le réseau local (V1) ; les deux ports se règlent dans Préférences > Interface. Au lancement, la page s'ouvre dans le navigateur par défaut avec le jeton dans le fragment de l'URL (comme un clic sur un lien) ; l'URL est aussi affichée dans le terminal. Une icône dans la zone de notification (StatusNotifierItem, logo KVM Studio) indique que KVM Studio tourne : Ouvrir dans le navigateur, Copier l'adresse, Passer en mode fenêtre, Quitter. Sans zone de notification (GNOME sans extension AppIndicator), l'appli tourne normalement sans icône. Option « Partager sur le réseau local » : écoute sur le LAN, HTTPS auto-signé, ouverture du port dans firewalld ou ufw, connexion par compte invité. Le propriétaire utilise lui aussi le navigateur dans ce mode.
+- *Changement de mode* : Préférences > Interface propose de redémarrer tout de suite ; le message indique les ports (60080 en HTTP pour l'accès local, 60443 en HTTPS pour le partage). L'appli se relance dans le nouveau mode.
 
 **Connexion libvirt.** URI configurable, `qemu:///system` par défaut. Le paquet ajoute l'utilisateur au groupe `libvirt` au premier lancement (via polkit).
 
@@ -91,7 +93,8 @@ Tout se règle dans Préférences et dans l'assistant de premier lancement ; les
 mode = "desktop"          # "desktop" (fenêtre logicielle) | "web"
 
 [web]
-port = 8765
+port = 60080              # HTTP, accès local (127.0.0.1)
+https_port = 60443        # HTTPS, partage sur le réseau local
 share_on_lan = false      # true = écoute LAN + HTTPS + compte invité
 tls = "auto"              # certificat auto-signé généré au 1er lancement
 guest_enabled = true      # mot de passe défini dans Préférences > Interface
@@ -270,7 +273,7 @@ Les dossiers de la bibliothèque sont de vrais dossiers sur le disque : ce que l
 
 ### 6.7 Console et intégration invité
 
-- **F-60** Console intégrée à l'onglet VM, mise à l'échelle, plein écran, Ajuster l'invité / la fenêtre.
+- **F-60** Console intégrée à l'onglet VM, mise à l'échelle, plein écran, Ajuster l'invité / la fenêtre. La console utilise l'affichage VNC de la VM (sans port d'écoute, via libvirt) ; pour une VM qui n'a que SPICE (créée dans virt-manager), l'onglet l'explique et propose d'ajouter un affichage VNC à côté de SPICE, actif au prochain démarrage.
 - **F-61** Copier-coller de texte natif hôte ↔ VM via le canal `qemu-vdagent` et l'agent `spice-vdagent` de l'invité ; désactivable dans Options > Isolation. Fichiers et images non pris en charge.
 - **F-62** Envoi de combinaisons (Ctrl+Alt+Suppr, Ctrl+Alt+F1…F12, Impr écran), Capturer la saisie (Ctrl+G).
 - **F-63** Console série (xterm.js) pour firewalls et appliances.

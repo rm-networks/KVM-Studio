@@ -22,7 +22,9 @@ class InterfaceSettings(_Section):
 
 
 class WebSettings(_Section):
-    port: int = Field(default=8765, ge=1024, le=65535)
+    # HTTP on 127.0.0.1; HTTPS is for LAN sharing (V1).
+    port: int = Field(default=60080, ge=1024, le=65535)
+    https_port: int = Field(default=60443, ge=1024, le=65535)
     share_on_lan: bool = False
     tls: Literal["auto"] = "auto"
     guest_enabled: bool = True

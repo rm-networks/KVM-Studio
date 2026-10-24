@@ -38,6 +38,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/restart": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restart
+     * @description Restart the whole app (after an interface mode change, for instance).
+     */
+    post: operations["restart_api_restart_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/vms": {
     parameters: {
       query?: never;
@@ -749,6 +769,15 @@ export interface components {
       /** Library Root */
       library_root: string | null;
     };
+    /** Restarting */
+    Restarting: {
+      /**
+       * Restarting
+       * @default true
+       * @constant
+       */
+      restarting: true;
+    };
     /** SaveResult */
     SaveResult: {
       /** Restart Required */
@@ -857,9 +886,14 @@ export interface components {
     WebSettings: {
       /**
        * Port
-       * @default 8765
+       * @default 60080
        */
       port: number;
+      /**
+       * Https Port
+       * @default 60443
+       */
+      https_port: number;
       /**
        * Share On Lan
        * @default false
@@ -927,6 +961,80 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AppInfo"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  restart_api_restart_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Restarting"];
         };
       };
       /** @description Unauthorized */

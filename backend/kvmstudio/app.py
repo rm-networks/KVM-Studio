@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -53,6 +53,7 @@ def create_app(
     frontend_dir: Path | None = None,
     open_console: ConsoleOpener = open_vnc_socket,
     config_path: Path | None = None,
+    on_restart: Callable[[], None] | None = None,
 ) -> FastAPI:
     def describe(uuid: str) -> dict[str, object] | None:
         # Read the config at call time: Preferences may have replaced it.
@@ -71,6 +72,8 @@ def create_app(
         title="KVM Studio", version=__version__, docs_url=None, redoc_url=None, lifespan=lifespan
     )
     app.state.events = hub
+    # Set by the shell that started us; tests and --reload have none.
+    app.state.on_restart = on_restart
     app.state.context = AppContext(
         config=config,
         conn=conn,
@@ -91,6 +94,9 @@ def create_app(
         prefix="/api", dependencies=[Depends(require_token)], responses=_ERROR_RESPONSES
     )
     private.add_api_route("/info", system.info, methods=["GET"], tags=["system"])
+    private.add_api_route(
+        "/restart", system.restart, methods=["POST"], status_code=202, tags=["system"]
+    )
     private.include_router(vms.router)
     private.include_router(library.router)
     private.include_router(networks.router)

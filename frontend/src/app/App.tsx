@@ -49,6 +49,7 @@ function MainWindow() {
     if (!info) return;
     void i18n.changeLanguage(info.ui.language);
     document.documentElement.lang = info.ui.language;
+    document.documentElement.dataset.mode = info.mode;
     if (info.ui.theme === "system") delete document.documentElement.dataset.theme;
     else document.documentElement.dataset.theme = info.ui.theme;
   }, [info, i18n]);

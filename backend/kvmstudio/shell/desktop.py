@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import os
 import sys
 import threading
+import time
 from pathlib import Path
 from typing import Any, Literal
 
@@ -14,6 +16,7 @@ from ..config import Config, default_config_path
 from ..frontend import find_frontend_dir
 from .backend_process import BackendError, BackendProcess
 from .clipboard import DesktopApi, make_clipboard
+from .restart import exec_restart
 
 # Smoke test: close the window that many seconds after the page loaded.
 SMOKE_ENV = "KVMSTUDIO_SMOKE_SECONDS"
@@ -86,6 +89,7 @@ def run(config: Config, config_path: Path | None = None) -> int:
     except BackendError as exc:
         print(exc, file=sys.stderr)
         return 1
+    restart = threading.Event()
     try:
         window = webview.create_window(
             "KVM Studio",
@@ -95,14 +99,30 @@ def run(config: Config, config_path: Path | None = None) -> int:
             min_size=(900, 600),
             js_api=api,
         )
+        if window is None:
+            print("could not create the window", file=sys.stderr)
+            return 1
         api._attach(window)
         if seconds := os.environ.get(SMOKE_ENV):
             _close_after_load(window, float(seconds))
+
+        def watch_backend() -> None:
+            # A restart request (mode change) ends the backend: close the window.
+            while backend.alive():
+                time.sleep(0.5)
+            if backend.wants_restart():
+                restart.set()
+            with contextlib.suppress(Exception):  # already closed by the user
+                window.destroy()
+
+        threading.Thread(target=watch_backend, daemon=True).start()
         # Lets the network editor export its JSON file.
         webview.settings["ALLOW_DOWNLOADS"] = True
         webview.start(gui=gui, icon=str(icon) if icon and icon.is_file() else None)
     finally:
         backend.stop()
+    if restart.is_set():
+        exec_restart()
     return 0
 
 

@@ -104,6 +104,7 @@ export const api = {
   display: (uuid: string) => request<DisplayInfo>("GET", `${vmPath(uuid)}/display`),
   addVnc: (uuid: string) =>
     request<{ restart_required: boolean }>("POST", `${vmPath(uuid)}/display/vnc`),
+  restart: () => request<{ restarting: boolean }>("POST", "/api/restart"),
   preferences: () => request<Preferences>("GET", "/api/preferences"),
   savePreferences: (config: Config) => request<SaveResult>("PUT", "/api/preferences", config),
   networks: () => request<Network[]>("GET", "/api/networks"),
