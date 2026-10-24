@@ -349,7 +349,9 @@
       "subnet": "Invalid subnet address or mask (prefix between /8 and /30).",
       "dhcp": "Enter the first and last DHCP addresses.",
       "name": "Letters, digits, dot, dash and underscore, 50 characters at most."
-    }
+    },
+    "usedByMore_one": "Used by: {{names}} and {{count}} other",
+    "usedByMore_other": "Used by: {{names}} and {{count}} others"
   },
   "prefs": {
     "title": "Preferences",
@@ -366,8 +368,6 @@
     "vmLocationLabel": "Chosen folder",
     "libraryRoot": "Virtual machines are stored in: {{path}}",
     "libraryRootUnset": "No location yet: library folders and VM creation need one.",
-    "isoFolder": "Default ISO folder",
-    "isoFolderLabel": "Folder offered when looking for an ISO image",
     "isoLibraries": "ISO Libraries",
     "isoIntro": "Folders of ISO images browsed read-only, subfolders included. Nothing is copied or changed there.",
     "unnamed": "(unnamed)",

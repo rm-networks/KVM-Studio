@@ -22,7 +22,6 @@ uri = "qemu:///system"
 # Folder where each VM gets its own subfolder. No default: set it here or in
 # the first-run assistant.
 # vm_default_location = "/srv/vm"
-default_iso_folder = "~/ISO"
 
 # ISO libraries, browsed read-only. Repeat the block for each folder.
 # [[iso_libraries]]

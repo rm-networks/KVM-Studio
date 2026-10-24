@@ -78,6 +78,19 @@ describe("NetworkEditor", () => {
     });
   });
 
+  it("shortens a long list of VMs and shows it all on hover", async () => {
+    kvmnet8.used_by = ["FW-OPN", "SRV-AD", "CLT-1", "CLT-2"];
+    mockApi();
+    render(
+      <NotificationProvider>
+        <NetworkEditor onClose={() => undefined} />
+      </NotificationProvider>,
+    );
+    const line = await screen.findByText("Utilisé par : FW-OPN, SRV-AD et 2 autres");
+    expect(line.getAttribute("title")).toBe("FW-OPN, SRV-AD, CLT-1, CLT-2");
+    kvmnet8.used_by = ["FW-OPN"];
+  });
+
   it("explains that other network types are edited elsewhere", async () => {
     mockApi();
     render(

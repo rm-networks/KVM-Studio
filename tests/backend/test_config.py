@@ -63,3 +63,9 @@ def test_config_dir_follows_xdg(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
     assert config_dir() == tmp_path / "kvm-studio"
     monkeypatch.setenv("XDG_CONFIG_HOME", "relative/path")
     assert config_dir() == Path.home() / ".config" / "kvm-studio"
+
+
+def test_old_default_iso_folder_key_is_ignored(tmp_path: Path) -> None:
+    path = tmp_path / "config.toml"
+    path.write_text('[storage]\ndefault_iso_folder = "~/ISO"\n')
+    assert load_config(path) == Config()

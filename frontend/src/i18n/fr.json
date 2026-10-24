@@ -351,7 +351,9 @@
       "subnet": "Adresse ou masque de sous-réseau invalide (préfixe entre /8 et /30).",
       "dhcp": "Indiquez la première et la dernière adresse DHCP.",
       "name": "Lettres, chiffres, point, tiret et souligné, 50 caractères au plus."
-    }
+    },
+    "usedByMore_one": "Utilisé par : {{names}} et {{count}} autre",
+    "usedByMore_other": "Utilisé par : {{names}} et {{count}} autres"
   },
   "prefs": {
     "title": "Préférences",
@@ -368,8 +370,6 @@
     "vmLocationLabel": "Dossier choisi",
     "libraryRoot": "Les machines virtuelles sont rangées dans : {{path}}",
     "libraryRootUnset": "Aucun emplacement : les dossiers de bibliothèque et la création de VM en ont besoin.",
-    "isoFolder": "Dossier ISO par défaut",
-    "isoFolderLabel": "Dossier proposé pour chercher une image ISO",
     "isoLibraries": "Bibliothèques ISO",
     "isoIntro": "Dossiers d'images ISO parcourus en lecture seule, sous-dossiers compris. Rien n'y est copié ni modifié.",
     "unnamed": "(sans nom)",

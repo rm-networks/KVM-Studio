@@ -102,7 +102,6 @@ uri = "qemu:///system"
 
 [storage]
 # vm_default_location = "/srv/vm"     # choisi au premier lancement ; les VMs vont dans <emplacement>/KVM-Studio/VM
-default_iso_folder = "~/ISO"
 
 [[iso_libraries]]
 name = "ISO principales"
@@ -141,7 +140,7 @@ L'interface reprend la disposition, les menus et les dialogues de Workstation 17
 
 - Barre de menus : Fichier, Édition, Affichage, VM, Onglets, Aide.
 - Barre d'outils : alimentation (avec menu déroulant), envoi Ctrl+Alt+Suppr, snapshot / revenir / gestionnaire, afficher la bibliothèque, miniatures, plein écran, console.
-- Bibliothèque à gauche : recherche avec filtre, arbre « Mon ordinateur » → dossiers → VMs, glisser-déposer entre dossiers.
+- Bibliothèque à gauche : recherche avec filtre, arbre « Mon ordinateur » → dossiers → VMs, glisser-déposer entre dossiers. Un simple clic sur une VM affiche son onglet (et l'ouvre s'il ne l'est pas).
 - Zone centrale à onglets : Accueil + un onglet par VM ouverte.
 - Barre d'état : périphériques (disque, réseau, CD, USB) avec activité, rappel du raccourci de libération.
 
@@ -282,14 +281,14 @@ Les dossiers de la bibliothèque sont de vrais dossiers sur le disque : ce que l
 
 ### 6.8 Réseaux virtuels
 
-- **F-70** Éditeur de réseaux virtuels : tableau Nom / Type / Connexion externe / Connexion hôte / DHCP / Sous-réseau ; boutons Ajouter, Supprimer, Renommer ; panneau du réseau sélectionné (type, adaptateur hôte, DHCP et ses réglages, IP et masque) ; Restaurer les valeurs par défaut, Importer, Exporter.
+- **F-70** Éditeur de réseaux virtuels : tableau Nom / Type / Connexion externe / Connexion hôte / DHCP / Sous-réseau ; boutons Ajouter, Supprimer, Renommer ; panneau du réseau sélectionné (type, adaptateur hôte, DHCP et ses réglages, IP et masque, VMs qui l'utilisent : « VM1, VM2 et N autres », liste complète au survol) ; Restaurer les valeurs par défaut, Importer, Exporter.
 - **F-71** Réseaux créés au premier lancement : kvmnet1 (Host-only, DHCP) et kvmnet8 (NAT, DHCP), sur des sous-réseaux qui ne chevauchent pas le LAN. kvmnet0 est réservé au Bridged (V2).
 - **F-72** Host-only : réseau isolé, case « Connecter un adaptateur virtuel de l'hôte » (l'hôte a une IP sur ce réseau ou non), DHCP activable.
 - **F-73** NAT : sortie via l'IP de l'hôte, DHCP, réglages NAT (passerelle, redirection de ports TCP/UDP) gérés dans une table nftables propre à KVM Studio.
 - **F-74** Bridged transparent (V2) : mini-routeur transparent par proxy ARP + relais DHCP, Wi-Fi ou filaire, sans toucher à la connexion de l'utilisateur. À prototyper avant de s'engager (box qui refusent le relais DHCP, réseaux d'entreprise avec port security).
 - **F-75** Bridged L2 complet (V2, option Ethernet uniquement) : vrai pont via NetworkManager.
 - **F-76** Segments de lab rapides (LAN-1, LAN-2, DMZ…) = Host-only sans adaptateur hôte.
-- **F-77** Poste propre : ponts nommés `kvmnetN`, cartes des VMs `ks-*`, déclarés non gérés dans NetworkManager → invisibles dans l'applet réseau.
+- **F-77** Poste propre : tout réseau créé par KVM Studio a un pont nommé `kvmnetN`, quel que soit son nom affiché (ex. Host-Only-3) ; cartes des VMs `ks-*` ; déclarés non gérés dans NetworkManager → invisibles dans l'applet réseau. `kvm-studio --check` signale l'absence de `/etc/NetworkManager/conf.d/90-kvm-studio.conf` et affiche la commande sudo qui l'installe.
 - **F-78** Diagnostic réseau : routage IP, nftables, conflit de sous-réseau avec le LAN, présence de Docker ou d'un pare-feu qui bloque le transfert, avec correction proposée.
 - **F-79** Vue topologie : quelles VMs et cartes sur quel kvmnet (V2).
 

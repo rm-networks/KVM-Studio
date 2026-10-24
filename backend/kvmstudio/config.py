@@ -36,7 +36,6 @@ class LibvirtSettings(_Section):
 class StorageSettings(_Section):
     # No generic default: the first-run assistant asks for it.
     vm_default_location: ExpandedPath | None = None
-    default_iso_folder: ExpandedPath | None = Path("~/ISO")
 
 
 class IsoLibrary(_Section):
@@ -92,6 +91,10 @@ def load_config(path: Path | None = None) -> Config:
         data = tomllib.loads(path.read_text(encoding="utf-8"))
     except (OSError, tomllib.TOMLDecodeError) as exc:
         raise ConfigError(f"{path}: {exc}") from exc
+    # Dropped keys: ISO images come from [[iso_libraries]] only.
+    storage = data.get("storage")
+    if isinstance(storage, dict):
+        storage.pop("default_iso_folder", None)
     try:
         return Config.model_validate(data)
     except ValidationError as exc:

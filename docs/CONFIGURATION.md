@@ -40,7 +40,6 @@ indique la clé fautive. `kvm-studio --check` valide le fichier sans rien lancer
 | Clé | Défaut | Description |
 | --- | --- | --- |
 | `vm_default_location` | aucun | Emplacement choisi pour les VMs. KVM Studio y range tout sous `KVM-Studio/VM/` : `<emplacement>/KVM-Studio/VM/<dossiers>/<nom de la VM>/<disques>`. À choisir au premier lancement. `~` est accepté. |
-| `default_iso_folder` | `"~/ISO"` | Dossier proposé par défaut pour chercher une ISO. |
 
 ## [[iso_libraries]]
 

@@ -66,3 +66,23 @@ def test_reload_requires_web_mode(tmp_path: Path, capsys: pytest.CaptureFixture[
     path = write_config(tmp_path, "")
     assert main(["--config", str(path), "--mode", "desktop", "--reload"]) == 2
     assert "--reload" in capsys.readouterr().err
+
+
+def test_networkmanager_rule_is_checked(tmp_path: Path) -> None:
+    from kvmstudio.check import NM_CONF_NAME, _check_networkmanager
+
+    conf_dir = tmp_path / "NetworkManager" / "conf.d"
+    conf_dir.mkdir(parents=True)
+    missing = _check_networkmanager(conf_dir)
+    assert missing is not None
+    assert missing.level == "warn"
+    assert "sudo install -m 644" in missing.message
+    assert "packaging/networkmanager/90-kvm-studio.conf" in missing.message
+
+    (conf_dir / NM_CONF_NAME).write_text(
+        "[keyfile]\nunmanaged-devices=interface-name:kvmnet*;interface-name:ks-*\n"
+    )
+    found = _check_networkmanager(conf_dir)
+    assert found is not None
+    assert found.level == "ok"
+    assert _check_networkmanager(tmp_path / "absent" / "conf.d") is None

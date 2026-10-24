@@ -249,9 +249,12 @@ export function LibraryTree({
                   e.dataTransfer.setData(DRAG_TYPE, vm.uuid);
                   e.dataTransfer.effectAllowed = "move";
                 }}
-                onClick={() => onSelect(vmId(vm.uuid))}
+                onClick={() => {
+                  // Like Workstation: one click shows the VM's tab, opening it if needed.
+                  onSelect(vmId(vm.uuid));
+                  onOpen(vm.uuid);
+                }}
                 onContextMenu={() => onSelect(vmId(vm.uuid))}
-                onDoubleClick={() => onOpen(vm.uuid)}
               >
                 <span className="tree-icon tree-vm-icon">
                   <Monitor size={14} strokeWidth={1.75} />

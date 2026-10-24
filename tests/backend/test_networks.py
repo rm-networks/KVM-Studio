@@ -270,3 +270,14 @@ def test_export_then_import(client: TestClient) -> None:
     report = client.post("/api/networks/import", headers=AUTH, json=exported).json()
     assert report == {"created": ["LAN-2"], "skipped": ["kvmnet3"]}
     assert networks(client)["LAN-2"]["bridge"] == "kvmnet5"
+
+
+def test_any_display_name_gets_a_kvmnet_bridge(client: TestClient, conn: LibvirtConnection) -> None:
+    """Whatever the name, the interface is kvmnetN, so NetworkManager hides it."""
+    body = {**host_only(), "name": "Host-Only-3"}
+    created = client.post("/api/networks", headers=AUTH, json=body).json()
+    assert created["name"] == "Host-Only-3"
+    assert created["bridge"].startswith("kvmnet")
+    assert network_xml(conn, "Host-Only-3").find("bridge").get("name") == created["bridge"]  # type: ignore[union-attr]
+    client.post("/api/networks/Host-Only-3/rename", headers=AUTH, json={"name": "LAB"})
+    assert networks(client)["LAB"]["bridge"] == created["bridge"]

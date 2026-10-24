@@ -760,11 +760,6 @@ export interface components {
     StorageSettings: {
       /** Vm Default Location */
       vm_default_location?: string | null;
-      /**
-       * Default Iso Folder
-       * @default ~/ISO
-       */
-      default_iso_folder: string | null;
     };
     /** Suggestion */
     Suggestion: {

@@ -94,7 +94,7 @@ describe("LibraryTree", () => {
     expect(screen.queryByText("a")).toBeNull();
   });
 
-  it("opens a VM with Enter or a double click", () => {
+  it("opens a VM with Enter or a single click", () => {
     const opened: string[] = [];
     render(
       <Harness
@@ -105,7 +105,7 @@ describe("LibraryTree", () => {
     const tree = screen.getByRole("tree");
     fireEvent.keyDown(tree, { key: "ArrowDown" });
     fireEvent.keyDown(tree, { key: "Enter" });
-    fireEvent.doubleClick(screen.getByText("b"));
+    fireEvent.click(screen.getByText("b"));
     expect(opened).toEqual(["a", "b"]);
   });
 });

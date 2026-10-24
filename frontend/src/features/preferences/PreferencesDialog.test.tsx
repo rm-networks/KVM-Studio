@@ -9,7 +9,7 @@ const config: Config = {
   interface: { mode: "desktop" },
   web: { port: 8765, share_on_lan: false, tls: "auto", guest_enabled: true, login_max_attempts: 5 },
   libvirt: { uri: "qemu:///system" },
-  storage: { vm_default_location: null, default_iso_folder: "/home/romain/ISO" },
+  storage: { vm_default_location: null },
   iso_libraries: [],
   defaults: { firmware: "uefi", disk_bus: "virtio", nic_model: "virtio", virtio_win_iso: null },
   ui: { theme: "system", language: "fr" },

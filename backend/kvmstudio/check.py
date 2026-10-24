@@ -76,6 +76,41 @@ def _check_iso_libraries(config: Config) -> list[Result]:
     return results
 
 
+NM_CONF_DIR = Path("/etc/NetworkManager/conf.d")
+NM_CONF_NAME = "90-kvm-studio.conf"
+
+
+def _packaged_nm_conf() -> Path | None:
+    """The rule file shipped in the source tree (development installs)."""
+    candidate = Path(__file__).resolve().parents[2] / "packaging" / "networkmanager" / NM_CONF_NAME
+    return candidate if candidate.is_file() else None
+
+
+def _check_networkmanager(conf_dir: Path = NM_CONF_DIR) -> Result | None:
+    if not conf_dir.parent.is_dir():
+        return None  # no NetworkManager on this machine
+    item = "NetworkManager"
+    installed = conf_dir / NM_CONF_NAME
+    try:
+        content = installed.read_text()
+    except OSError:
+        content = ""
+    if "interface-name:kvmnet*" in content:
+        return Result("ok", item, f"{installed} hides kvmnet* and ks-* interfaces")
+    source = _packaged_nm_conf()
+    command = (
+        f"sudo install -m 644 {source} {conf_dir}/ && sudo systemctl reload NetworkManager"
+        if source
+        else f"reinstall the kvm-studio package to get {installed}"
+    )
+    return Result(
+        "warn",
+        item,
+        f"{installed} is missing: KVM Studio networks show up in the network applet.\n"
+        f"       To fix it: {command}",
+    )
+
+
 def run_checks(config: Config, config_path: Path) -> list[Result]:
     state = "found" if config_path.exists() else "not found, using defaults"
     results = [Result("ok", "Configuration", f"{config_path} ({state})")]
@@ -83,6 +118,8 @@ def run_checks(config: Config, config_path: Path) -> list[Result]:
     results += _check_libvirt(config.libvirt.uri)
     results.append(_check_vm_location(config.storage.vm_default_location))
     results += _check_iso_libraries(config)
+    if (nm := _check_networkmanager()) is not None:
+        results.append(nm)
     return results
 
 

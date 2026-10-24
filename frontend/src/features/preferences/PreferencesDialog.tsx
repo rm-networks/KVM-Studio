@@ -196,15 +196,6 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                     : t("prefs.libraryRootUnset")}
                 </p>
               </Group>
-              <Group title={t("prefs.isoFolder")}>
-                <PathField
-                  label={t("prefs.isoFolderLabel")}
-                  value={config.storage.default_iso_folder ?? ""}
-                  onChange={(v) =>
-                    update("storage", { ...config.storage, default_iso_folder: v || null })
-                  }
-                />
-              </Group>
             </>
           )}
 
