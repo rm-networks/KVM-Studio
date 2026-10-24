@@ -1,0 +1,20 @@
+[Unit]
+Description=KVM Studio privileged helper
+Documentation=https://github.com/rm-networks/kvm-studio/blob/main/docs/ARCHITECTURE.md
+Requires=kvmstudio-helper.socket
+
+[Service]
+ExecStart=/opt/kvm-studio/bin/kvmstudio-helper
+# Started on demand by the socket.
+NoNewPrivileges=yes
+ProtectSystem=full
+PrivateTmp=yes
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+CapabilityBoundingSet=CAP_FOWNER CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native

@@ -28,6 +28,7 @@ function mockApi(readable: boolean) {
   vi.stubGlobal(
     "fetch",
     vi.fn((path: string) => {
+      if (path === "/api/isos/access/fix") readable = true;
       const body = path.startsWith("/api/isos/access")
         ? {
             path: "/srv/iso/Windows/Win11.iso",
@@ -74,5 +75,7 @@ describe("IsoPicker", () => {
     fireEvent.click(await screen.findByText("Windows/Win11.iso"));
     expect(await screen.findByText(/ne pourra pas lire cette image/)).toBeTruthy();
     expect(screen.getByText("sudo setfacl -m u:qemu:x /srv/iso/Windows")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Corriger" }));
+    expect(await screen.findByText("QEMU peut lire cette image.")).toBeTruthy();
   });
 });

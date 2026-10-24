@@ -12,13 +12,13 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "S", "RUF", "PT"]
 "tests/**" = ["S101", "S105", "S106"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["kvmstudio"]
+known-first-party = ["kvmstudio", "kvmstudio_helper"]
 
 [tool.mypy]
 python_version = "3.11"
 strict = true
-mypy_path = "backend/stubs:backend"
-files = ["backend/kvmstudio", "tests"]
+mypy_path = "backend/stubs:backend:helper"
+files = ["backend/kvmstudio", "helper/kvmstudio_helper", "tests"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
@@ -30,5 +30,5 @@ testpaths = ["tests"]
 addopts = "-q"
 
 [tool.coverage.run]
-source = ["kvmstudio"]
+source = ["kvmstudio", "kvmstudio_helper"]
 omit = ["*/kvmstudio/shell/desktop.py"]

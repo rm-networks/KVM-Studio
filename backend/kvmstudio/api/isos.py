@@ -8,6 +8,7 @@ from lxml import etree
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
+from .. import helper_client
 from ..context import Context
 from ..errors import ApiException
 from ..isolib import access, scan
@@ -48,6 +49,10 @@ class AccessReport(BaseModel):
     commands: list[str]
 
 
+class AccessFix(BaseModel):
+    path: str
+
+
 class CdromDevice(BaseModel):
     target: str
     bus: str
@@ -79,18 +84,32 @@ def _qemu_identity(ctx: Context) -> access.Identity | None:
     return access.qemu_identity(ctx.conn.run(lambda c: c.getCapabilities()))
 
 
+def _report(ctx: Context, path: str) -> AccessReport:
+    target = confine(path, ctx.config)
+    report = access.check(str(target), _qemu_identity(ctx))
+    return AccessReport(
+        path=report.path,
+        identity=report.identity,
+        readable=report.readable,
+        problems=[AccessProblem(kind=k, path=p) for k, p in report.problems],
+        commands=report.commands,
+    )
+
+
 @router.get("/isos/access")
 async def check_access(ctx: Context, path: Annotated[str, Query()]) -> AccessReport:
+    return await run_in_threadpool(_report, ctx, path)
+
+
+@router.post("/isos/access/fix")
+async def fix_access(ctx: Context, body: AccessFix) -> AccessReport:
+    """Ask the helper to add the ACLs QEMU needs inside the ISO library."""
+
     def run() -> AccessReport:
-        target = confine(path, ctx.config)
-        report = access.check(str(target), _qemu_identity(ctx))
-        return AccessReport(
-            path=report.path,
-            identity=report.identity,
-            readable=report.readable,
-            problems=[AccessProblem(kind=k, path=p) for k, p in report.problems],
-            commands=report.commands,
-        )
+        if not in_iso_library(body.path, ctx.config):
+            raise ApiException(403, "path.not_allowed", f"{body.path} is not in an ISO library")
+        helper_client.call("iso_acl", {"path": str(confine(body.path, ctx.config))})
+        return _report(ctx, body.path)
 
     return await run_in_threadpool(run)
 

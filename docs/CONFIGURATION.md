@@ -79,6 +79,26 @@ Valeurs proposées par l'assistant de création de VM.
 | `XDG_CONFIG_HOME` | Emplacement du dossier de configuration. |
 | `KVMSTUDIO_FRONTEND_DIR` | Dossier de l'interface compilée, si elle n'est pas à l'emplacement habituel. |
 | `KVMSTUDIO_BACKEND` | Développement : adresse de l'API pour le serveur Vite (défaut `http://127.0.0.1:60080`). |
+| `KVMSTUDIO_HELPER_SOCKET` | Socket du helper (défaut `/run/kvmstudio-helper.sock`). |
+
+## Helper : /etc/kvm-studio/helper.toml
+
+Ce fichier appartient à root et se modifie avec `sudo`. Le helper ne touche
+qu'aux bibliothèques ISO qui y sont déclarées, même si `config.toml` en liste
+d'autres : le bouton « Corriger » du sélecteur d'ISO ne fonctionne que pour
+elles.
+
+```toml
+# socket = "/run/kvmstudio-helper.sock"
+# qemu_user = "qemu"          # détecté : qemu, puis libvirt-qemu
+
+[[iso_libraries]]
+path = "/srv/iso"
+extensions = [".iso", ".img"]  # défaut
+```
+
+Une clé inconnue empêche le helper de démarrer. Le modèle complet est dans
+`packaging/helper/helper.toml`.
 
 ## Dossiers de la bibliothèque
 

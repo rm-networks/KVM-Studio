@@ -227,6 +227,15 @@
     },
     "restart": {
       "unavailable": "Restart KVM Studio yourself."
+    },
+    "helper": {
+      "unavailable": "The kvmstudio-helper service does not answer. It comes with the package.",
+      "not_authorized": "Authentication refused or cancelled.",
+      "path_not_allowed": "This library is not declared in /etc/kvm-studio/helper.toml.",
+      "not_found": "This file no longer exists.",
+      "path_changed": "The folder changed during the operation. Try again.",
+      "failed": "The fix failed.",
+      "bad_answer": "Unexpected answer from the kvmstudio-helper service."
     }
   },
   "about": {
@@ -459,8 +468,10 @@
       "no_labels": "{{path}} is on a filesystem without SELinux labels (FAT, exFAT, NTFS...)",
       "missing": "{{path}} no longer exists"
     },
-    "fixWithCommands": "To fix it, run (the Fix button comes with the package):",
-    "changeFailed": "Could not change the media of {{name}}"
+    "fixWithCommands": "Or run it yourself:",
+    "changeFailed": "Could not change the media of {{name}}",
+    "fix": "Fix",
+    "fixFailed": "Could not fix the access rights"
   },
   "wizard": {
     "title": "New Virtual Machine",

@@ -43,7 +43,33 @@ aux paramètres validés, chacune autorisée par polkit :
 - redirection de ports NAT (table nftables `inet kvmstudio`) ;
 - correctifs de droits sur les ISO (contexte SELinux `virt_content_t` ou ACL).
 
-Il n'existe pas d'opération générique d'exécution de commande. Le masquage
+Il n'existe pas d'opération générique d'exécution de commande.
+
+Fonctionnement :
+
+- systemd crée le socket `/run/kvmstudio-helper.sock` (unité
+  `kvmstudio-helper.socket`) et démarre le service à la première connexion ;
+- chaque connexion porte une requête JSON `{"op": ..., "params": {...}}` ;
+  toute clé en trop, tout type inattendu ou toute opération inconnue est
+  refusé avant de solliciter polkit ;
+- l'appelant est identifié par le noyau (`SO_PEERCRED` : pid, uid réel) et
+  jamais par un champ de la requête ; polkit (`pkcheck`) autorise ce processus
+  pour l'action de l'opération, en affichant au besoin la fenêtre
+  d'authentification du bureau ;
+- les chemins sont résolus (liens symboliques et `..` compris), puis doivent
+  se trouver strictement sous une bibliothèque déclarée dans
+  `/etc/kvm-studio/helper.toml` ;
+- le fichier est ensuite rouvert composant par composant avec `O_NOFOLLOW`
+  depuis la racine de la bibliothèque, et l'outil reçoit `/proc/self/fd/N` :
+  remplacer un dossier par un lien symbolique entre le contrôle et la
+  modification n'a donc aucun effet.
+
+| Opération | Action polkit | Effet |
+| --- | --- | --- |
+| `iso_acl` | `org.kvmstudio.helper.iso-acl` | ACL `u:<qemu>:x` sur les dossiers de la bibliothèque jusqu'à l'image, `u:<qemu>:r` sur l'image |
+
+Les dossiers situés au-dessus de la racine d'une bibliothèque ne sont jamais
+modifiés : le sélecteur d'ISO indique la commande à lancer. Le masquage
 NetworkManager est porté uniquement par un fichier du paquet. L'ACL `u:qemu:x`
 sur les dossiers de VMs situés sous le home est posée par l'utilisateur
 lui-même, sans le helper.
@@ -133,15 +159,16 @@ kvm-studio/
 │   └── helper_client.py
 ├── helper/kvmstudio_helper/
 │   ├── server.py            # socket Unix, opérations nommées
-│   ├── ops/                 # firewall_port, nat_portfwd, iso_acl
-│   └── polkit/
+│   ├── paths.py             # résolution, confinement, ouverture sans course
+│   ├── polkit.py            # identité de l'appelant, pkcheck
+│   └── ops/                 # iso_acl (puis firewall_port, nat_portfwd)
 ├── frontend/src/
 │   ├── app/                 # menus, barre d'outils, bibliothèque, onglets, barre d'état
 │   ├── features/            # un dossier par écran ou dialogue
 │   ├── components/
 │   ├── api/                 # client typé généré depuis l'OpenAPI
 │   └── i18n/
-├── packaging/               # nfpm, scripts, systemd, NetworkManager, firewalld, .desktop
+├── packaging/               # nfpm, scripts, systemd, polkit, NetworkManager, firewalld, .desktop
 └── tests/                   # backend, helper, e2e
 ```
 

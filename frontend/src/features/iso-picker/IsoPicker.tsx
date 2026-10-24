@@ -108,6 +108,7 @@ export function IsoPicker({ title, onPick, onClose }: Props) {
   const [descending, setDescending] = useState(false);
   const [picked, setPicked] = useState<IsoFile | null>(null);
   const [report, setReport] = useState<AccessReport | null>(null);
+  const [fixing, setFixing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -309,6 +310,22 @@ export function IsoPicker({ title, onPick, onClose }: Props) {
               </ul>
               {report.commands.length > 0 && (
                 <>
+                  <p>
+                    <button
+                      type="button"
+                      disabled={fixing}
+                      onClick={() => {
+                        setFixing(true);
+                        api
+                          .fixIsoAccess(report.path)
+                          .then(setReport)
+                          .catch((err: unknown) => notifyError(t("iso.fixFailed"), err))
+                          .finally(() => setFixing(false));
+                      }}
+                    >
+                      {t("iso.fix")}
+                    </button>
+                  </p>
                   <p>{t("iso.fixWithCommands")}</p>
                   <pre>{report.commands.map((c) => `sudo ${c}`).join("\n")}</pre>
                 </>

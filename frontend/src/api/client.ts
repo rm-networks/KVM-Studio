@@ -144,6 +144,7 @@ export const api = {
   isos: () => request<IsoListing>("GET", "/api/isos"),
   isoAccess: (path: string) =>
     request<AccessReport>("GET", `/api/isos/access?path=${encodeURIComponent(path)}`),
+  fixIsoAccess: (path: string) => request<AccessReport>("POST", "/api/isos/access/fix", { path }),
   cdroms: (uuid: string) => request<CdromDevice[]>("GET", `${vmPath(uuid)}/cdroms`),
   changeMedia: (uuid: string, target: string, path: string | null) =>
     request<undefined>("PUT", `${vmPath(uuid)}/cdroms/${encodeURIComponent(target)}`, { path }),

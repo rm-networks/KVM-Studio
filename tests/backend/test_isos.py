@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import os
 import struct
+import threading
 import uuid as uuidlib
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -213,3 +215,69 @@ def test_media_must_come_from_a_library(iso_client: TestClient, cd_vm: Any, tmp_
     missing = iso_client.put(f"/api/vms/{uuid}/cdroms/sdz", headers=AUTH, json={"path": None})
     assert missing.status_code == 404
     assert missing.json()["error"]["code"] == "vm.no_cdrom"
+
+
+# Fix button: backend -> helper socket -> (simulated) setfacl
+
+
+@pytest.fixture
+def helper_socket(
+    isos: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[list[list[str]]]:
+    from kvmstudio_helper import server
+    from kvmstudio_helper.config import HelperConfig
+    from kvmstudio_helper.config import IsoLibrary as HelperLibrary
+
+    ran: list[list[str]] = []
+    real = server.handle
+    monkeypatch.setattr(
+        server,
+        "handle",
+        lambda raw, peer, cfg: real(
+            raw, peer, cfg, authorizer=lambda a, p: True, runner=lambda argv, fds: ran.append(argv)
+        ),
+    )
+    config = HelperConfig(tmp_path / "helper.sock", 107, (HelperLibrary(isos, (".iso",)),))
+    monkeypatch.setenv("KVMSTUDIO_HELPER_SOCKET", str(config.socket))
+    srv = server.HelperServer(config)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    yield ran
+    srv.shutdown()
+    srv.server_close()
+
+
+def test_fix_access_goes_through_the_helper(
+    iso_client: TestClient, isos: Path, helper_socket: list[list[str]]
+) -> None:
+    r = iso_client.post(
+        "/api/isos/access/fix", json={"path": str(isos / "debian-13.iso")}, headers=AUTH
+    )
+    assert r.status_code == 200
+    assert r.json()["path"] == str(isos / "debian-13.iso")
+    assert [argv[:3] for argv in helper_socket] == [
+        ["setfacl", "-m", "u:107:x"],
+        ["setfacl", "-m", "u:107:r"],
+    ]
+
+
+def test_fix_access_refusals(
+    iso_client: TestClient, isos: Path, tmp_path: Path, helper_socket: list[list[str]]
+) -> None:
+    outside = touch(tmp_path / "outside.iso")
+    r = iso_client.post("/api/isos/access/fix", json={"path": str(outside)}, headers=AUTH)
+    assert r.status_code == 403
+    # Declared in config.toml but the helper only accepts .iso here.
+    img = isos / "Firewalls" / "OPNsense" / "opnsense-25.7.img"
+    r = iso_client.post("/api/isos/access/fix", json={"path": str(img)}, headers=AUTH)
+    assert (r.status_code, r.json()["error"]["code"]) == (403, "helper.path_not_allowed")
+    assert helper_socket == []
+
+
+def test_fix_access_without_helper(
+    iso_client: TestClient, isos: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("KVMSTUDIO_HELPER_SOCKET", str(tmp_path / "none.sock"))
+    r = iso_client.post(
+        "/api/isos/access/fix", json={"path": str(isos / "debian-13.iso")}, headers=AUTH
+    )
+    assert (r.status_code, r.json()["error"]["code"]) == (503, "helper.unavailable")

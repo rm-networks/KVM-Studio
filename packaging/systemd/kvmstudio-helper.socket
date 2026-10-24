@@ -1,0 +1,9 @@
+[Unit]
+Description=KVM Studio privileged helper socket
+
+[Socket]
+ListenStream=/run/kvmstudio-helper.sock
+SocketMode=0666
+
+[Install]
+WantedBy=sockets.target

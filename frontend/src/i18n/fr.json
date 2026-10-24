@@ -227,6 +227,15 @@
     },
     "restart": {
       "unavailable": "Redémarrez KVM Studio vous-même."
+    },
+    "helper": {
+      "unavailable": "Le service kvmstudio-helper ne répond pas. Il est installé avec le paquet.",
+      "not_authorized": "Authentification refusée ou annulée.",
+      "path_not_allowed": "Cette bibliothèque n'est pas déclarée dans /etc/kvm-studio/helper.toml.",
+      "not_found": "Ce fichier n'existe plus.",
+      "path_changed": "Le dossier a changé pendant l'opération. Réessayez.",
+      "failed": "La correction a échoué.",
+      "bad_answer": "Réponse inattendue du service kvmstudio-helper."
     }
   },
   "about": {
@@ -461,8 +470,10 @@
       "no_labels": "{{path}} est sur un système de fichiers sans étiquettes SELinux (FAT, exFAT, NTFS...)",
       "missing": "{{path}} n'existe plus"
     },
-    "fixWithCommands": "Pour corriger, lancez (le bouton « Corriger » arrivera avec le paquet) :",
-    "changeFailed": "Impossible de changer le média de {{name}}"
+    "fixWithCommands": "Ou lancez vous-même :",
+    "changeFailed": "Impossible de changer le média de {{name}}",
+    "fix": "Corriger",
+    "fixFailed": "Impossible de corriger les droits"
   },
   "wizard": {
     "title": "Nouvelle machine virtuelle",

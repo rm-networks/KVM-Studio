@@ -21,7 +21,7 @@ jobs:
       - name: Install the backend
         run: |
           python3 -m venv --system-site-packages .venv
-          .venv/bin/pip install -e "backend[dev]"
+          .venv/bin/pip install -e "backend[dev]" -e helper
 
       - name: Lint
         run: |
