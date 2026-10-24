@@ -1,7 +1,63 @@
 # Installation
 
-Les paquets .rpm et .deb arriveront avec le MVP. Pour l'instant, KVM Studio se
-lance depuis les sources.
+## Paquet .rpm (Fedora)
+
+Le paquet est construit par la CI (artefact `kvm-studio-rpm` de chaque build).
+Il installe ou tire toutes ses dépendances depuis les dépôts Fedora.
+
+```bash
+sudo dnf install ./kvm-studio-*.rpm
+```
+
+Contenu :
+
+| Emplacement | Rôle |
+| --- | --- |
+| `/opt/kvm-studio` | application, interface compilée, modules Python absents des dépôts (`vendor/`) |
+| `/usr/bin/kvm-studio` | lanceur |
+| `/usr/share/applications/kvm-studio.desktop` | entrée du menu des applications |
+| `kvmstudio-helper.socket` / `.service` | helper root, démarré à la demande |
+| `/usr/share/polkit-1/actions/org.kvmstudio.helper.policy` | autorisations du helper |
+| `/etc/kvm-studio/helper.toml` | bibliothèques ISO que le helper peut corriger |
+| `/etc/NetworkManager/conf.d/90-kvm-studio.conf` | masque `kvmnet*` et `ks-*` dans l'applet réseau |
+| `/usr/lib/firewalld/services/kvm-studio.xml` | service pare-feu du partage sur le LAN |
+
+Pour que le bouton « Corriger » du sélecteur d'ISO fonctionne, déclarer les
+bibliothèques ISO dans `/etc/kvm-studio/helper.toml` (voir
+[Configuration](CONFIGURATION.md)) :
+
+```bash
+sudoedit /etc/kvm-studio/helper.toml
+```
+
+Vérifier que le socket du helper écoute :
+
+```bash
+systemctl status kvmstudio-helper.socket
+```
+
+La désinstallation arrête le helper, retire le service pare-feu de toutes les
+zones et ne touche pas aux VMs :
+
+```bash
+sudo dnf remove kvm-studio
+```
+
+### Construire le paquet
+
+Il faut [nfpm](https://nfpm.goreleaser.com/) et l'interface compilée.
+
+```bash
+cd frontend && npm ci && npm run build && cd ..
+```
+
+```bash
+python3 packaging/stage.py
+```
+
+```bash
+VERSION=0.1.0 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
+```
 
 ## Depuis les sources (Fedora)
 

@@ -1,0 +1,14 @@
+#!/usr/bin/python3 -I
+"""Entry point of the kvmstudio-helper service (runs as root).
+
+-I: no environment variables, no user site, no current directory on sys.path.
+"""
+
+import sys
+
+sys.dont_write_bytecode = True
+sys.path.insert(0, "/opt/kvm-studio/lib")
+
+from kvmstudio_helper.__main__ import main  # noqa: E402
+
+sys.exit(main())

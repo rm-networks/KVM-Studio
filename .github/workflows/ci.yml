@@ -52,3 +52,55 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  package:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    container: fedora:44
+    env:
+      NFPM_VERSION: 2.48.0
+    steps:
+      - name: Install build tools
+        run: dnf install -y --setopt=install_weak_deps=False git python3 python3-pip nodejs npm
+
+      - uses: actions/checkout@v5
+
+      - name: Build the frontend
+        working-directory: frontend
+        run: npm ci && npm run build
+
+      - name: Install nfpm
+        run: |
+          cd /tmp
+          curl -fsSLO "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_Linux_x86_64.tar.gz"
+          curl -fsSLO "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/checksums.txt"
+          sha256sum -c --ignore-missing checksums.txt
+          tar xzf "nfpm_${NFPM_VERSION}_Linux_x86_64.tar.gz" nfpm
+          install -m 755 nfpm /usr/local/bin/nfpm
+
+      - name: Build the .rpm
+        run: |
+          base=$(python3 -c "import tomllib; print(tomllib.load(open('backend/pyproject.toml', 'rb'))['project']['version'].split('.dev')[0])")
+          case "$GITHUB_REF" in
+            refs/tags/v*) export VERSION="${GITHUB_REF_NAME#v}" ;;
+            *) export VERSION="${base}-dev.${GITHUB_RUN_NUMBER}" ;;
+          esac
+          python3 packaging/stage.py
+          mkdir -p dist
+          nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
+
+      - name: Install and run the package
+        run: |
+          dnf install -y --setopt=install_weak_deps=False ./dist/kvm-studio-*.rpm
+          kvm-studio --version
+          printf 'socket = "/tmp/h.sock"\n' > /tmp/h.toml
+          /opt/kvm-studio/bin/kvmstudio-helper --config /tmp/h.toml &
+          sleep 2
+          python3 -c "import socket; s = socket.socket(socket.AF_UNIX); s.connect('/tmp/h.sock'); s.sendall(b'{\"op\": \"exec\", \"params\": {}}\n'); a = s.makefile().readline(); print(a); assert 'unknown_operation' in a"
+          dnf remove -y kvm-studio
+          test ! -e /opt/kvm-studio
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kvm-studio-rpm
+          path: dist/*.rpm

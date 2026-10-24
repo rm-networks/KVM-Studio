@@ -1,0 +1,112 @@
+# Package definition. Run packaging/stage.py first, from the repository root.
+#   VERSION=0.1.0 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
+
+name: kvm-studio
+arch: amd64
+platform: linux
+version: ${VERSION}
+release: 1
+section: admin
+priority: optional
+maintainer: rm-networks
+vendor: KVM Studio
+homepage: https://github.com/rm-networks/kvm-studio
+license: GPL-3.0-or-later
+description: |
+  Virtual machine manager for Linux, built on libvirt and QEMU/KVM.
+  Runs in a native window or as a web interface.
+
+overrides:
+  rpm:
+    depends:
+      - python3 >= 3.11
+      - python3-libvirt
+      - python3-gobject
+      - python3-fastapi
+      - python3-uvicorn
+      - python3-pydantic >= 2.7
+      - python3-websockets
+      - python3-lxml
+      - python3-tomli-w
+      - python3-bottle
+      - python3-typing-extensions
+      - python3-pyqt6-webengine
+      - python3-QtPy
+      - libvirt-daemon-kvm
+      - libvirt-daemon-config-network
+      - qemu-kvm
+      - qemu-img
+      - libosinfo
+      - edk2-ovmf
+      - swtpm-tools
+      - acl
+      - polkit
+    recommends:
+      - firewalld
+
+contents:
+  - dst: /opt/kvm-studio
+    type: dir
+  - dst: /opt/kvm-studio/bin
+    type: dir
+  - src: build/stage/lib
+    dst: /opt/kvm-studio/lib
+    type: tree
+  - src: build/stage/vendor
+    dst: /opt/kvm-studio/vendor
+    type: tree
+  - src: packaging/bin/kvm-studio
+    dst: /opt/kvm-studio/bin/kvm-studio
+    file_info:
+      mode: 0755
+  - src: packaging/bin/kvmstudio-helper
+    dst: /opt/kvm-studio/bin/kvmstudio-helper
+    file_info:
+      mode: 0755
+  - src: /opt/kvm-studio/bin/kvm-studio
+    dst: /usr/bin/kvm-studio
+    type: symlink
+
+  - src: packaging/desktop/kvm-studio.desktop
+    dst: /usr/share/applications/kvm-studio.desktop
+  - src: packaging/desktop/icons/hicolor/16x16/apps/kvm-studio.png
+    dst: /usr/share/icons/hicolor/16x16/apps/kvm-studio.png
+  - src: packaging/desktop/icons/hicolor/32x32/apps/kvm-studio.png
+    dst: /usr/share/icons/hicolor/32x32/apps/kvm-studio.png
+  - src: packaging/desktop/icons/hicolor/48x48/apps/kvm-studio.png
+    dst: /usr/share/icons/hicolor/48x48/apps/kvm-studio.png
+  - src: packaging/desktop/icons/hicolor/64x64/apps/kvm-studio.png
+    dst: /usr/share/icons/hicolor/64x64/apps/kvm-studio.png
+  - src: packaging/desktop/icons/hicolor/128x128/apps/kvm-studio.png
+    dst: /usr/share/icons/hicolor/128x128/apps/kvm-studio.png
+  - src: packaging/desktop/icons/hicolor/256x256/apps/kvm-studio.png
+    dst: /usr/share/icons/hicolor/256x256/apps/kvm-studio.png
+  - src: packaging/desktop/icons/hicolor/512x512/apps/kvm-studio.png
+    dst: /usr/share/icons/hicolor/512x512/apps/kvm-studio.png
+
+  - src: packaging/systemd/kvmstudio-helper.service
+    dst: /usr/lib/systemd/system/kvmstudio-helper.service
+  - src: packaging/systemd/kvmstudio-helper.socket
+    dst: /usr/lib/systemd/system/kvmstudio-helper.socket
+  - src: packaging/polkit/org.kvmstudio.helper.policy
+    dst: /usr/share/polkit-1/actions/org.kvmstudio.helper.policy
+  - src: packaging/firewalld/kvm-studio.xml
+    dst: /usr/lib/firewalld/services/kvm-studio.xml
+
+  - src: packaging/networkmanager/90-kvm-studio.conf
+    dst: /etc/NetworkManager/conf.d/90-kvm-studio.conf
+    type: config
+  - dst: /etc/kvm-studio
+    type: dir
+  - src: packaging/helper/helper.toml
+    dst: /etc/kvm-studio/helper.toml
+    type: config|noreplace
+
+  - src: LICENSE
+    dst: /usr/share/licenses/kvm-studio/LICENSE
+    type: license
+
+scripts:
+  postinstall: packaging/scripts/postinstall.sh
+  preremove: packaging/scripts/preremove.sh
+  postremove: packaging/scripts/postremove.sh
