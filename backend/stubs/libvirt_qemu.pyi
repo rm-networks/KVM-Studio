@@ -1,0 +1,3 @@
+from libvirt import virDomain
+
+def qemuAgentCommand(domain: virDomain, cmd: str, timeout: int, flags: int) -> str | None: ...

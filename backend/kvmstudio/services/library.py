@@ -66,9 +66,26 @@ def metadata_folder(xml: str) -> str | None:
     return (node.text or "").strip()
 
 
-def set_metadata_folder(dom: libvirt.virDomain, folder: str) -> None:
+def metadata_values(xml: str) -> dict[str, str]:
+    """Every field KVM Studio keeps in <metadata> (folder, profile, keyboard...)."""
+    root = etree.fromstring(xml.encode(), parser=etree.XMLParser(resolve_entities=False))
+    vm = root.find(f"metadata/{{{NAMESPACE}}}vm")
+    if vm is None:
+        return {}
+    return {
+        etree.QName(child).localname: (child.text or "").strip()
+        for child in vm
+        if isinstance(child.tag, str)
+    }
+
+
+def set_metadata(dom: libvirt.virDomain, **values: str) -> None:
+    """Update some fields of our <metadata> element, keeping the others."""
+    current = metadata_values(dom.XMLDesc(0))
+    current.update(values)
     vm = etree.Element("vm")
-    etree.SubElement(vm, "folder").text = folder
+    for key, value in current.items():
+        etree.SubElement(vm, key).text = value
     # Transient domains have no persistent config, only the live one.
     flags = libvirt.VIR_DOMAIN_AFFECT_CONFIG if dom.isPersistent() else 0
     if dom.isActive():
@@ -80,6 +97,10 @@ def set_metadata_folder(dom: libvirt.virDomain, folder: str) -> None:
         NAMESPACE,
         flags,
     )
+
+
+def set_metadata_folder(dom: libvirt.virDomain, folder: str) -> None:
+    set_metadata(dom, folder=folder)
 
 
 # Validation

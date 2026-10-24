@@ -12,6 +12,7 @@ import { VmActionsProvider } from "../features/vm/VmActions";
 import { NetworkEditor } from "../features/network-editor/NetworkEditor";
 import { PreferencesDialog } from "../features/preferences/PreferencesDialog";
 import { IsoPicker } from "../features/iso-picker/IsoPicker";
+import { GuestToolsDialog } from "../features/guest-tools/GuestToolsDialog";
 import { VmSettings } from "../features/vm-settings/VmSettings";
 import { NewVmWizard } from "../features/wizard/NewVmWizard";
 import { useConsole } from "../features/console/consoleRegistry";
@@ -55,6 +56,7 @@ function MainWindow() {
   const [mediaTarget, setMediaTarget] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
+  const [guestToolsFor, setGuestToolsFor] = useState<string | null>(null);
   const [openVms, setOpenVms] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
 
@@ -130,6 +132,7 @@ function MainWindow() {
           onPreferences={() => setPreferencesOpen(true)}
           onNewVm={() => setWizardOpen(true)}
           onSettings={() => currentVm && setSettingsFor(currentVm.uuid)}
+          onGuestTools={() => currentVm && setGuestToolsFor(currentVm.uuid)}
           vmConsole={vmConsole}
           onFullscreen={toggleFullscreen}
           onGoHome={() => setActiveTab(HOME_TAB)}
@@ -191,6 +194,12 @@ function MainWindow() {
           <VmSettings
             vm={vmByUuid.get(settingsFor) as VmSummary}
             onClose={() => setSettingsFor(null)}
+          />
+        )}
+        {guestToolsFor && vmByUuid.get(guestToolsFor) && (
+          <GuestToolsDialog
+            vm={vmByUuid.get(guestToolsFor) as VmSummary}
+            onClose={() => setGuestToolsFor(null)}
           />
         )}
         {wizardOpen && (

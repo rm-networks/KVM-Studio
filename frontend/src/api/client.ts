@@ -34,6 +34,8 @@ export type NicChange = components["schemas"]["NicChange"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
 export type Preferences = components["schemas"]["Preferences"] & { config: Config };
 export type SaveResult = components["schemas"]["SaveResult"];
+export type GuestToolsInfo = components["schemas"]["GuestToolsInfo"];
+export type InstallRequest = components["schemas"]["InstallRequest"];
 type ApiErrorBody = components["schemas"]["ApiError"];
 
 export class ApiError extends Error {
@@ -146,6 +148,10 @@ export const api = {
   changeMedia: (uuid: string, target: string, path: string | null) =>
     request<undefined>("PUT", `${vmPath(uuid)}/cdroms/${encodeURIComponent(target)}`, { path }),
   display: (uuid: string) => request<DisplayInfo>("GET", `${vmPath(uuid)}/display`),
+  guestTools: (uuid: string) => request<GuestToolsInfo>("GET", `${vmPath(uuid)}/guest-tools`),
+  installGuestTools: (uuid: string, body: InstallRequest) =>
+    request<{ typed: boolean; drive: string | null }>("POST", `${vmPath(uuid)}/guest-tools`, body),
+  agentStatus: (uuid: string) => request<{ responding: boolean }>("GET", `${vmPath(uuid)}/agent`),
   addVnc: (uuid: string) =>
     request<{ restart_required: boolean }>("POST", `${vmPath(uuid)}/display/vnc`),
   restart: () => request<{ restarting: boolean }>("POST", "/api/restart"),

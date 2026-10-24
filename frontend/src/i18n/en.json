@@ -323,7 +323,8 @@
   "common": {
     "cancel": "Cancel",
     "ok": "OK",
-    "apply": "Apply"
+    "apply": "Apply",
+    "close": "Close"
   },
   "networks": {
     "title": "Virtual Network Editor",
@@ -561,5 +562,23 @@
     "applyFailed": "Could not change {{name}}",
     "confirmRemoveNic": "Remove this network adapter from the virtual machine?",
     "confirmRemoveCdrom": "Remove this CD/DVD drive from the virtual machine?"
+  },
+  "guestTools": {
+    "title": "Install Guest Tools: {{name}}",
+    "family": "Guest system",
+    "layout": "Guest keyboard layout",
+    "layoutFr": "French (AZERTY)",
+    "layoutUs": "US English (QWERTY)",
+    "install": "Install",
+    "mustRun": "Start the virtual machine and log in before running the installation.",
+    "alreadyOk": "The guest agent already responds. You can run the installation again to repair or update it.",
+    "helpLinux": "Open a terminal in the guest and click into it. The install command will be typed there; you only have to enter the sudo password.",
+    "helpWindows": "The Windows desktop must be showing. The virtio-win ISO is inserted, then its installer starts from Run: you only have to accept the User Account Control prompt.",
+    "noVirtio": "No virtio-win ISO is set in an ISO library. Set it in Preferences > Virtual Machines.",
+    "waitLinux": "Command typed. Enter the sudo password in the guest, then wait for the installation…",
+    "waitWindows": "Installer started. Accept the User Account Control prompt and follow the wizard in the guest…",
+    "done": "Guest tools are installed: the agent responds.",
+    "timeout": "The agent still does not respond after 10 minutes. Check the installation in the guest (qemu-guest-agent service).",
+    "failed": "Could not install the guest tools"
   }
 }

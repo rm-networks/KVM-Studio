@@ -33,6 +33,7 @@ interface Props {
   onPreferences: () => void;
   onNewVm: () => void;
   onSettings: () => void;
+  onGuestTools: () => void;
   vmConsole: ConsoleHandle | null;
   onFullscreen: () => void;
   onGoHome: () => void;
@@ -53,6 +54,7 @@ export function MenuBar({
   onPreferences,
   onNewVm,
   onSettings,
+  onGuestTools,
   vmConsole,
   onFullscreen,
   onGoHome,
@@ -165,7 +167,7 @@ export function MenuBar({
         item(m("capture"), ["Ctrl", "Alt", "PrintScreen"]),
         sep,
         sub(m("manage"), vm ? manageEntries : undefined),
-        item(m("guestTools")),
+        item(m("guestTools"), undefined, vm?.state === "running" ? onGuestTools : undefined),
         sep,
         item(m("settings"), ["Ctrl", "D"], vm ? onSettings : undefined),
       ],

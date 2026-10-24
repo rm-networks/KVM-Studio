@@ -325,7 +325,8 @@
   "common": {
     "cancel": "Annuler",
     "ok": "OK",
-    "apply": "Appliquer"
+    "apply": "Appliquer",
+    "close": "Fermer"
   },
   "networks": {
     "title": "Éditeur de réseaux virtuels",
@@ -563,5 +564,23 @@
     "applyFailed": "Impossible de modifier {{name}}",
     "confirmRemoveNic": "Retirer cette carte réseau de la machine virtuelle ?",
     "confirmRemoveCdrom": "Retirer ce lecteur CD/DVD de la machine virtuelle ?"
+  },
+  "guestTools": {
+    "title": "Installer les outils invités : {{name}}",
+    "family": "Système invité",
+    "layout": "Disposition du clavier de l'invité",
+    "layoutFr": "Français (AZERTY)",
+    "layoutUs": "Anglais US (QWERTY)",
+    "install": "Installer",
+    "mustRun": "Démarrez la machine virtuelle et ouvrez une session avant de lancer l'installation.",
+    "alreadyOk": "L'agent invité répond déjà. Vous pouvez relancer l'installation pour réparer ou mettre à jour.",
+    "helpLinux": "Ouvrez un terminal dans l'invité et cliquez dedans. La commande d'installation y sera tapée, il vous restera à saisir le mot de passe sudo.",
+    "helpWindows": "Le bureau Windows doit être affiché. L'ISO virtio-win sera insérée, puis l'installeur lancé via Exécuter : il vous restera à accepter le contrôle de compte d'utilisateur.",
+    "noVirtio": "Aucune ISO virtio-win n'est configurée dans une bibliothèque. Indiquez-la dans Préférences > Machines virtuelles.",
+    "waitLinux": "Commande tapée. Saisissez le mot de passe sudo dans l'invité, puis patientez pendant l'installation…",
+    "waitWindows": "Installeur lancé. Acceptez le contrôle de compte d'utilisateur et suivez l'assistant dans l'invité…",
+    "done": "Les outils invités sont installés : l'agent répond.",
+    "timeout": "L'agent ne répond toujours pas après 10 minutes. Vérifiez l'installation dans l'invité (service qemu-guest-agent).",
+    "failed": "Impossible d'installer les outils invités"
   }
 }

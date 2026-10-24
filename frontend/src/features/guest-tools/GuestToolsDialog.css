@@ -1,0 +1,35 @@
+.guest-tools .field select {
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.guest-tools-help {
+  margin: 8px 0 4px;
+}
+
+.guest-tools-path {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-small);
+  word-break: break-all;
+}
+
+.guest-tools-ok {
+  margin: 0 0 8px;
+  padding: 4px 8px;
+  border-left: 3px solid var(--state-running);
+  background: var(--surface-alt);
+}
+
+.guest-tools-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
