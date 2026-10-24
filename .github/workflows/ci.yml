@@ -123,8 +123,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         # The notes are the message of the annotated tag.
-        run: >
-          gh release create "$GITHUB_REF_NAME" dist/*.rpm
-          --repo "$GITHUB_REPOSITORY"
-          --title "KVM Studio ${GITHUB_REF_NAME#v}"
-          --notes-from-tag
+        run: |
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME" --jq .object.sha)
+          gh api "repos/$GITHUB_REPOSITORY/git/tags/$sha" --jq .message > notes.md
+          gh release create "$GITHUB_REF_NAME" dist/*.rpm \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "KVM Studio ${GITHUB_REF_NAME#v}" \
+            --notes-file notes.md
