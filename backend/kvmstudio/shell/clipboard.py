@@ -31,6 +31,11 @@ class DesktopApi:
     def _attach(self, window: Any) -> None:
         self._window = window
 
+    def toggle_fullscreen(self) -> None:
+        """The page's own Fullscreen API is not honoured by the embedded engine."""
+        if self._window is not None:
+            self._window.toggle_fullscreen()
+
     def choose_folder(self, start: str | None = None) -> str | None:
         """Native folder picker (Preferences, ISO libraries)."""
         if self._window is None:

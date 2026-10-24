@@ -33,3 +33,11 @@
 .statusbar-dot-lost {
   background: var(--state-crashed);
 }
+
+.statusbar-grab {
+  color: var(--text-muted);
+}
+
+.statusbar-grab.active {
+  color: var(--accent);
+}

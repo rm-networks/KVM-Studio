@@ -52,7 +52,8 @@
     "cdrom": "CD/DVD ({{target}}): {{media}}",
     "noMedia": "empty",
     "changeIso": "Change ISO Image…",
-    "eject": "Eject"
+    "eject": "Eject",
+    "sendKeys": "Send Key Combination"
   },
   "toolbar": {
     "start": "Start",
@@ -138,7 +139,9 @@
     "running_one": "{{count}} running",
     "running_other": "{{count}} running",
     "disconnected": "Not connected",
-    "lost": "Lost connection to libvirt, retrying…"
+    "lost": "Lost connection to libvirt, retrying…",
+    "release": "Press Ctrl+Alt to release the keyboard and mouse",
+    "grabHint": "Click in the console or press Ctrl+G to direct input to the VM"
   },
   "errors": {
     "auth": {
@@ -234,7 +237,11 @@
     "close": "Close"
   },
   "keys": {
-    "PrintScreen": "PrtScn"
+    "PrintScreen": "PrtScn",
+    "combo": {
+      "ctrl-alt-backspace": "Ctrl+Alt+Backspace",
+      "print": "Print Screen"
+    }
   },
   "console": {
     "connecting": "Connecting to the console…",

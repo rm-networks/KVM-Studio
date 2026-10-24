@@ -13,7 +13,9 @@ import { NetworkEditor } from "../features/network-editor/NetworkEditor";
 import { PreferencesDialog } from "../features/preferences/PreferencesDialog";
 import { IsoPicker } from "../features/iso-picker/IsoPicker";
 import { NewVmWizard } from "../features/wizard/NewVmWizard";
+import { useConsole } from "../features/console/consoleRegistry";
 import { useCdroms } from "../features/vm/useCdroms";
+import { toggleFullscreen } from "../platform/fullscreen";
 import { VmTab } from "../features/vm/VmTab";
 import { AboutDialog } from "./AboutDialog";
 import { MenuBar } from "./MenuBar";
@@ -21,6 +23,7 @@ import { StatusBar } from "./StatusBar";
 import { HOME_TAB, TabBar } from "./TabBar";
 import { Toolbar } from "./Toolbar";
 import { useAppData } from "./useAppData";
+import { useShortcuts } from "./useShortcuts";
 import "./App.css";
 
 export interface Layout {
@@ -82,6 +85,21 @@ function MainWindow() {
   const selectedVm = selectedNode?.startsWith("v:") ? selectedNode.slice(2) : "";
   const currentVm = vmByUuid.get(activeTab !== HOME_TAB ? activeTab : selectedVm) ?? null;
   const { drives, reload: reloadDrives } = useCdroms(currentVm);
+  const vmConsole = useConsole(currentVm?.uuid);
+  const allTabs = [HOME_TAB, ...openVms];
+  const cycleTab = (delta: number) => {
+    const at = allTabs.indexOf(activeTab);
+    setActiveTab(allTabs[(at + delta + allTabs.length) % allTabs.length] ?? HOME_TAB);
+  };
+  useShortcuts({
+    newVm: () => setWizardOpen(true),
+    closeTab: () => activeTab !== HOME_TAB && closeTab(activeTab),
+    nextTab: () => cycleTab(1),
+    previousTab: () => cycleTab(-1),
+    preferences: () => setPreferencesOpen(true),
+    grab: () => vmConsole?.grab(),
+    fullscreen: toggleFullscreen,
+  });
   const setMedia = (target: string, path: string | null) => {
     if (!currentVm) return;
     api
@@ -108,6 +126,12 @@ function MainWindow() {
           onNetworkEditor={() => setNetworkEditorOpen(true)}
           onPreferences={() => setPreferencesOpen(true)}
           onNewVm={() => setWizardOpen(true)}
+          vmConsole={vmConsole}
+          onFullscreen={toggleFullscreen}
+          onGoHome={() => setActiveTab(HOME_TAB)}
+          onCloseTab={activeTab !== HOME_TAB ? () => closeTab(activeTab) : undefined}
+          onNextTab={allTabs.length > 1 ? () => cycleTab(1) : undefined}
+          onPreviousTab={allTabs.length > 1 ? () => cycleTab(-1) : undefined}
           drives={drives}
           onChangeMedia={setMediaTarget}
           onEject={(target) => setMedia(target, null)}
@@ -118,6 +142,8 @@ function MainWindow() {
             libraryVisible={layout.library}
             onToggleLibrary={() => toggle("library")}
             vm={currentVm}
+            vmConsole={vmConsole}
+            onFullscreen={toggleFullscreen}
           />
         )}
         <div className="app-body">
@@ -147,7 +173,14 @@ function MainWindow() {
             ))}
           </main>
         </div>
-        {layout.statusBar && <StatusBar info={info} vms={vms} libvirtLost={libvirtLost} />}
+        {layout.statusBar && (
+          <StatusBar
+            info={info}
+            vms={vms}
+            libvirtLost={libvirtLost}
+            vmConsole={activeTab !== HOME_TAB ? vmConsole : null}
+          />
+        )}
         <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} version={info?.version} />
         {networkEditorOpen && <NetworkEditor onClose={() => setNetworkEditorOpen(false)} />}
         {wizardOpen && (

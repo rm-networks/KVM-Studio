@@ -31,7 +31,12 @@ def test_desktop_api_ignores_non_text() -> None:
 def test_only_intended_methods_are_public() -> None:
     # pywebview exposes every public method to the page.
     public = [name for name in dir(DesktopApi) if not name.startswith("_")]
-    assert public == ["choose_folder", "read_clipboard", "write_clipboard"]
+    assert public == [
+        "choose_folder",
+        "read_clipboard",
+        "toggle_fullscreen",
+        "write_clipboard",
+    ]
 
 
 def test_folder_picker_without_window() -> None:

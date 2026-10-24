@@ -15,6 +15,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useTranslation } from "react-i18next";
 
 import type { VmSummary } from "../api/client";
+import type { ConsoleHandle } from "../features/console/consoleRegistry";
 import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
 import { useVmActions } from "../features/vm/vmActionsContext";
 
@@ -24,6 +25,8 @@ interface Props {
   libraryVisible: boolean;
   onToggleLibrary: () => void;
   vm: VmSummary | null;
+  vmConsole: ConsoleHandle | null;
+  onFullscreen: () => void;
 }
 
 interface ToolProps {
@@ -50,7 +53,7 @@ function Tool({ icon: Icon, label, onClick, pressed, narrow }: ToolProps) {
   );
 }
 
-export function Toolbar({ libraryVisible, onToggleLibrary, vm }: Props) {
+export function Toolbar({ libraryVisible, onToggleLibrary, vm, vmConsole, onFullscreen }: Props) {
   const { t } = useTranslation();
   const actions = useVmActions();
   const l = (key: string) => t(`toolbar.${key}`);
@@ -89,7 +92,11 @@ export function Toolbar({ libraryVisible, onToggleLibrary, vm }: Props) {
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
       <span className="toolbar-separator" />
-      <Tool icon={Keyboard} label={l("sendCad")} />
+      <Tool
+        icon={Keyboard}
+        label={l("sendCad")}
+        onClick={vmConsole ? () => vmConsole.sendCtrlAltDel() : undefined}
+      />
       <span className="toolbar-separator" />
       <Tool icon={Camera} label={l("snapshot")} />
       <Tool icon={RotateCcw} label={l("revert")} />
@@ -102,7 +109,7 @@ export function Toolbar({ libraryVisible, onToggleLibrary, vm }: Props) {
         onClick={onToggleLibrary}
       />
       <Tool icon={LayoutGrid} label={l("thumbnails")} />
-      <Tool icon={Maximize} label={l("fullscreen")} />
+      <Tool icon={Maximize} label={l("fullscreen")} onClick={onFullscreen} />
       <span className="toolbar-separator" />
       <Tool icon={SquareTerminal} label={l("console")} />
     </div>

@@ -8,6 +8,8 @@ import { useNotifier } from "../../components/notifier";
 import { hostClipboard } from "../../platform/hostClipboard";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import { ClipboardBridge } from "./clipboardBridge";
+import { registerConsole, unregisterConsole, updateConsole } from "./consoleRegistry";
+import { pressCombo } from "./keys";
 import "./VmConsole.css";
 
 type Status = "connecting" | "connected" | "disconnected" | "timeout";
@@ -127,18 +129,40 @@ function VncScreen({ uuid }: { uuid: string }) {
     const onConnect = () => {
       clearTimeout(timer);
       setStatus("connected");
+      registerConsole(uuid, {
+        sendCtrlAltDel: () => rfb.sendCtrlAltDel(),
+        sendKeys: (keys) => pressCombo((s, c, d) => rfb.sendKey(s, c, d), keys),
+        grab: () => rfb.focus(),
+        grabbed: false,
+      });
     };
     const onDisconnect = () => {
       clearTimeout(timer);
+      unregisterConsole(uuid);
       setStatus((s) => (s === "timeout" ? s : "disconnected"));
     };
     const onClipboard = (e: Event) => {
       const text = (e as CustomEvent<{ text: string }>).detail.text;
       void bridge.fromGuest(text);
     };
-    const onFocus = () => void bridge.toGuest();
+    const onFocus = () => {
+      updateConsole(uuid, { grabbed: true });
+      void bridge.toGuest();
+    };
+    const onBlur = (e: FocusEvent) => {
+      if (!screen.contains(e.relatedTarget as Node | null)) updateConsole(uuid, { grabbed: false });
+    };
+    // Ctrl+Alt pressed and released alone gives the keyboard back to the host.
+    let releasePending = false;
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (releasePending && (e.key === "Control" || e.key === "Alt")) {
+        releasePending = false;
+        (document.activeElement as HTMLElement | null)?.blur();
+      }
+    };
     // Capture phase: runs before noVNC forwards the keystroke to the guest.
     const onKeyDown = (e: KeyboardEvent) => {
+      releasePending = (e.key === "Alt" && e.ctrlKey) || (e.key === "Control" && e.altKey);
       const key = pasteKey(e);
       if (!key) return;
       e.preventDefault();
@@ -155,12 +179,17 @@ function VncScreen({ uuid }: { uuid: string }) {
     rfb.addEventListener("disconnect", onDisconnect);
     rfb.addEventListener("clipboard", onClipboard);
     screen.addEventListener("focusin", onFocus);
+    screen.addEventListener("focusout", onBlur);
     screen.addEventListener("keydown", onKeyDown, { capture: true });
+    screen.addEventListener("keyup", onKeyUp, { capture: true });
 
     return () => {
       clearTimeout(timer);
+      unregisterConsole(uuid);
       screen.removeEventListener("focusin", onFocus);
+      screen.removeEventListener("focusout", onBlur);
       screen.removeEventListener("keydown", onKeyDown, { capture: true });
+      screen.removeEventListener("keyup", onKeyUp, { capture: true });
       rfb.removeEventListener("connect", onConnect);
       rfb.removeEventListener("disconnect", onDisconnect);
       rfb.removeEventListener("clipboard", onClipboard);

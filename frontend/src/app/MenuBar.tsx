@@ -3,6 +3,8 @@ import { Check, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { CdromDevice, VmSummary } from "../api/client";
+import type { ConsoleHandle } from "../features/console/consoleRegistry";
+import { COMBOS } from "../features/console/keys";
 import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
 import { useVmActions } from "../features/vm/vmActionsContext";
 import type { Layout } from "./App";
@@ -30,6 +32,12 @@ interface Props {
   onNetworkEditor: () => void;
   onPreferences: () => void;
   onNewVm: () => void;
+  vmConsole: ConsoleHandle | null;
+  onFullscreen: () => void;
+  onGoHome: () => void;
+  onCloseTab?: () => void;
+  onNextTab?: () => void;
+  onPreviousTab?: () => void;
   drives: CdromDevice[];
   onChangeMedia: (target: string) => void;
   onEject: (target: string) => void;
@@ -43,6 +51,12 @@ export function MenuBar({
   onNetworkEditor,
   onPreferences,
   onNewVm,
+  vmConsole,
+  onFullscreen,
+  onGoHome,
+  onCloseTab,
+  onNextTab,
+  onPreviousTab,
   drives,
   onChangeMedia,
   onEject,
@@ -93,7 +107,7 @@ export function MenuBar({
         item(m("scan")),
         item(m("autostart")),
         sep,
-        item(m("closeTab"), ["Ctrl", "W"]),
+        item(m("closeTab"), ["Ctrl", "W"], onCloseTab),
         sep,
         item(m("connect"), ["Ctrl", "L"]),
         item(m("exportOvf")),
@@ -115,7 +129,7 @@ export function MenuBar({
     [
       "view",
       [
-        item(m("fullscreen"), ["Ctrl", "Alt", "Enter"]),
+        item(m("fullscreen"), ["Ctrl", "Alt", "Enter"], onFullscreen),
         item(m("consoleView")),
         sep,
         item(m("fitGuest")),
@@ -132,8 +146,18 @@ export function MenuBar({
         sub(m("removable"), removableEntries.length ? removableEntries : undefined),
         item(m("pause"), ["Ctrl", "Shift", "P"]),
         sep,
-        item(m("sendCad")),
-        item(m("grab"), ["Ctrl", "G"]),
+        item(m("sendCad"), undefined, vmConsole ? () => vmConsole.sendCtrlAltDel() : undefined),
+        sub(
+          m("sendKeys"),
+          vmConsole
+            ? COMBOS.map((c) =>
+                item(t(`keys.combo.${c.id}`, { defaultValue: c.label }), undefined, () =>
+                  vmConsole.sendKeys(c.keys),
+                ),
+              )
+            : undefined,
+        ),
+        item(m("grab"), ["Ctrl", "G"], vmConsole ? () => vmConsole.grab() : undefined),
         sep,
         sub(m("snapshot")),
         item(m("capture"), ["Ctrl", "Alt", "PrintScreen"]),
@@ -149,10 +173,10 @@ export function MenuBar({
       [
         item(`1  ${t("home.tab")}`, undefined, () => undefined),
         sep,
-        item(m("goHome"), undefined, () => undefined),
+        item(m("goHome"), undefined, onGoHome),
         sep,
-        item(m("nextTab"), ["Ctrl", "Tab"]),
-        item(m("previousTab"), ["Ctrl", "Shift", "Tab"]),
+        item(m("nextTab"), ["Ctrl", "Tab"], onNextTab),
+        item(m("previousTab"), ["Ctrl", "Shift", "Tab"], onPreviousTab),
       ],
     ],
     [

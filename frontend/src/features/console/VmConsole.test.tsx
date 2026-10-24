@@ -1,7 +1,20 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { type ConsoleHandle, useConsole } from "./consoleRegistry";
+import { COMBOS } from "./keys";
 import { VmConsole } from "./VmConsole";
+
+function Probe() {
+  const handle: ConsoleHandle | null = useConsole("abc");
+  const f2 = COMBOS.find((c) => c.id === "ctrl-alt-f2");
+  return (
+    <div data-testid="probe" data-ready={handle ? "yes" : "no"}>
+      <button onClick={() => handle?.sendCtrlAltDel()}>cad</button>
+      <button onClick={() => handle?.sendKeys(f2?.keys ?? [])}>f2</button>
+    </div>
+  );
+}
 
 // vi.mock is hoisted above the imports, so the fake must be hoisted too.
 const { FakeRfb, instances } = vi.hoisted(() => {
@@ -31,6 +44,11 @@ const { FakeRfb, instances } = vi.hoisted(() => {
     disconnect() {
       this.disconnected = true;
     }
+    cad = 0;
+    sendCtrlAltDel() {
+      this.cad += 1;
+    }
+    focus() {}
   }
   return { FakeRfb, instances };
 });
@@ -149,5 +167,46 @@ describe("VmConsole", () => {
     );
     expect(await screen.findByText(/Arrêtez puis redémarrez/)).toBeTruthy();
     expect(posts).toEqual(["/api/vms/abc/display/vnc"]);
+  });
+
+  it("exposes key combinations once connected", async () => {
+    render(
+      <>
+        <VmConsole uuid="abc" />
+        <Probe />
+      </>,
+    );
+    const rfb = await connected();
+    const probe = screen.getByTestId("probe");
+    expect(probe.dataset.ready).toBe("no");
+    act(() => void rfb.dispatchEvent(new Event("connect")));
+    expect(probe.dataset.ready).toBe("yes");
+    fireEvent.click(screen.getByText("cad"));
+    expect(rfb.cad).toBe(1);
+    fireEvent.click(screen.getByText("f2"));
+    expect(rfb.keys.map(([sym, , down]) => [sym, down])).toEqual([
+      [0xffe3, true],
+      [0xffe9, true],
+      [0xffbf, true],
+      [0xffbf, false],
+      [0xffe9, false],
+      [0xffe3, false],
+    ]);
+    act(() => void rfb.dispatchEvent(new Event("disconnect")));
+    expect(probe.dataset.ready).toBe("no");
+  });
+
+  it("gives the keyboard back on Ctrl+Alt", async () => {
+    const { container } = render(<VmConsole uuid="abc" />);
+    await connected();
+    const screenEl = container.querySelector(".console-screen") as HTMLElement;
+    const input = document.createElement("button");
+    screenEl.appendChild(input);
+    input.focus();
+    expect(document.activeElement).toBe(input);
+    fireEvent.keyDown(input, { key: "Control", ctrlKey: true });
+    fireEvent.keyDown(input, { key: "Alt", ctrlKey: true, altKey: true });
+    fireEvent.keyUp(input, { key: "Alt", ctrlKey: true });
+    expect(document.activeElement).not.toBe(input);
   });
 });
