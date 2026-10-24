@@ -1,4 +1,4 @@
-import { Cpu, MemoryStick, Play } from "lucide-react";
+import { Cpu, MemoryStick, Play, Settings2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { VmSummary } from "../../api/client";
@@ -9,7 +9,7 @@ import "./VmTab.css";
 
 const LIVE_STATES: ReadonlySet<VmSummary["state"]> = new Set(["running", "paused"]);
 
-export function VmTab({ vm }: { vm: VmSummary | undefined }) {
+export function VmTab({ vm, onSettings }: { vm: VmSummary | undefined; onSettings: () => void }) {
   const { t } = useTranslation();
   const actions = useVmActions();
   if (!vm) return <div className="vm-tab-note">{t("errors.libvirt.no_domain")}</div>;
@@ -29,6 +29,10 @@ export function VmTab({ vm }: { vm: VmSummary | undefined }) {
           {t("summary.start")}
         </button>
       )}
+      <button type="button" className="vm-summary-action" onClick={onSettings}>
+        <Settings2 size={14} />
+        {t("summary.settings")}
+      </button>
       <h2 className="vm-summary-heading">{t("summary.devices")}</h2>
       <table className="vm-summary-devices">
         <tbody>

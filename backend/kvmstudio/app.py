@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import __version__
-from .api import create, display, isos, library, networks, preferences, system, vms
+from .api import create, display, hardware, isos, library, networks, preferences, system, vms
 from .auth.token import require_token
 from .config import Config, default_config_path, load_config
 from .console.vnc import ConsoleOpener, open_vnc_socket, vnc_console
@@ -103,6 +103,7 @@ def create_app(
     private.include_router(networks.router)
     private.include_router(preferences.router)
     private.include_router(display.router)
+    private.include_router(hardware.router)
     private.include_router(isos.router)
 
     app.include_router(public)

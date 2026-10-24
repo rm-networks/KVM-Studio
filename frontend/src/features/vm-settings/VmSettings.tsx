@@ -1,0 +1,456 @@
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Cpu, Disc3, HardDrive, MemoryStick, Network as NetworkIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import {
+  api,
+  type Hardware,
+  type HardwareNic,
+  type HostCapabilities,
+  type Network,
+  type NicChange,
+  type VmSummary,
+} from "../../api/client";
+import { Dialog } from "../../components/Dialog";
+import { useNotifier } from "../../components/notifier";
+import { IsoPicker } from "../iso-picker/IsoPicker";
+import { ConfirmDialog } from "../vm/ConfirmDialog";
+import "./VmSettings.css";
+
+type Selection =
+  | { kind: "memory" }
+  | { kind: "cpu" }
+  | { kind: "disk"; target: string }
+  | { kind: "cdrom"; target: string }
+  | { kind: "nic"; mac: string };
+
+interface NicEdit {
+  network: string | null;
+  model: string;
+  connected: boolean;
+}
+
+function fileName(path: string | null): string | null {
+  return path ? path.slice(path.lastIndexOf("/") + 1) : null;
+}
+
+export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void }) {
+  const { t } = useTranslation();
+  const { notify, notifyError } = useNotifier();
+  const [hw, setHw] = useState<Hardware | null>(null);
+  const [host, setHost] = useState<HostCapabilities | null>(null);
+  const [networks, setNetworks] = useState<Network[]>([]);
+  const [selection, setSelection] = useState<Selection>({ kind: "memory" });
+  const [memory, setMemory] = useState(0);
+  const [vcpus, setVcpus] = useState(0);
+  const [nicEdits, setNicEdits] = useState<Record<string, NicEdit>>({});
+  const [busy, setBusy] = useState(false);
+  const [picking, setPicking] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<Selection | null>(null);
+
+  const receive = useCallback((data: Hardware) => {
+    setHw(data);
+    setMemory(data.memory_mib);
+    setVcpus(data.vcpus);
+    setNicEdits({});
+  }, []);
+
+  const reload = useCallback(
+    () =>
+      api
+        .hardware(vm.uuid)
+        .then(receive)
+        .catch((err: unknown) => notifyError(t("settings.title", { name: vm.name }), err)),
+    [vm.uuid, vm.name, receive, notifyError, t],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([api.hardware(vm.uuid), api.host(), api.networks()])
+      .then(([h, caps, nets]) => {
+        if (cancelled) return;
+        receive(h);
+        setHost(caps);
+        setNetworks(nets);
+      })
+      .catch(
+        (err: unknown) => !cancelled && notifyError(t("settings.title", { name: vm.name }), err),
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [vm.uuid, vm.name, receive, notifyError, t]);
+
+  const nicOf = (n: HardwareNic): NicEdit =>
+    nicEdits[n.mac] ?? { network: n.network, model: n.model, connected: n.connected };
+
+  const dirty =
+    hw !== null &&
+    (memory !== hw.memory_mib ||
+      vcpus !== hw.vcpus ||
+      hw.nics.some((n) => {
+        const e = nicEdits[n.mac];
+        return e && (e.network !== n.network || e.model !== n.model || e.connected !== n.connected);
+      }));
+
+  const apply = async (): Promise<boolean> => {
+    if (!hw) return false;
+    setBusy(true);
+    let restart = false;
+    try {
+      if (memory !== hw.memory_mib || vcpus !== hw.vcpus) {
+        restart = (await api.setCpuMemory(vm.uuid, memory, vcpus)).restart_required || restart;
+      }
+      for (const nic of hw.nics) {
+        const e = nicEdits[nic.mac];
+        if (!e) continue;
+        const change: NicChange = {};
+        if (e.network !== nic.network && e.network) change.network = e.network;
+        if (e.model !== nic.model) change.model = e.model as NicChange["model"];
+        if (e.connected !== nic.connected) change.connected = e.connected;
+        if (Object.keys(change).length) {
+          restart = (await api.changeNic(vm.uuid, nic.mac, change)).restart_required || restart;
+        }
+      }
+      if (restart) notify(t("settings.saved"), t("settings.nextBoot"));
+      await reload();
+      return true;
+    } catch (err) {
+      notifyError(t("settings.applyFailed", { name: vm.name }), err);
+      await reload();
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const run = async (action: () => Promise<{ restart_required?: boolean } | unknown>) => {
+    setBusy(true);
+    try {
+      const result = (await action()) as { restart_required?: boolean } | undefined;
+      if (result?.restart_required) notify(t("settings.saved"), t("settings.nextBoot"));
+    } catch (err) {
+      notifyError(t("settings.applyFailed", { name: vm.name }), err);
+    } finally {
+      setBusy(false);
+      await reload();
+    }
+  };
+
+  const defaultNetwork = networks.find((n) => n.name === "kvmnet8")?.name ?? networks[0]?.name;
+  const rows: { sel: Selection; icon: typeof Cpu; label: string; summary: string }[] = hw
+    ? [
+        {
+          sel: { kind: "memory" },
+          icon: MemoryStick,
+          label: t("summary.memory"),
+          summary:
+            memory % 1024 === 0
+              ? t("units.gib", { value: memory / 1024 })
+              : t("units.mib", { value: memory }),
+        },
+        { sel: { kind: "cpu" }, icon: Cpu, label: t("summary.processors"), summary: String(vcpus) },
+        ...hw.disks.map((d) => ({
+          sel: { kind: "disk" as const, target: d.target },
+          icon: HardDrive,
+          label: t("settings.disk", { bus: d.bus.toUpperCase(), target: d.target }),
+          summary: fileName(d.path) ?? "",
+        })),
+        ...hw.cdroms.map((d) => ({
+          sel: { kind: "cdrom" as const, target: d.target },
+          icon: Disc3,
+          label: t("settings.cdrom", { target: d.target }),
+          summary: fileName(d.path) ?? t("menu.noMedia"),
+        })),
+        ...hw.nics.map((n, i) => ({
+          sel: { kind: "nic" as const, mac: n.mac },
+          icon: NetworkIcon,
+          label: t("settings.nic", { index: i + 1 }),
+          summary: `${nicOf(n).network ?? "-"}${nicOf(n).connected ? "" : ` (${t("settings.unplugged")})`}`,
+        })),
+      ]
+    : [];
+  const same = (a: Selection, b: Selection) => JSON.stringify(a) === JSON.stringify(b);
+  const removable = selection.kind === "cdrom" || selection.kind === "nic";
+
+  const nic = selection.kind === "nic" ? hw?.nics.find((n) => n.mac === selection.mac) : undefined;
+  const cdrom =
+    selection.kind === "cdrom" ? hw?.cdroms.find((d) => d.target === selection.target) : undefined;
+  const disk =
+    selection.kind === "disk" ? hw?.disks.find((d) => d.target === selection.target) : undefined;
+
+  return (
+    <>
+      <Dialog
+        open
+        width={760}
+        onOpenChange={(open) => !open && onClose()}
+        title={t("settings.title", { name: vm.name })}
+        buttons={
+          <>
+            <button
+              type="button"
+              className="button button-primary"
+              disabled={busy}
+              onClick={() =>
+                void (dirty ? apply() : Promise.resolve(true)).then((ok) => ok && onClose())
+              }
+            >
+              {t("common.ok")}
+            </button>
+            <button type="button" className="button" onClick={onClose}>
+              {t("common.cancel")}
+            </button>
+            <button
+              type="button"
+              className="button"
+              disabled={!dirty || busy}
+              onClick={() => void apply()}
+            >
+              {t("common.apply")}
+            </button>
+          </>
+        }
+      >
+        <div className="settings">
+          <div className="settings-left">
+            <table className="settings-devices">
+              <thead>
+                <tr>
+                  <th>{t("settings.device")}</th>
+                  <th>{t("settings.summary")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr
+                    key={JSON.stringify(row.sel)}
+                    className={same(row.sel, selection) ? "selected" : undefined}
+                    onClick={() => setSelection(row.sel)}
+                  >
+                    <td>
+                      <row.icon size={13} aria-hidden />
+                      {row.label}
+                    </td>
+                    <td>{row.summary}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="settings-left-buttons">
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger className="button" disabled={busy || !hw}>
+                  {t("settings.add")}
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content className="menu" align="start" sideOffset={2}>
+                    <DropdownMenu.Item
+                      className="menu-item"
+                      disabled={!defaultNetwork}
+                      onSelect={() =>
+                        defaultNetwork &&
+                        void run(() => api.addNic(vm.uuid, defaultNetwork, "virtio"))
+                      }
+                    >
+                      <span className="menu-indicator" />
+                      <span className="menu-label">{t("settings.addNic")}</span>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                      className="menu-item"
+                      onSelect={() => void run(() => api.addCdrom(vm.uuid, null))}
+                    >
+                      <span className="menu-indicator" />
+                      <span className="menu-label">{t("settings.addCdrom")}</span>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+              <button
+                type="button"
+                className="button"
+                disabled={busy || !removable}
+                onClick={() => setRemoving(selection)}
+              >
+                {t("settings.remove")}
+              </button>
+            </div>
+          </div>
+
+          <div className="settings-panel">
+            {hw?.active && <p className="settings-note">{t("settings.runningNote")}</p>}
+            {hw && selection.kind === "memory" && (
+              <fieldset className="settings-group">
+                <legend>{t("summary.memory")}</legend>
+                <p>{t("settings.memoryIntro")}</p>
+                <label className="settings-inline">
+                  {t("settings.memoryLabel")}
+                  <input
+                    type="number"
+                    min={256}
+                    step={4}
+                    max={host?.memory_mib}
+                    value={memory}
+                    onChange={(e) => setMemory(Number(e.target.value))}
+                  />
+                  {t("units.mibShort")}
+                </label>
+                {host && (
+                  <p className="settings-muted">
+                    {t("settings.hostMemory", { value: Math.round(host.memory_mib / 1024) })}
+                  </p>
+                )}
+                {memory % 4 !== 0 && <p className="field-error">{t("settings.memoryMultiple")}</p>}
+              </fieldset>
+            )}
+            {hw && selection.kind === "cpu" && (
+              <fieldset className="settings-group">
+                <legend>{t("summary.processors")}</legend>
+                <label className="settings-inline">
+                  {t("settings.vcpus")}
+                  <input
+                    type="number"
+                    min={1}
+                    max={host?.cpus}
+                    value={vcpus}
+                    onChange={(e) => setVcpus(Number(e.target.value))}
+                  />
+                </label>
+                {host && (
+                  <p className="settings-muted">{t("settings.hostCpus", { count: host.cpus })}</p>
+                )}
+              </fieldset>
+            )}
+            {disk && (
+              <fieldset className="settings-group">
+                <legend>{t("settings.diskTitle")}</legend>
+                <p className="settings-mono">{disk.path}</p>
+                <p className="settings-muted">
+                  {disk.bus.toUpperCase()} {disk.target}, {disk.format}
+                </p>
+                <p className="settings-muted">{t("settings.diskLater")}</p>
+              </fieldset>
+            )}
+            {cdrom && (
+              <fieldset className="settings-group">
+                <legend>{t("settings.cdrom", { target: cdrom.target })}</legend>
+                <p className="settings-mono">{cdrom.path ?? t("menu.noMedia")}</p>
+                <div className="settings-row">
+                  <button type="button" className="button" onClick={() => setPicking(cdrom.target)}>
+                    {t("menu.changeIso")}
+                  </button>
+                  <button
+                    type="button"
+                    className="button"
+                    disabled={!cdrom.path}
+                    onClick={() => void run(() => api.changeMedia(vm.uuid, cdrom.target, null))}
+                  >
+                    {t("menu.eject")}
+                  </button>
+                </div>
+              </fieldset>
+            )}
+            {nic && (
+              <fieldset className="settings-group">
+                <legend>{t("settings.nicTitle")}</legend>
+                <label className="settings-check">
+                  <input
+                    type="checkbox"
+                    checked={nicOf(nic).connected}
+                    onChange={(e) =>
+                      setNicEdits({
+                        ...nicEdits,
+                        [nic.mac]: { ...nicOf(nic), connected: e.target.checked },
+                      })
+                    }
+                  />
+                  {t("settings.connected")}
+                </label>
+                <label className="settings-inline">
+                  {t("settings.network")}
+                  <select
+                    value={nicOf(nic).network ?? ""}
+                    onChange={(e) =>
+                      setNicEdits({
+                        ...nicEdits,
+                        [nic.mac]: { ...nicOf(nic), network: e.target.value },
+                      })
+                    }
+                  >
+                    {nicOf(nic).network === null && <option value="">-</option>}
+                    {networks.map((n) => (
+                      <option key={n.name} value={n.name}>
+                        {n.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="settings-inline">
+                  {t("settings.model")}
+                  <select
+                    value={nicOf(nic).model}
+                    onChange={(e) =>
+                      setNicEdits({
+                        ...nicEdits,
+                        [nic.mac]: { ...nicOf(nic), model: e.target.value },
+                      })
+                    }
+                  >
+                    {(host?.nic_models ?? ["virtio", "e1000e", "rtl8139", "vmxnet3"]).map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p className="settings-muted">
+                  {t("settings.mac")} <span className="settings-mono">{nic.mac}</span>
+                </p>
+                {nic.target && (
+                  <p className="settings-muted">
+                    {t("settings.hostInterface")}{" "}
+                    <span className="settings-mono">{nic.target}</span>
+                  </p>
+                )}
+              </fieldset>
+            )}
+          </div>
+        </div>
+      </Dialog>
+      {picking && (
+        <IsoPicker
+          title={t("iso.titleFor", { name: vm.name, target: picking })}
+          onPick={(path) => {
+            const target = picking;
+            setPicking(null);
+            void run(() => api.changeMedia(vm.uuid, target, path));
+          }}
+          onClose={() => setPicking(null)}
+        />
+      )}
+      {removing && (
+        <ConfirmDialog
+          title={t("settings.remove")}
+          message={
+            removing.kind === "nic"
+              ? t("settings.confirmRemoveNic")
+              : t("settings.confirmRemoveCdrom")
+          }
+          confirmLabel={t("settings.remove")}
+          danger
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => {
+            const target = removing;
+            setRemoving(null);
+            setSelection({ kind: "memory" });
+            void run(() =>
+              target.kind === "nic"
+                ? api.removeNic(vm.uuid, target.mac)
+                : api.removeCdrom(vm.uuid, (target as { target: string }).target),
+            );
+          }}
+        />
+      )}
+    </>
+  );
+}

@@ -175,7 +175,8 @@
       "bad_format": "Format de disque inconnu.",
       "secure_boot_needs_uefi": "Secure Boot demande l'UEFI.",
       "exists": "Une machine virtuelle porte déjà ce nom.",
-      "disk_failed": "La création du disque a échoué."
+      "disk_failed": "La création du disque a échoué.",
+      "no_nic": "Cette carte réseau n'existe plus."
     },
     "request": {
       "invalid": "Requête invalide."
@@ -310,7 +311,8 @@
     "start": "Démarrer cette machine virtuelle",
     "devices": "Périphériques",
     "memory": "Mémoire",
-    "processors": "Processeurs"
+    "processors": "Processeurs",
+    "settings": "Modifier les paramètres de la machine virtuelle"
   },
   "units": {
     "gib": "{{value}} Gio",
@@ -527,5 +529,39 @@
     "addNic": "Ajouter une carte",
     "removeNic": "Retirer la carte",
     "startAfter": "Démarrer la machine virtuelle après sa création"
+  },
+  "settings": {
+    "title": "Paramètres de {{name}}",
+    "device": "Périphérique",
+    "summary": "Résumé",
+    "add": "Ajouter…",
+    "remove": "Retirer",
+    "addNic": "Carte réseau",
+    "addCdrom": "Lecteur CD/DVD",
+    "disk": "Disque {{bus}} ({{target}})",
+    "cdrom": "CD/DVD ({{target}})",
+    "nic": "Carte réseau {{index}}",
+    "unplugged": "débranchée",
+    "memoryIntro": "Mémoire allouée à cette machine virtuelle. La valeur doit être un multiple de 4 Mio.",
+    "memoryLabel": "Mémoire de la machine virtuelle",
+    "memoryMultiple": "Utilisez un multiple de 4 Mio.",
+    "hostMemory": "Mémoire de l'hôte : {{value}} Gio",
+    "vcpus": "Nombre de processeurs",
+    "hostCpus_one": "L'hôte a {{count}} processeur logique.",
+    "hostCpus_other": "L'hôte a {{count}} processeurs logiques.",
+    "diskTitle": "Disque",
+    "diskLater": "Agrandir, compacter et convertir arriveront dans une prochaine version.",
+    "nicTitle": "Carte réseau",
+    "connected": "Connectée (câble branché)",
+    "network": "Réseau",
+    "model": "Modèle",
+    "mac": "Adresse MAC :",
+    "hostInterface": "Interface sur l'hôte :",
+    "runningNote": "La machine virtuelle est allumée : le câble et le réseau d'une carte changent tout de suite, le reste au prochain démarrage.",
+    "saved": "Paramètres enregistrés",
+    "nextBoot": "Certains changements s'appliqueront au prochain démarrage de la machine virtuelle.",
+    "applyFailed": "Impossible de modifier {{name}}",
+    "confirmRemoveNic": "Retirer cette carte réseau de la machine virtuelle ?",
+    "confirmRemoveCdrom": "Retirer ce lecteur CD/DVD de la machine virtuelle ?"
   }
 }

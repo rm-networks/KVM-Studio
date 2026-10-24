@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { api } from "../api/client";
+import { api, type VmSummary } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { NotificationProvider } from "../components/Notifications";
 import { useNotifier } from "../components/notifier";
@@ -12,6 +12,7 @@ import { VmActionsProvider } from "../features/vm/VmActions";
 import { NetworkEditor } from "../features/network-editor/NetworkEditor";
 import { PreferencesDialog } from "../features/preferences/PreferencesDialog";
 import { IsoPicker } from "../features/iso-picker/IsoPicker";
+import { VmSettings } from "../features/vm-settings/VmSettings";
 import { NewVmWizard } from "../features/wizard/NewVmWizard";
 import { useConsole } from "../features/console/consoleRegistry";
 import { useCdroms } from "../features/vm/useCdroms";
@@ -53,6 +54,7 @@ function MainWindow() {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [settingsFor, setSettingsFor] = useState<string | null>(null);
   const [openVms, setOpenVms] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
 
@@ -97,6 +99,7 @@ function MainWindow() {
     nextTab: () => cycleTab(1),
     previousTab: () => cycleTab(-1),
     preferences: () => setPreferencesOpen(true),
+    settings: () => currentVm && setSettingsFor(currentVm.uuid),
     grab: () => vmConsole?.grab(),
     fullscreen: toggleFullscreen,
   });
@@ -126,6 +129,7 @@ function MainWindow() {
           onNetworkEditor={() => setNetworkEditorOpen(true)}
           onPreferences={() => setPreferencesOpen(true)}
           onNewVm={() => setWizardOpen(true)}
+          onSettings={() => currentVm && setSettingsFor(currentVm.uuid)}
           vmConsole={vmConsole}
           onFullscreen={toggleFullscreen}
           onGoHome={() => setActiveTab(HOME_TAB)}
@@ -168,7 +172,7 @@ function MainWindow() {
             {/* VM tabs stay mounted so their console keeps its connection. */}
             {openVms.map((uuid) => (
               <div key={uuid} className="workspace-content" hidden={activeTab !== uuid}>
-                <VmTab vm={vmByUuid.get(uuid)} />
+                <VmTab vm={vmByUuid.get(uuid)} onSettings={() => setSettingsFor(uuid)} />
               </div>
             ))}
           </main>
@@ -183,6 +187,12 @@ function MainWindow() {
         )}
         <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} version={info?.version} />
         {networkEditorOpen && <NetworkEditor onClose={() => setNetworkEditorOpen(false)} />}
+        {settingsFor && vmByUuid.get(settingsFor) && (
+          <VmSettings
+            vm={vmByUuid.get(settingsFor) as VmSummary}
+            onClose={() => setSettingsFor(null)}
+          />
+        )}
         {wizardOpen && (
           <NewVmWizard
             library={library}

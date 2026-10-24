@@ -23,7 +23,7 @@
 }
 
 .vm-summary-action {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
   padding: 3px 4px;

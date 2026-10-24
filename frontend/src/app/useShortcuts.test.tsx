@@ -22,6 +22,7 @@ function actions(): ShortcutActions {
     nextTab: vi.fn(),
     previousTab: vi.fn(),
     preferences: vi.fn(),
+    settings: vi.fn(),
     grab: vi.fn(),
     fullscreen: vi.fn(),
   };
@@ -37,6 +38,7 @@ describe("useShortcuts", () => {
     fireEvent.keyDown(window, { key: "Tab", ctrlKey: true, shiftKey: true });
     fireEvent.keyDown(window, { key: "p", ctrlKey: true });
     fireEvent.keyDown(window, { key: "g", ctrlKey: true });
+    fireEvent.keyDown(window, { key: "d", ctrlKey: true });
     fireEvent.keyDown(window, { key: "Enter", ctrlKey: true, altKey: true });
     for (const fn of Object.values(a)) expect(fn).toHaveBeenCalledTimes(1);
   });

@@ -175,7 +175,8 @@
       "bad_format": "Unknown disk format.",
       "secure_boot_needs_uefi": "Secure Boot needs UEFI.",
       "exists": "A virtual machine already has this name.",
-      "disk_failed": "Creating the disk failed."
+      "disk_failed": "Creating the disk failed.",
+      "no_nic": "This network adapter no longer exists."
     },
     "request": {
       "invalid": "Invalid request."
@@ -308,7 +309,8 @@
     "start": "Power on this virtual machine",
     "devices": "Devices",
     "memory": "Memory",
-    "processors": "Processors"
+    "processors": "Processors",
+    "settings": "Edit virtual machine settings"
   },
   "units": {
     "gib": "{{value}} GiB",
@@ -525,5 +527,39 @@
     "addNic": "Add a card",
     "removeNic": "Remove the card",
     "startAfter": "Power on the virtual machine once created"
+  },
+  "settings": {
+    "title": "{{name}} Settings",
+    "device": "Device",
+    "summary": "Summary",
+    "add": "Add…",
+    "remove": "Remove",
+    "addNic": "Network adapter",
+    "addCdrom": "CD/DVD drive",
+    "disk": "{{bus}} disk ({{target}})",
+    "cdrom": "CD/DVD ({{target}})",
+    "nic": "Network adapter {{index}}",
+    "unplugged": "unplugged",
+    "memoryIntro": "Memory given to this virtual machine. The value must be a multiple of 4 MiB.",
+    "memoryLabel": "Memory for this virtual machine",
+    "memoryMultiple": "Use a multiple of 4 MiB.",
+    "hostMemory": "Host memory: {{value}} GiB",
+    "vcpus": "Number of processors",
+    "hostCpus_one": "The host has {{count}} logical processor.",
+    "hostCpus_other": "The host has {{count}} logical processors.",
+    "diskTitle": "Disk",
+    "diskLater": "Expand, compact and convert come in a future version.",
+    "nicTitle": "Network adapter",
+    "connected": "Connected (cable plugged in)",
+    "network": "Network",
+    "model": "Model",
+    "mac": "MAC address:",
+    "hostInterface": "Host interface:",
+    "runningNote": "The virtual machine is running: an adapter's cable and network change at once, the rest at next boot.",
+    "saved": "Settings saved",
+    "nextBoot": "Some changes apply the next time the virtual machine starts.",
+    "applyFailed": "Could not change {{name}}",
+    "confirmRemoveNic": "Remove this network adapter from the virtual machine?",
+    "confirmRemoveCdrom": "Remove this CD/DVD drive from the virtual machine?"
   }
 }

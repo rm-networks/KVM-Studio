@@ -1,0 +1,143 @@
+.settings {
+  display: flex;
+  gap: 12px;
+  height: 440px;
+}
+
+.settings-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 330px;
+  flex: none;
+}
+
+.settings-devices {
+  flex: 1;
+  display: block;
+  overflow: auto;
+  border: 1px solid var(--border-strong);
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.settings-devices thead,
+.settings-devices tbody {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.settings-devices th {
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-alt);
+  font-weight: 400;
+  text-align: left;
+}
+
+.settings-devices td {
+  padding: 1px 6px;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.settings-devices td:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 55%;
+}
+
+.settings-devices td:last-child {
+  overflow: hidden;
+  max-width: 140px;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+}
+
+.settings-devices tr.selected td {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.settings-left-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.settings-panel {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.settings-group {
+  margin: 0 0 10px;
+  padding: 6px 12px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.settings-group legend {
+  padding: 0 4px;
+}
+
+.settings-group p {
+  margin: 4px 0;
+}
+
+.settings-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.settings-inline input,
+.settings-inline select {
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.settings-inline input[type="number"] {
+  width: 100px;
+}
+
+.settings-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+}
+
+.settings-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.settings-muted {
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+.settings-mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-small);
+  word-break: break-all;
+}
+
+.settings-note {
+  margin: 0 0 8px;
+  padding: 4px 8px;
+  border-left: 3px solid var(--state-paused);
+  background: var(--surface-alt);
+  font-size: var(--font-size-small);
+}

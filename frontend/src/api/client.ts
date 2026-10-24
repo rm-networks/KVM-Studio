@@ -28,6 +28,9 @@ export type CdromDevice = components["schemas"]["CdromDevice"];
 export type ProfileInfo = components["schemas"]["ProfileInfo"];
 export type HostCapabilities = components["schemas"]["HostInfo"];
 export type NewVmRequest = components["schemas"]["NewVmRequest"];
+export type Hardware = components["schemas"]["Hardware"];
+export type HardwareNic = components["schemas"]["Nic"];
+export type NicChange = components["schemas"]["NicChange"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
 export type Preferences = components["schemas"]["Preferences"] & { config: Config };
 export type SaveResult = components["schemas"]["SaveResult"];
@@ -113,6 +116,29 @@ export const api = {
     request<{ profile: string }>("GET", `/api/profiles/guess?iso=${encodeURIComponent(iso)}`),
   host: () => request<HostCapabilities>("GET", "/api/host"),
   createVm: (body: NewVmRequest) => request<{ uuid: string }>("POST", "/api/vms", body),
+  hardware: (uuid: string) => request<Hardware>("GET", `${vmPath(uuid)}/hardware`),
+  setCpuMemory: (uuid: string, memory_mib: number, vcpus: number) =>
+    request<{ restart_required: boolean }>("PUT", `${vmPath(uuid)}/hardware/cpu-memory`, {
+      memory_mib,
+      vcpus,
+    }),
+  addNic: (uuid: string, network: string, model: string) =>
+    request<HardwareNic>("POST", `${vmPath(uuid)}/nics`, { network, model }),
+  changeNic: (uuid: string, mac: string, change: NicChange) =>
+    request<{ restart_required: boolean }>(
+      "PATCH",
+      `${vmPath(uuid)}/nics/${encodeURIComponent(mac)}`,
+      change,
+    ),
+  removeNic: (uuid: string, mac: string) =>
+    request<undefined>("DELETE", `${vmPath(uuid)}/nics/${encodeURIComponent(mac)}`),
+  addCdrom: (uuid: string, path: string | null) =>
+    request<{ restart_required: boolean }>("POST", `${vmPath(uuid)}/cdroms`, { path }),
+  removeCdrom: (uuid: string, target: string) =>
+    request<{ restart_required: boolean }>(
+      "DELETE",
+      `${vmPath(uuid)}/cdroms/${encodeURIComponent(target)}`,
+    ),
   isos: () => request<IsoListing>("GET", "/api/isos"),
   isoAccess: (path: string) =>
     request<AccessReport>("GET", `/api/isos/access?path=${encodeURIComponent(path)}`),

@@ -32,6 +32,7 @@ interface Props {
   onNetworkEditor: () => void;
   onPreferences: () => void;
   onNewVm: () => void;
+  onSettings: () => void;
   vmConsole: ConsoleHandle | null;
   onFullscreen: () => void;
   onGoHome: () => void;
@@ -51,6 +52,7 @@ export function MenuBar({
   onNetworkEditor,
   onPreferences,
   onNewVm,
+  onSettings,
   vmConsole,
   onFullscreen,
   onGoHome,
@@ -165,7 +167,7 @@ export function MenuBar({
         sub(m("manage"), vm ? manageEntries : undefined),
         item(m("guestTools")),
         sep,
-        item(m("settings"), ["Ctrl", "D"]),
+        item(m("settings"), ["Ctrl", "D"], vm ? onSettings : undefined),
       ],
     ],
     [

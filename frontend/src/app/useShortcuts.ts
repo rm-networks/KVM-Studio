@@ -6,6 +6,7 @@ export interface ShortcutActions {
   nextTab: () => void;
   previousTab: () => void;
   preferences: () => void;
+  settings: () => void;
   grab: () => void;
   fullscreen: () => void;
 }
@@ -38,7 +39,7 @@ export function useShortcuts(actions: ShortcutActions): void {
             : a.nextTab
           : e.shiftKey
             ? undefined
-            : { n: a.newVm, w: a.closeTab, p: a.preferences, g: a.grab }[key];
+            : { n: a.newVm, w: a.closeTab, p: a.preferences, g: a.grab, d: a.settings }[key];
       if (handler) {
         e.preventDefault();
         handler();
