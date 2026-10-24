@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from kvmstudio.app import create_app
-from kvmstudio.config import Config
+from kvmstudio.config import Config, load_config
 from kvmstudio.libvirt_conn import LibvirtConnection
 from kvmstudio.shell import tray
 from kvmstudio.shell.backend_process import BackendProcess
@@ -72,9 +72,11 @@ def test_switch_to_desktop_saves_the_mode(tmp_path: Path) -> None:
     config = tmp_path / "config.toml"
     config.write_text('[interface]\nmode = "web"\n[ui]\nlanguage = "en"\n')
     switch_to_desktop(config)
-    text = config.read_text()
-    assert 'mode = "desktop"' in text
-    assert 'language = "en"' in text
+    # Desktop is the default: the key leaves the file.
+    assert 'mode = "web"' not in config.read_text()
+    loaded = load_config(config)
+    assert loaded.interface.mode == "desktop"
+    assert loaded.ui.language == "en"
 
 
 def test_tray_falls_back_without_a_display(monkeypatch: pytest.MonkeyPatch) -> None:
