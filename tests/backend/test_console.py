@@ -130,6 +130,7 @@ SPICE_VM = (
     "<domain type='test'><name>spice-vm</name><memory>65536</memory>"
     "<os><type>hvm</type></os><devices>"
     "<graphics type='spice' autoport='yes'><listen type='address'/></graphics>"
+    "<channel type='spicevmc'><target type='virtio' name='com.redhat.spice.0'/></channel>"
     "</devices></domain>"
 )
 
@@ -158,16 +159,48 @@ def test_display_info_and_adding_vnc(
     try:
         uuid = dom.UUIDString()
         info = client.get(f"/api/vms/{uuid}/display", headers=auth).json()
-        assert info == {"live": [], "config": ["spice"], "clipboard": False, "active": False}
+        assert info == {
+            "live": [],
+            "config": ["spice"],
+            "clipboard": False,
+            "clipboard_config": False,
+            "active": False,
+        }
         result = client.post(f"/api/vms/{uuid}/display/vnc", headers=auth).json()
         assert result == {"restart_required": False}
         info = client.get(f"/api/vms/{uuid}/display", headers=auth).json()
+        # SPICE stays; its agent channel gives way to QEMU's vdagent.
         assert info["config"] == ["spice", "vnc"]
+        assert info["clipboard_config"] is True
+        xml = dom.XMLDesc(0)
+        assert "spicevmc" not in xml
+        assert xml.count("com.redhat.spice.0") == 1
         # Adding twice changes nothing.
         client.post(f"/api/vms/{uuid}/display/vnc", headers=auth)
         assert client.get(f"/api/vms/{uuid}/display", headers=auth).json()["config"] == [
             "spice",
             "vnc",
         ]
+    finally:
+        dom.undefine()
+
+
+def test_enable_clipboard_on_a_vm_that_has_vnc(
+    config: Config, conn: LibvirtConnection, frontend_dir: Path
+) -> None:
+    client = make_client(config, conn, frontend_dir, echo_opener)
+    auth = {"Authorization": f"Bearer {TOKEN}"}
+    xml = SPICE_VM.replace("spice-vm", "spice-vnc-vm").replace(
+        "</devices>", "<graphics type='vnc'><listen type='none'/></graphics></devices>"
+    )
+    dom = conn.run(lambda c: c.defineXML(xml))
+    try:
+        uuid = dom.UUIDString()
+        assert client.get(f"/api/vms/{uuid}/display", headers=auth).json()["clipboard"] is False
+        result = client.post(f"/api/vms/{uuid}/display/clipboard", headers=auth).json()
+        assert result == {"restart_required": False}
+        info = client.get(f"/api/vms/{uuid}/display", headers=auth).json()
+        assert info["clipboard"] is True
+        assert info["config"] == ["spice", "vnc"]
     finally:
         dom.undefine()

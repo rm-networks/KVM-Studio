@@ -1,5 +1,5 @@
 import RFB from "@novnc/novnc";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, type DisplayInfo } from "../../api/client";
@@ -63,7 +63,19 @@ export function VmConsole({ uuid }: { uuid: string }) {
       </div>
     );
   }
-  if (display.live.includes("vnc")) return <VncScreen uuid={uuid} />;
+  if (display.live.includes("vnc")) {
+    return (
+      <VncScreen uuid={uuid}>
+        {!display.clipboard && (
+          <ClipboardNotice
+            uuid={uuid}
+            pending={display.clipboard_config}
+            onChanged={() => setCheck((n) => n + 1)}
+          />
+        )}
+      </VncScreen>
+    );
+  }
 
   const vncConfigured = display.config.includes("vnc");
   return (
@@ -103,7 +115,47 @@ export function VmConsole({ uuid }: { uuid: string }) {
   );
 }
 
-function VncScreen({ uuid }: { uuid: string }) {
+/** Copy and paste is off: the agent port belongs to SPICE, or no agent channel at all. */
+function ClipboardNotice({
+  uuid,
+  pending,
+  onChanged,
+}: {
+  uuid: string;
+  pending: boolean;
+  onChanged: () => void;
+}) {
+  const { t } = useTranslation();
+  const { notifyError } = useNotifier();
+  const [confirming, setConfirming] = useState(false);
+  return (
+    <div className="console-banner">
+      <span>{pending ? t("console.restartForClipboard") : t("console.clipboardOff")}</span>
+      {!pending && (
+        <button type="button" className="button" onClick={() => setConfirming(true)}>
+          {t("console.enableClipboard")}
+        </button>
+      )}
+      {confirming && (
+        <ConfirmDialog
+          title={t("console.enableClipboard")}
+          message={t("console.enableClipboardConfirm")}
+          confirmLabel={t("console.enableClipboard")}
+          onCancel={() => setConfirming(false)}
+          onConfirm={() => {
+            setConfirming(false);
+            api
+              .enableClipboard(uuid)
+              .then(onChanged)
+              .catch((err: unknown) => notifyError(t("console.enableClipboard"), err));
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function VncScreen({ uuid, children }: { uuid: string; children?: ReactNode }) {
   const { t } = useTranslation();
   const screenRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<Status>("connecting");
@@ -200,6 +252,7 @@ function VncScreen({ uuid }: { uuid: string }) {
   return (
     <div className="console">
       <div className="console-screen" ref={screenRef} />
+      {children}
       {status !== "connected" && (
         <div className="console-overlay">
           {status === "connecting" ? (

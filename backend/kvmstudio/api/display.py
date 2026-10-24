@@ -8,7 +8,7 @@ from starlette.concurrency import run_in_threadpool
 
 from ..console.vnc import graphics_types
 from ..context import Context
-from ..xml.devices import vnc_graphics
+from ..xml.devices import use_qemu_vdagent, vnc_graphics
 
 router = APIRouter(prefix="/vms", tags=["console"])
 
@@ -18,6 +18,8 @@ class DisplayInfo(BaseModel):
     live: list[str]
     config: list[str]
     clipboard: bool  # qemu-vdagent channel with copy/paste
+    # Same, in the config: the running VM gets it at next boot.
+    clipboard_config: bool
     active: bool
 
 
@@ -45,27 +47,38 @@ async def display(ctx: Context, uuid: str) -> DisplayInfo:
             live=graphics_types(live) if active else [],
             config=graphics_types(config),
             clipboard=_has_vdagent(live if active else config),
+            clipboard_config=_has_vdagent(config),
             active=active,
         )
 
     return await run_in_threadpool(ctx.conn.run, op)
 
 
+def _edit_devices(conn: libvirt.virConnect, uuid: str, vnc: bool) -> DisplayChange:
+    dom = conn.lookupByUUIDString(uuid)
+    root = etree.fromstring(
+        dom.XMLDesc(libvirt.VIR_DOMAIN_XML_INACTIVE).encode(),
+        parser=etree.XMLParser(resolve_entities=False),
+    )
+    devices = root.find("devices")
+    if devices is not None:
+        changed = use_qemu_vdagent(devices)
+        if vnc and devices.find("graphics[@type='vnc']") is None:
+            devices.append(vnc_graphics())
+            changed = True
+        if changed:
+            conn.defineXML(etree.tostring(root).decode())
+    # Graphics and channels are not hot-plugged: a running VM gets them at next boot.
+    return DisplayChange(restart_required=bool(dom.isActive()))
+
+
 @router.post("/{uuid}/display/vnc")
 async def add_vnc(ctx: Context, uuid: str) -> DisplayChange:
     """Add a listen-less VNC display next to the existing ones (SPICE stays)."""
+    return await run_in_threadpool(ctx.conn.run, lambda c: _edit_devices(c, uuid, vnc=True))
 
-    def op(c: libvirt.virConnect) -> DisplayChange:
-        dom = c.lookupByUUIDString(uuid)
-        root = etree.fromstring(
-            dom.XMLDesc(libvirt.VIR_DOMAIN_XML_INACTIVE).encode(),
-            parser=etree.XMLParser(resolve_entities=False),
-        )
-        devices = root.find("devices")
-        if devices is not None and devices.find("graphics[@type='vnc']") is None:
-            devices.append(vnc_graphics())
-            c.defineXML(etree.tostring(root).decode())
-        # Graphics cannot be hot-plugged: a running VM gets it at next boot.
-        return DisplayChange(restart_required=bool(dom.isActive()))
 
-    return await run_in_threadpool(ctx.conn.run, op)
+@router.post("/{uuid}/display/clipboard")
+async def enable_clipboard(ctx: Context, uuid: str) -> DisplayChange:
+    """Copy and paste over VNC for a VM whose agent port belongs to SPICE."""
+    return await run_in_threadpool(ctx.conn.run, lambda c: _edit_devices(c, uuid, vnc=False))

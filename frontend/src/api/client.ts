@@ -164,6 +164,8 @@ export const api = {
   agentStatus: (uuid: string) => request<{ responding: boolean }>("GET", `${vmPath(uuid)}/agent`),
   addVnc: (uuid: string) =>
     request<{ restart_required: boolean }>("POST", `${vmPath(uuid)}/display/vnc`),
+  enableClipboard: (uuid: string) =>
+    request<{ restart_required: boolean }>("POST", `${vmPath(uuid)}/display/clipboard`),
   restart: () => request<{ restarting: boolean }>("POST", "/api/restart"),
   preferences: () => request<Preferences>("GET", "/api/preferences"),
   savePreferences: (config: Config) => request<SaveResult>("PUT", "/api/preferences", config),

@@ -26,3 +26,20 @@ def vdagent_channel(*, clipboard: bool = True) -> etree._Element:
     etree.SubElement(source, "mouse", mode="client")
     etree.SubElement(channel, "target", type="virtio", name=SPICE_AGENT_PORT)
     return channel
+
+
+def use_qemu_vdagent(devices: etree._Element) -> bool:
+    """Give the agent port to QEMU's vdagent, so copy and paste works over VNC.
+
+    A SPICE agent channel (spicevmc, added by virt-manager) holds the same port
+    name and cannot coexist with it: it is replaced. The SPICE display stays;
+    SPICE clients just lose their own copy and paste. Returns True if changed.
+    """
+    if devices.find("channel[@type='qemu-vdagent']") is not None:
+        return False
+    for channel in devices.findall("channel"):
+        target = channel.find("target")
+        if target is not None and target.get("name") == SPICE_AGENT_PORT:
+            devices.remove(channel)
+    devices.append(vdagent_channel())
+    return True

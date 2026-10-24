@@ -277,8 +277,12 @@
     "spiceOnly": "Cette machine virtuelle n'a qu'un affichage SPICE (créé par virt-manager). La console intégrée utilise VNC.",
     "noDisplay": "Cette machine virtuelle n'a pas d'affichage graphique.",
     "addVnc": "Ajouter un affichage VNC",
-    "addVncConfirm": "Un affichage VNC sera ajouté à la configuration de la machine virtuelle, à côté de l'affichage existant : virt-manager continue de fonctionner. Il sera actif au prochain démarrage de la VM.",
-    "restartForVnc": "L'affichage VNC est configuré. Arrêtez puis redémarrez la machine virtuelle pour l'utiliser."
+    "addVncConfirm": "Un affichage VNC sera ajouté à la configuration de la machine virtuelle, à côté de l'affichage SPICE, qui reste utilisable dans virt-manager. Le copier-coller passera par KVM Studio : virt-manager n'en disposera plus. Actif au prochain démarrage de la VM.",
+    "restartForVnc": "L'affichage VNC est configuré. Arrêtez puis redémarrez la machine virtuelle pour l'utiliser.",
+    "clipboardOff": "Copier-coller inactif : le canal de l'agent est réservé à SPICE (virt-manager).",
+    "enableClipboard": "Activer le copier-coller",
+    "enableClipboardConfirm": "Le canal d'agent SPICE de virt-manager sera remplacé par celui de QEMU. L'affichage SPICE reste disponible dans virt-manager, sans copier-coller. Actif au prochain démarrage de la VM.",
+    "restartForClipboard": "Copier-coller configuré : arrêtez puis redémarrez la machine virtuelle pour l'utiliser."
   },
   "tabs": {
     "close": "Fermer l'onglet"
