@@ -84,6 +84,9 @@ def default_config_path() -> Path:
     return config_dir() / "config.toml"
 
 
+OLD_DEFAULT_PORT = 8765
+
+
 def load_config(path: Path | None = None) -> Config:
     """Load the configuration file, or return defaults when it does not exist."""
     path = path or default_config_path()
@@ -97,6 +100,10 @@ def load_config(path: Path | None = None) -> Config:
     storage = data.get("storage")
     if isinstance(storage, dict):
         storage.pop("default_iso_folder", None)
+    # Former default port, written by versions that saved every value.
+    web = data.get("web")
+    if isinstance(web, dict) and web.get("port") == OLD_DEFAULT_PORT:
+        web.pop("port")
     try:
         return Config.model_validate(data)
     except ValidationError as exc:
@@ -114,10 +121,15 @@ HEADER = """\
 
 
 def save_config(config: Config, path: Path | None = None) -> Path:
-    """Write the configuration atomically, readable by the user only."""
+    """Write the configuration atomically, readable by the user only.
+
+    Only values that differ from the defaults are written, so a default
+    changed in a later version applies to everyone who never touched it.
+    """
     path = path or default_config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    data = config.model_dump(mode="json", exclude_none=True)
+    dumped = config.model_dump(mode="json", exclude_none=True, exclude_defaults=True)
+    data = {key: value for key, value in dumped.items() if value not in ({}, [])}
     tmp = path.with_suffix(".toml.tmp")
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:

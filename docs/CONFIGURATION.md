@@ -5,8 +5,10 @@ KVM Studio lit `$XDG_CONFIG_HOME/kvm-studio/config.toml`, soit en général
 aussi : une clé absente prend sa valeur par défaut. Un modèle commenté se trouve
 dans [config.example.toml](../config.example.toml).
 
-L'écran Édition > Préférences modifie ce fichier (il le réécrit sans les
-commentaires). Le mode d'interface, le port et l'URI libvirt s'appliquent au
+L'écran Édition > Préférences modifie ce fichier. Il le réécrit sans les
+commentaires et n'y garde que les valeurs différentes des défauts : un défaut
+modifié dans une version suivante s'applique donc à qui ne l'a pas changé.
+`port = 8765`, l'ancien défaut, est ignoré à la lecture. Le mode d'interface, le port et l'URI libvirt s'appliquent au
 prochain lancement ; le reste s'applique tout de suite.
 
 Une clé inconnue ou une valeur invalide empêche le démarrage, avec un message qui

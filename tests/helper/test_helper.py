@@ -211,6 +211,23 @@ def test_config_parsing() -> None:
         parse({"qemu_user": "no-such-account-here"})
 
 
+def test_duplicate_libraries_count_once() -> None:
+    parsed = parse(
+        {
+            "qemu_user": "root",
+            "iso_libraries": [
+                {"path": "/srv/iso"},
+                {"path": "/srv/iso/", "extensions": [".iso", ".raw"]},
+                {"path": "/data/iso"},
+            ],
+        }
+    )
+    assert parsed.iso_libraries == (
+        IsoLibrary(Path("/srv/iso"), (".iso", ".img", ".raw")),
+        IsoLibrary(Path("/data/iso"), (".iso", ".img")),
+    )
+
+
 def test_start_time_reads_proc() -> None:
     assert start_time(os.getpid()).isdigit()
 

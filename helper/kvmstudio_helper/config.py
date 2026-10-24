@@ -6,6 +6,7 @@ config.toml is never trusted for that.
 
 from __future__ import annotations
 
+import os
 import pwd
 import tomllib
 from dataclasses import dataclass
@@ -85,8 +86,22 @@ def parse(data: dict[str, Any]) -> HelperConfig:
     return HelperConfig(
         socket=Path(socket),
         qemu_uid=_qemu_uid(data.get("qemu_user")),
-        iso_libraries=tuple(_library(t, i) for i, t in enumerate(libraries)),
+        iso_libraries=_unique([_library(t, i) for i, t in enumerate(libraries)]),
     )
+
+
+def _unique(libraries: list[IsoLibrary]) -> tuple[IsoLibrary, ...]:
+    """The same folder declared twice counts once (extensions merged)."""
+    merged: dict[str, IsoLibrary] = {}
+    for lib in libraries:
+        key = os.path.normpath(lib.path)
+        if key in merged:
+            known = merged[key]
+            extra = tuple(e for e in lib.extensions if e not in known.extensions)
+            merged[key] = IsoLibrary(known.path, known.extensions + extra)
+        else:
+            merged[key] = IsoLibrary(Path(key), lib.extensions)
+    return tuple(merged.values())
 
 
 def load(path: Path = DEFAULT_PATH) -> HelperConfig:

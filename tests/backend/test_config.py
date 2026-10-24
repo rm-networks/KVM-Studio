@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from kvmstudio.config import Config, ConfigError, config_dir, load_config
+from kvmstudio.config import Config, ConfigError, config_dir, load_config, save_config
 
 
 def test_missing_file_gives_defaults(tmp_path: Path) -> None:
@@ -69,3 +69,26 @@ def test_old_default_iso_folder_key_is_ignored(tmp_path: Path) -> None:
     path = tmp_path / "config.toml"
     path.write_text('[storage]\ndefault_iso_folder = "~/ISO"\n')
     assert load_config(path) == Config()
+
+
+def test_only_changed_values_are_written(tmp_path: Path) -> None:
+    path = tmp_path / "config.toml"
+    config = Config()
+    config.storage.vm_default_location = tmp_path / "vms"
+    config.ui.theme = "dark"
+    save_config(config, path)
+    text = path.read_text()
+    assert "theme" in text
+    assert "vm_default_location" in text
+    # Defaults stay out of the file, so a new default applies later.
+    assert "port" not in text
+    assert "[interface]" not in text
+    assert load_config(path) == config
+
+
+def test_old_default_port_is_dropped(tmp_path: Path) -> None:
+    path = tmp_path / "config.toml"
+    path.write_text("[web]\nport = 8765\nhttps_port = 60443\n")
+    assert load_config(path).web.port == 60080
+    path.write_text("[web]\nport = 61000\n")
+    assert load_config(path).web.port == 61000
