@@ -5,15 +5,18 @@ from __future__ import annotations
 import importlib.util
 import os
 import sys
+import threading
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
-from ..app import create_app, find_frontend_dir
 from ..auth.token import new_token
 from ..config import Config, default_config_path
-from ..libvirt_conn import LibvirtConnection
+from ..frontend import find_frontend_dir
+from .backend_process import BackendError, BackendProcess
 from .clipboard import DesktopApi, make_clipboard
-from .server import BackgroundServer, bind_loopback
+
+# Smoke test: close the window that many seconds after the page loaded.
+SMOKE_ENV = "KVMSTUDIO_SMOKE_SECONDS"
 
 # Must match packaging/desktop/kvm-studio.desktop: on Wayland the compositor
 # takes the window icon from the desktop entry with this id.
@@ -77,31 +80,36 @@ def run(config: Config, config_path: Path | None = None) -> int:
     icon = frontend_dir / "logo.png" if frontend_dir else None
 
     token = new_token()
-    conn = LibvirtConnection(config.libvirt.uri)
-    app = create_app(
-        config,
-        conn,
-        token,
-        mode="desktop",
-        frontend_dir=frontend_dir,
-        config_path=config_path or default_config_path(),
-    )
-    server = BackgroundServer(app, bind_loopback(0))
-    server.start()
+    backend = BackendProcess(config_path or default_config_path(), "desktop", token)
+    try:
+        port = backend.start()
+    except BackendError as exc:
+        print(exc, file=sys.stderr)
+        return 1
     try:
         window = webview.create_window(
             "KVM Studio",
-            f"http://127.0.0.1:{server.port}/#token={token}",
+            f"http://127.0.0.1:{port}/#token={token}",
             width=1280,
             height=800,
             min_size=(900, 600),
             js_api=api,
         )
         api._attach(window)
+        if seconds := os.environ.get(SMOKE_ENV):
+            _close_after_load(window, float(seconds))
         # Lets the network editor export its JSON file.
         webview.settings["ALLOW_DOWNLOADS"] = True
         webview.start(gui=gui, icon=str(icon) if icon and icon.is_file() else None)
     finally:
-        server.stop()
-        conn.close()
+        backend.stop()
     return 0
+
+
+def _close_after_load(window: Any, seconds: float) -> None:
+    def on_loaded() -> None:
+        title = window.evaluate_js("document.title")
+        print(f"SMOKE loaded {title}", flush=True)
+        threading.Timer(seconds, window.destroy).start()
+
+    window.events.loaded += on_loaded

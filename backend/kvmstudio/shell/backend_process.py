@@ -1,0 +1,167 @@
+"""The backend (web server, libvirt and its event loop) in a child process.
+
+libvirt's event loop runs on GLib's default main context, which Qt also uses
+when it is built with GLib support: in one process, the libvirt thread ends up
+dispatching Qt timers and the window crashes. Keeping the window (or the tray
+icon) alone in the main process and everything libvirt in a child avoids that.
+
+The child prints "READY <port>" once it listens on 127.0.0.1, and exits when
+its standard input closes, so it never outlives the parent.
+"""
+
+from __future__ import annotations
+
+import argparse
+import contextlib
+import os
+import select
+import subprocess
+import sys
+import threading
+import time
+from pathlib import Path
+from typing import Literal
+
+READY_PREFIX = "READY "
+START_TIMEOUT = 30.0
+TOKEN_ENV = "KVMSTUDIO_TOKEN"  # noqa: S105 (a variable name, not a secret)
+
+
+class BackendError(Exception):
+    pass
+
+
+class BackendProcess:
+    def __init__(
+        self, config_path: Path, mode: Literal["desktop", "web"], token: str, port: int = 0
+    ) -> None:
+        self._args = [
+            sys.executable,
+            "-m",
+            "kvmstudio.shell.backend_process",
+            "--config",
+            str(config_path),
+            "--mode",
+            mode,
+            "--port",
+            str(port),
+        ]
+        self._token = token
+        self._proc: subprocess.Popen[str] | None = None
+        self.port = 0
+
+    def start(self, timeout: float = START_TIMEOUT) -> int:
+        env = {**os.environ, TOKEN_ENV: self._token}
+        self._proc = subprocess.Popen(  # noqa: S603
+            self._args,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+            env=env,
+        )
+        if self._proc.stdout is None:
+            raise BackendError("no pipe to the backend process")
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            ready, _, _ = select.select([self._proc.stdout], [], [], 0.2)
+            if ready:
+                line = self._proc.stdout.readline()
+                if line.startswith(READY_PREFIX):
+                    self.port = int(line[len(READY_PREFIX) :])
+                    return self.port
+                if line == "":
+                    break
+                sys.stdout.write(line)  # messages printed before READY
+            if self._proc.poll() is not None:
+                break
+        self.stop()
+        raise BackendError("the KVM Studio backend did not start; see the messages above")
+
+    def alive(self) -> bool:
+        return self._proc is not None and self._proc.poll() is None
+
+    def stop(self) -> None:
+        proc = self._proc
+        if proc is None:
+            return
+        if proc.stdin is not None:
+            with contextlib.suppress(OSError):
+                proc.stdin.close()  # the child exits when its stdin closes
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+        self._proc = None
+
+
+def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int:
+    # Heavy imports only here, in the child.
+    from ..app import create_app
+    from ..config import ConfigError, load_config
+    from ..frontend import find_frontend_dir
+    from ..libvirt_conn import LibvirtConnection
+    from .server import BackgroundServer, PortInUseError, bind_loopback
+
+    token = os.environ.get(TOKEN_ENV)
+    if not token:
+        print(f"{TOKEN_ENV} is not set", file=sys.stderr)
+        return 2
+    try:
+        config = load_config(config_path)
+    except ConfigError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    try:
+        sock = bind_loopback(port)
+    except PortInUseError as exc:
+        print(f"{exc}. Change the port in Preferences > Interface.", file=sys.stderr)
+        return 1
+    conn = LibvirtConnection(config.libvirt.uri)
+    app = create_app(
+        config,
+        conn,
+        token,
+        mode=mode,
+        frontend_dir=find_frontend_dir(),
+        config_path=config_path,
+    )
+    server = BackgroundServer(app, sock)
+    server.start()
+    print(f"{READY_PREFIX}{server.port}", flush=True)
+
+    # Exit when the parent closes our stdin (or dies).
+    stop = threading.Event()
+
+    def watch_stdin() -> None:
+        try:
+            while sys.stdin.read(4096):
+                pass
+        finally:
+            stop.set()
+
+    threading.Thread(target=watch_stdin, daemon=True).start()
+    try:
+        stop.wait()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.stop()
+        conn.close()
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(prog="kvmstudio-backend")
+    parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--mode", choices=["desktop", "web"], required=True)
+    parser.add_argument("--port", type=int, default=0)
+    args = parser.parse_args()
+    return _serve(args.config, args.mode, args.port)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

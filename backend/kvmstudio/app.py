@@ -28,6 +28,7 @@ from .errors import (
     validation_error_handler,
 )
 from .events import EventHub, events_socket
+from .frontend import find_frontend_dir
 from .libvirt_conn import LibvirtConnection
 from .services import vm_view
 
@@ -42,16 +43,6 @@ _ERROR_RESPONSES: dict[int | str, dict[str, object]] = {
     500: {"model": ApiError},
     503: {"model": ApiError},
 }
-
-
-def find_frontend_dir() -> Path | None:
-    """Locate the built frontend: explicit override, packaged copy, then source tree."""
-    candidates = []
-    if override := os.environ.get("KVMSTUDIO_FRONTEND_DIR"):
-        candidates.append(Path(override))
-    here = Path(__file__).resolve().parent
-    candidates += [here / "static", here.parents[1] / "frontend" / "dist"]
-    return next((c for c in candidates if (c / "index.html").is_file()), None)
 
 
 def create_app(

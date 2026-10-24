@@ -6,9 +6,10 @@ import libvirt
 import pytest
 from fastapi.testclient import TestClient
 
-from kvmstudio.app import create_app, find_frontend_dir
+from kvmstudio.app import create_app
 from kvmstudio.config import Config
 from kvmstudio.errors import classify
+from kvmstudio.frontend import find_frontend_dir
 from kvmstudio.libvirt_conn import LibvirtConnection
 
 

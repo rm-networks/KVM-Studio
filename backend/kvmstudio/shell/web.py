@@ -4,16 +4,15 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 import webbrowser
 from pathlib import Path
 
 import uvicorn
 
-from ..app import create_app, find_frontend_dir
 from ..auth.token import new_token
 from ..config import Config, default_config_path
-from ..libvirt_conn import LibvirtConnection
-from .server import BackgroundServer, PortInUseError, bind_loopback
+from .backend_process import BackendError, BackendProcess
 
 
 def run(config: Config, config_path: Path | None, *, open_browser: bool, reload: bool) -> int:
@@ -46,32 +45,21 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
         )
         return 0
 
+    backend = BackendProcess(config_path or default_config_path(), "web", token, port)
     try:
-        sock = bind_loopback(port)
-    except PortInUseError as exc:
-        print(f"{exc}. Change [web] port in the configuration.", file=sys.stderr)
+        backend.start()
+    except BackendError as exc:
+        print(exc, file=sys.stderr)
         return 1
-
-    conn = LibvirtConnection(config.libvirt.uri)
-    app = create_app(
-        config,
-        conn,
-        token,
-        mode="web",
-        frontend_dir=find_frontend_dir(),
-        config_path=config_path or default_config_path(),
-    )
-    server = BackgroundServer(app, sock)
-    server.start()
     print(f"KVM Studio is listening on 127.0.0.1:{port}")
     print(f"Open this link (it contains the session token): {url}", flush=True)
     if open_browser:
         webbrowser.open(url)
     try:
-        server.wait()
+        while backend.alive():
+            time.sleep(0.5)
     except KeyboardInterrupt:
         pass
     finally:
-        server.stop()
-        conn.close()
+        backend.stop()
     return 0
