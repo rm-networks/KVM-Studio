@@ -28,10 +28,11 @@ interface Props {
   onToggle: (key: keyof Layout) => void;
   onAbout: () => void;
   onNetworkEditor: () => void;
+  onPreferences: () => void;
   vm: VmSummary | null;
 }
 
-export function MenuBar({ layout, onToggle, onAbout, onNetworkEditor, vm }: Props) {
+export function MenuBar({ layout, onToggle, onAbout, onNetworkEditor, onPreferences, vm }: Props) {
   const { t } = useTranslation();
   const m = (key: string) => t(`menu.${key}`);
   const actions = useVmActions();
@@ -81,7 +82,7 @@ export function MenuBar({ layout, onToggle, onAbout, onNetworkEditor, vm }: Prop
         item(m("paste"), ["Ctrl", "V"]),
         sep,
         item(m("networkEditor"), undefined, onNetworkEditor),
-        item(m("preferences"), ["Ctrl", "P"]),
+        item(m("preferences"), ["Ctrl", "P"], onPreferences),
       ],
     ],
     [

@@ -198,6 +198,13 @@
       "copy_failed": "Copying the disks failed.",
       "unreadable": "A disk cannot be read with your permissions.",
       "already_inside": "The disks are already in the KVM Studio folder."
+    },
+    "prefs": {
+      "share_later": "Sharing on the local network arrives in the next version.",
+      "location_relative": "Enter a full path (starting with /).",
+      "location_missing": "This folder does not exist.",
+      "iso_missing": "The folder of an ISO library does not exist.",
+      "location_not_writable": "Cannot create the KVM-Studio folder there: your account must be able to write to it."
     }
   },
   "about": {
@@ -333,5 +340,56 @@
       "dhcp": "Enter the first and last DHCP addresses.",
       "name": "Letters, digits, dot, dash and underscore, 50 characters at most."
     }
+  },
+  "prefs": {
+    "title": "Preferences",
+    "section": {
+      "workspace": "Workspace",
+      "iso": "ISO Libraries",
+      "vm": "Virtual Machines",
+      "interface": "Interface",
+      "display": "Display",
+      "advanced": "Advanced"
+    },
+    "browse": "Browse…",
+    "vmLocation": "Virtual machine location",
+    "vmLocationLabel": "Chosen folder",
+    "libraryRoot": "Virtual machines are stored in: {{path}}",
+    "libraryRootUnset": "No location yet: library folders and VM creation need one.",
+    "isoFolder": "Default ISO folder",
+    "isoFolderLabel": "Folder offered when looking for an ISO image",
+    "isoLibraries": "ISO Libraries",
+    "isoIntro": "Folders of ISO images browsed read-only, subfolders included. Nothing is copied or changed there.",
+    "unnamed": "(unnamed)",
+    "noIsoLibrary": "No ISO library.",
+    "newLibrary": "New library",
+    "addLibrary": "Add",
+    "removeLibrary": "Remove",
+    "libraryName": "Name",
+    "libraryPath": "Folder",
+    "recursive": "Also browse subfolders",
+    "vmDefaults": "Values offered when creating a VM",
+    "firmware": "Firmware",
+    "diskBus": "Disk controller",
+    "nicModel": "Network adapter model",
+    "virtioWin": "virtio-win driver ISO (Windows)",
+    "interfaceMode": "Interface mode",
+    "modeDesktop": "Desktop: native window",
+    "modeWeb": "Web: in the browser, on this computer",
+    "port": "Port",
+    "shareLan": "Share on the local network (next version)",
+    "appliedOnRestart": "Mode and port changes apply the next time KVM Studio starts.",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeSystem": "Follow the system",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language",
+    "libvirt": "libvirt connection",
+    "libvirtUri": "URI",
+    "libvirtHint": "qemu:///system by default. qemu:///session works without kvmnet networks. Applied on restart.",
+    "saved": "Preferences saved",
+    "restartRequired": "Restart KVM Studio to apply the new mode, port or URI.",
+    "saveFailed": "Preferences not saved"
   }
 }

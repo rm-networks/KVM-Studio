@@ -59,7 +59,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     from .shell import desktop
 
-    return desktop.run(config)
+    return desktop.run(config, args.config)
 
 
 if __name__ == "__main__":

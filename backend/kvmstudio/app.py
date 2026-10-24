@@ -15,9 +15,9 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import __version__
-from .api import library, networks, system, vms
+from .api import library, networks, preferences, system, vms
 from .auth.token import require_token
-from .config import Config, load_config
+from .config import Config, default_config_path, load_config
 from .console.vnc import ConsoleOpener, open_vnc_socket, vnc_console
 from .context import AppContext, Mode
 from .errors import (
@@ -61,9 +61,11 @@ def create_app(
     mode: Mode,
     frontend_dir: Path | None = None,
     open_console: ConsoleOpener = open_vnc_socket,
+    config_path: Path | None = None,
 ) -> FastAPI:
     def describe(uuid: str) -> dict[str, object] | None:
-        entry = vm_view.one_vm(conn, config, uuid)
+        # Read the config at call time: Preferences may have replaced it.
+        entry = vm_view.one_vm(conn, app.state.context.config, uuid)
         return entry.as_dict() if entry else None
 
     hub = EventHub(conn, describe)
@@ -79,7 +81,12 @@ def create_app(
     )
     app.state.events = hub
     app.state.context = AppContext(
-        config=config, conn=conn, token=token, mode=mode, open_console=open_console
+        config=config,
+        conn=conn,
+        token=token,
+        mode=mode,
+        open_console=open_console,
+        config_path=config_path,
     )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=LOOPBACK_HOSTS)
     app.add_exception_handler(libvirt.libvirtError, libvirt_error_handler)
@@ -96,6 +103,7 @@ def create_app(
     private.include_router(vms.router)
     private.include_router(library.router)
     private.include_router(networks.router)
+    private.include_router(preferences.router)
 
     app.include_router(public)
     app.include_router(private)
@@ -126,4 +134,5 @@ def create_app_from_env() -> FastAPI:
         token=os.environ["KVMSTUDIO_TOKEN"],
         mode="web",
         frontend_dir=find_frontend_dir(),
+        config_path=Path(config_path) if config_path else default_config_path(),
     )

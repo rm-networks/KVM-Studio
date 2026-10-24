@@ -1,0 +1,162 @@
+.prefs {
+  display: flex;
+  gap: 12px;
+  height: 430px;
+}
+
+.prefs-sections {
+  width: 170px;
+  flex: none;
+  margin: 0;
+  padding: 2px 0;
+  overflow: auto;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  list-style: none;
+}
+
+.prefs-sections li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  cursor: default;
+}
+
+.prefs-sections li:hover {
+  background: var(--hover);
+}
+
+.prefs-sections li.selected {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.prefs-panel {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.prefs-group {
+  margin: 0 0 10px;
+  padding: 6px 12px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.prefs-group legend {
+  padding: 0 4px;
+}
+
+.prefs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.prefs-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.prefs-inline > span {
+  min-width: 170px;
+}
+
+.prefs-field input[type="text"],
+.prefs-field input[type="number"],
+.prefs-field select {
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  user-select: text;
+}
+
+.prefs-field input:focus,
+.prefs-field select:focus {
+  outline: none;
+  border-color: var(--focus);
+}
+
+.prefs-path {
+  display: flex;
+  gap: 6px;
+}
+
+.prefs-path input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+}
+
+.prefs-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+}
+
+.prefs-indent {
+  margin-left: 22px;
+}
+
+.prefs-disabled {
+  color: var(--text-disabled);
+}
+
+.prefs-muted {
+  margin: 4px 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+.prefs-list {
+  max-height: 120px;
+  margin: 6px 0;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  list-style: none;
+}
+
+.prefs-list li {
+  display: flex;
+  gap: 10px;
+  padding: 2px 8px;
+  cursor: default;
+}
+
+.prefs-list li span {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prefs-list li.selected {
+  background: var(--selection);
+  color: var(--selection-text);
+}
+
+.prefs-list-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.prefs-subform {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}

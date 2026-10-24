@@ -19,6 +19,8 @@ dependencies = [
     "websockets>=12",
     # Domain XML builders; also packaged by every distribution (python3-lxml).
     "lxml>=5",
+    # Writes the configuration file from the Preferences screen.
+    "tomli-w>=1",
 ]
 
 [project.optional-dependencies]

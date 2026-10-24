@@ -11,7 +11,7 @@ import uvicorn
 
 from ..app import create_app, find_frontend_dir
 from ..auth.token import new_token
-from ..config import Config
+from ..config import Config, default_config_path
 from ..libvirt_conn import LibvirtConnection
 from .server import BackgroundServer, PortInUseError, bind_loopback
 
@@ -53,7 +53,14 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
         return 1
 
     conn = LibvirtConnection(config.libvirt.uri)
-    app = create_app(config, conn, token, mode="web", frontend_dir=find_frontend_dir())
+    app = create_app(
+        config,
+        conn,
+        token,
+        mode="web",
+        frontend_dir=find_frontend_dir(),
+        config_path=config_path or default_config_path(),
+    )
     server = BackgroundServer(app, sock)
     server.start()
     print(f"KVM Studio is listening on 127.0.0.1:{port}")

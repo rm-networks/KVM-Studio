@@ -7,6 +7,7 @@ import tomllib
 from pathlib import Path
 from typing import Annotated, Literal
 
+import tomli_w
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
 ExpandedPath = Annotated[Path, AfterValidator(lambda p: p.expanduser())]
@@ -99,3 +100,22 @@ def load_config(path: Path | None = None) -> Config:
             where = ".".join(str(part) for part in err["loc"])
             lines.append(f"  {where}: {err['msg']}")
         raise ConfigError("\n".join(lines)) from exc
+
+
+HEADER = """\
+# KVM Studio configuration, written by the Preferences screen.
+# Every key is optional; see config.example.toml for the full list.
+"""
+
+
+def save_config(config: Config, path: Path | None = None) -> Path:
+    """Write the configuration atomically, readable by the user only."""
+    path = path or default_config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data = config.model_dump(mode="json", exclude_none=True)
+    tmp = path.with_suffix(".toml.tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(HEADER + "\n" + tomli_w.dumps(data))
+    os.replace(tmp, path)
+    return path

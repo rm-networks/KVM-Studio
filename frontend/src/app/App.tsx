@@ -8,6 +8,7 @@ import { LibraryActionsProvider } from "../features/library/LibraryActions";
 import { LibraryPanel } from "../features/library/LibraryPanel";
 import { VmActionsProvider } from "../features/vm/VmActions";
 import { NetworkEditor } from "../features/network-editor/NetworkEditor";
+import { PreferencesDialog } from "../features/preferences/PreferencesDialog";
 import { VmTab } from "../features/vm/VmTab";
 import { AboutDialog } from "./AboutDialog";
 import { MenuBar } from "./MenuBar";
@@ -40,6 +41,7 @@ function MainWindow() {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [networkEditorOpen, setNetworkEditorOpen] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [openVms, setOpenVms] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
 
@@ -87,6 +89,7 @@ function MainWindow() {
           onToggle={toggle}
           onAbout={() => setAboutOpen(true)}
           onNetworkEditor={() => setNetworkEditorOpen(true)}
+          onPreferences={() => setPreferencesOpen(true)}
           vm={currentVm}
         />
         {layout.toolbar && (
@@ -126,6 +129,9 @@ function MainWindow() {
         {layout.statusBar && <StatusBar info={info} vms={vms} libvirtLost={libvirtLost} />}
         <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} version={info?.version} />
         {networkEditorOpen && <NetworkEditor onClose={() => setNetworkEditorOpen(false)} />}
+        {preferencesOpen && (
+          <PreferencesDialog onClose={() => setPreferencesOpen(false)} onSaved={refresh} />
+        )}
       </div>
     </LibraryActionsProvider>
   );

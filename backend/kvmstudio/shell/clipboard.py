@@ -26,6 +26,21 @@ class DesktopApi:
 
     def __init__(self, clipboard: HostClipboard) -> None:
         self._clipboard = clipboard
+        self._window: Any = None
+
+    def _attach(self, window: Any) -> None:
+        self._window = window
+
+    def choose_folder(self, start: str | None = None) -> str | None:
+        """Native folder picker (Preferences, ISO libraries)."""
+        if self._window is None:
+            return None
+        import webview
+
+        kind = getattr(webview, "FileDialog", None)
+        folder_kind = kind.FOLDER if kind is not None else webview.FOLDER_DIALOG
+        result = self._window.create_file_dialog(folder_kind, directory=start or "")
+        return str(result[0]) if result else None
 
     def read_clipboard(self) -> str:
         return self._clipboard.read()

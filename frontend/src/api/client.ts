@@ -19,6 +19,10 @@ export type NetworkSuggestion = components["schemas"]["Suggestion"];
 export type NetworkExport = components["schemas"]["NetworkExport-Output"];
 export type NetworkImport = components["schemas"]["NetworkExport-Input"];
 export type ImportReport = components["schemas"]["ImportReport"];
+export type Config = Required<components["schemas"]["Config"]>;
+export type IsoLibrary = components["schemas"]["IsoLibrary"];
+export type Preferences = components["schemas"]["Preferences"] & { config: Config };
+export type SaveResult = components["schemas"]["SaveResult"];
 type ApiErrorBody = components["schemas"]["ApiError"];
 
 export class ApiError extends Error {
@@ -96,6 +100,8 @@ export const api = {
       "GET",
       `/api/library/folders/deletion-plan?path=${encodeURIComponent(path)}`,
     ),
+  preferences: () => request<Preferences>("GET", "/api/preferences"),
+  savePreferences: (config: Config) => request<SaveResult>("PUT", "/api/preferences", config),
   networks: () => request<Network[]>("GET", "/api/networks"),
   networkSuggestion: () => request<NetworkSuggestion>("GET", "/api/networks/suggestion"),
   createNetwork: (body: NetworkCreate) => request<Network>("POST", "/api/networks", body),

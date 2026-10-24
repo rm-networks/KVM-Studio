@@ -338,6 +338,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/preferences": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get */
+    get: operations["get_api_preferences_get"];
+    /** Save */
+    put: operations["save_api_preferences_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -357,6 +375,40 @@ export interface components {
       mode: "desktop" | "web";
       libvirt: components["schemas"]["LibvirtInfo"];
       ui: components["schemas"]["UiPreferences"];
+    };
+    /** Config */
+    Config: {
+      interface?: components["schemas"]["InterfaceSettings"];
+      web?: components["schemas"]["WebSettings"];
+      libvirt?: components["schemas"]["LibvirtSettings"];
+      storage?: components["schemas"]["StorageSettings"];
+      /** Iso Libraries */
+      iso_libraries?: components["schemas"]["IsoLibrary"][];
+      defaults?: components["schemas"]["DefaultsSettings"];
+      ui?: components["schemas"]["UiSettings"];
+    };
+    /** DefaultsSettings */
+    DefaultsSettings: {
+      /**
+       * Firmware
+       * @default uefi
+       * @enum {string}
+       */
+      firmware: "uefi" | "bios";
+      /**
+       * Disk Bus
+       * @default virtio
+       * @enum {string}
+       */
+      disk_bus: "virtio" | "scsi" | "sata" | "nvme" | "ide";
+      /**
+       * Nic Model
+       * @default virtio
+       * @enum {string}
+       */
+      nic_model: "virtio" | "e1000e" | "rtl8139" | "vmxnet3";
+      /** Virtio Win Iso */
+      virtio_win_iso?: string | null;
     };
     /** DeletionPlan */
     DeletionPlan: {
@@ -451,6 +503,32 @@ export interface components {
       /** Originals */
       originals: string[];
     };
+    /** InterfaceSettings */
+    InterfaceSettings: {
+      /**
+       * Mode
+       * @default desktop
+       * @enum {string}
+       */
+      mode: "desktop" | "web";
+    };
+    /** IsoLibrary */
+    IsoLibrary: {
+      /** Name */
+      name: string;
+      /**
+       * Path
+       * Format: path
+       */
+      path: string;
+      /**
+       * Recursive
+       * @default true
+       */
+      recursive: boolean;
+      /** Extensions */
+      extensions?: string[];
+    };
     /** KeptFile */
     KeptFile: {
       /** Path */
@@ -480,6 +558,14 @@ export interface components {
       libvirt_version: string;
       /** Hypervisor Version */
       hypervisor_version: string;
+    };
+    /** LibvirtSettings */
+    LibvirtSettings: {
+      /**
+       * Uri
+       * @default qemu:///system
+       */
+      uri: string;
     };
     /** MoveRequest */
     MoveRequest: {
@@ -602,6 +688,31 @@ export interface components {
       /** Autostart */
       autostart?: boolean | null;
     };
+    /** Preferences */
+    Preferences: {
+      config: components["schemas"]["Config"];
+      /** Config Path */
+      config_path: string | null;
+      /** Library Root */
+      library_root: string | null;
+    };
+    /** SaveResult */
+    SaveResult: {
+      /** Restart Required */
+      restart_required: boolean;
+      /** Library Root */
+      library_root: string | null;
+    };
+    /** StorageSettings */
+    StorageSettings: {
+      /** Vm Default Location */
+      vm_default_location?: string | null;
+      /**
+       * Default Iso Folder
+       * @default ~/ISO
+       */
+      default_iso_folder: string | null;
+    };
     /** Suggestion */
     Suggestion: {
       /** Name */
@@ -621,6 +732,21 @@ export interface components {
       theme: "system" | "light" | "dark";
       /**
        * Language
+       * @enum {string}
+       */
+      language: "fr" | "en";
+    };
+    /** UiSettings */
+    UiSettings: {
+      /**
+       * Theme
+       * @default system
+       * @enum {string}
+       */
+      theme: "system" | "light" | "dark";
+      /**
+       * Language
+       * @default fr
        * @enum {string}
        */
       language: "fr" | "en";
@@ -678,6 +804,35 @@ export interface components {
     VmUpdate: {
       /** Name */
       name: string;
+    };
+    /** WebSettings */
+    WebSettings: {
+      /**
+       * Port
+       * @default 8765
+       */
+      port: number;
+      /**
+       * Share On Lan
+       * @default false
+       */
+      share_on_lan: boolean;
+      /**
+       * Tls
+       * @default auto
+       * @constant
+       */
+      tls: "auto";
+      /**
+       * Guest Enabled
+       * @default true
+       */
+      guest_enabled: boolean;
+      /**
+       * Login Max Attempts
+       * @default 5
+       */
+      login_max_attempts: number;
     };
   };
   responses: never;
@@ -2540,6 +2695,167 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ImportReport"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  get_api_preferences_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Preferences"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  save_api_preferences_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Config"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SaveResult"];
         };
       };
       /** @description Unauthorized */

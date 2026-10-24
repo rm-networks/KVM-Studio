@@ -5,11 +5,12 @@ from __future__ import annotations
 import importlib.util
 import os
 import sys
+from pathlib import Path
 from typing import Literal
 
 from ..app import create_app, find_frontend_dir
 from ..auth.token import new_token
-from ..config import Config
+from ..config import Config, default_config_path
 from ..libvirt_conn import LibvirtConnection
 from .clipboard import DesktopApi, make_clipboard
 from .server import BackgroundServer, bind_loopback
@@ -54,7 +55,7 @@ def _set_app_id(gui: Literal["qt", "gtk"]) -> None:
         GLib.set_prgname(DESKTOP_ID)
 
 
-def run(config: Config) -> int:
+def run(config: Config, config_path: Path | None = None) -> int:
     try:
         import webview
     except ImportError:
@@ -77,11 +78,18 @@ def run(config: Config) -> int:
 
     token = new_token()
     conn = LibvirtConnection(config.libvirt.uri)
-    app = create_app(config, conn, token, mode="desktop", frontend_dir=frontend_dir)
+    app = create_app(
+        config,
+        conn,
+        token,
+        mode="desktop",
+        frontend_dir=frontend_dir,
+        config_path=config_path or default_config_path(),
+    )
     server = BackgroundServer(app, bind_loopback(0))
     server.start()
     try:
-        webview.create_window(
+        window = webview.create_window(
             "KVM Studio",
             f"http://127.0.0.1:{server.port}/#token={token}",
             width=1280,
@@ -89,6 +97,7 @@ def run(config: Config) -> int:
             min_size=(900, 600),
             js_api=api,
         )
+        api._attach(window)
         # Lets the network editor export its JSON file.
         webview.settings["ALLOW_DOWNLOADS"] = True
         webview.start(gui=gui, icon=str(icon) if icon and icon.is_file() else None)

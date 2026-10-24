@@ -5,6 +5,7 @@
 interface DesktopApi {
   read_clipboard(): Promise<string>;
   write_clipboard(text: string): Promise<void>;
+  choose_folder(start: string | null): Promise<string | null>;
 }
 
 declare global {
