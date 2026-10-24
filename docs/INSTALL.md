@@ -2,7 +2,8 @@
 
 ## Paquet .rpm (Fedora)
 
-Le paquet est construit par la CI (artefact `kvm-studio-rpm` de chaque build).
+Chaque version publiée (tag `vX.Y.Z`) a son .rpm dans les Releases GitHub ; la CI
+construit aussi un paquet de développement à chaque build (artefact `kvm-studio-rpm`).
 Il installe ou tire toutes ses dépendances depuis les dépôts Fedora.
 
 ```bash
