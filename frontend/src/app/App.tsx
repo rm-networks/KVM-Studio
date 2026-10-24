@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { api } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { NotificationProvider } from "../components/Notifications";
+import { useNotifier } from "../components/notifier";
 import { HomeTab } from "../features/home/HomeTab";
 import { LibraryActionsProvider } from "../features/library/LibraryActions";
 import { LibraryPanel } from "../features/library/LibraryPanel";
 import { VmActionsProvider } from "../features/vm/VmActions";
 import { NetworkEditor } from "../features/network-editor/NetworkEditor";
 import { PreferencesDialog } from "../features/preferences/PreferencesDialog";
+import { IsoPicker } from "../features/iso-picker/IsoPicker";
+import { useCdroms } from "../features/vm/useCdroms";
 import { VmTab } from "../features/vm/VmTab";
 import { AboutDialog } from "./AboutDialog";
 import { MenuBar } from "./MenuBar";
@@ -35,13 +39,15 @@ export function App() {
 }
 
 function MainWindow() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { notifyError } = useNotifier();
   const { info, vms, library, error, loading, libvirtLost, refresh } = useAppData();
   const [layout, setLayout] = useState<Layout>({ library: true, toolbar: true, statusBar: true });
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [networkEditorOpen, setNetworkEditorOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [mediaTarget, setMediaTarget] = useState<string | null>(null);
   const [openVms, setOpenVms] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
 
@@ -53,14 +59,6 @@ function MainWindow() {
     if (info.ui.theme === "system") delete document.documentElement.dataset.theme;
     else document.documentElement.dataset.theme = info.ui.theme;
   }, [info, i18n]);
-
-  if (error?.code === "auth.invalid_token") {
-    return (
-      <div className="session-error">
-        <ErrorMessage error={error} />
-      </div>
-    );
-  }
 
   const toggle = (key: keyof Layout) => setLayout((l) => ({ ...l, [key]: !l[key] }));
 
@@ -81,6 +79,22 @@ function MainWindow() {
   // Menu and toolbar act on the VM of the active tab, else on the library selection.
   const selectedVm = selectedNode?.startsWith("v:") ? selectedNode.slice(2) : "";
   const currentVm = vmByUuid.get(activeTab !== HOME_TAB ? activeTab : selectedVm) ?? null;
+  const { drives, reload: reloadDrives } = useCdroms(currentVm);
+  const setMedia = (target: string, path: string | null) => {
+    if (!currentVm) return;
+    api
+      .changeMedia(currentVm.uuid, target, path)
+      .then(reloadDrives)
+      .catch((err: unknown) => notifyError(t("iso.changeFailed", { name: currentVm.name }), err));
+  };
+
+  if (error?.code === "auth.invalid_token") {
+    return (
+      <div className="session-error">
+        <ErrorMessage error={error} />
+      </div>
+    );
+  }
 
   return (
     <LibraryActionsProvider library={library}>
@@ -91,6 +105,9 @@ function MainWindow() {
           onAbout={() => setAboutOpen(true)}
           onNetworkEditor={() => setNetworkEditorOpen(true)}
           onPreferences={() => setPreferencesOpen(true)}
+          drives={drives}
+          onChangeMedia={setMediaTarget}
+          onEject={(target) => setMedia(target, null)}
           vm={currentVm}
         />
         {layout.toolbar && (
@@ -130,6 +147,16 @@ function MainWindow() {
         {layout.statusBar && <StatusBar info={info} vms={vms} libvirtLost={libvirtLost} />}
         <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} version={info?.version} />
         {networkEditorOpen && <NetworkEditor onClose={() => setNetworkEditorOpen(false)} />}
+        {mediaTarget && currentVm && (
+          <IsoPicker
+            title={t("iso.titleFor", { name: currentVm.name, target: mediaTarget })}
+            onPick={(path) => {
+              setMedia(mediaTarget, path);
+              setMediaTarget(null);
+            }}
+            onClose={() => setMediaTarget(null)}
+          />
+        )}
         {preferencesOpen && (
           <PreferencesDialog onClose={() => setPreferencesOpen(false)} onSaved={refresh} />
         )}

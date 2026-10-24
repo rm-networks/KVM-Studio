@@ -48,7 +48,11 @@
     "rename": "Rename…",
     "removeFromLibrary": "Remove from Library…",
     "deleteFromDisk": "Delete from Disk…",
-    "openTab": "Open in a Tab"
+    "openTab": "Open in a Tab",
+    "cdrom": "CD/DVD ({{target}}): {{media}}",
+    "noMedia": "empty",
+    "changeIso": "Change ISO Image…",
+    "eject": "Eject"
   },
   "toolbar": {
     "start": "Start",
@@ -160,7 +164,8 @@
     "retry": "Retry",
     "sessionTitle": "Session expired",
     "vm": {
-      "not_shut_off": "Power the virtual machine off first."
+      "not_shut_off": "Power the virtual machine off first.",
+      "no_cdrom": "This virtual machine has no such CD/DVD drive."
     },
     "request": {
       "invalid": "Invalid request."
@@ -293,7 +298,10 @@
   },
   "units": {
     "gib": "{{value}} GiB",
-    "mib": "{{value}} MiB"
+    "mib": "{{value}} MiB",
+    "mb": "MB",
+    "gb": "GB",
+    "kb": "KB"
   },
   "common": {
     "cancel": "Cancel",
@@ -412,5 +420,28 @@
     "restartToDesktop": "KVM Studio will restart in window mode. This browser tab will no longer be used.",
     "restarting": "KVM Studio is restarting…",
     "restartingToDesktop": "KVM Studio is restarting in window mode. You can close this tab."
+  },
+  "iso": {
+    "title": "Choose an ISO Image",
+    "titleFor": "ISO image for {{name}} ({{target}})",
+    "choose": "Choose",
+    "search": "Search all libraries",
+    "libraries": "ISO libraries",
+    "name": "Name",
+    "size": "Size",
+    "modified": "Modified",
+    "noLibrary": "No ISO library. Add some in Edit > Preferences > ISO Libraries.",
+    "noFile": "No image in this folder.",
+    "unavailable": "Library not found: {{names}}",
+    "readable": "QEMU can read this image.",
+    "notReadable": "QEMU ({{who}}) will not be able to read this image:",
+    "problem": {
+      "no_search": "{{path}} cannot be traversed",
+      "no_read": "{{path}} is not readable",
+      "no_labels": "{{path}} is on a filesystem without SELinux labels (FAT, exFAT, NTFS...)",
+      "missing": "{{path}} no longer exists"
+    },
+    "fixWithCommands": "To fix it, run (the Fix button comes with the package):",
+    "changeFailed": "Could not change the media of {{name}}"
   }
 }

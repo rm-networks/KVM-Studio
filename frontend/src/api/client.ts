@@ -21,6 +21,10 @@ export type NetworkImport = components["schemas"]["NetworkExport-Input"];
 export type ImportReport = components["schemas"]["ImportReport"];
 export type Config = Required<components["schemas"]["Config"]>;
 export type DisplayInfo = components["schemas"]["DisplayInfo"];
+export type IsoListing = components["schemas"]["IsoListing"];
+export type IsoFile = components["schemas"]["IsoFile"];
+export type AccessReport = components["schemas"]["AccessReport"];
+export type CdromDevice = components["schemas"]["CdromDevice"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
 export type Preferences = components["schemas"]["Preferences"] & { config: Config };
 export type SaveResult = components["schemas"]["SaveResult"];
@@ -101,6 +105,12 @@ export const api = {
       "GET",
       `/api/library/folders/deletion-plan?path=${encodeURIComponent(path)}`,
     ),
+  isos: () => request<IsoListing>("GET", "/api/isos"),
+  isoAccess: (path: string) =>
+    request<AccessReport>("GET", `/api/isos/access?path=${encodeURIComponent(path)}`),
+  cdroms: (uuid: string) => request<CdromDevice[]>("GET", `${vmPath(uuid)}/cdroms`),
+  changeMedia: (uuid: string, target: string, path: string | null) =>
+    request<undefined>("PUT", `${vmPath(uuid)}/cdroms/${encodeURIComponent(target)}`, { path }),
   display: (uuid: string) => request<DisplayInfo>("GET", `${vmPath(uuid)}/display`),
   addVnc: (uuid: string) =>
     request<{ restart_required: boolean }>("POST", `${vmPath(uuid)}/display/vnc`),

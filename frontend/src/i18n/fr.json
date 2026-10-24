@@ -48,7 +48,11 @@
     "rename": "Renommer…",
     "removeFromLibrary": "Retirer de la bibliothèque…",
     "deleteFromDisk": "Supprimer du disque…",
-    "openTab": "Ouvrir dans un onglet"
+    "openTab": "Ouvrir dans un onglet",
+    "cdrom": "CD/DVD ({{target}}) : {{media}}",
+    "noMedia": "vide",
+    "changeIso": "Changer d'image ISO…",
+    "eject": "Éjecter"
   },
   "toolbar": {
     "start": "Démarrer",
@@ -160,7 +164,8 @@
     "retry": "Réessayer",
     "sessionTitle": "Session expirée",
     "vm": {
-      "not_shut_off": "Éteignez d'abord la machine virtuelle."
+      "not_shut_off": "Éteignez d'abord la machine virtuelle.",
+      "no_cdrom": "Cette machine virtuelle n'a pas ce lecteur CD/DVD."
     },
     "request": {
       "invalid": "Requête invalide."
@@ -295,7 +300,10 @@
   },
   "units": {
     "gib": "{{value}} Gio",
-    "mib": "{{value}} Mio"
+    "mib": "{{value}} Mio",
+    "mb": "Mo",
+    "gb": "Go",
+    "kb": "Ko"
   },
   "common": {
     "cancel": "Annuler",
@@ -414,5 +422,28 @@
     "restartToDesktop": "KVM Studio va redémarrer en mode fenêtre. Cet onglet du navigateur ne servira plus.",
     "restarting": "KVM Studio redémarre…",
     "restartingToDesktop": "KVM Studio redémarre en mode fenêtre. Vous pouvez fermer cet onglet."
+  },
+  "iso": {
+    "title": "Choisir une image ISO",
+    "titleFor": "Image ISO pour {{name}} ({{target}})",
+    "choose": "Choisir",
+    "search": "Rechercher dans toutes les bibliothèques",
+    "libraries": "Bibliothèques ISO",
+    "name": "Nom",
+    "size": "Taille",
+    "modified": "Modifiée le",
+    "noLibrary": "Aucune bibliothèque ISO. Ajoutez-en dans Édition > Préférences > Bibliothèques ISO.",
+    "noFile": "Aucune image dans ce dossier.",
+    "unavailable": "Bibliothèque introuvable : {{names}}",
+    "readable": "QEMU peut lire cette image.",
+    "notReadable": "QEMU ({{who}}) ne pourra pas lire cette image :",
+    "problem": {
+      "no_search": "{{path}} ne peut pas être traversé",
+      "no_read": "{{path}} n'est pas lisible",
+      "no_labels": "{{path}} est sur un système de fichiers sans étiquettes SELinux (FAT, exFAT, NTFS...)",
+      "missing": "{{path}} n'existe plus"
+    },
+    "fixWithCommands": "Pour corriger, lancez (le bouton « Corriger » arrivera avec le paquet) :",
+    "changeFailed": "Impossible de changer le média de {{name}}"
   }
 }

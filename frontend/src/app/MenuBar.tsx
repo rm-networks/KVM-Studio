@@ -2,7 +2,7 @@ import * as Menubar from "@radix-ui/react-menubar";
 import { Check, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import type { VmSummary } from "../api/client";
+import type { CdromDevice, VmSummary } from "../api/client";
 import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
 import { useVmActions } from "../features/vm/vmActionsContext";
 import type { Layout } from "./App";
@@ -29,10 +29,23 @@ interface Props {
   onAbout: () => void;
   onNetworkEditor: () => void;
   onPreferences: () => void;
+  drives: CdromDevice[];
+  onChangeMedia: (target: string) => void;
+  onEject: (target: string) => void;
   vm: VmSummary | null;
 }
 
-export function MenuBar({ layout, onToggle, onAbout, onNetworkEditor, onPreferences, vm }: Props) {
+export function MenuBar({
+  layout,
+  onToggle,
+  onAbout,
+  onNetworkEditor,
+  onPreferences,
+  drives,
+  onChangeMedia,
+  onEject,
+  vm,
+}: Props) {
   const { t } = useTranslation();
   const m = (key: string) => t(`menu.${key}`);
   const actions = useVmActions();
@@ -41,6 +54,18 @@ export function MenuBar({ layout, onToggle, onAbout, onNetworkEditor, onPreferen
       t(`power.${action}`),
       undefined,
       vm && powerAllowed(vm.state, action) ? () => actions.power(vm, action) : undefined,
+    ),
+  );
+  const removableEntries: Entry[] = drives.map((drive) =>
+    sub(
+      t("menu.cdrom", {
+        target: drive.target,
+        media: drive.path ? drive.path.slice(drive.path.lastIndexOf("/") + 1) : t("menu.noMedia"),
+      }),
+      [
+        item(m("changeIso"), undefined, () => onChangeMedia(drive.target)),
+        item(m("eject"), undefined, drive.path ? () => onEject(drive.target) : undefined),
+      ],
     ),
   );
   const manageEntries: Entry[] = [
@@ -102,7 +127,7 @@ export function MenuBar({ layout, onToggle, onAbout, onNetworkEditor, onPreferen
       "vm",
       [
         sub(m("power"), vm ? powerEntries : undefined),
-        sub(m("removable")),
+        sub(m("removable"), removableEntries.length ? removableEntries : undefined),
         item(m("pause"), ["Ctrl", "Shift", "P"]),
         sep,
         item(m("sendCad")),
