@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -109,6 +110,7 @@ def test_invalid_preferences(
     assert not config_file.exists()
 
 
+@pytest.mark.skipif(os.geteuid() == 0, reason="root can write anywhere (CI container)")
 def test_unwritable_location_is_explained(prefs_client: TestClient, tmp_path: Path) -> None:
     location = tmp_path / "root-owned"
     location.mkdir()
