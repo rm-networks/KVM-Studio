@@ -36,6 +36,8 @@ export type Preferences = components["schemas"]["Preferences"] & { config: Confi
 export type SaveResult = components["schemas"]["SaveResult"];
 export type GuestToolsInfo = components["schemas"]["GuestToolsInfo"];
 export type InstallRequest = components["schemas"]["InstallRequest"];
+export type SetupStatus = components["schemas"]["SetupStatus"];
+export type GroupState = SetupStatus["libvirt_group"];
 type ApiErrorBody = components["schemas"]["ApiError"];
 
 export class ApiError extends Error {
@@ -172,6 +174,10 @@ export const api = {
   deleteNetwork: (name: string) =>
     request<undefined>("DELETE", `/api/networks/${encodeURIComponent(name)}`),
   restoreDefaultNetworks: () => request<string[]>("POST", "/api/networks/defaults"),
+  setup: () => request<SetupStatus>("GET", "/api/setup"),
+  joinLibvirtGroup: () =>
+    request<{ libvirt_group: GroupState }>("POST", "/api/setup/libvirt-group"),
+  createDefaultNetworks: () => request<string[]>("POST", "/api/setup/networks"),
   exportNetworks: () => request<NetworkExport>("GET", "/api/networks/export"),
   importNetworks: (body: NetworkImport) =>
     request<ImportReport>("POST", "/api/networks/import", body),

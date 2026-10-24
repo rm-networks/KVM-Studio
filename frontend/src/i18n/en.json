@@ -53,7 +53,8 @@
     "noMedia": "empty",
     "changeIso": "Change ISO Image…",
     "eject": "Eject",
-    "sendKeys": "Send Key Combination"
+    "sendKeys": "Send Key Combination",
+    "firstRun": "First-run assistant…"
   },
   "toolbar": {
     "start": "Start",
@@ -235,7 +236,8 @@
       "not_found": "This file no longer exists.",
       "path_changed": "The folder changed during the operation. Try again.",
       "failed": "The fix failed.",
-      "bad_answer": "Unexpected answer from the kvmstudio-helper service."
+      "bad_answer": "Unexpected answer from the kvmstudio-helper service.",
+      "not_allowed": "This account cannot be added to the libvirt group (system account or root)."
     }
   },
   "about": {
@@ -591,5 +593,83 @@
     "done": "Guest tools are installed: the agent responds.",
     "timeout": "The agent still does not respond after 10 minutes. Check the installation in the guest (qemu-guest-agent service).",
     "failed": "Could not install the guest tools"
+  },
+  "firstRun": {
+    "title": "Welcome to KVM Studio",
+    "step": {
+      "welcome": "Welcome",
+      "checks": "Checks",
+      "group": "libvirt group",
+      "locations": "Locations",
+      "mode": "Interface",
+      "networks": "Networks",
+      "done": "Done"
+    },
+    "welcome": {
+      "intro": "This assistant sets KVM Studio up: it checks the machine, chooses where virtual machines go and creates the basic virtual networks.",
+      "license": "KVM Studio is free software released under the GPL-3.0 license, without any warranty."
+    },
+    "check": {
+      "cpu": {
+        "ok": "Hardware virtualization available ({{detail}})",
+        "warn": "Hardware virtualization not detected",
+        "hint": "Enable Intel VT-x or AMD-V in the machine firmware (BIOS/UEFI)."
+      },
+      "kvm": {
+        "ok": "KVM module loaded ({{detail}})",
+        "fail": "/dev/kvm missing: KVM is not available",
+        "hint": "Enable virtualization in the firmware, then check with: lsmod | grep kvm"
+      },
+      "nested": {
+        "ok": "Nested virtualization enabled",
+        "warn": "Nested virtualization disabled",
+        "hint": "Optional: only needed to run hypervisors inside VMs."
+      },
+      "libvirt": {
+        "ok": "libvirt service reachable: {{detail}}",
+        "fail": "libvirt service unreachable",
+        "hint": "{{detail}}. Check: systemctl status virtqemud.socket"
+      }
+    },
+    "group": {
+      "why": "Members of the libvirt group run system virtual machines without typing a password for each action.",
+      "state": {
+        "member": "The {{user}} account is in the libvirt group.",
+        "relogin": "The {{user}} account was added to the libvirt group.",
+        "not_member": "The {{user}} account is not in the libvirt group.",
+        "no_group": "There is no libvirt group: is libvirt installed?",
+        "not_needed": "qemu:///session connection: no group needed."
+      },
+      "join": "Add my account to the libvirt group",
+      "failed": "Could not add the account to the libvirt group",
+      "relogin": "Log out and back in for the libvirt group membership to take effect."
+    },
+    "locations": {
+      "vm": "Virtual machine folder",
+      "vmHint": "KVM Studio creates a KVM-Studio/VM folder in it, with one subtree per virtual machine.",
+      "iso": "ISO library (optional)",
+      "isoHint": "Folder holding your ISO images. It is read, never changed. More libraries can be added in Preferences.",
+      "isoName": "ISO",
+      "absolute": "Enter a full path (starting with /)."
+    },
+    "mode": {
+      "desktop": "Window (recommended)",
+      "desktopHint": "KVM Studio opens in its own window.",
+      "web": "Web browser",
+      "webHint": "KVM Studio opens in the browser, on this machine only. A notification area icon reopens it."
+    },
+    "networks": {
+      "intro": "Basic virtual networks, on ranges that do not overlap your local network:",
+      "exists": "already there",
+      "create": "Create the missing networks"
+    },
+    "done": {
+      "saved": "KVM Studio is ready.",
+      "networks": "Networks created: {{names}}.",
+      "again": "This assistant can be run again from the Help menu."
+    },
+    "applying": "Applying…",
+    "failed": "Could not save the settings",
+    "close": "Close"
   }
 }

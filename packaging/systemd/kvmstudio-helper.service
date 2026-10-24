@@ -7,11 +7,12 @@ Requires=kvmstudio-helper.socket
 ExecStart=/opt/kvm-studio/bin/kvmstudio-helper
 # Started on demand by the socket.
 NoNewPrivileges=yes
-ProtectSystem=full
+# usermod writes /etc/group and /etc/gshadow.
+ProtectSystem=true
 PrivateTmp=yes
 PrivateNetwork=yes
-RestrictAddressFamilies=AF_UNIX
-CapabilityBoundingSet=CAP_FOWNER CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+CapabilityBoundingSet=CAP_FOWNER CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_CHOWN CAP_AUDIT_WRITE
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes

@@ -13,12 +13,13 @@ from typing import Any
 from ..config import HelperConfig
 from ..errors import HelperError
 from ..paths import client_path, confine, fd_path, opened_chain
+from ..polkit import Peer
 from . import Runner, Task, expect_keys
 
 ACTION = "org.kvmstudio.helper.iso-acl"
 
 
-def prepare(params: Mapping[str, object], config: HelperConfig) -> Task:
+def prepare(params: Mapping[str, object], config: HelperConfig, peer: Peer) -> Task:
     expect_keys(params, {"path"})
     target = confine(client_path(params["path"]), config.iso_libraries)
     if target.relative.suffix.lower() not in target.library.extensions:

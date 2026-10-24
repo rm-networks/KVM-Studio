@@ -42,6 +42,7 @@ aux paramètres validés, chacune autorisée par polkit :
 - ouverture et fermeture du port web (firewalld ou ufw) ;
 - redirection de ports NAT (table nftables `inet kvmstudio`) ;
 - correctifs de droits sur les ISO (contexte SELinux `virt_content_t` ou ACL).
+- ajout du compte de l'appelant au groupe `libvirt`.
 
 Il n'existe pas d'opération générique d'exécution de commande.
 
@@ -67,6 +68,7 @@ Fonctionnement :
 | Opération | Action polkit | Effet |
 | --- | --- | --- |
 | `iso_acl` | `org.kvmstudio.helper.iso-acl` | ACL `u:<qemu>:x` sur les dossiers de la bibliothèque jusqu'à l'image, `u:<qemu>:r` sur l'image |
+| `join_libvirt` | `org.kvmstudio.helper.join-libvirt` | ajoute l'appelant au groupe `libvirt` ; aucun paramètre, refusé pour root et les UID inférieurs à 1000, mot de passe administrateur à chaque appel |
 
 Les dossiers situés au-dessus de la racine d'une bibliothèque ne sont jamais
 modifiés : le sélecteur d'ISO indique la commande à lancer. Le masquage
@@ -161,7 +163,7 @@ kvm-studio/
 │   ├── server.py            # socket Unix, opérations nommées
 │   ├── paths.py             # résolution, confinement, ouverture sans course
 │   ├── polkit.py            # identité de l'appelant, pkcheck
-│   └── ops/                 # iso_acl (puis firewall_port, nat_portfwd)
+│   └── ops/                 # iso_acl, join_libvirt (puis firewall_port, nat_portfwd)
 ├── frontend/src/
 │   ├── app/                 # menus, barre d'outils, bibliothèque, onglets, barre d'état
 │   ├── features/            # un dossier par écran ou dialogue

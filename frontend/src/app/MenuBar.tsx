@@ -31,6 +31,7 @@ interface Props {
   onAbout: () => void;
   onNetworkEditor: () => void;
   onPreferences: () => void;
+  onFirstRun: () => void;
   onNewVm: () => void;
   onSettings: () => void;
   onGuestTools: () => void;
@@ -52,6 +53,7 @@ export function MenuBar({
   onAbout,
   onNetworkEditor,
   onPreferences,
+  onFirstRun,
   onNewVm,
   onSettings,
   onGuestTools,
@@ -188,6 +190,8 @@ export function MenuBar({
       [
         item(m("docs")),
         item(m("shortcuts")),
+        sep,
+        item(m("firstRun"), undefined, onFirstRun),
         sep,
         item(m("about"), undefined, onAbout),
         sep,

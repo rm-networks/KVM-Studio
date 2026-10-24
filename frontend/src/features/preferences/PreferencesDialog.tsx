@@ -450,7 +450,7 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
   );
 }
 
-function RestartPrompt({ next, onClose }: { next: Config; onClose: () => void }) {
+export function RestartPrompt({ next, onClose }: { next: Config; onClose: () => void }) {
   const { t } = useTranslation();
   const { notifyError } = useNotifier();
   const [restarting, setRestarting] = useState(false);

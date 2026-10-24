@@ -67,7 +67,7 @@ Un backend Python unique pilote libvirt ; le même frontend s'affiche soit dans 
 | Console graphique | noVNC + canal QEMU `qemu-vdagent`, VNC en mode partagé | Copier-coller de texte natif ; plusieurs personnes sur la même console |
 | Console série | xterm.js | Firewalls et appliances sans GUI |
 | Fichiers de réponse | Modèles autounattend.xml (Windows), kickstart (Fedora/RHEL), preseed / autoinstall (Debian/Ubuntu) | Installation simplifiée avec outils invités |
-| Helper privilégié | `kvmstudio-helper` : service systemd root, socket Unix, autorisations polkit | Seul composant root : masquage NetworkManager, ouverture du port web dans le pare-feu, redirection de ports NAT, correctifs de droits ISO |
+| Helper privilégié | `kvmstudio-helper` : service systemd root, socket Unix, autorisations polkit | Seul composant root : ajout au groupe libvirt, ouverture du port web dans le pare-feu, redirection de ports NAT, correctifs de droits ISO, désinstallation |
 | Détection OS | libosinfo, repli sur profils internes | Bonnes valeurs par défaut (virtio, UEFI, TPM) |
 | Packaging | Paquets .rpm et .deb construits par la CI (nfpm), publiés dans les Releases GitHub, puis dépôts COPR et APT | Double-clic pour installer, dépendances et désinstallation gérées par la distro |
 | Tests | pytest + URI `test:///default`, Playwright | Tests sans vraie VM, en CI GitHub Actions |
@@ -78,7 +78,7 @@ Un backend Python unique pilote libvirt ; le même frontend s'affiche soit dans 
 - *Web* : HTTP sur 127.0.0.1, port 60080 par défaut ; HTTPS port 60443 pour le partage sur le réseau local (V1) ; les deux ports se règlent dans Préférences > Interface. Au lancement, la page s'ouvre dans le navigateur par défaut avec le jeton dans le fragment de l'URL (comme un clic sur un lien) ; l'URL est aussi affichée dans le terminal. Une icône dans la zone de notification (StatusNotifierItem, logo KVM Studio) indique que KVM Studio tourne : Ouvrir dans le navigateur, Copier l'adresse, Passer en mode fenêtre, Quitter. Sans zone de notification (GNOME sans extension AppIndicator), l'appli tourne normalement sans icône. Option « Partager sur le réseau local » : écoute sur le LAN, HTTPS auto-signé, ouverture du port dans firewalld ou ufw, connexion par compte invité. Le propriétaire utilise lui aussi le navigateur dans ce mode.
 - *Changement de mode* : Préférences > Interface propose de redémarrer tout de suite ; le message indique les ports (60080 en HTTP pour l'accès local, 60443 en HTTPS pour le partage). L'appli se relance dans le nouveau mode.
 
-**Connexion libvirt.** URI configurable, `qemu:///system` par défaut. Le paquet ajoute l'utilisateur au groupe `libvirt` au premier lancement (via polkit).
+**Connexion libvirt.** URI configurable, `qemu:///system` par défaut. L'assistant de premier lancement ajoute l'utilisateur au groupe `libvirt` par le helper (opération sans paramètre, authentification administrateur à chaque fois), puis invite à se reconnecter.
 
 **Droits sur les ISO.** QEMU tourne sous l'utilisateur `qemu` et doit lire les ISO. KVM Studio détecte un refus (droits Unix, ACL, SELinux, AppArmor) et propose un bouton « Corriger » qui passe par le helper après authentification polkit.
 

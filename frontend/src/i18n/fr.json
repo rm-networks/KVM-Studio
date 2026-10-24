@@ -53,7 +53,8 @@
     "noMedia": "vide",
     "changeIso": "Changer d'image ISO…",
     "eject": "Éjecter",
-    "sendKeys": "Envoyer une combinaison"
+    "sendKeys": "Envoyer une combinaison",
+    "firstRun": "Assistant de premier lancement…"
   },
   "toolbar": {
     "start": "Démarrer",
@@ -235,7 +236,8 @@
       "not_found": "Ce fichier n'existe plus.",
       "path_changed": "Le dossier a changé pendant l'opération. Réessayez.",
       "failed": "La correction a échoué.",
-      "bad_answer": "Réponse inattendue du service kvmstudio-helper."
+      "bad_answer": "Réponse inattendue du service kvmstudio-helper.",
+      "not_allowed": "Ce compte ne peut pas être ajouté au groupe libvirt (compte système ou root)."
     }
   },
   "about": {
@@ -593,5 +595,83 @@
     "done": "Les outils invités sont installés : l'agent répond.",
     "timeout": "L'agent ne répond toujours pas après 10 minutes. Vérifiez l'installation dans l'invité (service qemu-guest-agent).",
     "failed": "Impossible d'installer les outils invités"
+  },
+  "firstRun": {
+    "title": "Bienvenue dans KVM Studio",
+    "step": {
+      "welcome": "Bienvenue",
+      "checks": "Vérification",
+      "group": "Groupe libvirt",
+      "locations": "Emplacements",
+      "mode": "Interface",
+      "networks": "Réseaux",
+      "done": "Terminé"
+    },
+    "welcome": {
+      "intro": "Cet assistant prépare KVM Studio : il vérifie la machine, choisit où ranger les machines virtuelles et crée les réseaux virtuels de base.",
+      "license": "KVM Studio est un logiciel libre distribué sous licence GPL-3.0, sans aucune garantie."
+    },
+    "check": {
+      "cpu": {
+        "ok": "Virtualisation matérielle disponible ({{detail}})",
+        "warn": "Virtualisation matérielle non détectée",
+        "hint": "Activez Intel VT-x ou AMD-V dans le firmware (BIOS/UEFI) de la machine."
+      },
+      "kvm": {
+        "ok": "Module KVM chargé ({{detail}})",
+        "fail": "/dev/kvm absent : KVM n'est pas disponible",
+        "hint": "Activez la virtualisation dans le firmware, puis vérifiez avec : lsmod | grep kvm"
+      },
+      "nested": {
+        "ok": "Virtualisation imbriquée active",
+        "warn": "Virtualisation imbriquée inactive",
+        "hint": "Facultatif : utile seulement pour lancer des hyperviseurs dans les VMs."
+      },
+      "libvirt": {
+        "ok": "Service libvirt joignable : {{detail}}",
+        "fail": "Service libvirt injoignable",
+        "hint": "{{detail}}. Vérifiez : systemctl status virtqemud.socket"
+      }
+    },
+    "group": {
+      "why": "Les membres du groupe libvirt pilotent les machines virtuelles du système sans saisir de mot de passe à chaque action.",
+      "state": {
+        "member": "Le compte {{user}} fait partie du groupe libvirt.",
+        "relogin": "Le compte {{user}} a été ajouté au groupe libvirt.",
+        "not_member": "Le compte {{user}} ne fait pas partie du groupe libvirt.",
+        "no_group": "Le groupe libvirt n'existe pas : libvirt est-il installé ?",
+        "not_needed": "Connexion qemu:///session : aucun groupe n'est nécessaire."
+      },
+      "join": "Ajouter mon compte au groupe libvirt",
+      "failed": "Impossible d'ajouter le compte au groupe libvirt",
+      "relogin": "Fermez votre session puis reconnectez-vous pour que l'ajout au groupe libvirt prenne effet."
+    },
+    "locations": {
+      "vm": "Dossier des machines virtuelles",
+      "vmHint": "KVM Studio y crée un dossier KVM-Studio/VM qui contient une sous-arborescence par machine virtuelle.",
+      "iso": "Bibliothèque ISO (facultatif)",
+      "isoHint": "Dossier où se trouvent vos images ISO. Il est lu sans jamais être modifié. D'autres bibliothèques s'ajoutent dans les Préférences.",
+      "isoName": "ISO",
+      "absolute": "Indiquez un chemin complet (qui commence par /)."
+    },
+    "mode": {
+      "desktop": "Fenêtre (recommandé)",
+      "desktopHint": "KVM Studio s'ouvre dans sa propre fenêtre.",
+      "web": "Navigateur web",
+      "webHint": "KVM Studio s'ouvre dans le navigateur, sur cette machine uniquement. Une icône dans la zone de notification permet de le rouvrir."
+    },
+    "networks": {
+      "intro": "Réseaux virtuels de base, sur des plages qui ne chevauchent pas votre réseau local :",
+      "exists": "déjà présent",
+      "create": "Créer les réseaux manquants"
+    },
+    "done": {
+      "saved": "KVM Studio est prêt.",
+      "networks": "Réseaux créés : {{names}}.",
+      "again": "Cet assistant se relance depuis le menu Aide."
+    },
+    "applying": "Application…",
+    "failed": "Impossible d'enregistrer les réglages",
+    "close": "Fermer"
   }
 }

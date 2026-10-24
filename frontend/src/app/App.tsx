@@ -11,6 +11,7 @@ import { LibraryPanel } from "../features/library/LibraryPanel";
 import { VmActionsProvider } from "../features/vm/VmActions";
 import { NetworkEditor } from "../features/network-editor/NetworkEditor";
 import { PreferencesDialog } from "../features/preferences/PreferencesDialog";
+import { FirstRunWizard } from "../features/first-run/FirstRunWizard";
 import { IsoPicker } from "../features/iso-picker/IsoPicker";
 import { GuestToolsDialog } from "../features/guest-tools/GuestToolsDialog";
 import { VmSettings } from "../features/vm-settings/VmSettings";
@@ -53,6 +54,7 @@ function MainWindow() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [networkEditorOpen, setNetworkEditorOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [firstRunOpen, setFirstRunOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
@@ -68,6 +70,18 @@ function MainWindow() {
     if (info.ui.theme === "system") delete document.documentElement.dataset.theme;
     else document.documentElement.dataset.theme = info.ui.theme;
   }, [info, i18n]);
+
+  // The assistant opens by itself until a VM location is chosen.
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .setup()
+      .then((s) => !cancelled && s.needed && setFirstRunOpen(true))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const toggle = (key: keyof Layout) => setLayout((l) => ({ ...l, [key]: !l[key] }));
 
@@ -130,6 +144,7 @@ function MainWindow() {
           onAbout={() => setAboutOpen(true)}
           onNetworkEditor={() => setNetworkEditorOpen(true)}
           onPreferences={() => setPreferencesOpen(true)}
+          onFirstRun={() => setFirstRunOpen(true)}
           onNewVm={() => setWizardOpen(true)}
           onSettings={() => currentVm && setSettingsFor(currentVm.uuid)}
           onGuestTools={() => currentVm && setGuestToolsFor(currentVm.uuid)}
@@ -226,6 +241,9 @@ function MainWindow() {
         )}
         {preferencesOpen && (
           <PreferencesDialog onClose={() => setPreferencesOpen(false)} onSaved={refresh} />
+        )}
+        {firstRunOpen && (
+          <FirstRunWizard onClose={() => setFirstRunOpen(false)} onSaved={refresh} />
         )}
       </div>
     </LibraryActionsProvider>

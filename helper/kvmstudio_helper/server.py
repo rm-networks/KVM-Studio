@@ -95,7 +95,7 @@ def handle(
         operation = (operations or registry()).get(name)
         if operation is None:
             raise HelperError("unknown_operation", f"unknown operation {name!r}")
-        task = operation.prepare(params, config)
+        task = operation.prepare(params, config, peer)
         if not authorizer(operation.action, peer):
             raise HelperError("not_authorized", "authorization refused")
         result = task(runner)
