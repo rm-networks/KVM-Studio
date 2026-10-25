@@ -16,6 +16,39 @@ import "./VmConsole.css";
 
 type Status = "connecting" | "connected" | "disconnected" | "timeout";
 
+// A console out of sight that long (another tab, window minimized) lets go
+// of its VNC stream: decoding and drawing it costs CPU for nothing. It
+// connects again as soon as it shows.
+const PAUSE_HIDDEN_MS = 15_000;
+
+/** True once the element has been out of sight for PAUSE_HIDDEN_MS. */
+function useHiddenFor(ref: { current: HTMLElement | null }, ms: number): boolean {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    let inView = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const update = () => {
+      clearTimeout(timer);
+      if (inView && document.visibilityState !== "hidden") setHidden(false);
+      else timer = setTimeout(() => setHidden(true), ms);
+    };
+    const observer = new IntersectionObserver((entries) => {
+      inView = entries.some((e) => e.isIntersecting);
+      update();
+    });
+    observer.observe(el);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, [ref, ms]);
+  return hidden;
+}
+
 // A console that has not answered by then will not: say so instead of waiting.
 const CONNECT_TIMEOUT_MS = 15_000;
 
@@ -201,12 +234,15 @@ function VncScreen({
 }) {
   const { t } = useTranslation();
   const screenRef = useRef<HTMLDivElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<Status>("connecting");
   const [attempt, setAttempt] = useState(0);
+  const paused = useHiddenFor(boxRef, PAUSE_HIDDEN_MS);
 
   useEffect(() => {
     const screen = screenRef.current;
-    if (!screen) return;
+    // Out of sight for a while: no stream (it connects again once shown).
+    if (!screen || paused) return;
     setStatus("connecting");
 
     const rfb = new RFB(screen, consoleUrl(uuid), {
@@ -295,18 +331,18 @@ function VncScreen({
       rfb.removeEventListener("clipboard", onClipboard);
       rfb.disconnect();
     };
-  }, [uuid, attempt]);
+  }, [uuid, attempt, paused]);
 
   useEffect(() => {
     onConnected?.(status === "connected");
   }, [status, onConnected]);
 
   return (
-    <div className="console">
+    <div className="console" ref={boxRef}>
       <div className="console-screen" ref={screenRef} />
       {children}
       {splash && <BootSplash />}
-      {!splash && status !== "connected" && (
+      {!splash && !paused && status !== "connected" && (
         <div
           className={
             status === "connecting" ? "console-overlay console-loading" : "console-overlay"

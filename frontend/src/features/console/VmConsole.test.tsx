@@ -108,6 +108,35 @@ async function connected(): Promise<InstanceType<typeof FakeRfb>> {
 }
 
 describe("VmConsole", () => {
+  it("lets go of the stream when out of sight for a while, and comes back", async () => {
+    let seen: (entries: { isIntersecting: boolean }[]) => void = () => undefined;
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(callback: typeof seen) {
+          seen = callback;
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    render(<VmConsole uuid="abc" />);
+    const first = await connected();
+    vi.useFakeTimers();
+    try {
+      act(() => seen([{ isIntersecting: false }]));
+      act(() => vi.advanceTimersByTime(14_000));
+      expect(first.disconnected).toBe(false);
+      act(() => vi.advanceTimersByTime(2_000));
+      expect(first.disconnected).toBe(true);
+      expect(screen.queryByText("Connexion à la console…")).toBeNull();
+      act(() => seen([{ isIntersecting: true }]));
+    } finally {
+      vi.useRealTimers();
+    }
+    await waitFor(() => expect(instances).toHaveLength(2));
+  });
+
   it("connects with the token as a WebSocket subprotocol", async () => {
     render(<VmConsole uuid="abc" />);
     const rfb = await connected();
