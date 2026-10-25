@@ -14,8 +14,11 @@ export type FolderMovePlan = components["schemas"]["FolderMovePlan"];
 export type ImportResult = components["schemas"]["ImportResult"];
 export type Drift = VmSummary["drift"][number];
 export type Network = components["schemas"]["Network"];
-export type NetworkSettings = components["schemas"]["NetworkSettings"];
-export type NetworkCreate = components["schemas"]["NetworkCreate"];
+// Fields with a default on the server stay optional here.
+type Defaulted<T> = Omit<T, "gateway" | "reservations"> &
+  Partial<Pick<T & { gateway: unknown; reservations: unknown }, "gateway" | "reservations">>;
+export type NetworkSettings = Defaulted<components["schemas"]["NetworkSettings"]>;
+export type NetworkCreate = Defaulted<components["schemas"]["NetworkCreate"]>;
 export type NetworkSuggestion = components["schemas"]["Suggestion"];
 export type NetworkExport = components["schemas"]["NetworkExport-Output"];
 export type NetworkImport = components["schemas"]["NetworkExport-Input"];
@@ -209,8 +212,17 @@ export const api = {
   networks: () => request<Network[]>("GET", "/api/networks"),
   networkSuggestion: () => request<NetworkSuggestion>("GET", "/api/networks/suggestion"),
   createNetwork: (body: NetworkCreate) => request<Network>("POST", "/api/networks", body),
-  updateNetwork: (name: string, body: NetworkSettings) =>
-    request<undefined>("PUT", `/api/networks/${encodeURIComponent(name)}`, body),
+  updateNetwork: (name: string, body: NetworkSettings, stopVms?: "shutdown" | "poweroff") =>
+    request<undefined>("PUT", `/api/networks/${encodeURIComponent(name)}`, {
+      ...body,
+      stop_vms: stopVms ?? null,
+    }),
+  networkPlan: (name: string, body: NetworkSettings) =>
+    request<{ restart: boolean; running: string[] }>(
+      "POST",
+      `/api/networks/${encodeURIComponent(name)}/plan`,
+      body,
+    ),
   renameNetwork: (name: string, newName: string) =>
     request<undefined>("POST", `/api/networks/${encodeURIComponent(name)}/rename`, {
       name: newName,

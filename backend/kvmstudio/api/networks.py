@@ -19,6 +19,11 @@ class Dhcp(BaseModel):
     end: str
 
 
+class Reservation(BaseModel):
+    mac: str
+    ip: str
+
+
 class Network(BaseModel):
     name: str
     kind: net.Kind
@@ -32,6 +37,9 @@ class Network(BaseModel):
     host_ip: str | None
     dhcp: Dhcp | None
     used_by: list[str]
+    gateway: net.GatewayMode = "host"
+    gateway_ip: str | None = None
+    reservations: list[Reservation] = []
 
 
 class NetworkSettings(BaseModel):
@@ -39,6 +47,11 @@ class NetworkSettings(BaseModel):
     subnet: str | None = None
     host_adapter: bool = True
     dhcp: Dhcp | None = None
+    host_ip: str | None = None
+    # None: libvirt's default (the host on NAT, no gateway on host-only).
+    gateway: net.GatewayMode | None = None
+    gateway_ip: str | None = None
+    reservations: list[Reservation] = Field(default=[], max_length=net.MAX_RESERVATIONS)
 
     def to_spec(self) -> net.NetworkSpec:
         try:
@@ -46,7 +59,26 @@ class NetworkSettings(BaseModel):
         except ValueError as exc:
             raise ApiException(422, "net.bad_subnet", str(exc)) from exc
         dhcp = net.DhcpRange(self.dhcp.start, self.dhcp.end) if self.dhcp else None
-        return net.NetworkSpec(self.kind, subnet, self.host_adapter, dhcp)
+        return net.NetworkSpec(
+            self.kind,
+            subnet,
+            self.host_adapter,
+            dhcp,
+            self.host_ip or None,
+            self.gateway,
+            self.gateway_ip if self.gateway == "custom" else None,
+            tuple(net.Reservation(r.mac.lower(), r.ip) for r in self.reservations),
+        )
+
+
+class NetworkUpdate(NetworkSettings):
+    # Asked after the confirmation: stop the running VMs that use the network.
+    stop_vms: Literal["shutdown", "poweroff"] | None = None
+
+
+class UpdatePlan(BaseModel):
+    restart: bool
+    running: list[str]
 
 
 class NetworkCreate(NetworkSettings):
@@ -96,6 +128,9 @@ def _model(info: net.NetworkInfo) -> Network:
         host_ip=info.host_ip,
         dhcp=Dhcp(start=info.dhcp.start, end=info.dhcp.end) if info.dhcp else None,
         used_by=list(info.used_by),
+        gateway=info.gateway,
+        gateway_ip=info.gateway_ip,
+        reservations=[Reservation(mac=r.mac, ip=r.ip) for r in info.reservations],
     )
 
 
@@ -133,9 +168,18 @@ async def create(ctx: Context, body: NetworkCreate) -> Network:
     return await run_in_threadpool(run)
 
 
+@router.post("/{name}/plan")
+async def plan(ctx: Context, name: str, body: NetworkSettings) -> UpdatePlan:
+    """Whether these settings restart the network, and which running VMs use it."""
+    found = await run_in_threadpool(net.plan_update, ctx.conn, name, body.to_spec())
+    return UpdatePlan(restart=found.restart, running=list(found.running))
+
+
 @router.put("/{name}", status_code=204)
-async def update(ctx: Context, name: str, body: NetworkSettings) -> Response:
-    await run_in_threadpool(net.update_network, ctx.conn, name, body.to_spec())
+async def update(ctx: Context, name: str, body: NetworkUpdate) -> Response:
+    await run_in_threadpool(
+        lambda: net.update_network(ctx.conn, name, body.to_spec(), stop_vms=body.stop_vms)
+    )
     return Response(status_code=204)
 
 

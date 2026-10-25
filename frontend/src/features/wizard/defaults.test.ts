@@ -17,6 +17,9 @@ function net(name: string, kind: Network["kind"]): Network {
     host_ip: null,
     dhcp: null,
     used_by: [],
+    gateway: "host",
+    gateway_ip: null,
+    reservations: [],
   };
 }
 

@@ -445,6 +445,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/networks/{name}/plan": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Plan
+     * @description Whether these settings restart the network, and which running VMs use it.
+     */
+    post: operations["plan_api_networks__name__plan_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/networks/{name}": {
     parameters: {
       query?: never;
@@ -1637,6 +1657,19 @@ export interface components {
       dhcp: components["schemas"]["Dhcp"] | null;
       /** Used By */
       used_by: string[];
+      /**
+       * Gateway
+       * @default host
+       * @enum {string}
+       */
+      gateway: "host" | "custom" | "none";
+      /** Gateway Ip */
+      gateway_ip?: string | null;
+      /**
+       * Reservations
+       * @default []
+       */
+      reservations: components["schemas"]["Reservation"][];
     };
     /** NetworkCreate */
     NetworkCreate: {
@@ -1653,6 +1686,21 @@ export interface components {
        */
       host_adapter: boolean;
       dhcp?: components["schemas"]["Dhcp"] | null;
+      /** Host Ip */
+      host_ip?: string | null;
+      /**
+       * Gateway
+       * @default host
+       * @enum {string}
+       */
+      gateway: "host" | "custom" | "none";
+      /** Gateway Ip */
+      gateway_ip?: string | null;
+      /**
+       * Reservations
+       * @default []
+       */
+      reservations: components["schemas"]["Reservation"][];
       /** Name */
       name?: string | null;
       /** Number */
@@ -1728,6 +1776,21 @@ export interface components {
        */
       host_adapter: boolean;
       dhcp?: components["schemas"]["Dhcp"] | null;
+      /** Host Ip */
+      host_ip?: string | null;
+      /**
+       * Gateway
+       * @default host
+       * @enum {string}
+       */
+      gateway: "host" | "custom" | "none";
+      /** Gateway Ip */
+      gateway_ip?: string | null;
+      /**
+       * Reservations
+       * @default []
+       */
+      reservations: components["schemas"]["Reservation"][];
     };
     /** NetworkState */
     NetworkState: {
@@ -1735,6 +1798,39 @@ export interface components {
       active?: boolean | null;
       /** Autostart */
       autostart?: boolean | null;
+    };
+    /** NetworkUpdate */
+    NetworkUpdate: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "host_only" | "nat";
+      /** Subnet */
+      subnet?: string | null;
+      /**
+       * Host Adapter
+       * @default true
+       */
+      host_adapter: boolean;
+      dhcp?: components["schemas"]["Dhcp"] | null;
+      /** Host Ip */
+      host_ip?: string | null;
+      /**
+       * Gateway
+       * @default host
+       * @enum {string}
+       */
+      gateway: "host" | "custom" | "none";
+      /** Gateway Ip */
+      gateway_ip?: string | null;
+      /**
+       * Reservations
+       * @default []
+       */
+      reservations: components["schemas"]["Reservation"][];
+      /** Stop Vms */
+      stop_vms?: ("shutdown" | "poweroff") | null;
     };
     /** NewIsoLibrary */
     NewIsoLibrary: {
@@ -1970,6 +2066,13 @@ export interface components {
       /** Nested */
       nested: boolean;
     };
+    /** Reservation */
+    Reservation: {
+      /** Mac */
+      mac: string;
+      /** Ip */
+      ip: string;
+    };
     /** Restarting */
     Restarting: {
       /**
@@ -2135,6 +2238,13 @@ export interface components {
        * @default false
        */
       remove_iso_acls: boolean;
+    };
+    /** UpdatePlan */
+    UpdatePlan: {
+      /** Restart */
+      restart: boolean;
+      /** Running */
+      running: string[];
     };
     /** ValidationError */
     ValidationError: {
@@ -4585,7 +4695,7 @@ export interface operations {
       };
     };
   };
-  update_api_networks__name__put: {
+  plan_api_networks__name__plan_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -4597,6 +4707,95 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["NetworkSettings"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdatePlan"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  update_api_networks__name__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["NetworkUpdate"];
       };
     };
     responses: {

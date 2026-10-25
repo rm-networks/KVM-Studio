@@ -1,12 +1,20 @@
+import { Info } from "lucide-react";
 import { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { api, type Network, type NetworkImport } from "../../api/client";
+import {
+  api,
+  ApiError,
+  type Network,
+  type NetworkImport,
+  type NetworkSettings,
+} from "../../api/client";
 import { Dialog } from "../../components/Dialog";
 import { useNotifier } from "../../components/notifier";
 import { PromptDialog } from "../../components/PromptDialog";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
-import { type Draft, draftFrom, sameDraft, settingsFrom } from "./draft";
+import { DhcpSettingsDialog } from "./DhcpSettingsDialog";
+import { type Draft, draftFrom, firstHost, fittedRange, sameDraft, settingsFrom } from "./draft";
 import { defaultDhcp, joinCidr } from "./subnet";
 import "./NetworkEditor.css";
 
@@ -16,6 +24,9 @@ type Pending =
   | { kind: "delete"; network: Network }
   | { kind: "rename"; network: Network }
   | { kind: "defaults" }
+  | { kind: "dhcp"; network: Network }
+  // The network must restart while VMs use it: they are stopped, then started again.
+  | { kind: "stop"; name: string; settings: NetworkSettings; running: string[]; force: boolean }
   | null;
 
 export function NetworkEditor({ onClose }: { onClose: () => void }) {
@@ -100,6 +111,19 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
         continue;
       }
       try {
+        const plan = await api.networkPlan(name, result.settings);
+        if (plan.restart && plan.running.length > 0) {
+          // Asked first; the other networks wait for the answer.
+          setPending({
+            kind: "stop",
+            name,
+            settings: result.settings,
+            running: plan.running,
+            force: false,
+          });
+          setBusy(false);
+          return false;
+        }
         await api.updateNetwork(name, result.settings);
       } catch (err) {
         notifyError(t("networks.applyFailed", { name }), err);
@@ -109,6 +133,23 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
     setBusy(false);
     await load();
     return ok;
+  };
+
+  const applyStopping = async (name: string, settings: NetworkSettings, force: boolean) => {
+    setBusy(true);
+    try {
+      await api.updateNetwork(name, settings, force ? "poweroff" : "shutdown");
+      setDrafts((all) => Object.fromEntries(Object.entries(all).filter(([n]) => n !== name)));
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "net.vms_still_running") {
+        setBusy(false);
+        setPending({ kind: "stop", name, settings, running: [], force: true });
+        return;
+      }
+      notifyError(t("networks.applyFailed", { name }), err);
+    }
+    setBusy(false);
+    await load();
   };
 
   const add = () =>
@@ -347,6 +388,15 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
                     }}
                   />
                   {t("networks.dhcp")}
+                  {draft.dhcpEnabled && effectiveAdapter && (
+                    <button
+                      type="button"
+                      className="button net-inline-button"
+                      onClick={() => setPending({ kind: "dhcp", network })}
+                    >
+                      {t("networks.dhcpSettings")}
+                    </button>
+                  )}
                 </label>
                 {!effectiveAdapter && (
                   <p className="check-hint">{t("networks.dhcpNeedsAdapter")}</p>
@@ -378,7 +428,7 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
                       type="text"
                       value={draft.ip}
                       disabled={!effectiveAdapter}
-                      onChange={(e) => edit({ ip: e.target.value })}
+                      onChange={(e) => edit({ ip: e.target.value, hostIp: "" })}
                     />
                   </label>
                   <label>
@@ -387,13 +437,50 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
                       type="text"
                       value={draft.mask}
                       disabled={!effectiveAdapter}
-                      onChange={(e) => edit({ mask: e.target.value })}
+                      onChange={(e) => edit({ mask: e.target.value, hostIp: "" })}
                     />
                   </label>
                 </div>
                 {effectiveAdapter && cidr === null && (
                   <p className="field-error">{t("networks.invalid.subnet")}</p>
                 )}
+                {effectiveAdapter && cidr !== null && (
+                  <div className="net-grid">
+                    <label>
+                      <span className="net-label-help">
+                        {t("networks.hostIp")}
+                        <Info
+                          aria-label={t(
+                            draft.kind === "nat" ? "networks.hostIpNat" : "networks.hostIpHint",
+                          )}
+                          role="img"
+                        >
+                          <title>
+                            {t(draft.kind === "nat" ? "networks.hostIpNat" : "networks.hostIpHint")}
+                          </title>
+                        </Info>
+                      </span>
+                      <input
+                        type="text"
+                        value={draft.hostIp}
+                        placeholder={firstHost(cidr)}
+                        onChange={(e) => edit({ hostIp: e.target.value })}
+                      />
+                    </label>
+                  </div>
+                )}
+                {effectiveAdapter &&
+                  cidr !== null &&
+                  draft.dhcpEnabled &&
+                  (() => {
+                    const fitted = fittedRange(draft, cidr);
+                    return fitted.start !== draft.dhcpStart.trim() ||
+                      fitted.end !== draft.dhcpEnd.trim() ? (
+                      <p className="check-hint">
+                        {t("networks.rangeMoved", { start: fitted.start, end: fitted.end })}
+                      </p>
+                    ) : null;
+                  })()}
               </>
             )}
             <div className="net-state">
@@ -440,6 +527,35 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
         )}
       </Dialog>
 
+      {pending?.kind === "dhcp" && draft && (
+        <DhcpSettingsDialog
+          network={pending.network}
+          draft={draft}
+          onSave={edit}
+          onClose={() => setPending(null)}
+        />
+      )}
+      {pending?.kind === "stop" && (
+        <ConfirmDialog
+          title={t("networks.restartTitle", { name: pending.name })}
+          message={
+            pending.force
+              ? t("networks.restartForce", { name: pending.name })
+              : t("networks.restartStop", {
+                  name: pending.name,
+                  names: pending.running.join(", "),
+                })
+          }
+          confirmLabel={pending.force ? t("networks.powerOffApply") : t("networks.stopApply")}
+          danger
+          onCancel={() => setPending(null)}
+          onConfirm={() => {
+            const { name, settings, force } = pending;
+            setPending(null);
+            void applyStopping(name, settings, force);
+          }}
+        />
+      )}
       {pending?.kind === "delete" && (
         <ConfirmDialog
           title={t("networks.remove")}

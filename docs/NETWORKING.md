@@ -33,10 +33,30 @@ Default networks, created at first run or by "Restore Defaults":
 Their subnets are chosen so as not to overlap the local network or the other
 libvirt networks (192.168.101.0/24 and 192.168.108.0/24 when free).
 
+## Addresses and DHCP
+
+- **Host address.** The host's own address can be anywhere in the subnet (for
+  instance `.254` instead of `.1`), neither the network nor the broadcast
+  address. When it falls inside the DHCP range, the range is moved off it. With
+  libvirt, this address is also the gateway and the DNS server of the VMs on a
+  NAT network.
+- **Gateway announced by DHCP** (DHCP Settings, host-only networks). libvirt
+  announces none on a host-only network; the editor can announce the host
+  address or another one, for instance a firewall VM that routes the segment.
+  It is written as a libvirt dnsmasq option
+  (`<dnsmasq:option value='dhcp-option=option:router,X'/>`), which virt-manager
+  and virsh keep. A NAT network always announces the host address.
+- **Reserved addresses** (DHCP Settings). A MAC address always gets the same IP
+  address (`<host mac=... ip=.../>` in `<dhcp>`).
+
 ## Changes
 
-Changing the DHCP range applies live. Changing the type or the subnet restarts
-the network: it is refused while a running VM uses it.
+What libvirt 12 changes on a running network (`net-update`): the DHCP range
+and the reservations. The type, the subnet, the host address and the announced
+gateway need the network to restart, and libvirt does not plug the cards of
+running VMs back into the bridge afterwards. When running VMs use the network,
+the editor lists them and asks first: they are shut down (powered off after
+60 s if confirmed again), the network restarts, then they start again.
 
 ## Hidden from the network applet
 
