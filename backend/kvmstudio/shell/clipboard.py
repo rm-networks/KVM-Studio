@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import importlib
 import threading
+import webbrowser
 from collections.abc import Callable
 from typing import Any, Literal, Protocol
 
@@ -51,6 +52,11 @@ class DesktopApi:
         folder_kind = kind.FOLDER if kind is not None else webview.FOLDER_DIALOG
         result = self._window.create_file_dialog(folder_kind, directory=start or "")
         return str(result[0]) if result else None
+
+    def open_link(self, url: str) -> None:
+        """A help link, in the default browser (the window never leaves the app)."""
+        if isinstance(url, str) and url.startswith("https://"):
+            webbrowser.open(url)
 
     def read_clipboard(self) -> str:
         return self._clipboard.read()

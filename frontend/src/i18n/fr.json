@@ -459,7 +459,13 @@
     "restartingToDesktop": "{{app}} redémarre en mode fenêtre. Vous pouvez fermer cet onglet.",
     "removeLibraryConfirm": "« {{name}} » ({{path}}) ne sera plus proposée. Les droits d'accès que {{app}} avait donnés aux machines virtuelles dans ce dossier sont retirés ; les fichiers restent en place. Le mot de passe administrateur est demandé.",
     "addLibraryHint": "Le dossier doit vous appartenir et se trouver hors des dossiers système. Il est seulement lu, jamais modifié. Le mot de passe administrateur est demandé.",
-    "isoNotDeclared": "Déclarée avant cette version : retirez-la puis ajoutez-la de nouveau pour que le bouton Corriger puisse régler ses droits d'accès."
+    "isoNotDeclared": "Déclarée avant cette version : retirez-la puis ajoutez-la de nouveau pour que le bouton Corriger puisse régler ses droits d'accès.",
+    "virtioHelpTitle": "À propos de l'ISO virtio-win",
+    "virtioHelp": "virtio-win contient les pilotes Windows du matériel virtuel (disques et cartes réseau VirtIO, affichage) et les outils invités : agent invité et copier-coller. {{app}} copie son installeur sur le CD des outils invités des machines virtuelles Windows ; l'ISO elle-même n'est jamais modifiée.",
+    "virtioDownload": "Téléchargez virtio-win.iso depuis la page du projet virtio-win, puis placez-la dans une de vos bibliothèques ISO :",
+    "virtioNoDownload": "{{app}} ne télécharge rien de lui-même.",
+    "virtioOutside": "Ce fichier n'est pas dans une bibliothèque ISO : les machines virtuelles ne peuvent pas le lire et les outils invités ne peuvent pas s'en servir.",
+    "virtioAddLibrary": "Ajouter son dossier comme bibliothèque ISO…"
   },
   "iso": {
     "title": "Choisir une image ISO",

@@ -123,3 +123,23 @@
   font-size: var(--font-size-small);
   user-select: text;
 }
+
+.prefs-label-help {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.prefs-note {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.prefs-note p,
+.prefs-help p {
+  margin: 0 0 var(--space-2);
+}
+
+.prefs-help a {
+  overflow-wrap: anywhere;
+}

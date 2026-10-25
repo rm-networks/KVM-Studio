@@ -45,8 +45,27 @@ function mockApi(restart = false) {
           new Response(JSON.stringify({ restart_required: restart, library_root: root })),
         );
       }
+      if (path === "/api/isos") {
+        const listing = {
+          libraries: [{ name: "ISO", path: "/srv/iso", available: true }],
+          isos: [
+            {
+              library: "ISO",
+              path: "/srv/iso/virtio-win.iso",
+              relative: "virtio-win.iso",
+              size: 726501376,
+              mtime: 1760000000,
+            },
+          ],
+        };
+        return Promise.resolve(new Response(JSON.stringify(listing)));
+      }
+      if (path.startsWith("/api/isos/access")) {
+        const report = { path: "", identity: "qemu", readable: true, problems: [], commands: [] };
+        return Promise.resolve(new Response(JSON.stringify(report)));
+      }
       const body = {
-        config,
+        config: { ...config, iso_libraries: [{ name: "ISO", path: "/srv/iso", recursive: true }] },
         config_path: "/home/romain/.config/kvm-studio/config.toml",
         library_root: null,
         iso_declared: [],
@@ -102,6 +121,36 @@ describe("PreferencesDialog", () => {
         "Les machines virtuelles sont rangées dans : /media/romain/Data/VM/KVM-Studio/VM",
       ),
     ).toBeTruthy();
+  });
+
+  it("picks the virtio-win ISO in the libraries and explains where to get it", async () => {
+    const puts = mockApi();
+    const openLink = vi.fn(() => Promise.resolve());
+    vi.stubGlobal("pywebview", { api: { open_link: openLink } });
+    open();
+    await screen.findByPlaceholderText("/srv/vm");
+    fireEvent.click(screen.getByText("Machines virtuelles"));
+    const field = screen.getByLabelText("Image ISO des pilotes virtio-win (Windows)");
+
+    fireEvent.click(screen.getByRole("button", { name: "Parcourir…" }));
+    fireEvent.doubleClick(await screen.findByText("virtio-win.iso"));
+    await waitFor(() => expect((field as HTMLInputElement).value).toBe("/srv/iso/virtio-win.iso"));
+    expect(screen.queryByText(/n'est pas dans une bibliothèque ISO/)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "À propos de l'ISO virtio-win" }));
+    fireEvent.click(await screen.findByText(/^https:\/\/fedorapeople\.org\//));
+    expect(openLink).toHaveBeenCalledWith(
+      "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso",
+    );
+    fireEvent.click(screen.getAllByRole("button", { name: "Fermer" }).at(-1) as HTMLElement);
+
+    // Typed by hand outside the libraries: offer to add its folder.
+    fireEvent.change(field, { target: { value: "/home/me/Downloads/virtio-win.iso" } });
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Ajouter son dossier comme bibliothèque ISO…" }),
+    );
+    expect(await screen.findByDisplayValue("/home/me/Downloads")).toBeTruthy();
+    expect(puts).toHaveLength(0);
   });
 
   it("offers to restart with the web ports", async () => {

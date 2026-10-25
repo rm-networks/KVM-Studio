@@ -1,4 +1,12 @@
-import { Disc3, FolderTree, HardDrive, Monitor, Settings2, SquareTerminal } from "lucide-react";
+import {
+  CircleHelp,
+  Disc3,
+  FolderTree,
+  HardDrive,
+  Monitor,
+  Settings2,
+  SquareTerminal,
+} from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -6,8 +14,13 @@ import { api, type Config, type IsoLibrary, type IsoLibraryChange } from "../../
 import { Dialog } from "../../components/Dialog";
 import { useNotifier } from "../../components/notifier";
 import { folderPicker } from "../../platform/folders";
+import { openLink } from "../../platform/links";
+import { IsoPicker } from "../iso-picker/IsoPicker";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import "./PreferencesDialog.css";
+
+export const VIRTIO_WIN_URL =
+  "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso";
 
 type Section = "workspace" | "iso" | "vm" | "interface" | "display" | "advanced";
 
@@ -57,6 +70,15 @@ function PathField({
   );
 }
 
+/** Same rule as the backend, before it resolves links: inside a library folder. */
+function inIsoLibrary(path: string, libraries: IsoLibrary[]): boolean {
+  return libraries.some((lib) => path.startsWith(`${lib.path.replace(/\/+$/, "")}/`));
+}
+
+function parentFolder(path: string): string {
+  return path.replace(/\/[^/]*$/, "") || "/";
+}
+
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <fieldset className="prefs-group">
@@ -83,8 +105,10 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
   const [busy, setBusy] = useState(false);
   const [restartPrompt, setRestartPrompt] = useState<Config | null>(null);
   const [declared, setDeclared] = useState<string[] | null>(null);
-  const [addingIso, setAddingIso] = useState(false);
+  const [addingIso, setAddingIso] = useState<{ path: string } | null>(null);
   const [removingIso, setRemovingIso] = useState(false);
+  const [pickingVirtio, setPickingVirtio] = useState(false);
+  const [virtioHelp, setVirtioHelp] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,6 +158,9 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
   };
 
   const iso = config?.iso_libraries[selectedIso];
+  const virtioPath = config?.defaults.virtio_win_iso ?? "";
+  const virtioOutside =
+    virtioPath.startsWith("/") && !inIsoLibrary(virtioPath, config?.iso_libraries ?? []);
 
   /** The server saved the library list: take it, keep the other unsaved edits. */
   const applyIsoChange = (change: IsoLibraryChange) => {
@@ -240,7 +267,7 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                 )}
               </ul>
               <div className="prefs-list-buttons">
-                <button type="button" className="button" onClick={() => setAddingIso(true)}>
+                <button type="button" className="button" onClick={() => setAddingIso({ path: "" })}>
                   {t("prefs.addLibrary")}
                 </button>
                 <button
@@ -334,20 +361,49 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                   <option value="vmxnet3">vmxnet3</option>
                 </select>
               </label>
-              <label className="prefs-field">
-                <span>{t("prefs.virtioWin")}</span>
-                <input
-                  type="text"
-                  value={config.defaults.virtio_win_iso ?? ""}
-                  placeholder="/srv/iso/drivers/virtio-win.iso"
-                  onChange={(e) =>
-                    update("defaults", {
-                      ...config.defaults,
-                      virtio_win_iso: e.target.value || null,
-                    })
-                  }
-                />
-              </label>
+              <div className="prefs-field">
+                <span className="prefs-label-help">
+                  <label htmlFor="prefs-virtio">{t("prefs.virtioWin")}</label>
+                  <button
+                    type="button"
+                    className="icon-button"
+                    aria-label={t("prefs.virtioHelpTitle")}
+                    title={t("prefs.virtioHelpTitle")}
+                    onClick={() => setVirtioHelp(true)}
+                  >
+                    <CircleHelp aria-hidden />
+                  </button>
+                </span>
+                <span className="prefs-path">
+                  <input
+                    id="prefs-virtio"
+                    type="text"
+                    value={config.defaults.virtio_win_iso ?? ""}
+                    placeholder="/srv/iso/drivers/virtio-win.iso"
+                    onChange={(e) =>
+                      update("defaults", {
+                        ...config.defaults,
+                        virtio_win_iso: e.target.value || null,
+                      })
+                    }
+                  />
+                  <button type="button" className="button" onClick={() => setPickingVirtio(true)}>
+                    {t("prefs.browse")}
+                  </button>
+                </span>
+              </div>
+              {virtioOutside && (
+                <div className="note note-warn prefs-note">
+                  <p>{t("prefs.virtioOutside")}</p>
+                  <button
+                    type="button"
+                    className="button"
+                    onClick={() => setAddingIso({ path: parentFolder(virtioPath) })}
+                  >
+                    {t("prefs.virtioAddLibrary")}
+                  </button>
+                </div>
+              )}
             </Group>
           )}
 
@@ -435,15 +491,56 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
       </div>
       {addingIso && (
         <AddIsoLibraryDialog
-          onClose={() => setAddingIso(false)}
+          initialPath={addingIso.path}
+          onClose={() => setAddingIso(null)}
           onAdded={(change) => {
             applyIsoChange(change);
             setSelectedIso(change.config.iso_libraries.length - 1);
             const added = change.config.iso_libraries.at(-1)?.path;
             if (change.declared && added) setDeclared((d) => [...(d ?? []), added]);
-            setAddingIso(false);
+            setAddingIso(null);
           }}
         />
+      )}
+      {pickingVirtio && config && (
+        <IsoPicker
+          title={t("prefs.virtioWin")}
+          onPick={(path) => {
+            setPickingVirtio(false);
+            update("defaults", { ...config.defaults, virtio_win_iso: path });
+          }}
+          onClose={() => setPickingVirtio(false)}
+        />
+      )}
+      {virtioHelp && (
+        <Dialog
+          open
+          width={480}
+          onOpenChange={(open) => !open && setVirtioHelp(false)}
+          title={t("prefs.virtioHelpTitle")}
+          buttons={
+            <button type="button" className="button" onClick={() => setVirtioHelp(false)}>
+              {t("common.close")}
+            </button>
+          }
+        >
+          <div className="prefs-help">
+            <p>{t("prefs.virtioHelp")}</p>
+            <p>{t("prefs.virtioDownload")}</p>
+            <p>
+              <a
+                href={VIRTIO_WIN_URL}
+                onClick={(e) => {
+                  e.preventDefault();
+                  openLink(VIRTIO_WIN_URL);
+                }}
+              >
+                {VIRTIO_WIN_URL}
+              </a>
+            </p>
+            <p className="prefs-muted">{t("prefs.virtioNoDownload")}</p>
+          </div>
+        </Dialog>
       )}
       {removingIso && iso && (
         <ConfirmDialog
