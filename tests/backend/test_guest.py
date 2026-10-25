@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 from fastapi import FastAPI
-from fastapi.routing import APIRoute, APIWebSocketRoute
+from fastapi.routing import APIWebSocketRoute
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
@@ -103,9 +103,11 @@ def test_guest_manages_vms(guest_client: TestClient) -> None:
 def _forbidden_routes(app: FastAPI) -> list[tuple[str, str]]:
     found = []
     for route in app.routes:
-        if isinstance(route, APIRoute):
-            path = re.sub(r"\{[^}]+\}", "x", route.path)
-            found += [(m, path) for m in sorted(route.methods or ()) if guest_forbidden(m, path)]
+        # HTTP routes, whatever class the FastAPI version gives them.
+        methods = getattr(route, "methods", None)
+        if methods:
+            path = re.sub(r"\{[^}]+\}", "x", getattr(route, "path", ""))
+            found += [(m, path) for m in sorted(methods) if guest_forbidden(m, path)]
     return found
 
 
