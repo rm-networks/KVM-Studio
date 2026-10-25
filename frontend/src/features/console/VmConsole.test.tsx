@@ -66,13 +66,20 @@ const desktopApi = {
   write_clipboard: vi.fn(() => Promise.resolve()),
 };
 
-let display = { live: ["vnc"], config: ["vnc"], clipboard: true, active: true };
+const vncDisplay = {
+  live: ["vnc"],
+  config: ["vnc"],
+  clipboard: true,
+  clipboard_config: true,
+  active: true,
+};
+let display = vncDisplay;
 const posts: string[] = [];
 
 beforeEach(() => {
   instances.length = 0;
   posts.length = 0;
-  display = { live: ["vnc"], config: ["vnc"], clipboard: true, active: true };
+  display = vncDisplay;
   window.pywebview = { api: desktopApi };
   sessionStorage.setItem("kvmstudio.token", "tok");
   vi.stubGlobal(
@@ -156,17 +163,47 @@ describe("VmConsole", () => {
     vi.useRealTimers();
   });
 
-  it("explains a SPICE-only VM and adds a VNC display", async () => {
-    display = { live: ["spice"], config: ["spice"], clipboard: false, active: true };
+  it("only offers copy and paste for a SPICE VM", async () => {
+    display = {
+      live: ["spice"],
+      config: ["spice"],
+      clipboard: false,
+      clipboard_config: false,
+      active: true,
+    };
     render(<VmConsole uuid="abc" />);
-    expect(await screen.findByText(/n'a qu'un affichage SPICE/)).toBeTruthy();
+    expect(await screen.findByText(/copier-coller entre cet ordinateur/)).toBeTruthy();
+    expect(screen.queryByText(/SPICE/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /affichage/ })).toBeNull();
     expect(instances).toHaveLength(0);
-    fireEvent.click(screen.getByRole("button", { name: "Ajouter un affichage VNC" }));
+    fireEvent.click(screen.getByRole("button", { name: "Activer le copier-coller" }));
+    display = {
+      live: ["spice"],
+      config: ["spice", "vnc"],
+      clipboard: false,
+      clipboard_config: true,
+      active: true,
+    };
     fireEvent.click(
-      screen.getAllByRole("button", { name: "Ajouter un affichage VNC" }).at(-1) as HTMLElement,
+      screen.getAllByRole("button", { name: "Activer le copier-coller" }).at(-1) as HTMLElement,
     );
-    expect(await screen.findByText(/Arrêtez puis redémarrez/)).toBeTruthy();
-    expect(posts).toEqual(["/api/vms/abc/display/vnc"]);
+    expect(await screen.findByText(/Copier-coller configuré/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Activer le copier-coller" })).toBeNull();
+    expect(posts).toEqual(["/api/vms/abc/display/clipboard"]);
+  });
+
+  it("shows no banner once copy and paste works after a restart", async () => {
+    display = {
+      live: ["spice", "vnc"],
+      config: ["spice", "vnc"],
+      clipboard: true,
+      clipboard_config: true,
+      active: true,
+    };
+    render(<VmConsole uuid="abc" />);
+    await connected();
+    expect(screen.queryByText(/copier-coller/i)).toBeNull();
+    expect(document.querySelector(".console-banner")).toBeNull();
   });
 
   it("exposes key combinations once connected", async () => {

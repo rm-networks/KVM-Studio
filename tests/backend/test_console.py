@@ -185,6 +185,25 @@ def test_display_info_and_adding_vnc(
         dom.undefine()
 
 
+def test_enable_clipboard_on_a_spice_only_vm(
+    config: Config, conn: LibvirtConnection, frontend_dir: Path
+) -> None:
+    client = make_client(config, conn, frontend_dir, echo_opener)
+    auth = {"Authorization": f"Bearer {TOKEN}"}
+    dom = conn.run(lambda c: c.defineXML(SPICE_VM))
+    try:
+        uuid = dom.UUIDString()
+        result = client.post(f"/api/vms/{uuid}/display/clipboard", headers=auth).json()
+        assert result == {"restart_required": False}
+        info = client.get(f"/api/vms/{uuid}/display", headers=auth).json()
+        # One action: the agent channel and the display the console uses.
+        assert info["config"] == ["spice", "vnc"]
+        assert info["clipboard_config"] is True
+        assert "spicevmc" not in dom.XMLDesc(0)
+    finally:
+        dom.undefine()
+
+
 def test_enable_clipboard_on_a_vm_that_has_vnc(
     config: Config, conn: LibvirtConnection, frontend_dir: Path
 ) -> None:

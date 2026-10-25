@@ -78,6 +78,22 @@ export function VmConsole({ uuid }: { uuid: string }) {
     );
   }
 
+  // A SPICE display (virt-manager): turning copy and paste on also gives the
+  // console the display it uses, so it is the only thing to offer.
+  const spice = display.live.includes("spice") || display.config.includes("spice");
+  if (spice) {
+    return (
+      <div className="console">
+        <ClipboardNotice
+          uuid={uuid}
+          centered
+          pending={display.config.includes("vnc") && display.clipboard_config}
+          onChanged={() => setCheck((n) => n + 1)}
+        />
+      </div>
+    );
+  }
+
   const vncConfigured = display.config.includes("vnc");
   return (
     <div className="console">
@@ -86,11 +102,7 @@ export function VmConsole({ uuid }: { uuid: string }) {
           <span>{t("console.restartForVnc")}</span>
         ) : (
           <>
-            <span>
-              {display.live.includes("spice") || display.config.includes("spice")
-                ? t("console.spiceOnly")
-                : t("console.noDisplay")}
-            </span>
+            <span>{t("console.noDisplay")}</span>
             <button type="button" className="button" onClick={() => setConfirming(true)}>
               {t("console.addVnc")}
             </button>
@@ -116,21 +128,24 @@ export function VmConsole({ uuid }: { uuid: string }) {
   );
 }
 
-/** Copy and paste is off: the agent port belongs to SPICE, or no agent channel at all. */
+/** Copy and paste is off: the agent port belongs to SPICE, or there is no agent channel. */
 function ClipboardNotice({
   uuid,
   pending,
+  centered = false,
   onChanged,
 }: {
   uuid: string;
   pending: boolean;
+  /** Alone on the console (no screen yet) rather than over the screen. */
+  centered?: boolean;
   onChanged: () => void;
 }) {
   const { t } = useTranslation();
   const { notifyError } = useNotifier();
   const [confirming, setConfirming] = useState(false);
   return (
-    <div className="console-banner">
+    <div className={centered ? "console-overlay console-notice" : "console-banner"}>
       <span>{pending ? t("console.restartForClipboard") : t("console.clipboardOff")}</span>
       {!pending && (
         <button type="button" className="button" onClick={() => setConfirming(true)}>

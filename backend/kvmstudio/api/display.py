@@ -80,5 +80,8 @@ async def add_vnc(ctx: Context, uuid: str) -> DisplayChange:
 
 @router.post("/{uuid}/display/clipboard")
 async def enable_clipboard(ctx: Context, uuid: str) -> DisplayChange:
-    """Copy and paste over VNC for a VM whose agent port belongs to SPICE."""
-    return await run_in_threadpool(ctx.conn.run, lambda c: _edit_devices(c, uuid, vnc=False))
+    """Copy and paste for a VM whose agent port belongs to SPICE, or that has none.
+
+    The console needs a VNC display too: a SPICE-only VM gets one, SPICE stays.
+    """
+    return await run_in_threadpool(ctx.conn.run, lambda c: _edit_devices(c, uuid, vnc=True))
