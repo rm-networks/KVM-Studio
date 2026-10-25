@@ -264,6 +264,13 @@
       "memory_required": "libvirt ne prend l'instantané d'une VM allumée qu'avec sa mémoire.",
       "linked_clones": "Des clones liés utilisent les disques de cette VM : ses instantanés ne peuvent pas changer.",
       "exists": "Un instantané porte déjà ce nom."
+    },
+    "kvm": {
+      "no_cpu_support": "Le processeur n'annonce aucune virtualisation matérielle. Activez Intel VT-x ou AMD-V dans le firmware (BIOS/UEFI).",
+      "reboot_needed": "Les modules KVM du noyau en cours ne sont plus installés, sans doute après une mise à jour du noyau. Redémarrez l'ordinateur pour utiliser le nouveau noyau et ses modules.",
+      "module_not_loaded": "Le module KVM n'est pas chargé : les VMs ne peuvent pas démarrer. Chargez-le avec sudo modprobe kvm_intel (ou kvm_amd), ou redémarrez l'ordinateur.",
+      "no_dev_kvm": "/dev/kvm est absent alors que le module KVM est chargé. Redémarrez l'ordinateur ; si cela persiste, regardez : dmesg | grep -i kvm",
+      "dev_kvm_denied": "/dev/kvm n'est pas accessible à ce compte. Fermez puis rouvrez la session ; si cela persiste, vérifiez : ls -l /dev/kvm"
     }
   },
   "about": {
@@ -730,7 +737,7 @@
       },
       "kvm": {
         "ok": "Module KVM chargé ({{detail}})",
-        "fail": "/dev/kvm absent : KVM n'est pas disponible",
+        "fail": "KVM n'est pas disponible",
         "hint": "Activez la virtualisation dans le firmware, puis vérifiez avec : lsmod | grep kvm"
       },
       "nested": {
@@ -1007,5 +1014,8 @@
     "cancel": "Annuler : {{label}}",
     "cancelling": "{{label}} : annulation…",
     "cancelled": "{{label}} : annulé"
+  },
+  "kvm": {
+    "title": "KVM n'est pas disponible"
   }
 }

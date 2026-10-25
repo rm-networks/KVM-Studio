@@ -12,6 +12,7 @@ import libvirt
 from .config import Config
 from .i18n import t
 from .libvirt_conn import LibvirtConnection
+from .services import host_kvm
 
 Level = Literal["ok", "warn", "fail"]
 _LABELS: dict[Level, str] = {"ok": " OK ", "warn": "WARN", "fail": "FAIL"}
@@ -24,12 +25,22 @@ class Result:
     message: str
 
 
-def _check_kvm() -> Result:
-    if not os.path.exists("/dev/kvm"):
-        return Result("warn", "KVM", t("check.kvm_missing"))
-    if not os.access("/dev/kvm", os.R_OK | os.W_OK):
-        return Result("warn", "KVM", t("check.kvm_denied"))
-    return Result("ok", "KVM", t("check.kvm_ok"))
+def _check_kvm(root: Path = Path("/")) -> list[Result]:
+    state = host_kvm.kvm_state(root)
+    module = state.module or ("kvm_amd" if state.vendor == "amd" else "kvm_intel")
+    if state.problem is not None:
+        message = t(f"check.kvm_{state.problem}", kernel=state.kernel, module=module)
+        return [Result("warn", "KVM", message)]
+    results = [Result("ok", "KVM", t("check.kvm_ok", module=module))]
+    if state.nested is not None:
+        results.append(
+            Result(
+                "ok" if state.nested else "warn",
+                t("check.nested"),
+                t("check.nested_on" if state.nested else "check.nested_off", module=module),
+            )
+        )
+    return results
 
 
 def _check_libvirt(uri: str) -> list[Result]:
@@ -124,7 +135,7 @@ def _check_networkmanager(conf_dir: Path = NM_CONF_DIR) -> Result | None:
 def run_checks(config: Config, config_path: Path) -> list[Result]:
     state = t("check.config_found" if config_path.exists() else "check.config_defaults")
     results = [Result("ok", t("check.config"), f"{config_path} ({state})")]
-    results.append(_check_kvm())
+    results += _check_kvm()
     results += _check_libvirt(config.libvirt.uri)
     results.append(_check_vm_location(config.storage.vm_default_location))
     results += _check_iso_libraries(config)

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 import uuid as uuidlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import libvirt
+from lxml import etree
 
 from ..config import Config
 from ..errors import ApiException
@@ -16,6 +18,7 @@ from ..paths import confine, in_iso_library, library_root, resolve
 from ..xml.domain import DiskSpec, DomainSpec, NicSpec, build_domain
 from ..xml.profiles import PROFILES, DiskBus, NicModel
 from . import qemu_img
+from .host_kvm import kvm_state
 from .library import _SEGMENT_RE, check_folder
 
 MAX_NICS = 10
@@ -90,6 +93,17 @@ def _check(conn: LibvirtConnection, config: Config, vm: NewVm) -> tuple[Path, st
     return vm_dir, "test" if driver.upper() == "TEST" else "kvm"
 
 
+def machine_type(conn: LibvirtConnection) -> str:
+    """The versioned name behind the q35 alias, as QEMU reports it now."""
+    try:
+        xml = conn.run(lambda c: c.getDomainCapabilities(None, "x86_64", "q35", "kvm", 0))
+    except libvirt.libvirtError:
+        return "q35"
+    root = etree.fromstring(xml.encode(), parser=etree.XMLParser(resolve_entities=False))
+    found = root.findtext("machine") or ""
+    return found if re.fullmatch(r"pc-q35-\d+\.\d+", found) else "q35"
+
+
 def create_vm(conn: LibvirtConnection, config: Config, vm: NewVm) -> str:
     vm_dir, domain_type = _check(conn, config, vm)
     iso = None
@@ -131,6 +145,8 @@ def create_vm(conn: LibvirtConnection, config: Config, vm: NewVm) -> str:
             nvram=vm_dir / f"{vm.name}_VARS.fd" if vm.uefi else None,
             folder=check_folder(vm.folder),
             domain_type=domain_type,
+            machine=machine_type(conn) if domain_type == "kvm" else "q35",
+            cpu_vendor=kvm_state().vendor,
         )
         xml = build_domain(spec)
 

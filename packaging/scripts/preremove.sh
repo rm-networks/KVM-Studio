@@ -14,6 +14,7 @@ esac
 
 if [ -d /run/systemd/system ]; then
     systemctl disable --now kvmstudio-helper.socket kvmstudio-helper.service || :
+    systemctl disable kvmstudio-forwards.service || :
 fi
 
 # Access rights the helper gave QEMU on ISO libraries: only those it added.

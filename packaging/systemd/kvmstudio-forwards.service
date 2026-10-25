@@ -1,0 +1,17 @@
+[Unit]
+Description=@APP_NAME@ port forwarding table
+Documentation=https://github.com/rm-networks/kvm-studio/blob/main/docs/NETWORKING.md
+# "systemctl restart nftables" flushes every table, firewalld and libvirt
+# rebuild their own: the inet kvmstudio table is written again after each.
+After=nftables.service firewalld.service virtnetworkd.service libvirtd.service
+PartOf=nftables.service firewalld.service virtnetworkd.service libvirtd.service
+ReloadPropagatedFrom=nftables.service firewalld.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/kvm-studio/bin/kvmstudio-helper --apply-forwards
+ExecReload=/opt/kvm-studio/bin/kvmstudio-helper --apply-forwards
+
+[Install]
+WantedBy=multi-user.target

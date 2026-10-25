@@ -91,6 +91,8 @@ contents:
     dst: /usr/lib/systemd/system/kvmstudio-helper.service
   - src: build/stage/files/systemd/kvmstudio-helper.socket
     dst: /usr/lib/systemd/system/kvmstudio-helper.socket
+  - src: build/stage/files/systemd/kvmstudio-forwards.service
+    dst: /usr/lib/systemd/system/kvmstudio-forwards.service
   - src: build/stage/files/polkit/org.kvmstudio.helper.policy
     dst: /usr/share/polkit-1/actions/org.kvmstudio.helper.policy
   - src: build/stage/files/firewalld/kvm-studio.xml

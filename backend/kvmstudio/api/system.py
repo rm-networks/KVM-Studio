@@ -9,6 +9,7 @@ from .. import APP_NAME, __version__
 from ..context import Context, Mode
 from ..errors import ApiException
 from ..i18n import resolve
+from ..services import host_kvm
 
 
 class Health(BaseModel):
@@ -23,6 +24,14 @@ class LibvirtInfo(BaseModel):
     hypervisor_version: str
 
 
+class KvmInfo(BaseModel):
+    """KVM on the host, checked at each start (kernel updates can break it)."""
+
+    problem: host_kvm.Problem | None
+    kernel: str
+    module: str
+
+
 class UiPreferences(BaseModel):
     theme: Literal["system", "light", "dark"]
     # The language to show: the setting, or the desktop's when it is "system".
@@ -34,6 +43,8 @@ class AppInfo(BaseModel):
     mode: Mode
     libvirt: LibvirtInfo
     ui: UiPreferences
+    # Only for a QEMU connection (not the test driver).
+    kvm: KvmInfo | None = None
 
 
 def health() -> Health:
@@ -53,7 +64,14 @@ def info(ctx: Context) -> AppInfo:
             hypervisor_version=host.hypervisor_version,
         ),
         ui=UiPreferences(theme=ctx.config.ui.theme, language=resolve(ctx.config.ui.language)),
+        kvm=_kvm() if host.uri.startswith("qemu") else None,
     )
+
+
+def _kvm() -> KvmInfo:
+    state = host_kvm.kvm_state()
+    module = state.module or ("kvm_amd" if state.vendor == "amd" else "kvm_intel")
+    return KvmInfo(problem=state.problem, kernel=state.kernel, module=module)
 
 
 class Restarting(BaseModel):

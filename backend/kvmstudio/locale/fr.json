@@ -2,9 +2,7 @@
   "check.config": "Configuration",
   "check.config_found": "trouvée",
   "check.config_defaults": "absente, valeurs par défaut",
-  "check.kvm_missing": "/dev/kvm introuvable (virtualisation désactivée dans le firmware ?)",
-  "check.kvm_denied": "/dev/kvm existe mais n'est pas accessible à cet utilisateur",
-  "check.kvm_ok": "/dev/kvm accessible",
+  "check.kvm_ok": "/dev/kvm accessible ({module})",
   "check.libvirt_ok": "{uri} ({driver} {hypervisor}, libvirt {libvirt})",
   "check.domains": "Domaines",
   "check.domains_ok": "{defined} définis, {running} en marche",
@@ -92,5 +90,13 @@
   "close.stuck": "Ces machines virtuelles tournent encore ({count}) :",
   "close.power_off": "Couper l'alimentation",
   "close.leave_running": "Les laisser tourner",
-  "close.power_off_warning": "Couper l'alimentation revient à débrancher la prise : le travail non enregistré dans l'invité est perdu."
+  "close.power_off_warning": "Couper l'alimentation revient à débrancher la prise : le travail non enregistré dans l'invité est perdu.",
+  "check.kvm_no_cpu_support": "le processeur n'annonce aucune virtualisation matérielle : activez Intel VT-x ou AMD-V dans le firmware (BIOS/UEFI)",
+  "check.kvm_reboot_needed": "les modules KVM du noyau en cours ({kernel}) ne sont plus installés, sans doute après une mise à jour du noyau : redémarrez l'ordinateur",
+  "check.kvm_module_not_loaded": "le module KVM n'est pas chargé : sudo modprobe {module}",
+  "check.kvm_no_dev_kvm": "/dev/kvm est absent alors que {module} est chargé : redémarrez l'ordinateur, puis vérifiez : dmesg | grep -i kvm",
+  "check.kvm_dev_kvm_denied": "/dev/kvm n'est pas accessible à ce compte : fermez puis rouvrez la session, puis vérifiez : ls -l /dev/kvm",
+  "check.nested": "Virtualisation imbriquée",
+  "check.nested_on": "activée ({module})",
+  "check.nested_off": "désactivée ({module}) ; utile seulement pour des hyperviseurs dans des VMs : echo 'options {module} nested=1' | sudo tee /etc/modprobe.d/kvm-nested.conf, puis redémarrez"
 }

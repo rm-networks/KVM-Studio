@@ -10,6 +10,12 @@
 - Snapshots: "Include RAM" choice, limits of libvirt (raw disks, raw UEFI
   variables, TPM of a powered-off VM) shown before taking one; snapshots run
   in the background, followed in the status bar with a Cancel button.
+- System updates: KVM checked at each start and by `kvm-studio --check`
+  (kernel updated but not restarted, module not loaded, nested
+  virtualization); new VMs get a versioned machine type; the port forwarding
+  table comes back after nftables, firewalld or libvirt restart; the helper
+  service can now write it (host network, CAP_NET_ADMIN). The nested profile
+  asks for svm on AMD hosts instead of vmx.
 
 ## 0.4.0 (2026-10-25)
 

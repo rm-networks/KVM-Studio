@@ -1225,6 +1225,7 @@ export interface components {
       mode: "desktop" | "web";
       libvirt: components["schemas"]["LibvirtInfo"];
       ui: components["schemas"]["UiPreferences"];
+      kvm?: components["schemas"]["KvmInfo"] | null;
     };
     /** BootDevice */
     BootDevice: {
@@ -1691,6 +1692,26 @@ export interface components {
        * @enum {string}
        */
       reason: "no_library" | "outside_library" | "iso" | "shared" | "backing" | "not_a_file";
+    };
+    /**
+     * KvmInfo
+     * @description KVM on the host, checked at each start (kernel updates can break it).
+     */
+    KvmInfo: {
+      /** Problem */
+      problem:
+        | (
+            | "no_cpu_support"
+            | "reboot_needed"
+            | "module_not_loaded"
+            | "no_dev_kvm"
+            | "dev_kvm_denied"
+          )
+        | null;
+      /** Kernel */
+      kernel: string;
+      /** Module */
+      module: string;
     };
     /** LibraryInfo */
     LibraryInfo: {

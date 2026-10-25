@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { api, type VmSummary } from "../api/client";
+import { ApiError, api, type VmSummary } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { NotificationProvider } from "../components/Notifications";
 import { useNotifier } from "../components/notifier";
@@ -86,6 +86,7 @@ function MainWindow() {
   const [fullscreenVm, setFullscreenVm] = useState<string | null>(null);
   const windowWasFullscreen = useRef(false);
   const browserNoticeShown = useRef(false);
+  const kvmNoticeShown = useRef(false);
 
   useEffect(() => {
     if (!info) return;
@@ -95,6 +96,17 @@ function MainWindow() {
     if (info.ui.theme === "system") delete document.documentElement.dataset.theme;
     else document.documentElement.dataset.theme = info.ui.theme;
   }, [info, i18n]);
+
+  // Checked at each start: a kernel update can leave KVM unusable until a reboot.
+  useEffect(() => {
+    const kvm = info?.kvm;
+    if (!kvm?.problem || kvmNoticeShown.current) return;
+    kvmNoticeShown.current = true;
+    notifyError(
+      t("kvm.title"),
+      new ApiError(0, `kvm.${kvm.problem}`, `${kvm.module}, kernel ${kvm.kernel}`),
+    );
+  }, [info, notifyError, t]);
 
   // A VM can be missing from the list for a moment (renamed, defined elsewhere):
   // its tab keeps the last known name, and the list is fetched again.

@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 from lxml import etree
 
+from kvmstudio.services import create as create_module
 from kvmstudio.services.create import nic_target
 from kvmstudio.services.library import metadata_folder
 from kvmstudio.xml.domain import DiskSpec, DomainSpec, NicSpec, build_domain
@@ -240,7 +241,6 @@ def test_iso_must_come_from_a_library(
 def test_failed_definition_leaves_nothing_behind(
     lib_client: TestClient, labs: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import kvmstudio.services.create as create_module
 
     monkeypatch.setattr(create_module, "build_domain", lambda _spec: "<domain/>")
     response = lib_client.post("/api/vms", headers=AUTH, json=new_vm())
@@ -257,3 +257,44 @@ def test_profiles_and_host_endpoints(lib_client: TestClient) -> None:
     assert "virtio" in host["disk_buses"]
     guess = lib_client.get("/api/profiles/guess?iso=/srv/iso/Win11.iso", headers=AUTH).json()
     assert guess == {"profile": "windows11"}
+
+
+@pytest.mark.parametrize(("vendor", "flag"), [("intel", "vmx"), ("amd", "svm"), (None, None)])
+def test_nested_profile_asks_for_the_host_extension(
+    tmp_path: Path, vendor: str | None, flag: str | None
+) -> None:
+    xml = build_domain(
+        DomainSpec(
+            name="ESX",
+            uuid=str(uuidlib.uuid4()),
+            profile=PROFILES["nested"],
+            memory_mib=8192,
+            vcpus=4,
+            disks=[],
+            iso=None,
+            nics=[],
+            uefi=False,
+            secure_boot=False,
+            tpm=False,
+            nvram=None,
+            folder="",
+            machine="pc-q35-10.2",
+            cpu_vendor=vendor,
+        )
+    )
+    root = etree.fromstring(xml.encode())
+    assert root.find("os/type").get("machine") == "pc-q35-10.2"  # type: ignore[union-attr]
+    assert [f.get("name") for f in root.iterfind("cpu/feature")] == ([flag] if flag else [])
+
+
+def test_machine_type_is_the_versioned_name() -> None:
+    class Conn:
+        def __init__(self, xml: str) -> None:
+            self.xml = xml
+
+        def run(self, op: Any) -> str:
+            return self.xml
+
+    caps = "<domainCapabilities><machine>pc-q35-10.2</machine></domainCapabilities>"
+    assert create_module.machine_type(Conn(caps)) == "pc-q35-10.2"  # type: ignore[arg-type]
+    assert create_module.machine_type(Conn("<domainCapabilities/>")) == "q35"  # type: ignore[arg-type]

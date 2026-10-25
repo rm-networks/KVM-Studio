@@ -19,6 +19,7 @@ Contents:
 | `/usr/share/applications/kvm-studio.desktop` | applications menu entry |
 | `/usr/share/applications/kvm-studio-uninstall.desktop` | "Uninstall KVM Studio" entry |
 | `kvmstudio-helper.socket` / `.service` | root helper, started on demand |
+| `kvmstudio-forwards.service` | writes the port forwarding table at boot and after nftables, firewalld or libvirt restart |
 | `/usr/share/polkit-1/actions/org.kvmstudio.helper.policy` | helper authorizations |
 | `/etc/kvm-studio/helper.toml` | helper settings, libraries declared by the administrator |
 | `/var/lib/kvm-studio` | helper state: ISO libraries declared from Preferences, access rights it added |
@@ -61,6 +62,43 @@ python3 packaging/stage.py
 
 ```bash
 VERSION=0.4.0 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
+```
+
+## System updates
+
+KVM Studio relies on the kernel (KVM modules), QEMU, libvirt, NetworkManager
+and the firewall. What to know when they are updated:
+
+- **Kernel.** The KVM modules (`kvm_intel` or `kvm_amd`) belong to the running
+  kernel. After a kernel update, restart the computer: once the package
+  manager removes the modules of the kernel still running, KVM cannot be
+  loaded again until the restart. KVM Studio checks KVM at each start and says
+  so ("the KVM modules of the running kernel are no longer installed"), as
+  does `kvm-studio --check`, which also shows whether nested virtualization is
+  on. Nested virtualization is a module option
+  (`options kvm_intel nested=1` in `/etc/modprobe.d/`) and follows the kernel.
+- **QEMU.** New VMs get a versioned machine type (`pc-q35-10.2`, never the
+  `q35` alias), so their virtual hardware stays the same after a QEMU update;
+  Windows does not see new hardware and keeps its activation. Existing VMs
+  keep their machine type; change it only on purpose.
+- **libvirt, NetworkManager, firewalld, nftables.** The `kvmnet` networks are
+  libvirt's own and come back with it; NetworkManager keeps ignoring their
+  interfaces after a restart (its `90-kvm-studio.conf` file is read again).
+  `systemctl restart nftables` flushes every nftables table, libvirt's
+  included: libvirt rebuilds its own when `virtnetworkd` restarts, and
+  `kvmstudio-forwards.service` writes the `inet kvmstudio` table again after
+  nftables, firewalld (reload or restart) and libvirt. The LAN sharing port is
+  opened in firewalld permanently, so a reload keeps it.
+- **KVM Studio.** `dnf upgrade` (or `rpm -U`, `apt`, `dpkg -i`) keeps the
+  settings (`~/.config/kvm-studio`), the guest account, `helper.toml`, the
+  declared ISO libraries, the record of access rights and the port
+  forwarding rules (`/var/lib/kvm-studio`); the helper restarts with the new
+  code and the forwarding table is written again.
+
+To check a host after updates:
+
+```bash
+kvm-studio --check
 ```
 
 ## From the sources (Fedora)

@@ -196,7 +196,11 @@ export function FirstRunWizard({ onClose, onSaved }: Props) {
                 <span>
                   {t(`firstRun.check.${c.id}.${c.level}`, { detail: c.detail })}
                   {c.level !== "ok" && (
-                    <small>{t(`firstRun.check.${c.id}.hint`, { detail: c.detail })}</small>
+                    <small>
+                      {c.id === "kvm" && c.detail
+                        ? t(`errors.kvm.${c.detail}`)
+                        : t(`firstRun.check.${c.id}.hint`, { detail: c.detail })}
+                    </small>
                   )}
                 </span>
               </li>

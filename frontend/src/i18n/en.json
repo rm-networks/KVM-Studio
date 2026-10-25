@@ -264,6 +264,13 @@
       "memory_required": "libvirt only takes a snapshot of a running VM together with its memory.",
       "linked_clones": "Linked clones use the disks of this VM: its snapshots cannot change.",
       "exists": "A snapshot already has this name."
+    },
+    "kvm": {
+      "no_cpu_support": "The processor shows no hardware virtualization. Enable Intel VT-x or AMD-V in the firmware (BIOS/UEFI).",
+      "reboot_needed": "The KVM modules of the running kernel are no longer installed, most likely after a kernel update. Restart the computer so that the new kernel and its modules are used.",
+      "module_not_loaded": "The KVM module is not loaded: VMs cannot start. Load it with sudo modprobe kvm_intel (or kvm_amd), or restart the computer.",
+      "no_dev_kvm": "/dev/kvm is missing although the KVM module is loaded. Restart the computer; if it persists, look at: dmesg | grep -i kvm",
+      "dev_kvm_denied": "/dev/kvm is not accessible to this account. Log out and back in; if it persists, check: ls -l /dev/kvm"
     }
   },
   "about": {
@@ -730,7 +737,7 @@
       },
       "kvm": {
         "ok": "KVM module loaded ({{detail}})",
-        "fail": "/dev/kvm missing: KVM is not available",
+        "fail": "KVM is not available",
         "hint": "Enable virtualization in the firmware, then check with: lsmod | grep kvm"
       },
       "nested": {
@@ -1007,5 +1014,8 @@
     "cancel": "Cancel: {{label}}",
     "cancelling": "{{label}}: cancelling…",
     "cancelled": "{{label}}: cancelled"
+  },
+  "kvm": {
+    "title": "KVM is not available"
   }
 }

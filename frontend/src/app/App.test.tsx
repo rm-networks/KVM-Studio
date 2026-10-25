@@ -68,6 +68,17 @@ describe("App", () => {
     expect(headers.Authorization).toBe("Bearer abc123");
   });
 
+  it("tells at start that a kernel update needs a reboot", async () => {
+    const broken = {
+      ...info,
+      kvm: { problem: "reboot_needed", kernel: "6.17.1", module: "kvm_intel" },
+    };
+    mockFetch((path) => [200, path === "/api/info" ? broken : apiResponse(path)]);
+    render(<App />);
+    expect(await screen.findByText("KVM n'est pas disponible")).toBeTruthy();
+    expect(screen.getByText(/Redémarrez l'ordinateur pour utiliser le nouveau noyau/)).toBeTruthy();
+  });
+
   it("explains an invalid session", async () => {
     mockFetch(() => [
       401,

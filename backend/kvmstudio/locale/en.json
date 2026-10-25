@@ -2,9 +2,7 @@
   "check.config": "Configuration",
   "check.config_found": "found",
   "check.config_defaults": "not found, using defaults",
-  "check.kvm_missing": "/dev/kvm not found (virtualization disabled in firmware?)",
-  "check.kvm_denied": "/dev/kvm exists but is not accessible to this user",
-  "check.kvm_ok": "/dev/kvm accessible",
+  "check.kvm_ok": "/dev/kvm accessible ({module})",
   "check.libvirt_ok": "{uri} ({driver} {hypervisor}, libvirt {libvirt})",
   "check.domains": "Domains",
   "check.domains_ok": "{defined} defined, {running} running",
@@ -92,5 +90,13 @@
   "close.stuck": "These virtual machines are still running ({count}):",
   "close.power_off": "Power off",
   "close.leave_running": "Leave them running",
-  "close.power_off_warning": "Powering off is like pulling the plug: unsaved work in the guest is lost."
+  "close.power_off_warning": "Powering off is like pulling the plug: unsaved work in the guest is lost.",
+  "check.kvm_no_cpu_support": "the processor shows no hardware virtualization: enable Intel VT-x or AMD-V in the firmware (BIOS/UEFI)",
+  "check.kvm_reboot_needed": "the KVM modules of the running kernel ({kernel}) are no longer installed, most likely after a kernel update: restart the computer",
+  "check.kvm_module_not_loaded": "the KVM module is not loaded: sudo modprobe {module}",
+  "check.kvm_no_dev_kvm": "/dev/kvm is missing although {module} is loaded: restart the computer, then check: dmesg | grep -i kvm",
+  "check.kvm_dev_kvm_denied": "/dev/kvm is not accessible to this account: log out and back in, then check: ls -l /dev/kvm",
+  "check.nested": "Nested virtualization",
+  "check.nested_on": "enabled ({module})",
+  "check.nested_off": "disabled ({module}); only needed for hypervisors inside VMs: echo 'options {module} nested=1' | sudo tee /etc/modprobe.d/kvm-nested.conf, then restart"
 }

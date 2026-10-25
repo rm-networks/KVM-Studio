@@ -52,6 +52,11 @@ class DomainSpec:
     nvram: Path | None
     folder: str
     domain_type: str = "kvm"
+    # Versioned machine type (pc-q35-10.2): the VM keeps the same virtual
+    # hardware when QEMU is updated. "q35" only where libvirt gives none.
+    machine: str = "q35"
+    # Host processor, for the virtualization extension a nested profile needs.
+    cpu_vendor: str | None = None
     extra_cdroms: list[Path] = field(default_factory=list)
 
 
@@ -83,7 +88,7 @@ def build_domain(spec: DomainSpec) -> str:
     _sub(root, "vcpu", str(spec.vcpus), placement="static")
 
     os_el = _sub(root, "os", firmware="efi") if spec.uefi else _sub(root, "os")
-    _sub(os_el, "type", "hvm", arch="x86_64", machine="q35")
+    _sub(os_el, "type", "hvm", arch="x86_64", machine=spec.machine)
     if spec.uefi:
         firmware = _sub(os_el, "firmware")
         _sub(firmware, "feature", enabled="yes" if spec.secure_boot else "no", name="secure-boot")
@@ -111,8 +116,9 @@ def build_domain(spec: DomainSpec) -> str:
     _sub(features, "vmport", state="off")
 
     cpu = _sub(root, "cpu", mode="host-passthrough", check="none", migratable="on")
-    if p.nested:
-        _sub(cpu, "feature", policy="require", name="vmx")
+    if p.nested and spec.cpu_vendor in ("intel", "amd"):
+        flag = "vmx" if spec.cpu_vendor == "intel" else "svm"
+        _sub(cpu, "feature", policy="require", name=flag)
     clock = _sub(root, "clock", offset="localtime" if p.family == "windows" else "utc")
     _sub(clock, "timer", name="rtc", tickpolicy="catchup")
     _sub(clock, "timer", name="pit", tickpolicy="delay")

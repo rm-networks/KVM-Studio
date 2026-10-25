@@ -22,6 +22,10 @@ hide_kvm_studio_interfaces() {
 if [ -d /run/systemd/system ]; then
     systemctl daemon-reload || :
     systemctl enable --now kvmstudio-helper.socket || :
+    # Writes the port forwarding table at boot and after nftables, firewalld
+    # or libvirt restart; restarted here so the new code applies it.
+    systemctl enable kvmstudio-forwards.service || :
+    systemctl restart kvmstudio-forwards.service || :
     # A helper already running keeps the old code until restarted.
     systemctl try-restart kvmstudio-helper.service || :
     if systemctl is-active --quiet NetworkManager.service; then

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import grp
 import ipaddress
 import os
@@ -16,6 +15,7 @@ import libvirt
 
 from ..libvirt_conn import LibvirtConnection
 from . import networks as net
+from .host_kvm import kvm_state
 
 Level = Literal["ok", "warn", "fail"]
 CheckId = Literal["cpu", "kvm", "nested", "libvirt"]
@@ -38,35 +38,14 @@ class DefaultNetwork:
     exists: bool
 
 
-def _cpu_flags(cpuinfo: Path) -> set[str]:
-    try:
-        text = cpuinfo.read_text()
-    except OSError:
-        return set()
-    for line in text.splitlines():
-        if line.startswith("flags"):
-            return set(line.partition(":")[2].split())
-    return set()
-
-
 def host_checks(conn: LibvirtConnection, root: Path = Path("/")) -> list[Check]:
-    flags = _cpu_flags(root / "proc" / "cpuinfo")
-    vendor = "intel" if "vmx" in flags else "amd" if "svm" in flags else None
-    checks = [Check("cpu", "ok" if vendor else "warn", vendor or "")]
-
-    module = next(
-        (m for m in ("kvm_intel", "kvm_amd") if (root / "sys" / "module" / m).is_dir()), None
-    )
-    if (root / "dev" / "kvm").exists():
-        checks.append(Check("kvm", "ok", module or "kvm"))
+    state = kvm_state(root)
+    checks = [Check("cpu", "ok" if state.vendor else "warn", state.vendor or "")]
+    if state.problem in (None, "dev_kvm_denied"):
+        checks.append(Check("kvm", "ok", state.module or "kvm"))
     else:
-        checks.append(Check("kvm", "fail", ""))
-
-    nested = ""
-    if module:
-        with contextlib.suppress(OSError):
-            nested = (root / "sys" / "module" / module / "parameters" / "nested").read_text()
-    checks.append(Check("nested", "ok" if nested.strip() in ("Y", "1") else "warn", module or ""))
+        checks.append(Check("kvm", "fail", state.problem or ""))
+    checks.append(Check("nested", "ok" if state.nested else "warn", state.module or ""))
 
     try:
         info = conn.host_info()
