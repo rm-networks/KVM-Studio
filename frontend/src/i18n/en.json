@@ -463,10 +463,14 @@
     "isoNotDeclared": "Declared before this version: remove it and add it again so that the Fix button can correct its access rights.",
     "virtioHelpTitle": "About the virtio-win ISO",
     "virtioHelp": "virtio-win holds the Windows drivers for the virtual hardware (VirtIO disks and network cards, display) and the guest tools: guest agent and copy and paste. {{app}} copies its installer onto the guest tools CD of Windows virtual machines; the ISO itself is never changed.",
-    "virtioDownload": "Download virtio-win.iso from the virtio-win project page, then put it in one of your ISO libraries:",
-    "virtioNoDownload": "{{app}} downloads nothing by itself.",
+    "virtioDownload": "These pages explain where to get virtio-win.iso. Put it in one of your ISO libraries afterwards:",
+    "virtioNoDownload": "{{app}} downloads nothing by itself: you alone are responsible for what you download.",
     "virtioOutside": "This file is not in an ISO library: the virtual machines cannot read it and the guest tools cannot use it.",
-    "virtioAddLibrary": "Add its folder as an ISO library…"
+    "virtioAddLibrary": "Add its folder as an ISO library…",
+    "virtioLink": {
+      "fedora": "Fedora documentation: Windows virtual machines with the virtio drivers",
+      "readme": "virtio-win project README (downloads and versions)"
+    }
   },
   "iso": {
     "title": "Choose an ISO Image",

@@ -138,10 +138,17 @@ describe("PreferencesDialog", () => {
     expect(screen.queryByText(/n'est pas dans une bibliothèque ISO/)).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "À propos de l'ISO virtio-win" }));
-    fireEvent.click(await screen.findByText(/^https:\/\/fedorapeople\.org\//));
+    fireEvent.click(await screen.findByText(/^Documentation Fedora/));
     expect(openLink).toHaveBeenCalledWith(
-      "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso",
+      "https://docs.fedoraproject.org/en-US/quick-docs/creating-windows-virtual-machines-using-virtio-drivers/",
     );
+    fireEvent.click(screen.getByText(/^README du projet virtio-win/));
+    expect(openLink).toHaveBeenLastCalledWith(
+      "https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md",
+    );
+    for (const link of document.querySelectorAll(".prefs-help a")) {
+      expect(link.getAttribute("href")).not.toMatch(/\.iso$/);
+    }
     fireEvent.click(screen.getAllByRole("button", { name: "Fermer" }).at(-1) as HTMLElement);
 
     // Typed by hand outside the libraries: offer to add its folder.

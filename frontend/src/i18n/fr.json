@@ -463,10 +463,14 @@
     "isoNotDeclared": "Déclarée avant cette version : retirez-la puis ajoutez-la de nouveau pour que le bouton Corriger puisse régler ses droits d'accès.",
     "virtioHelpTitle": "À propos de l'ISO virtio-win",
     "virtioHelp": "virtio-win contient les pilotes Windows du matériel virtuel (disques et cartes réseau VirtIO, affichage) et les outils invités : agent invité et copier-coller. {{app}} copie son installeur sur le CD des outils invités des machines virtuelles Windows ; l'ISO elle-même n'est jamais modifiée.",
-    "virtioDownload": "Téléchargez virtio-win.iso depuis la page du projet virtio-win, puis placez-la dans une de vos bibliothèques ISO :",
-    "virtioNoDownload": "{{app}} ne télécharge rien de lui-même.",
+    "virtioDownload": "Ces pages expliquent où obtenir virtio-win.iso. Placez-la ensuite dans une de vos bibliothèques ISO :",
+    "virtioNoDownload": "{{app}} ne télécharge rien de lui-même : vous êtes seul responsable de ce que vous téléchargez.",
     "virtioOutside": "Ce fichier n'est pas dans une bibliothèque ISO : les machines virtuelles ne peuvent pas le lire et les outils invités ne peuvent pas s'en servir.",
-    "virtioAddLibrary": "Ajouter son dossier comme bibliothèque ISO…"
+    "virtioAddLibrary": "Ajouter son dossier comme bibliothèque ISO…",
+    "virtioLink": {
+      "fedora": "Documentation Fedora : machines virtuelles Windows avec les pilotes virtio",
+      "readme": "README du projet virtio-win (téléchargements et versions)"
+    }
   },
   "iso": {
     "title": "Choisir une image ISO",

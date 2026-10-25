@@ -19,8 +19,17 @@ import { IsoPicker } from "../iso-picker/IsoPicker";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import "./PreferencesDialog.css";
 
-export const VIRTIO_WIN_URL =
-  "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso";
+// Stable documentation pages, never a direct link to the ISO itself.
+export const VIRTIO_WIN_LINKS = [
+  {
+    key: "fedora",
+    url: "https://docs.fedoraproject.org/en-US/quick-docs/creating-windows-virtual-machines-using-virtio-drivers/",
+  },
+  {
+    key: "readme",
+    url: "https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md",
+  },
+] as const;
 
 type Section = "workspace" | "iso" | "vm" | "interface" | "display" | "advanced";
 
@@ -527,17 +536,21 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
           <div className="prefs-help">
             <p>{t("prefs.virtioHelp")}</p>
             <p>{t("prefs.virtioDownload")}</p>
-            <p>
-              <a
-                href={VIRTIO_WIN_URL}
-                onClick={(e) => {
-                  e.preventDefault();
-                  openLink(VIRTIO_WIN_URL);
-                }}
-              >
-                {VIRTIO_WIN_URL}
-              </a>
-            </p>
+            <ul>
+              {VIRTIO_WIN_LINKS.map((link) => (
+                <li key={link.key}>
+                  <a
+                    href={link.url}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openLink(link.url);
+                    }}
+                  >
+                    {t(`prefs.virtioLink.${link.key}`)}
+                  </a>
+                </li>
+              ))}
+            </ul>
             <p className="prefs-muted">{t("prefs.virtioNoDownload")}</p>
           </div>
         </Dialog>
