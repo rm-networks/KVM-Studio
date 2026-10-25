@@ -6,6 +6,8 @@ import { type ServerEvent, subscribeEvents } from "../api/events";
 export interface AppData {
   info: AppInfo | null;
   vms: VmSummary[] | null;
+  /** Every VM name seen so far, kept when a VM drops out of the list for a moment. */
+  knownNames: ReadonlyMap<string, string>;
   library: LibraryInfo | null;
   error: ApiError | null;
   loading: boolean;
@@ -32,6 +34,15 @@ function applyEvent(vms: VmSummary[] | null, event: ServerEvent): VmSummary[] | 
 export function useAppData(): AppData {
   const [info, setInfo] = useState<AppInfo | null>(null);
   const [vms, setVms] = useState<VmSummary[] | null>(null);
+  const [knownNames, setKnownNames] = useState<ReadonlyMap<string, string>>(new Map());
+  const remember = useCallback((list: VmSummary[]) => {
+    setKnownNames((names) => {
+      if (list.every((vm) => names.get(vm.uuid) === vm.name)) return names;
+      const next = new Map(names);
+      for (const vm of list) next.set(vm.uuid, vm.name);
+      return next;
+    });
+  }, []);
   const [library, setLibrary] = useState<LibraryInfo | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,6 +56,7 @@ export function useAppData(): AppData {
         if (cancelled) return;
         setInfo(nextInfo);
         setVms(nextVms);
+        remember(nextVms);
         setLibrary(nextLibrary);
         setError(null);
       })
@@ -57,7 +69,7 @@ export function useAppData(): AppData {
     return () => {
       cancelled = true;
     };
-  }, [generation]);
+  }, [generation, remember]);
 
   const refresh = useCallback(() => {
     setLoading(true);
@@ -77,12 +89,13 @@ export function useAppData(): AppData {
             if (event.state === "restored") refresh();
             return;
           }
+          if (event.type === "vm.changed") remember([event.vm]);
           setVms((current) => applyEvent(current, event));
         },
         onReconnect: refresh,
       }),
-    [refresh],
+    [refresh, remember],
   );
 
-  return { info, vms, library, error, loading, libvirtLost, refresh };
+  return { info, vms, knownNames, library, error, loading, libvirtLost, refresh };
 }

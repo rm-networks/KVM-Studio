@@ -48,7 +48,7 @@ export function App() {
 function MainWindow() {
   const { t, i18n } = useTranslation();
   const { notifyError } = useNotifier();
-  const { info, vms, library, error, loading, libvirtLost, refresh } = useAppData();
+  const { info, vms, knownNames, library, error, loading, libvirtLost, refresh } = useAppData();
   const [layout, setLayout] = useState<Layout>({ library: true, toolbar: true, statusBar: true });
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -60,6 +60,8 @@ function MainWindow() {
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
   const [guestToolsFor, setGuestToolsFor] = useState<string | null>(null);
   const [openVms, setOpenVms] = useState<string[]>([]);
+  // Names given when a tab opens on a VM the list does not have yet (just created).
+  const [tabNames, setTabNames] = useState<ReadonlyMap<string, string>>(new Map());
   const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
 
   useEffect(() => {
@@ -70,6 +72,13 @@ function MainWindow() {
     if (info.ui.theme === "system") delete document.documentElement.dataset.theme;
     else document.documentElement.dataset.theme = info.ui.theme;
   }, [info, i18n]);
+
+  // A VM can be missing from the list for a moment (renamed, defined elsewhere):
+  // its tab keeps the last known name, and the list is fetched again.
+  const missingTab = vms !== null && openVms.some((uuid) => !vms.some((vm) => vm.uuid === uuid));
+  useEffect(() => {
+    if (missingTab) refresh();
+  }, [missingTab, refresh]);
 
   // The assistant opens by itself until a VM location is chosen.
   useEffect(() => {
@@ -85,7 +94,8 @@ function MainWindow() {
 
   const toggle = (key: keyof Layout) => setLayout((l) => ({ ...l, [key]: !l[key] }));
 
-  const openVm = (uuid: string) => {
+  const openVm = (uuid: string, name?: string) => {
+    if (name) setTabNames((names) => new Map(names).set(uuid, name));
     setOpenVms((tabs) => (tabs.includes(uuid) ? tabs : [...tabs, uuid]));
     setActiveTab(uuid);
   };
@@ -98,7 +108,10 @@ function MainWindow() {
   };
 
   const vmByUuid = new Map((vms ?? []).map((vm) => [vm.uuid, vm]));
-  const tabs = openVms.map((uuid) => ({ id: uuid, label: vmByUuid.get(uuid)?.name ?? uuid }));
+  const tabs = openVms.map((uuid) => ({
+    id: uuid,
+    label: vmByUuid.get(uuid)?.name ?? knownNames.get(uuid) ?? tabNames.get(uuid) ?? "",
+  }));
   // Menu and toolbar act on the VM of the active tab, else on the library selection.
   const selectedVm = selectedNode?.startsWith("v:") ? selectedNode.slice(2) : "";
   const currentVm = vmByUuid.get(activeTab !== HOME_TAB ? activeTab : selectedVm) ?? null;
@@ -177,7 +190,7 @@ function MainWindow() {
               error={error}
               selected={selectedNode}
               onSelect={setSelectedNode}
-              onOpen={openVm}
+              onOpen={(uuid) => openVm(uuid, vmByUuid.get(uuid)?.name)}
               onRefresh={refresh}
               onClose={() => toggle("library")}
             />
@@ -222,9 +235,9 @@ function MainWindow() {
             library={library}
             vms={vms ?? []}
             initialFolder={selectedNode?.startsWith("f:") ? selectedNode.slice(2) : ""}
-            onCreated={(uuid) => {
+            onCreated={(uuid, name) => {
               refresh();
-              openVm(uuid);
+              openVm(uuid, name);
             }}
             onClose={() => setWizardOpen(false)}
           />

@@ -57,8 +57,14 @@ class EventHub:
 
     # Run in the libvirt event-loop thread.
     def _on_lifecycle(
-        self, _conn: libvirt.virConnect, dom: libvirt.virDomain, event: int, _detail: int, _o: Any
+        self, _conn: libvirt.virConnect, dom: libvirt.virDomain, event: int, detail: int, _o: Any
     ) -> None:
+        # A rename is "undefined" under the old name, then "defined" under the new
+        # one: the VM never goes away, the second event carries its new name.
+        if event == libvirt.VIR_DOMAIN_EVENT_UNDEFINED and (
+            detail == libvirt.VIR_DOMAIN_EVENT_UNDEFINED_RENAMED
+        ):
+            return
         self._post(dom.UUIDString(), event)
 
     def _on_close(self, _conn: libvirt.virConnect, _reason: int, _opaque: Any) -> None:
@@ -88,6 +94,9 @@ class EventHub:
         except libvirt.libvirtError as exc:
             if exc.get_error_code() == libvirt.VIR_ERR_NO_DOMAIN:
                 self.broadcast({"type": "vm.removed", "uuid": uuid})
+            else:
+                # Could not read it now (domain being defined elsewhere): resync.
+                self.broadcast({"type": "library.changed"})
             return
         if vm is None:
             # A transient domain that stopped no longer exists.

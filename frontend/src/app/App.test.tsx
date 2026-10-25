@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { captureToken } from "../api/token";
@@ -107,5 +107,30 @@ describe("App", () => {
 
     act(() => socket.push({ type: "connection", state: "lost" }));
     expect(screen.getByText(/Connexion à libvirt perdue/)).toBeTruthy();
+  });
+
+  it("titles a VM tab with the VM name, whatever happens to the list", async () => {
+    let listed = vms;
+    const fetchMock = mockFetch((path) => [200, path === "/api/vms" ? listed : apiResponse(path)]);
+    render(<App />);
+    fireEvent.click(await screen.findByText("CLT-DEB13"));
+    const tabLabels = () => screen.getAllByRole("tab").map((tab) => tab.textContent);
+    expect(tabLabels()).toEqual(["Accueil", "CLT-DEB13"]);
+    const socket = eventSocket();
+    act(() => socket.open());
+
+    // libvirt renames a domain by undefining and defining it again.
+    listed = [vms[0] as (typeof vms)[number]];
+    act(() => socket.push({ type: "vm.removed", uuid: "2" }));
+    expect(tabLabels()).toEqual(["Accueil", "CLT-DEB13"]);
+    act(() => socket.push({ type: "vm.changed", vm: { ...vms[1], name: "CLT-DEB13-b" } }));
+    expect(tabLabels()).toEqual(["Accueil", "CLT-DEB13-b"]);
+    expect(tabLabels().join()).not.toContain("2");
+
+    // A VM missing from the list while its tab is open: the list is fetched again.
+    const calls = () => fetchMock.mock.calls.filter(([path]) => path === "/api/vms").length;
+    const before = calls();
+    act(() => socket.push({ type: "vm.removed", uuid: "2" }));
+    await vi.waitFor(() => expect(calls()).toBeGreaterThan(before));
   });
 });

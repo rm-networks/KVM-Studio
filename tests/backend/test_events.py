@@ -66,6 +66,25 @@ def test_transient_domains_appear_and_disappear(
         assert next_event(ws, "vm.removed")["uuid"] == uuid
 
 
+def test_a_rename_never_removes_the_vm(client: TestClient, conn: LibvirtConnection) -> None:
+    xml = TRANSIENT_XML.format(name="before-rename")
+    dom = conn.run(lambda c: c.defineXML(xml))
+    try:
+        with client.websocket_connect("ws://127.0.0.1/ws/events", subprotocols=PROTOCOLS) as ws:
+            dom.rename("after-rename", 0)
+            # The definition itself may still be on its way: skip to the rename.
+            for _ in range(5):
+                message = json.loads(ws.receive_text())
+                assert message["type"] == "vm.changed"
+                assert message["vm"]["uuid"] == dom.UUIDString()
+                if message["vm"]["name"] == "after-rename":
+                    break
+            else:
+                raise AssertionError("no event with the new name")
+    finally:
+        dom.undefine()
+
+
 @pytest.mark.parametrize(
     "protocols", [["kvmstudio.events"], [f"kvmstudio.{TOKEN}"], ["kvmstudio.events", "x"]]
 )

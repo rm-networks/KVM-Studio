@@ -25,7 +25,7 @@ interface Props {
   library: LibraryInfo | null;
   vms: VmSummary[];
   initialFolder?: string;
-  onCreated: (uuid: string) => void;
+  onCreated: (uuid: string, name: string) => void;
   onClose: () => void;
 }
 
@@ -152,7 +152,7 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
         tpm,
         start,
       });
-      onCreated(created.uuid);
+      onCreated(created.uuid, name);
       onClose();
     } catch (err) {
       notifyError(t("wizard.failed", { name }), err);

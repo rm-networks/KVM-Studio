@@ -151,7 +151,7 @@ describe("NewVmWizard", () => {
       ],
       start: true,
     });
-    await waitFor(() => expect(onCreated).toHaveBeenCalledWith("new-uuid"));
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith("new-uuid", "FW-OPN"));
   });
 
   it("asks for a VM location first", async () => {
