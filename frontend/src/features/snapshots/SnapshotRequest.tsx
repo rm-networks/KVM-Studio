@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { api, type VmSummary } from "../../api/client";
 import { useNotifier } from "../../components/notifier";
+import { useTasks } from "../../components/taskTracker";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import { SnapshotManager } from "./SnapshotManager";
 import { TakeSnapshotDialog } from "./TakeSnapshotDialog";
@@ -21,6 +22,7 @@ export function SnapshotRequest({
 }) {
   const { t } = useTranslation();
   const { notify, notifyError } = useNotifier();
+  const { track } = useTasks();
   const [names, setNames] = useState<string[] | null>(null);
   const [current, setCurrent] = useState<string | null>(null);
 
@@ -57,10 +59,16 @@ export function SnapshotRequest({
         vm={vm}
         existing={names}
         onClose={onClose}
-        onTake={(name, description) =>
+        onTake={(name, description, memory) =>
           void api
-            .takeSnapshot(vm.uuid, name, description)
-            .then(() => notify(t("snapshots.taken", { name })))
+            .takeSnapshot(vm.uuid, name, description, memory)
+            .then((info) =>
+              track(
+                info,
+                t("snapshots.started", { name: vm.name }),
+                t("snapshots.taken", { name }),
+              ),
+            )
             .catch((err: unknown) => notifyError(t("snapshots.take"), err))
         }
       />

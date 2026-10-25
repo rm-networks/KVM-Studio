@@ -41,3 +41,56 @@
 .statusbar-grab.active {
   color: var(--accent-fg);
 }
+
+.statusbar-task {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.statusbar-meter {
+  position: relative;
+  width: 80px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--border);
+}
+
+.statusbar-meter > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.statusbar-meter-busy > span {
+  width: 30%;
+  animation: statusbar-busy 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes statusbar-busy {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(233%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statusbar-meter-busy > span {
+    width: 100%;
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+.statusbar-cancel {
+  width: 18px;
+  height: 18px;
+}
+
+.statusbar-cancel svg {
+  width: 12px;
+  height: 12px;
+}

@@ -39,6 +39,7 @@ export type VmOptionsChange = components["schemas"]["OptionsChange"];
 export type BootDevice = components["schemas"]["BootDevice"];
 export type PortForward = components["schemas"]["PortForward"];
 export type Snapshot = components["schemas"]["Snapshot"];
+export type SnapshotLimits = components["schemas"]["SnapshotLimits"];
 export type RunningVm = components["schemas"]["RunningVm"];
 export type CloseResult = components["schemas"]["ActionResult"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
@@ -158,8 +159,10 @@ export const api = {
   createVm: (body: NewVmRequest) => request<{ uuid: string }>("POST", "/api/vms", body),
   hardware: (uuid: string) => request<Hardware>("GET", `${vmPath(uuid)}/hardware`),
   snapshots: (uuid: string) => request<Snapshot[]>("GET", `${vmPath(uuid)}/snapshots`),
-  takeSnapshot: (uuid: string, name: string, description: string) =>
-    request<Snapshot>("POST", `${vmPath(uuid)}/snapshots`, { name, description }),
+  snapshotLimits: (uuid: string) =>
+    request<SnapshotLimits>("GET", `${vmPath(uuid)}/snapshots/limits`),
+  takeSnapshot: (uuid: string, name: string, description: string, memory: boolean) =>
+    request<TaskInfo>("POST", `${vmPath(uuid)}/snapshots`, { name, description, memory }),
   revertSnapshot: (uuid: string, name: string) =>
     request<undefined>("POST", `${vmPath(uuid)}/snapshots/${encodeURIComponent(name)}/revert`),
   deleteSnapshot: (uuid: string, name: string) =>

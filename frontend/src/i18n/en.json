@@ -147,7 +147,8 @@
       "error": "libvirt returned an error.",
       "invalid_state": "Not possible in the current state of the virtual machine.",
       "unsupported": "This operation is not supported by the installed libvirt version.",
-      "no_network": "This network no longer exists."
+      "no_network": "This network no longer exists.",
+      "busy": "Another operation is under way on this virtual machine (a snapshot, for example). Try again once it is over."
     },
     "network": {
       "unreachable": "The {{app}} internal server is not responding."
@@ -258,6 +259,11 @@
     "task": {
       "failed": "The operation failed.",
       "not_found": "This operation is no longer known."
+    },
+    "snapshot": {
+      "memory_required": "libvirt only takes a snapshot of a running VM together with its memory.",
+      "linked_clones": "Linked clones use the disks of this VM: its snapshots cannot change.",
+      "exists": "A snapshot already has this name."
     }
   },
   "about": {
@@ -984,9 +990,22 @@
     "name": "Name",
     "description": "Description",
     "nameTaken": "A snapshot already has this name.",
-    "takeRunning": "The VM is running: its disks and its memory are saved, and it goes on running.",
+    "takeRunning": "The VM is running: it goes on running while its disks and its memory are saved.",
     "takeOff": "The VM is powered off: its disks are saved.",
     "taken": "Snapshot {{name}} taken",
-    "noCurrent": "{{name}} has no snapshot to go back to."
+    "noCurrent": "{{name}} has no snapshot to go back to.",
+    "memory": "Include RAM (the VM's memory)",
+    "memoryHint": "Without the memory, restoring the snapshot is like pulling the plug of the VM.",
+    "memoryRequired": "libvirt only takes a snapshot of a running VM together with its memory (internal snapshots). Shut the VM down to take one of its disks alone.",
+    "rawDisks": "libvirt cannot take an internal snapshot: these disks are not in the qcow2 format: {{disks}}.",
+    "rawNvram": "libvirt cannot take an internal snapshot: the UEFI variables of this VM are in a raw file (VMs created before qcow2 NVRAM).",
+    "tpmOff": "The VM is powered off: the snapshot does not hold the state of its TPM (libvirt limit).",
+    "started": "Snapshot of {{name}}"
+  },
+  "tasks": {
+    "progress": "{{label}}: {{percent}} %",
+    "cancel": "Cancel: {{label}}",
+    "cancelling": "{{label}}: cancelling…",
+    "cancelled": "{{label}}: cancelled"
   }
 }

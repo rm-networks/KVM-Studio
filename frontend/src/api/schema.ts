@@ -886,8 +886,28 @@ export interface paths {
     /** List Snapshots */
     get: operations["list_snapshots_api_vms__uuid__snapshots_get"];
     put?: never;
-    /** Take */
+    /**
+     * Take
+     * @description Checks the request, then snapshots in the background: follow /tasks/{id}.
+     */
     post: operations["take_api_vms__uuid__snapshots_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/vms/{uuid}/snapshots/limits": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Limits */
+    get: operations["limits_api_vms__uuid__snapshots_limits_get"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -2227,6 +2247,22 @@ export interface components {
        * @default
        */
       description: string;
+      /**
+       * Memory
+       * @default true
+       */
+      memory: boolean;
+    };
+    /** SnapshotLimits */
+    SnapshotLimits: {
+      /** Running */
+      running: boolean;
+      /** Raw Disks */
+      raw_disks: string[];
+      /** Raw Nvram */
+      raw_nvram: boolean;
+      /** Tpm */
+      tpm: boolean;
     };
     /** StorageSettings */
     StorageSettings: {
@@ -7536,12 +7572,97 @@ export interface operations {
     };
     responses: {
       /** @description Successful Response */
-      201: {
+      202: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["Snapshot"];
+          "application/json": components["schemas"]["TaskInfo"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  limits_api_vms__uuid__snapshots_limits_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        uuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SnapshotLimits"];
         };
       };
       /** @description Unauthorized */

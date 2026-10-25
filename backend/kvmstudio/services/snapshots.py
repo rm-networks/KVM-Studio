@@ -3,7 +3,12 @@
 libvirt 12 takes internal qcow2 snapshots of UEFI VMs whose firmware variables
 are stored as qcow2, TPM included: powered off (disks), or running (disks and
 memory, the VM goes on). Where libvirt refuses (raw disk or raw NVRAM), its
-error is reported as is.
+error is reported as is; limits() lets the interface say so beforehand.
+
+Limits of libvirt 12 met in testing: a running VM is only snapshotted with its
+memory (a disk-only snapshot is an external one, whose restore leaves overlay
+files behind); a powered-off snapshot holds no TPM state; while the memory is
+written, job statistics wait for the end and the job cannot be aborted.
 
 A VM whose disks back linked clones is never snapshotted, restored or cleaned:
 writing to its disk would damage the clones.
@@ -11,8 +16,11 @@ writing to its disk would damage the clones.
 
 from __future__ import annotations
 
+import contextlib
 import re
+import threading
 from dataclasses import dataclass
+from typing import Any
 
 import libvirt
 from lxml import etree
@@ -20,6 +28,7 @@ from lxml import etree
 from ..errors import ApiException
 from ..libvirt_conn import LibvirtConnection
 from .clone import linked_clones
+from .tasks import Cancelled, Task
 
 _PARSER = etree.XMLParser(resolve_entities=False, remove_blank_text=True)
 NAME_RE = re.compile(r"^[^/\\\x00-\x1f\x7f]{1,100}$")
@@ -69,6 +78,34 @@ def list_snapshots(conn: LibvirtConnection, uuid: str) -> list[Snapshot]:
     return conn.run(op)
 
 
+@dataclass(frozen=True, slots=True)
+class Limits:
+    running: bool
+    # Targets of the disks libvirt cannot snapshot internally (not qcow2).
+    raw_disks: list[str]
+    # UEFI variables in a raw file (VMs made before the qcow2 NVRAM).
+    raw_nvram: bool
+    tpm: bool
+
+
+def limits(conn: LibvirtConnection, uuid: str) -> Limits:
+    def op(c: libvirt.virConnect) -> Limits:
+        dom = c.lookupByUUIDString(uuid)
+        root = etree.fromstring(dom.XMLDesc(0).encode(), parser=_PARSER)
+        raw = []
+        for disk in root.iterfind("devices/disk[@device='disk']"):
+            driver, target = disk.find("driver"), disk.find("target")
+            if driver is None or driver.get("type") != "qcow2":
+                raw.append(target.get("dev", "") if target is not None else "")
+        nvram = root.find("os/nvram")
+        raw_nvram = nvram is not None and nvram.get("format", "raw") != "qcow2"
+        state = dom.state()[0]
+        running = state in (libvirt.VIR_DOMAIN_RUNNING, libvirt.VIR_DOMAIN_PAUSED)
+        return Limits(running, raw, raw_nvram, root.find("devices/tpm") is not None)
+
+    return conn.run(op)
+
+
 def _no_linked_clones(conn: LibvirtConnection, uuid: str) -> None:
     if clones := linked_clones(conn, uuid):
         raise ApiException(
@@ -78,26 +115,59 @@ def _no_linked_clones(conn: LibvirtConnection, uuid: str) -> None:
         )
 
 
-def take(conn: LibvirtConnection, uuid: str, name: str, description: str) -> Snapshot:
+def check_new(conn: LibvirtConnection, uuid: str, name: str, description: str, memory: bool) -> str:
+    """Refuses at once what libvirt would refuse later; returns the name to use."""
     name = name.strip()
     if not NAME_RE.match(name):
         raise ApiException(422, "snapshot.bad_name", f"invalid snapshot name: {name!r}")
     if len(description) > MAX_DESCRIPTION:
         raise ApiException(422, "snapshot.bad_description", "The description is too long")
     _no_linked_clones(conn, uuid)
+    if limits(conn, uuid).running and not memory:
+        raise ApiException(
+            409,
+            "snapshot.memory_required",
+            "libvirt only takes an internal snapshot of a running VM with its memory",
+        )
+    if name in conn.run(lambda c: c.lookupByUUIDString(uuid).snapshotListNames(0)):
+        raise ApiException(409, "snapshot.exists", f"{name} already exists")
+    return name
+
+
+def take(
+    conn: LibvirtConnection, uuid: str, name: str, description: str, task: Task | None = None
+) -> dict[str, Any]:
+    """Takes the snapshot (memory included when the VM runs); a task follows it.
+
+    Cancelling cannot stop libvirt: the snapshot is deleted once it is written.
+    """
     xml = etree.Element("domainsnapshot")
     etree.SubElement(xml, "name").text = name
     if description:
         etree.SubElement(xml, "description").text = description
+    done = threading.Event()
 
-    def op(c: libvirt.virConnect) -> Snapshot:
-        dom = c.lookupByUUIDString(uuid)
-        if name in dom.snapshotListNames(0):
-            raise ApiException(409, "snapshot.exists", f"{name} already exists")
-        snap = dom.snapshotCreateXML(etree.tostring(xml).decode(), 0)
-        return _describe(snap, _current(dom))
+    def watch() -> None:
+        # Progress where libvirt reports it; libvirt 12 makes this call wait for
+        # the end of an internal snapshot, so the interface shows no percentage.
+        while task is not None and not done.wait(1.0):
+            with contextlib.suppress(libvirt.libvirtError):
+                stats = conn.run(lambda c: c.lookupByUUIDString(uuid).jobStats(0))
+                total = stats.get("memory_total") or 0
+                if total and not done.is_set():
+                    task.progress = min(0.99, stats.get("memory_processed", 0) / total)
 
-    return conn.run(op)
+    threading.Thread(target=watch, name="snapshot-progress", daemon=True).start()
+    try:
+        conn.run(
+            lambda c: c.lookupByUUIDString(uuid).snapshotCreateXML(etree.tostring(xml).decode(), 0)
+        )
+    finally:
+        done.set()
+    if task is not None and task.cancel.is_set():
+        delete(conn, uuid, name)
+        raise Cancelled
+    return {"name": name}
 
 
 def revert(conn: LibvirtConnection, uuid: str, name: str) -> None:

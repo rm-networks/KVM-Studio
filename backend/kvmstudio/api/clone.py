@@ -40,7 +40,7 @@ def _registry(request: Request) -> TaskRegistry:
     return tasks
 
 
-def _info(task: Task) -> TaskInfo:
+def task_info(task: Task) -> TaskInfo:
     return TaskInfo(
         id=task.id,
         kind=task.kind,
@@ -67,7 +67,7 @@ async def start_clone(ctx: Context, request: Request, uuid: str, body: CloneRequ
         finally:
             hub.broadcast({"type": "library.changed"})
 
-    return _info(_registry(request).start("clone", work))
+    return task_info(_registry(request).start("clone", work))
 
 
 @router.get("/vms/{uuid}/linked-clones")
@@ -77,11 +77,11 @@ async def linked_clones(ctx: Context, uuid: str) -> LinkedClones:
 
 @router.get("/tasks/{task_id}")
 def task(request: Request, task_id: str) -> TaskInfo:
-    return _info(_registry(request).get(task_id))
+    return task_info(_registry(request).get(task_id))
 
 
 @router.post("/tasks/{task_id}/cancel")
 def cancel(request: Request, task_id: str) -> TaskInfo:
     task = _registry(request).get(task_id)
     task.cancel.set()
-    return _info(task)
+    return task_info(task)

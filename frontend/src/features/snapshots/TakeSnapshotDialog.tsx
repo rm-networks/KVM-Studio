@@ -1,26 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { VmSummary } from "../../api/client";
+import { api, type SnapshotLimits, type VmSummary } from "../../api/client";
 import { Dialog } from "../../components/Dialog";
 import "./SnapshotManager.css";
 
 interface Props {
   vm: VmSummary;
   existing: string[];
-  onTake: (name: string, description: string) => void;
+  onTake: (name: string, description: string, memory: boolean) => void;
   onClose: () => void;
 }
 
-/** Name and description of a new snapshot. */
+/** Name, description and memory of a new snapshot, with what libvirt cannot do. */
 export function TakeSnapshotDialog({ vm, existing, onTake, onClose }: Props) {
   const { t } = useTranslation();
   let n = existing.length + 1;
   while (existing.includes(t("snapshots.defaultName", { n }))) n += 1;
   const [name, setName] = useState(t("snapshots.defaultName", { n }));
   const [description, setDescription] = useState("");
+  const [limits, setLimits] = useState<SnapshotLimits | null>(null);
+  const [memory, setMemory] = useState(true);
   const taken = existing.includes(name.trim());
-  const running = vm.state === "running" || vm.state === "paused";
+  const running = limits?.running ?? (vm.state === "running" || vm.state === "paused");
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .snapshotLimits(vm.uuid)
+      .then((found) => !cancelled && setLimits(found))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [vm.uuid]);
+
+  const raw = limits !== null && (limits.raw_disks.length > 0 || limits.raw_nvram);
+  const blocked = raw || (running && !memory);
 
   return (
     <Dialog
@@ -33,9 +49,9 @@ export function TakeSnapshotDialog({ vm, existing, onTake, onClose }: Props) {
           <button
             type="button"
             className="button button-primary"
-            disabled={!name.trim() || taken}
+            disabled={!name.trim() || taken || blocked}
             onClick={() => {
-              onTake(name.trim(), description);
+              onTake(name.trim(), description, running && memory);
               onClose();
             }}
           >
@@ -57,6 +73,23 @@ export function TakeSnapshotDialog({ vm, existing, onTake, onClose }: Props) {
         <span>{t("snapshots.description")}</span>
         <textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
       </label>
+      <label className="check" title={t("snapshots.memoryHint")}>
+        <input
+          type="checkbox"
+          checked={running && memory}
+          disabled={!running}
+          onChange={(e) => setMemory(e.target.checked)}
+        />
+        {t("snapshots.memory")}
+      </label>
+      {running && !memory && <p className="field-error">{t("snapshots.memoryRequired")}</p>}
+      {limits?.raw_disks.length ? (
+        <p className="field-error">
+          {t("snapshots.rawDisks", { disks: limits.raw_disks.join(", ") })}
+        </p>
+      ) : null}
+      {limits?.raw_nvram && <p className="field-error">{t("snapshots.rawNvram")}</p>}
+      {limits?.tpm && !running && <p className="check-hint">{t("snapshots.tpmOff")}</p>}
     </Dialog>
   );
 }

@@ -91,6 +91,7 @@ def test_classify_known_and_unknown_errors() -> None:
 
     assert classify(FakeError(libvirt.VIR_ERR_NO_CONNECT)) == (503, "libvirt.unreachable")
     assert classify(FakeError(libvirt.VIR_ERR_ACCESS_DENIED)) == (403, "libvirt.denied")
+    assert classify(FakeError(libvirt.VIR_ERR_OPERATION_TIMEOUT)) == (409, "libvirt.busy")
     assert classify(FakeError(None)) == (500, "libvirt.error")
 
 

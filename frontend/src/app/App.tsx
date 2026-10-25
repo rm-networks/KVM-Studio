@@ -5,6 +5,7 @@ import { api, type VmSummary } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { NotificationProvider } from "../components/Notifications";
 import { useNotifier } from "../components/notifier";
+import { TaskTrackerProvider } from "../components/TaskTracker";
 import { HomeTab } from "../features/home/HomeTab";
 import { LibraryActionsProvider } from "../features/library/LibraryActions";
 import { LibraryPanel } from "../features/library/LibraryPanel";
@@ -51,9 +52,11 @@ function desktopWindow(): boolean {
 export function App() {
   return (
     <NotificationProvider>
-      <VmActionsProvider>
-        <MainWindow />
-      </VmActionsProvider>
+      <TaskTrackerProvider>
+        <VmActionsProvider>
+          <MainWindow />
+        </VmActionsProvider>
+      </TaskTrackerProvider>
     </NotificationProvider>
   );
 }

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { api, type Snapshot, type VmSummary } from "../../api/client";
 import { Dialog } from "../../components/Dialog";
 import { useNotifier } from "../../components/notifier";
+import { useTasks } from "../../components/taskTracker";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import { treeRows } from "./snapshotTree";
 import { TakeSnapshotDialog } from "./TakeSnapshotDialog";
@@ -15,6 +16,9 @@ type Pending = { kind: "take" } | { kind: "revert" | "delete"; name: string } | 
 export function SnapshotManager({ vm, onClose }: { vm: VmSummary; onClose: () => void }) {
   const { t, i18n } = useTranslation();
   const { notifyError } = useNotifier();
+  const { tasks, track } = useTasks();
+  // A snapshot of this VM still being written, maybe after the manager was reopened.
+  const writing = tasks.some((x) => x.info.kind === "snapshot" && x.info.result.vm === vm.uuid);
   const [snaps, setSnaps] = useState<Snapshot[] | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [pending, setPending] = useState<Pending>(null);
@@ -118,7 +122,7 @@ export function SnapshotManager({ vm, onClose }: { vm: VmSummary; onClose: () =>
               <button
                 type="button"
                 className="button"
-                disabled={busy}
+                disabled={busy || writing}
                 onClick={() => setPending({ kind: "take" })}
               >
                 {t("snapshots.take")}
@@ -140,7 +144,7 @@ export function SnapshotManager({ vm, onClose }: { vm: VmSummary; onClose: () =>
                 {t("snapshots.delete")}
               </button>
             </div>
-            {busy && <p className="muted">{t("snapshots.working")}</p>}
+            {(busy || writing) && <p className="muted">{t("snapshots.working")}</p>}
           </div>
         </div>
         <p className="check-hint">{t("snapshots.hint")}</p>
@@ -149,8 +153,19 @@ export function SnapshotManager({ vm, onClose }: { vm: VmSummary; onClose: () =>
         <TakeSnapshotDialog
           vm={vm}
           existing={(snaps ?? []).map((s) => s.name)}
-          onTake={(name, description) =>
-            run(t("snapshots.take"), () => api.takeSnapshot(vm.uuid, name, description))
+          onTake={(name, description, memory) =>
+            run(t("snapshots.take"), () =>
+              api
+                .takeSnapshot(vm.uuid, name, description, memory)
+                .then((info) =>
+                  track(
+                    info,
+                    t("snapshots.started", { name: vm.name }),
+                    t("snapshots.taken", { name }),
+                    () => void load(),
+                  ),
+                ),
+            )
           }
           onClose={() => setPending(null)}
         />

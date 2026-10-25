@@ -147,7 +147,8 @@
       "error": "libvirt a renvoyé une erreur.",
       "invalid_state": "Opération impossible dans l'état actuel de la machine virtuelle.",
       "unsupported": "Cette opération n'est pas prise en charge par la version de libvirt installée.",
-      "no_network": "Ce réseau n'existe plus."
+      "no_network": "Ce réseau n'existe plus.",
+      "busy": "Une autre opération est en cours sur cette machine virtuelle (un instantané, par exemple). Réessayez quand elle sera terminée."
     },
     "network": {
       "unreachable": "Le serveur interne de {{app}} ne répond pas."
@@ -258,6 +259,11 @@
     "task": {
       "failed": "L'opération a échoué.",
       "not_found": "Cette opération n'est plus connue."
+    },
+    "snapshot": {
+      "memory_required": "libvirt ne prend l'instantané d'une VM allumée qu'avec sa mémoire.",
+      "linked_clones": "Des clones liés utilisent les disques de cette VM : ses instantanés ne peuvent pas changer.",
+      "exists": "Un instantané porte déjà ce nom."
     }
   },
   "about": {
@@ -984,9 +990,22 @@
     "name": "Nom",
     "description": "Description",
     "nameTaken": "Un instantané porte déjà ce nom.",
-    "takeRunning": "La VM est allumée : ses disques et sa mémoire sont enregistrés, et elle continue de tourner.",
+    "takeRunning": "La VM est allumée : elle continue de tourner pendant l'enregistrement de ses disques et de sa mémoire.",
     "takeOff": "La VM est éteinte : ses disques sont enregistrés.",
     "taken": "Instantané {{name}} pris",
-    "noCurrent": "{{name}} n'a pas d'instantané auquel revenir."
+    "noCurrent": "{{name}} n'a pas d'instantané auquel revenir.",
+    "memory": "Inclure la RAM (mémoire de la VM)",
+    "memoryHint": "Sans la mémoire, la restauration revient à un arrêt brutal de la VM.",
+    "memoryRequired": "libvirt ne prend l'instantané d'une VM allumée qu'avec sa mémoire (instantanés internes). Éteignez la VM pour n'enregistrer que ses disques.",
+    "rawDisks": "libvirt ne peut pas prendre d'instantané interne : ces disques ne sont pas au format qcow2 : {{disks}}.",
+    "rawNvram": "libvirt ne peut pas prendre d'instantané interne : les variables UEFI de cette VM sont dans un fichier brut (VM créée avant la NVRAM qcow2).",
+    "tpmOff": "La VM est éteinte : l'instantané ne contient pas l'état de son TPM (limite de libvirt).",
+    "started": "Instantané de {{name}}"
+  },
+  "tasks": {
+    "progress": "{{label}} : {{percent}} %",
+    "cancel": "Annuler : {{label}}",
+    "cancelling": "{{label}} : annulation…",
+    "cancelled": "{{label}} : annulé"
   }
 }

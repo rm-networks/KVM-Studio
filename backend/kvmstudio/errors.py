@@ -31,6 +31,8 @@ _LIBVIRT_CODES: dict[int, tuple[int, str]] = {
     libvirt.VIR_ERR_NO_NETWORK: (404, "libvirt.no_network"),
     libvirt.VIR_ERR_OPERATION_INVALID: (409, "libvirt.invalid_state"),
     libvirt.VIR_ERR_NO_SUPPORT: (501, "libvirt.unsupported"),
+    # "cannot acquire state change lock": another job (a snapshot) holds the VM.
+    libvirt.VIR_ERR_OPERATION_TIMEOUT: (409, "libvirt.busy"),
 }
 
 

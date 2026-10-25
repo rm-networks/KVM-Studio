@@ -7,6 +7,9 @@
   (Playwright) now go through it to the last page.
 - Virtual network editor: Export no longer closes the window (it now opens a
   save dialog); the list of VMs using each network is gone.
+- Snapshots: "Include RAM" choice, limits of libvirt (raw disks, raw UEFI
+  variables, TPM of a powered-off VM) shown before taking one; snapshots run
+  in the background, followed in the status bar with a Cancel button.
 
 ## 0.4.0 (2026-10-25)
 

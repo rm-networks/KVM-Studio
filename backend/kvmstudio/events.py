@@ -6,6 +6,7 @@ the new state of the domain and broadcast a small JSON message:
     {"type": "vm.changed", "vm": {...VmSummary...}}
     {"type": "vm.removed", "uuid": "..."}
     {"type": "library.changed"}  (folders created, renamed, deleted, VMs moved)
+    {"type": "snapshots.changed", "uuid": "..."}  (a snapshot task ended)
     {"type": "connection", "state": "lost" | "restored"}
 """
 

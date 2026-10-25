@@ -94,6 +94,7 @@ def define(conn: LibvirtConnection) -> Iterator[list[libvirt.virDomain]]:
         try:
             if dom.isActive():
                 dom.destroy()
-            dom.undefine()
+            # Snapshots left by a test would keep the domain defined.
+            dom.undefineFlags(libvirt.VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA)
         except libvirt.libvirtError:
             pass
