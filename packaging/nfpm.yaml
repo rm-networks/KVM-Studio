@@ -1,5 +1,5 @@
 # Package definition. Run packaging/stage.py first, from the repository root.
-#   VERSION=0.2.0 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
+#   VERSION=0.2.1 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
 
 name: kvm-studio
 arch: amd64

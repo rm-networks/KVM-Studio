@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.1 (2026-10-25)
+
+- Windows guest tools: the KS_TOOLS CD now carries the virtio-win guest tools
+  installer, copied from the virtio-win ISO set in Preferences, so a single
+  CD/DVD drive is enough and Install-Tools.bat no longer reports a missing
+  virtio disc. The dialog shows the drive used and tells apart a virtio-win
+  ISO that is not set, missing, outside the ISO libraries (with a button to
+  add its folder) or without installer.
+- Preferences > Virtual machines: Browse button for the virtio-win ISO, and a
+  ? button explaining what it is for, with the link to download it.
+- Starting a VM shows the loading cubes over the firmware logo for a moment;
+  a key or a click puts them away at once.
+
 ## 0.2.0 (2026-10-25)
 
 - Clone a powered off VM from its context menu or from VM > Manage: full copy

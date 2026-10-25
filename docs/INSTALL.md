@@ -60,7 +60,7 @@ python3 packaging/stage.py
 ```
 
 ```bash
-VERSION=0.2.0 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
+VERSION=0.2.1 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
 ```
 
 ## From the sources (Fedora)
