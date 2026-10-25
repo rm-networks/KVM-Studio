@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.0 (2026-10-25)
+
+- VM settings, new Options tab: name and guest system, start with the host
+  and the restart and crash actions, BIOS or UEFI, Secure Boot and TPM (with a
+  warning and a confirmation for an installed VM), boot order per device by
+  drag and drop or arrows, boot menu, and copy and paste on or off.
+- View > Full Screen (Ctrl+Alt+Enter) shows the VM console alone on the
+  screen; a thin bar at the top edge gives Exit, Send Ctrl+Alt+Del and the
+  power menu. The whole window goes full screen with F11.
+- Library folders move by drag and drop into one another, nested, with the
+  files of their VMs; their display order is kept.
+- When KVM Studio closes or changes mode, a reminder lists the VMs still
+  running: libvirt and QEMU keep them running. Preferences > Workspace can
+  ask, suspend or shut them down instead.
+- Settings is the last entry of the VM context menu.
+- The virtio-win help links to its documentation instead of the ISO itself.
+- A console out of sight lets go of its stream after 15 s, saving CPU.
+
 ## 0.2.1 (2026-10-25)
 
 - Windows guest tools: the KS_TOOLS CD now carries the virtio-win guest tools
