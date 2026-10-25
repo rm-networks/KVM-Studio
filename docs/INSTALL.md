@@ -19,7 +19,7 @@ Contents:
 | `/usr/share/applications/kvm-studio.desktop` | applications menu entry |
 | `/usr/share/applications/kvm-studio-uninstall.desktop` | "Uninstall KVM Studio" entry |
 | `kvmstudio-helper.socket` / `.service` | root helper, started on demand |
-| `kvmstudio-forwards.service` | writes the port forwarding table at boot and after nftables, firewalld or libvirt restart |
+| `kvmstudio-forwards.service` | writes the port forwarding table at boot and after nftables or firewalld restart |
 | `/usr/share/polkit-1/actions/org.kvmstudio.helper.policy` | helper authorizations |
 | `/etc/kvm-studio/helper.toml` | helper settings, libraries declared by the administrator |
 | `/var/lib/kvm-studio` | helper state: ISO libraries declared from Preferences, access rights it added |
@@ -85,9 +85,10 @@ and the firewall. What to know when they are updated:
   libvirt's own and come back with it; NetworkManager keeps ignoring their
   interfaces after a restart (its `90-kvm-studio.conf` file is read again).
   `systemctl restart nftables` flushes every nftables table, libvirt's
-  included: libvirt rebuilds its own when `virtnetworkd` restarts, and
-  `kvmstudio-forwards.service` writes the `inet kvmstudio` table again after
-  nftables, firewalld (reload or restart) and libvirt. The LAN sharing port is
+  included: libvirt rebuilds its own when `virtnetworkd` or firewalld
+  restarts, and `kvmstudio-forwards.service` writes the `inet kvmstudio`
+  table again after nftables and firewalld (reload or restart). libvirt
+  leaves that table alone; the network hook writes it when a network starts. The LAN sharing port is
   opened in firewalld permanently, so a reload keeps it.
 - **KVM Studio.** `dnf upgrade` (or `rpm -U`, `apt`, `dpkg -i`) keeps the
   settings (`~/.config/kvm-studio`), the guest account, `helper.toml`, the

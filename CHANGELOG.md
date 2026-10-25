@@ -13,7 +13,7 @@
 - System updates: KVM checked at each start and by `kvm-studio --check`
   (kernel updated but not restarted, module not loaded, nested
   virtualization); new VMs get a versioned machine type; the port forwarding
-  table comes back after nftables, firewalld or libvirt restart; the helper
+  table comes back after nftables or firewalld restart; the helper
   service can now write it (host network, CAP_NET_ADMIN). The nested profile
   asks for svm on AMD hosts instead of vmx.
 

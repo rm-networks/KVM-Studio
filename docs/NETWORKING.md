@@ -76,7 +76,7 @@ included, is touched. A libvirt network hook
 (`/etc/libvirt/hooks/network.d/50-kvm-studio`) writes it again when a network
 starts, so the rules survive a restart (libvirt reads its hooks when its
 network daemon starts), and `kvmstudio-forwards.service` writes it again after
-nftables, firewalld or libvirt restart or reload (`systemctl restart nftables`
+nftables or firewalld restart or reload (`systemctl restart nftables`
 flushes every table). Deleting a network deletes its rules, and removing the
 package deletes the table.
 

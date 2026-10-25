@@ -1,10 +1,12 @@
 [Unit]
 Description=@APP_NAME@ port forwarding table
 Documentation=https://github.com/rm-networks/kvm-studio/blob/main/docs/NETWORKING.md
-# "systemctl restart nftables" flushes every table, firewalld and libvirt
-# rebuild their own: the inet kvmstudio table is written again after each.
-After=nftables.service firewalld.service virtnetworkd.service libvirtd.service
-PartOf=nftables.service firewalld.service virtnetworkd.service libvirtd.service
+# "systemctl restart nftables" can flush every table and firewalld rebuilds
+# its own: the inet kvmstudio table is written again after each. libvirt is
+# left out (virtnetworkd conflicts with libvirtd, PartOf would make their
+# restart fail); its network hook writes the table when a network starts.
+After=nftables.service firewalld.service
+PartOf=nftables.service firewalld.service
 ReloadPropagatedFrom=nftables.service firewalld.service
 
 [Service]
