@@ -10,15 +10,18 @@ import { useLibraryActions } from "./libraryActionsContext";
 interface Props {
   vm: VmSummary;
   onOpen: (uuid: string) => void;
+  onSettings: (uuid: string) => void;
   children: ReactNode;
 }
 
 function Item({
   label,
+  keys,
   onSelect,
   disabled,
 }: {
   label: string;
+  keys?: string;
   onSelect: () => void;
   disabled?: boolean;
 }) {
@@ -26,11 +29,12 @@ function Item({
     <ContextMenu.Item className="menu-item" disabled={disabled} onSelect={onSelect}>
       <span className="menu-indicator" />
       <span className="menu-label">{label}</span>
+      {keys && <span className="menu-keys">{keys}</span>}
     </ContextMenu.Item>
   );
 }
 
-export function VmContextMenu({ vm, onOpen, children }: Props) {
+export function VmContextMenu({ vm, onOpen, onSettings, children }: Props) {
   const { t } = useTranslation();
   const actions = useVmActions();
   const library = useLibraryActions();
@@ -40,6 +44,7 @@ export function VmContextMenu({ vm, onOpen, children }: Props) {
       <ContextMenu.Portal>
         <ContextMenu.Content className="menu">
           <Item label={t("menu.openTab")} onSelect={() => onOpen(vm.uuid)} />
+          <Item label={t("menu.settings")} keys="Ctrl+D" onSelect={() => onSettings(vm.uuid)} />
           <ContextMenu.Separator className="menu-separator" />
           {POWER_ACTIONS.map((action) => (
             <Item

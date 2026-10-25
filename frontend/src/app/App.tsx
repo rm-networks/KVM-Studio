@@ -191,6 +191,7 @@ function MainWindow() {
               selected={selectedNode}
               onSelect={setSelectedNode}
               onOpen={(uuid) => openVm(uuid, vmByUuid.get(uuid)?.name)}
+              onSettings={setSettingsFor}
               onRefresh={refresh}
               onClose={() => toggle("library")}
             />

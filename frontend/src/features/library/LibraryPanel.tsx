@@ -18,6 +18,7 @@ interface Props {
   selected: string | null;
   onSelect: (id: string) => void;
   onOpen: (uuid: string) => void;
+  onSettings: (uuid: string) => void;
   onRefresh: () => void;
   onClose: () => void;
 }
@@ -43,6 +44,7 @@ export function LibraryPanel({
   selected,
   onSelect,
   onOpen,
+  onSettings,
   onRefresh,
   onClose,
 }: Props) {
@@ -134,6 +136,7 @@ export function LibraryPanel({
             selected={selected}
             onSelect={onSelect}
             onOpen={onOpen}
+            onSettings={onSettings}
             forceOpen={narrowed}
             emptyLabel={narrowed ? t("library.noMatch") : undefined}
             vmsByUuid={vmsByUuid}

@@ -14,9 +14,15 @@ interface HarnessProps {
   vms: VmSummary[];
   folders?: string[];
   onOpen?: (uuid: string) => void;
+  onSettings?: (uuid: string) => void;
 }
 
-function Harness({ vms, folders = [], onOpen = () => undefined }: HarnessProps) {
+function Harness({
+  vms,
+  folders = [],
+  onOpen = () => undefined,
+  onSettings = () => undefined,
+}: HarnessProps) {
   const [selected, setSelected] = useState<string | null>(null);
   return (
     <NotificationProvider>
@@ -27,6 +33,7 @@ function Harness({ vms, folders = [], onOpen = () => undefined }: HarnessProps) 
             selected={selected}
             onSelect={setSelected}
             onOpen={onOpen}
+            onSettings={onSettings}
             forceOpen={false}
             vmsByUuid={new Map(vms.map((v) => [v.uuid, v]))}
           />
@@ -107,5 +114,15 @@ describe("LibraryTree", () => {
     fireEvent.keyDown(tree, { key: "Enter" });
     fireEvent.click(screen.getByText("b"));
     expect(opened).toEqual(["a", "b"]);
+  });
+
+  it("opens the settings from the context menu, right after Open in a Tab", async () => {
+    const settings: string[] = [];
+    render(<Harness vms={[makeVm({ name: "a" })]} onSettings={(uuid) => settings.push(uuid)} />);
+    fireEvent.contextMenu(screen.getByText("a"));
+    const items = (await screen.findAllByRole("menuitem")).map((el) => el.textContent);
+    expect(items.slice(0, 2)).toEqual(["Ouvrir dans un onglet", "Paramètres…Ctrl+D"]);
+    fireEvent.click(screen.getByRole("menuitem", { name: /Paramètres/ }));
+    expect(settings).toEqual(["a"]);
   });
 });
