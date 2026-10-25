@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { api, ApiError, type AppInfo, type LibraryInfo, type VmSummary } from "../api/client";
 import { type ServerEvent, subscribeEvents } from "../api/events";
+import { setViewers } from "../features/console/viewers";
 
 export interface AppData {
   info: AppInfo | null;
@@ -80,6 +81,10 @@ export function useAppData(): AppData {
     () =>
       subscribeEvents({
         onEvent: (event) => {
+          if (event.type === "console.viewers") {
+            setViewers(event.uuid, event.count);
+            return;
+          }
           if (event.type === "library.changed") {
             refresh();
             return;

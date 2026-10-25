@@ -7,6 +7,7 @@ the new state of the domain and broadcast a small JSON message:
     {"type": "vm.removed", "uuid": "..."}
     {"type": "library.changed"}  (folders created, renamed, deleted, VMs moved)
     {"type": "snapshots.changed", "uuid": "..."}  (a snapshot task ended)
+    {"type": "console.viewers", "uuid": "...", "count": N}  (people on a console)
     {"type": "connection", "state": "lost" | "restored"}
 """
 
@@ -22,8 +23,8 @@ import libvirt
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.concurrency import run_in_threadpool
 
-from .auth.token import offered_subprotocols, token_in_subprotocols
-from .context import get_context
+from .auth.roles import socket_role
+from .auth.token import offered_subprotocols
 from .libvirt_conn import LibvirtConnection
 
 EVENTS_PROTOCOL = "kvmstudio.events"
@@ -163,11 +164,8 @@ class EventHub:
 
 
 async def events_socket(websocket: WebSocket) -> None:
-    ctx = get_context(websocket)
     protocols = websocket.scope.get("subprotocols", [])
-    if not token_in_subprotocols(protocols, ctx.token) or EVENTS_PROTOCOL not in (
-        offered_subprotocols(protocols)
-    ):
+    if socket_role(websocket) is None or EVENTS_PROTOCOL not in (offered_subprotocols(protocols)):
         await websocket.close(code=4401)
         return
     hub: EventHub = websocket.app.state.events

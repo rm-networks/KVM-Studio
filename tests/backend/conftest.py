@@ -31,6 +31,8 @@ def no_system_helper(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("KVMSTUDIO_HELPER_SOCKET", str(tmp_path / "no-helper.sock"))
     # The library folder order is a state file: never the user's own.
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
+    # The guest password and the certificate of LAN sharing: never the user's own.
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
 
 
 @pytest.fixture

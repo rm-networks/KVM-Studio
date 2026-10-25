@@ -1,0 +1,36 @@
+.guest-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--space-4);
+  background: var(--bg);
+}
+
+.guest-login-box {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  width: min(340px, 100%);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+
+.guest-login-box img {
+  align-self: center;
+}
+
+.guest-login-box h1 {
+  margin: 0;
+  font-size: var(--font-size-title);
+  text-align: center;
+}
+
+.guest-login-box label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}

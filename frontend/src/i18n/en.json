@@ -42,7 +42,8 @@
     "snapshot": "Snapshot",
     "takeSnapshot": "Take Snapshot…",
     "revertSnapshot": "Restore Current Snapshot…",
-    "snapshotManager": "Snapshot Manager…"
+    "snapshotManager": "Snapshot Manager…",
+    "logout": "Log Out"
   },
   "toolbar": {
     "start": "Start",
@@ -137,7 +138,12 @@
   },
   "errors": {
     "auth": {
-      "invalid_token": "Invalid session. Restart {{app}} or, in web mode, open the link printed in the terminal."
+      "invalid_token": "Invalid session. Restart {{app}} or, in web mode, open the link printed in the terminal.",
+      "bad_password": "Wrong password.",
+      "locked": "Too many failed attempts: try again in a few minutes.",
+      "guest_forbidden": "The guest account cannot do this: it is kept for the owner of the computer.",
+      "guest_network": "The guest account only connects VMs to kvmnet networks.",
+      "no_sharing": "Sharing on the local network is off."
     },
     "libvirt": {
       "unreachable": "Cannot reach libvirt. Check that the service is running: systemctl status virtqemud.socket",
@@ -210,12 +216,13 @@
       "already_inside": "The disks are already in the {{app}} folder."
     },
     "prefs": {
-      "share_later": "Sharing on the local network is not available.",
       "location_relative": "Enter a full path (starting with /).",
       "location_missing": "This folder does not exist.",
       "iso_missing": "The folder of an ISO library does not exist.",
       "location_not_writable": "Cannot create the KVM-Studio folder there: your account must be able to write to it.",
-      "iso_through_helper": "ISO libraries are added and removed with the buttons of the list."
+      "iso_through_helper": "ISO libraries are added and removed with the buttons of the list.",
+      "share_needs_password": "Set the guest password before sharing on the local network.",
+      "share_same_port": "HTTPS needs a port of its own, not the web mode port."
     },
     "console": {
       "no_vnc": "This virtual machine has no VNC display."
@@ -271,6 +278,9 @@
       "module_not_loaded": "The KVM module is not loaded: VMs cannot start. Load it with sudo modprobe kvm_intel (or kvm_amd), or restart the computer.",
       "no_dev_kvm": "/dev/kvm is missing although the KVM module is loaded. Restart the computer; if it persists, look at: dmesg | grep -i kvm",
       "dev_kvm_denied": "/dev/kvm is not accessible to this account. Log out and back in; if it persists, check: ls -l /dev/kvm"
+    },
+    "sharing": {
+      "bad_password": "No spaces at the start or the end of the password."
     }
   },
   "about": {
@@ -310,7 +320,9 @@
     "fullscreenBrowserTitle": "Console full screen in the browser",
     "fullscreenBrowser": "The browser keeps Escape for itself: pressing it leaves full screen and does not reach the VM. Ctrl+Alt+Enter also leaves full screen. Chromium-based browsers can give Escape to the VM.",
     "fullscreenBrowserLocked": "The keyboard is locked for the VM: Escape reaches it, and holding Escape down leaves full screen (imposed by the browser). Ctrl+Alt+Enter also leaves full screen.",
-    "fullscreenKeys": "Ctrl+Alt+Enter"
+    "fullscreenKeys": "Ctrl+Alt+Enter",
+    "viewers_one": "{{count}} person connected",
+    "viewers_other": "{{count}} people connected"
   },
   "tabs": {
     "close": "Close tab",
@@ -1017,5 +1029,28 @@
   },
   "kvm": {
     "title": "KVM is not available"
+  },
+  "guest": {
+    "intro": "This computer shares its virtual machines on the local network. Enter the guest password.",
+    "password": "Guest password",
+    "login": "Log In"
+  },
+  "sharing": {
+    "title": "Sharing on the Local Network",
+    "enable": "Share the virtual machines on the local network (guest account, HTTPS)",
+    "enableHint": "Other computers open the HTTPS address below and log in with the guest password. The guest manages VMs, not this computer's settings. Applied on restart; the administrator password is asked to open the port in the firewall.",
+    "webModeOnly": "Only in web mode: choose \"Web\" above.",
+    "httpsPort": "HTTPS port",
+    "password": "Guest password",
+    "passwordKept": "unchanged",
+    "setPassword": "Set Password",
+    "passwordSet": "Guest password set",
+    "passwordHint": "At least 8 characters. Setting a new one logs every guest out.",
+    "noPassword": "No guest password yet: set one (8 characters at least) to turn sharing on.",
+    "active_one": "Shared now, {{count}} guest connected, at:",
+    "active_other": "Shared now, {{count}} guests connected, at:",
+    "fingerprint": "Certificate (self-signed), SHA-256 fingerprint to compare in the browser:",
+    "firewallOpened": "Port opened in {{firewall}}, closed when {{app}} stops.",
+    "firewallNone": "No firewall port was opened (no firewalld or ufw, or the helper did not answer)."
   }
 }

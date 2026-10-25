@@ -10,22 +10,24 @@ from pathlib import Path
 
 import uvicorn
 
+from ..auth import guest
 from ..auth.token import new_token
 from ..config import Config, default_config_path, load_config, save_config
 from ..frontend import find_frontend_dir
 from ..i18n import t
+from ..services.networks import host_addresses
 from .backend_process import BackendError, BackendProcess
 from .restart import exec_restart
 from .tray import run_tray
 
 
 def run(config: Config, config_path: Path | None, *, open_browser: bool, reload: bool) -> int:
-    if config.web.share_on_lan:
-        print(
-            t("cli.share_unavailable"),
-            file=sys.stderr,
-        )
+    if config.web.share_on_lan and not reload and not guest.has_password():
+        print(t("cli.share_needs_password"), file=sys.stderr)
         return 2
+    if config.web.share_on_lan and reload:
+        # Development server: one listener only, the guest account stays off.
+        print(t("cli.share_not_in_reload"), file=sys.stderr)
 
     port = config.web.port
     token = new_token()
@@ -57,6 +59,9 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
         return 1
     print(t("cli.web_listening", port=port))
     print(t("cli.web_link", url=url), flush=True)
+    if config.web.share_on_lan:
+        for address in host_addresses():
+            print(t("cli.share_link", url=f"https://{address}:{config.web.https_port}/"))
     if open_browser:
         # The default browser (xdg-open on Linux desktops), as if a link was clicked.
         webbrowser.open(url)

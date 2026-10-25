@@ -2,6 +2,8 @@ import type { components } from "./schema";
 import { getToken } from "./token";
 
 export type AppInfo = components["schemas"]["AppInfo"];
+export type AuthMe = components["schemas"]["Me"];
+export type SharingState = components["schemas"]["SharingState"];
 export type VmSummary = components["schemas"]["VmSummary"];
 export type VmState = VmSummary["state"];
 export type DeletionPlan = components["schemas"]["DeletionPlan"];
@@ -114,6 +116,12 @@ const vmPath = (uuid: string) => `/api/vms/${encodeURIComponent(uuid)}`;
 
 export const api = {
   info: () => request<AppInfo>("GET", "/api/info"),
+  me: () => request<AuthMe>("GET", "/api/auth/me"),
+  login: (password: string) => request<undefined>("POST", "/api/auth/login", { password }),
+  logout: () => request<undefined>("POST", "/api/auth/logout"),
+  sharing: () => request<SharingState>("GET", "/api/sharing"),
+  setGuestPassword: (password: string) =>
+    request<undefined>("PUT", "/api/sharing/password", { password }),
   listVms: () => request<VmSummary[]>("GET", "/api/vms"),
   /** force: start a VM even though linked clones depend on its disks. */
   power: (uuid: string, action: PowerAction, force = false) =>

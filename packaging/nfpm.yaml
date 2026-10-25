@@ -28,6 +28,9 @@ overrides:
       - python3-websockets
       - python3-lxml
       - python3-tomli-w
+      # Guest password of LAN sharing (hash), and its self-signed certificate.
+      - python3-argon2-cffi
+      - openssl
       - python3-bottle
       - python3-typing-extensions
       - python3-pyqt6-webengine

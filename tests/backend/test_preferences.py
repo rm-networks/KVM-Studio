@@ -87,7 +87,7 @@ def _share(c: dict[str, Any], _t: Path) -> None:
     [
         (_missing_location, "prefs.location_missing"),
         (_relative_location, "prefs.location_relative"),
-        (_share, "prefs.share_later"),
+        (_share, "prefs.share_needs_password"),
     ],
 )
 def test_invalid_preferences(

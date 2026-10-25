@@ -117,6 +117,7 @@ def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int
     from ..frontend import find_frontend_dir
     from ..libvirt_conn import LibvirtConnection
     from .server import BackgroundServer, PortInUseError, bind_loopback
+    from .sharing import SharingError, start_sharing, stop_sharing
 
     token = os.environ.get(TOKEN_ENV)
     if not token:
@@ -133,6 +134,14 @@ def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int
     except PortInUseError as exc:
         print(t("cli.port_in_use", error=exc), file=sys.stderr)
         return 1
+    lan = sharing = None
+    if mode == "web" and config.web.share_on_lan:
+        try:
+            lan, sharing = start_sharing(config)
+        except SharingError as exc:
+            sock.close()
+            print(exc, file=sys.stderr)
+            return 2
     conn = LibvirtConnection(config.libvirt.uri)
 
     def request_restart() -> None:
@@ -147,8 +156,9 @@ def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int
         frontend_dir=find_frontend_dir(),
         config_path=config_path,
         on_restart=request_restart,
+        sharing=sharing,
     )
-    server = BackgroundServer(app, sock)
+    server = BackgroundServer(app, sock, lan)
     server.start()
     print(f"{READY_PREFIX}{server.port}", flush=True)
 
@@ -170,6 +180,8 @@ def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int
     finally:
         server.stop()
         conn.close()
+        if sharing is not None:
+            stop_sharing(sharing)
     return 0
 
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .config import DEFAULT_PATH, ConfigError, load
 from .errors import HelperError
-from .ops import port_forward
+from .ops import lan_port, port_forward
 from .ops.iso_library import clear
 from .server import HelperServer, run_tool
 
@@ -47,6 +47,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             clear(config, run_tool, remove_acls=True)
             port_forward.clear(config, run_tool)
+            lan_port.close_recorded(config, run_tool)
         except HelperError as exc:
             print(f"kvmstudio-helper: {exc}", file=sys.stderr)
             return 1

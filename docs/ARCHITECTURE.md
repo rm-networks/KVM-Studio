@@ -115,15 +115,25 @@ The backend checks the rights on every route.
 
 - Allowed to the guest: creating, deleting, changing, starting and stopping
   VMs, console, snapshots, clones, picking ISO images from the libraries and
-  existing `kvmnet` networks.
-- Forbidden to the guest: Preferences, network editor, ISO libraries, LAN
-  sharing, raw XML editor, passthrough (physical disk, USB, PCI), any path
-  outside the confinement.
+  existing `kvmnet` networks (a card on any other network answers 403).
+- Forbidden to the guest (403 on every route, `auth/roles.py`, tested by direct
+  calls): Preferences and ISO libraries (`/api/preferences`), the network
+  editor (`/api/networks/...`, only the list stays), LAN sharing
+  (`/api/sharing`), the access fix of an ISO (`/api/isos/access/fix`), first
+  run, uninstall, restart and closing actions (`/api/setup`, `/api/uninstall`,
+  `/api/restart`, `/api/session`), importing a VM's disks from outside the
+  root (`/api/vms/{uuid}/import`). There is no raw XML editor nor passthrough
+  route, and every path stays confined.
+
+The owner's token is only accepted from a loopback address; a guest's session
+cookie (HttpOnly, Secure, SameSite=Strict) only on the HTTPS listener. Both
+listeners run in the backend process, on one event loop. The loopback one only
+answers to `127.0.0.1` and `localhost` as host name (DNS rebinding).
 
 Turning sharing on or off opens or closes the port through the helper. The
 shared console uses `<graphics type='vnc' sharePolicy='allow-exclusive'>`:
 several noVNC clients can connect and the interface shows how many people are
-connected.
+connected (event `console.viewers`).
 
 ## Guest integration
 

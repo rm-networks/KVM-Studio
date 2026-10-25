@@ -30,9 +30,12 @@ interface Props {
   layout: Layout;
   onToggle: (key: keyof Layout) => void;
   onAbout: () => void;
-  onNetworkEditor: () => void;
-  onPreferences: () => void;
-  onFirstRun: () => void;
+  /** Host settings: none for a guest of LAN sharing. */
+  onNetworkEditor?: () => void;
+  onPreferences?: () => void;
+  onFirstRun?: () => void;
+  /** Guest of LAN sharing: ends the session. */
+  onLogout?: () => void;
   onNewVm: () => void;
   onSettings: () => void;
   onSnapshot?: (kind: SnapshotKind) => void;
@@ -63,6 +66,7 @@ export function MenuBar({
   onNetworkEditor,
   onPreferences,
   onFirstRun,
+  onLogout,
   onNewVm,
   onSettings,
   onSnapshot,
@@ -129,13 +133,14 @@ export function MenuBar({
         sep,
         item(m("closeTab"), ["Ctrl", "W"], onCloseTab),
         ...(onQuit ? [sep, item(m("quit"), undefined, onQuit)] : []),
+        ...(onLogout ? [sep, item(m("logout"), undefined, onLogout)] : []),
       ],
     ],
     [
       "edit",
       [
-        item(m("networkEditor"), undefined, onNetworkEditor),
-        item(m("preferences"), ["Ctrl", "P"], onPreferences),
+        ...(onNetworkEditor ? [item(m("networkEditor"), undefined, onNetworkEditor)] : []),
+        ...(onPreferences ? [item(m("preferences"), ["Ctrl", "P"], onPreferences)] : []),
       ],
     ],
     [
@@ -201,7 +206,10 @@ export function MenuBar({
     ],
     [
       "help",
-      [item(m("firstRun"), undefined, onFirstRun), sep, item(m("about"), undefined, onAbout)],
+      [
+        ...(onFirstRun ? [item(m("firstRun"), undefined, onFirstRun), sep] : []),
+        item(m("about"), undefined, onAbout),
+      ],
     ],
   ];
 
@@ -265,16 +273,18 @@ export function MenuBar({
 
   return (
     <Menubar.Root className="menubar">
-      {menus.map(([key, entries]) => (
-        <Menubar.Menu key={key}>
-          <Menubar.Trigger className="menubar-trigger">{m(key)}</Menubar.Trigger>
-          <Menubar.Portal>
-            <Menubar.Content className="menu" align="start" sideOffset={0}>
-              {renderEntries(entries)}
-            </Menubar.Content>
-          </Menubar.Portal>
-        </Menubar.Menu>
-      ))}
+      {menus
+        .filter(([, entries]) => entries.length > 0)
+        .map(([key, entries]) => (
+          <Menubar.Menu key={key}>
+            <Menubar.Trigger className="menubar-trigger">{m(key)}</Menubar.Trigger>
+            <Menubar.Portal>
+              <Menubar.Content className="menu" align="start" sideOffset={0}>
+                {renderEntries(entries)}
+              </Menubar.Content>
+            </Menubar.Portal>
+          </Menubar.Menu>
+        ))}
     </Menubar.Root>
   );
 }

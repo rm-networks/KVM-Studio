@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
+from ..auth.roles import check_guest_networks
 from ..context import Context
 from ..services import hardware
 from ..xml.profiles import NicModel
@@ -89,13 +90,17 @@ async def cpu_memory(ctx: Context, uuid: str, body: CpuMemory) -> Changed:
 
 
 @router.post("/{uuid}/nics", status_code=201)
-async def add_nic(ctx: Context, uuid: str, body: NicCreate) -> Nic:
+async def add_nic(ctx: Context, request: Request, uuid: str, body: NicCreate) -> Nic:
+    await run_in_threadpool(check_guest_networks, request, [body.network])
     nic = await run_in_threadpool(hardware.add_nic, ctx.conn, uuid, body.network, body.model)
     return _nic(nic)
 
 
 @router.patch("/{uuid}/nics/{mac}")
-async def change_nic(ctx: Context, uuid: str, mac: str, body: NicChange) -> Changed:
+async def change_nic(
+    ctx: Context, request: Request, uuid: str, mac: str, body: NicChange
+) -> Changed:
+    await run_in_threadpool(check_guest_networks, request, [body.network])
     restart = await run_in_threadpool(
         lambda: hardware.update_nic(
             ctx.conn, uuid, mac, network=body.network, model=body.model, connected=body.connected

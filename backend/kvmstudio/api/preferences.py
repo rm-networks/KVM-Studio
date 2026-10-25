@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
+from ..auth import guest
 from ..config import Config, save_config
 from ..context import Context
 from ..errors import ApiException
@@ -46,8 +47,12 @@ class SaveResult(BaseModel):
 
 
 def _check(new: Config) -> None:
-    if new.web.share_on_lan:
-        raise ApiException(422, "prefs.share_later", "LAN sharing arrives in V1")
+    if new.web.share_on_lan and not guest.has_password():
+        raise ApiException(
+            422, "prefs.share_needs_password", "Set the guest password before sharing on the LAN"
+        )
+    if new.web.share_on_lan and new.web.https_port == new.web.port:
+        raise ApiException(422, "prefs.share_same_port", "HTTPS needs a port of its own")
     location = new.storage.vm_default_location
     if location is not None:
         if not location.is_absolute():
@@ -132,6 +137,8 @@ async def save(ctx: Context, body: Config) -> SaveResult:
         restart = (
             old.interface.mode != body.interface.mode
             or old.web.port != body.web.port
+            or old.web.share_on_lan != body.web.share_on_lan
+            or old.web.https_port != body.web.https_port
             or old.libvirt.uri != body.libvirt.uri
         )
         root = library_root(body)

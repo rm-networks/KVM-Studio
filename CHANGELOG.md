@@ -16,6 +16,12 @@
   table comes back after nftables or firewalld restart; the helper
   service can now write it (host network, CAP_NET_ADMIN). The nested profile
   asks for svm on AMD hosts instead of vmx.
+- Sharing on the local network (web mode): HTTPS on port 60443 with a
+  self-signed certificate, a guest account (argon2 password set in
+  Preferences > Interface, lockout after 5 failures, sessions ending after 30
+  minutes idle), the rights of the guest checked on every route, the firewall
+  port opened and closed by the helper (firewalld or ufw), and a shared
+  console showing how many people are on it.
 
 ## 0.4.0 (2026-10-25)
 

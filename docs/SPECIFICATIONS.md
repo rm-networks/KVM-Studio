@@ -335,7 +335,7 @@ The library folders are real folders on disk: what the user sees in the tree mat
 
 - **F-100** A single guest account, password set by the owner in Preferences > Interface, usable by several people at once.
 - **F-101** The guest manages VMs like the owner: create, delete, change the settings, start/stop, console, snapshots, clones.
-- **F-102** The guest does not touch the host: no access to Preferences, the network editor, the ISO libraries or LAN sharing; no raw XML editor; no passthrough (physical disk, USB, PCI).
+- **F-102** The guest does not touch the host: no access to Preferences, the network editor, the ISO libraries or LAN sharing; no raw XML editor; no passthrough (physical disk, USB, PCI); no import of a VM's disks from outside the root; VM cards on `kvmnet` networks only.
 - **F-103** Path confinement: a guest can only attach disks from the `KVM-Studio` root and ISO images from the declared libraries. Checked by the backend, not only in the interface.
 - **F-104** Shared console: several people on the same VM see the same screen and share keyboard and mouse; "N people connected" indicator.
 - **F-105** Login security: self-signed HTTPS, hashed password, temporary lockout after 5 failures, sessions expired after inactivity.

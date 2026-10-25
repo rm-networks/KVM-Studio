@@ -29,7 +29,6 @@
   "cli.no_pywebview": "pywebview n'est pas installé. Utilisez --mode web.",
   "cli.no_web_engine": "Aucun moteur web pour la fenêtre. Installez python3-pyqt6-webengine (ou webkit2gtk4.1), ou lancez avec --mode web.",
   "cli.no_window": "impossible de créer la fenêtre",
-  "cli.share_unavailable": "share_on_lan n'est pas encore disponible (prévu en V1). Mettez [web] share_on_lan = false dans la configuration.",
   "cli.web_dev": "{app} (développement) : {url}",
   "cli.web_listening": "{app} écoute sur 127.0.0.1:{port}",
   "cli.web_link": "Ouvrez ce lien (il contient le jeton de session) : {url}",
@@ -98,5 +97,11 @@
   "check.kvm_dev_kvm_denied": "/dev/kvm n'est pas accessible à ce compte : fermez puis rouvrez la session, puis vérifiez : ls -l /dev/kvm",
   "check.nested": "Virtualisation imbriquée",
   "check.nested_on": "activée ({module})",
-  "check.nested_off": "désactivée ({module}) ; utile seulement pour des hyperviseurs dans des VMs : echo 'options {module} nested=1' | sudo tee /etc/modprobe.d/kvm-nested.conf, puis redémarrez"
+  "check.nested_off": "désactivée ({module}) ; utile seulement pour des hyperviseurs dans des VMs : echo 'options {module} nested=1' | sudo tee /etc/modprobe.d/kvm-nested.conf, puis redémarrez",
+  "cli.share_not_in_reload": "Le partage sur le réseau local est désactivé avec --reload (serveur de développement).",
+  "cli.share_needs_password": "Le partage sur le réseau local demande le mot de passe invité : définissez-le dans Édition > Préférences > Interface, ou mettez [web] share_on_lan = false.",
+  "cli.share_no_certificate": "Impossible de créer le certificat du partage sur le réseau local : {error}",
+  "cli.share_port_not_opened": "Le port du partage n'a pas été ouvert dans le pare-feu ({error}) ; les autres machines risquent de ne pas l'atteindre.",
+  "cli.share_port_not_closed": "Le port du partage n'a pas été fermé dans le pare-feu ({error}).",
+  "cli.share_link": "Partagé sur le réseau local (compte invité) : {url}"
 }

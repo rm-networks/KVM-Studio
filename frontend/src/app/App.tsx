@@ -100,7 +100,7 @@ function MainWindow() {
   // Checked at each start: a kernel update can leave KVM unusable until a reboot.
   useEffect(() => {
     const kvm = info?.kvm;
-    if (!kvm?.problem || kvmNoticeShown.current) return;
+    if (!kvm?.problem || info?.role === "guest" || kvmNoticeShown.current) return;
     kvmNoticeShown.current = true;
     notifyError(
       t("kvm.title"),
@@ -139,6 +139,15 @@ function MainWindow() {
       cancelled = true;
     };
   }, []);
+
+  // A guest of LAN sharing manages VMs, not the host (F-102).
+  const guest = info?.role === "guest";
+  const logout = () => {
+    api
+      .logout()
+      .catch(() => undefined)
+      .finally(() => window.location.reload());
+  };
 
   const toggle = (key: keyof Layout) => setLayout((l) => ({ ...l, [key]: !l[key] }));
 
@@ -223,7 +232,7 @@ function MainWindow() {
     closeTab: () => activeTab !== HOME_TAB && closeTab(activeTab),
     nextTab: () => cycleTab(1),
     previousTab: () => cycleTab(-1),
-    preferences: () => setPreferencesOpen(true),
+    preferences: () => !guest && setPreferencesOpen(true),
     settings: () => currentVm && setSettingsFor(currentVm.uuid),
     grab: () => vmConsole?.grab(),
     consoleFullscreen: toggleConsoleFullscreen,
@@ -252,9 +261,10 @@ function MainWindow() {
           layout={layout}
           onToggle={toggle}
           onAbout={() => setAboutOpen(true)}
-          onNetworkEditor={() => setNetworkEditorOpen(true)}
-          onPreferences={() => setPreferencesOpen(true)}
-          onFirstRun={() => setFirstRunOpen(true)}
+          onNetworkEditor={guest ? undefined : () => setNetworkEditorOpen(true)}
+          onPreferences={guest ? undefined : () => setPreferencesOpen(true)}
+          onFirstRun={guest ? undefined : () => setFirstRunOpen(true)}
+          onLogout={guest ? logout : undefined}
           onNewVm={() => setWizardOpen(true)}
           onSettings={() => currentVm && setSettingsFor(currentVm.uuid)}
           onSnapshot={

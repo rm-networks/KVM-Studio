@@ -21,6 +21,8 @@ dependencies = [
     "lxml>=5",
     # Writes the configuration file from the Preferences screen.
     "tomli-w>=1",
+    # Guest password of LAN sharing; packaged by Fedora and Debian (python3-argon2).
+    "argon2-cffi>=21",
 ]
 
 [project.optional-dependencies]

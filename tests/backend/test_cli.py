@@ -59,12 +59,12 @@ def test_invalid_config_exits_with_2(tmp_path: Path, capsys: pytest.CaptureFixtu
     assert "interface.mode" in capsys.readouterr().err
 
 
-def test_share_on_lan_is_refused_for_now(
+def test_share_on_lan_needs_the_guest_password(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     path = write_config(tmp_path, "[web]\nshare_on_lan = true\n")
     assert main(["--config", str(path), "--mode", "web"]) == 2
-    assert "share_on_lan" in capsys.readouterr().err
+    assert "guest password" in capsys.readouterr().err
 
 
 def test_reload_requires_web_mode(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

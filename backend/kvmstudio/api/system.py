@@ -45,13 +45,15 @@ class AppInfo(BaseModel):
     ui: UiPreferences
     # Only for a QEMU connection (not the test driver).
     kvm: KvmInfo | None = None
+    # A guest of LAN sharing sees no host settings (F-102).
+    role: Literal["owner", "guest"] = "owner"
 
 
 def health() -> Health:
     return Health()
 
 
-def info(ctx: Context) -> AppInfo:
+def info(ctx: Context, request: Request) -> AppInfo:
     host = ctx.conn.host_info()
     return AppInfo(
         version=__version__,
@@ -65,6 +67,7 @@ def info(ctx: Context) -> AppInfo:
         ),
         ui=UiPreferences(theme=ctx.config.ui.theme, language=resolve(ctx.config.ui.language)),
         kvm=_kvm() if host.uri.startswith("qemu") else None,
+        role=getattr(request.state, "role", "owner"),
     )
 
 

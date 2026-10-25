@@ -1,4 +1,5 @@
 import RFB from "@novnc/novnc";
+import { Users } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -12,6 +13,7 @@ import { useBootSplash } from "./bootSplash";
 import { ClipboardBridge } from "./clipboardBridge";
 import { registerConsole, unregisterConsole, updateConsole } from "./consoleRegistry";
 import { pressCombo } from "./keys";
+import { useViewers } from "./viewers";
 import "./VmConsole.css";
 
 type Status = "connecting" | "connected" | "disconnected" | "timeout";
@@ -233,6 +235,7 @@ function VncScreen({
   children?: ReactNode;
 }) {
   const { t } = useTranslation();
+  const viewers = useViewers(uuid);
   const screenRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<Status>("connecting");
@@ -341,6 +344,12 @@ function VncScreen({
     <div className="console" ref={boxRef}>
       <div className="console-screen" ref={screenRef} />
       {children}
+      {status === "connected" && viewers > 1 && (
+        <span className="console-viewers" role="status">
+          <Users aria-hidden />
+          {t("console.viewers", { count: viewers })}
+        </span>
+      )}
       {splash && <BootSplash />}
       {!splash && !paused && status !== "connected" && (
         <div

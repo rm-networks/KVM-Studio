@@ -5,6 +5,8 @@ export type ServerEvent =
   | { type: "vm.changed"; vm: VmSummary }
   | { type: "vm.removed"; uuid: string }
   | { type: "library.changed" }
+  | { type: "snapshots.changed"; uuid: string }
+  | { type: "console.viewers"; uuid: string; count: number }
   | { type: "connection"; state: "lost" | "restored" };
 
 interface Handlers {

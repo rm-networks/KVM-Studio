@@ -29,7 +29,6 @@
   "cli.no_pywebview": "pywebview is not installed. Use --mode web instead.",
   "cli.no_web_engine": "No web engine found for the window. Install python3-pyqt6-webengine (or webkit2gtk4.1), or start with --mode web.",
   "cli.no_window": "could not create the window",
-  "cli.share_unavailable": "share_on_lan is not available yet (planned for V1). Set [web] share_on_lan = false in the configuration.",
   "cli.web_dev": "{app} (development): {url}",
   "cli.web_listening": "{app} is listening on 127.0.0.1:{port}",
   "cli.web_link": "Open this link (it contains the session token): {url}",
@@ -98,5 +97,11 @@
   "check.kvm_dev_kvm_denied": "/dev/kvm is not accessible to this account: log out and back in, then check: ls -l /dev/kvm",
   "check.nested": "Nested virtualization",
   "check.nested_on": "enabled ({module})",
-  "check.nested_off": "disabled ({module}); only needed for hypervisors inside VMs: echo 'options {module} nested=1' | sudo tee /etc/modprobe.d/kvm-nested.conf, then restart"
+  "check.nested_off": "disabled ({module}); only needed for hypervisors inside VMs: echo 'options {module} nested=1' | sudo tee /etc/modprobe.d/kvm-nested.conf, then restart",
+  "cli.share_not_in_reload": "LAN sharing is off with --reload (development server).",
+  "cli.share_needs_password": "LAN sharing needs the guest password: set it in Edit > Preferences > Interface, or set [web] share_on_lan = false.",
+  "cli.share_no_certificate": "Could not make the certificate of LAN sharing: {error}",
+  "cli.share_port_not_opened": "The firewall port of LAN sharing was not opened ({error}); other machines may not reach it.",
+  "cli.share_port_not_closed": "The firewall port of LAN sharing was not closed ({error}).",
+  "cli.share_link": "Shared on the LAN (guest account): {url}"
 }

@@ -16,7 +16,7 @@ from fastapi import WebSocket
 from lxml import etree
 from starlette.concurrency import run_in_threadpool
 
-from ..auth.token import token_in_subprotocols
+from ..auth.roles import socket_role
 from ..context import get_context
 from ..errors import ApiException, classify
 from ..libvirt_conn import LibvirtConnection
@@ -79,7 +79,7 @@ async def _pump(websocket: WebSocket, sock: socket.socket) -> None:
 
 async def vnc_console(websocket: WebSocket, uuid: str) -> None:
     ctx = get_context(websocket)
-    if not token_in_subprotocols(websocket.scope.get("subprotocols", []), ctx.token):
+    if socket_role(websocket) is None:
         await websocket.close(code=4401)
         return
     try:
@@ -94,7 +94,20 @@ async def vnc_console(websocket: WebSocket, uuid: str) -> None:
         await websocket.close(code=4000 + exc.status, reason=exc.code)
         return
     await websocket.accept(subprotocol=ACCEPTED_PROTOCOL)
+    _viewers(websocket, uuid, +1)
     try:
         await _pump(websocket, sock)
     finally:
         sock.close()
+        _viewers(websocket, uuid, -1)
+
+
+def _viewers(websocket: WebSocket, uuid: str, change: int) -> None:
+    """People on the console of a VM (F-104), told to every open interface."""
+    viewers: dict[str, int] = websocket.app.state.viewers
+    count = max(0, viewers.get(uuid, 0) + change)
+    if count:
+        viewers[uuid] = count
+    else:
+        viewers.pop(uuid, None)
+    websocket.app.state.events.broadcast({"type": "console.viewers", "uuid": uuid, "count": count})

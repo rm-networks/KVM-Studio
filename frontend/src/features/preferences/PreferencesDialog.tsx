@@ -16,6 +16,7 @@ import { useNotifier } from "../../components/notifier";
 import { folderPicker } from "../../platform/folders";
 import { openLink } from "../../platform/links";
 import { CloseDialog } from "../session/CloseDialog";
+import { SharingPrefs } from "../sharing/SharingPrefs";
 import { IsoPicker } from "../iso-picker/IsoPicker";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import "./PreferencesDialog.css";
@@ -478,6 +479,15 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                 />
               </label>
               <p className="prefs-muted">{t("prefs.appliedOnRestart")}</p>
+            </Group>
+          )}
+          {config && section === "interface" && (
+            <Group title={t("sharing.title")}>
+              <SharingPrefs
+                web={config.web}
+                webMode={config.interface.mode === "web"}
+                onChange={(web) => update("web", web)}
+              />
             </Group>
           )}
 

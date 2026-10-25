@@ -6,7 +6,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { captureToken } from "./api/token";
-import { App } from "./app/App";
+import { Gate } from "./app/Gate";
 import { NotificationProvider } from "./components/Notifications";
 import { UninstallWizard } from "./features/uninstall/UninstallWizard";
 import "./i18n";
@@ -29,7 +29,7 @@ if (root) {
           <UninstallWizard />
         </NotificationProvider>
       ) : (
-        <App />
+        <Gate />
       )}
     </StrictMode>,
   );

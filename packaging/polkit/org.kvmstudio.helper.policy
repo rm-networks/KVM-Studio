@@ -30,6 +30,18 @@
     </defaults>
   </action>
 
+  <action id="org.kvmstudio.helper.lan-port">
+    <description>Open or close the port of LAN sharing in the firewall</description>
+    <description xml:lang="fr">Ouvrir ou fermer le port du partage sur le réseau local dans le pare-feu</description>
+    <message>Authentication is required to open or close the LAN sharing port of the firewall.</message>
+    <message xml:lang="fr">Une authentification est nécessaire pour ouvrir ou fermer le port du partage dans le pare-feu.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.kvmstudio.helper.port-forward">
     <description>Change the port forwarding of a NAT network</description>
     <description xml:lang="fr">Modifier la redirection de ports d'un réseau NAT</description>

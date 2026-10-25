@@ -355,6 +355,24 @@ def host_subnets() -> list[tuple[str, ipaddress.IPv4Network]]:
     return result
 
 
+def host_addresses() -> list[str]:
+    """IPv4 addresses other machines may reach the host on (not VM bridges)."""
+    virtual = ("kvmnet", "ks-", "vnet", "virbr", "macvtap", "docker", "veth")
+    addresses = []
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        for _index, name in socket.if_nameindex():
+            if name.startswith(virtual):
+                continue
+            request = struct.pack("256s", name[:15].encode())
+            try:
+                addr = socket.inet_ntoa(fcntl.ioctl(sock.fileno(), 0x8915, request)[20:24])
+            except OSError:
+                continue
+            if not ipaddress.IPv4Address(addr).is_loopback:
+                addresses.append(addr)
+    return addresses
+
+
 def listening_ports(proc: str = "/proc/net") -> dict[str, list[int]]:
     """TCP ports in LISTEN state and bound UDP ports on the host, IPv4 and IPv6."""
     found: dict[str, set[int]] = {"tcp": set(), "udp": set()}

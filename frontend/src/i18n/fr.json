@@ -42,7 +42,8 @@
     "snapshot": "Instantané",
     "takeSnapshot": "Prendre un instantané…",
     "revertSnapshot": "Restaurer l'instantané courant…",
-    "snapshotManager": "Gestionnaire d'instantanés…"
+    "snapshotManager": "Gestionnaire d'instantanés…",
+    "logout": "Se déconnecter"
   },
   "toolbar": {
     "start": "Démarrer",
@@ -137,7 +138,12 @@
   },
   "errors": {
     "auth": {
-      "invalid_token": "Session invalide. Relancez {{app}} ou, en mode web, ouvrez le lien affiché dans le terminal."
+      "invalid_token": "Session invalide. Relancez {{app}} ou, en mode web, ouvrez le lien affiché dans le terminal.",
+      "bad_password": "Mot de passe incorrect.",
+      "locked": "Trop d'essais manqués : réessayez dans quelques minutes.",
+      "guest_forbidden": "Le compte invité ne peut pas faire cela : c'est réservé au propriétaire de l'ordinateur.",
+      "guest_network": "Le compte invité ne branche les VMs que sur les réseaux kvmnet.",
+      "no_sharing": "Le partage sur le réseau local est désactivé."
     },
     "libvirt": {
       "unreachable": "Impossible de joindre libvirt. Vérifiez que le service tourne : systemctl status virtqemud.socket",
@@ -210,12 +216,13 @@
       "already_inside": "Les disques sont déjà dans le dossier {{app}}."
     },
     "prefs": {
-      "share_later": "Le partage sur le réseau local n'est pas disponible.",
       "location_relative": "Indiquez un chemin complet (qui commence par /).",
       "location_missing": "Ce dossier n'existe pas.",
       "iso_missing": "Le dossier d'une bibliothèque ISO n'existe pas.",
       "location_not_writable": "Impossible de créer le dossier KVM-Studio à cet emplacement : votre compte doit pouvoir y écrire.",
-      "iso_through_helper": "Les bibliothèques ISO s'ajoutent et se retirent avec les boutons de la liste."
+      "iso_through_helper": "Les bibliothèques ISO s'ajoutent et se retirent avec les boutons de la liste.",
+      "share_needs_password": "Définissez le mot de passe invité avant de partager sur le réseau local.",
+      "share_same_port": "Le HTTPS demande son propre port, différent de celui du mode web."
     },
     "console": {
       "no_vnc": "Cette machine virtuelle n'a pas d'affichage VNC."
@@ -271,6 +278,9 @@
       "module_not_loaded": "Le module KVM n'est pas chargé : les VMs ne peuvent pas démarrer. Chargez-le avec sudo modprobe kvm_intel (ou kvm_amd), ou redémarrez l'ordinateur.",
       "no_dev_kvm": "/dev/kvm est absent alors que le module KVM est chargé. Redémarrez l'ordinateur ; si cela persiste, regardez : dmesg | grep -i kvm",
       "dev_kvm_denied": "/dev/kvm n'est pas accessible à ce compte. Fermez puis rouvrez la session ; si cela persiste, vérifiez : ls -l /dev/kvm"
+    },
+    "sharing": {
+      "bad_password": "Pas d'espace au début ni à la fin du mot de passe."
     }
   },
   "about": {
@@ -310,7 +320,9 @@
     "fullscreenBrowserTitle": "Console en plein écran dans le navigateur",
     "fullscreenBrowser": "Le navigateur garde Échap pour lui : cette touche quitte le plein écran et n'atteint pas la VM. Ctrl+Alt+Entrée quitte aussi le plein écran. Les navigateurs basés sur Chromium peuvent donner Échap à la VM.",
     "fullscreenBrowserLocked": "Le clavier est verrouillé pour la VM : Échap lui parvient, et la maintenir enfoncée quitte le plein écran (imposé par le navigateur). Ctrl+Alt+Entrée quitte aussi le plein écran.",
-    "fullscreenKeys": "Ctrl+Alt+Entrée"
+    "fullscreenKeys": "Ctrl+Alt+Entrée",
+    "viewers_one": "{{count}} personne connectée",
+    "viewers_other": "{{count}} personnes connectées"
   },
   "tabs": {
     "close": "Fermer l'onglet",
@@ -1017,5 +1029,28 @@
   },
   "kvm": {
     "title": "KVM n'est pas disponible"
+  },
+  "guest": {
+    "intro": "Cet ordinateur partage ses machines virtuelles sur le réseau local. Saisissez le mot de passe invité.",
+    "password": "Mot de passe invité",
+    "login": "Se connecter"
+  },
+  "sharing": {
+    "title": "Partage sur le réseau local",
+    "enable": "Partager les machines virtuelles sur le réseau local (compte invité, HTTPS)",
+    "enableHint": "Les autres ordinateurs ouvrent l'adresse HTTPS ci-dessous et se connectent avec le mot de passe invité. L'invité gère les VMs, pas les réglages de cet ordinateur. Appliqué au redémarrage ; le mot de passe administrateur est demandé pour ouvrir le port dans le pare-feu.",
+    "webModeOnly": "Seulement en mode web : choisissez « Web » ci-dessus.",
+    "httpsPort": "Port HTTPS",
+    "password": "Mot de passe invité",
+    "passwordKept": "inchangé",
+    "setPassword": "Définir le mot de passe",
+    "passwordSet": "Mot de passe invité défini",
+    "passwordHint": "8 caractères au moins. En définir un nouveau déconnecte tous les invités.",
+    "noPassword": "Pas encore de mot de passe invité : définissez-en un (8 caractères au moins) pour activer le partage.",
+    "active_one": "Partagé en ce moment, {{count}} invité connecté, à l'adresse :",
+    "active_other": "Partagé en ce moment, {{count}} invités connectés, aux adresses :",
+    "fingerprint": "Certificat (autosigné), empreinte SHA-256 à comparer dans le navigateur :",
+    "firewallOpened": "Port ouvert dans {{firewall}}, refermé à l'arrêt de {{app}}.",
+    "firewallNone": "Aucun port n'a été ouvert dans le pare-feu (ni firewalld ni ufw, ou le helper n'a pas répondu)."
   }
 }

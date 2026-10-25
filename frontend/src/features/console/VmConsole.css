@@ -53,3 +53,25 @@
 .console-splash {
   pointer-events: none;
 }
+
+/* Shared console: shown when several people are on it. */
+.console-viewers {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: var(--font-size-small);
+  pointer-events: none;
+}
+
+.console-viewers svg {
+  width: 14px;
+  height: 14px;
+}

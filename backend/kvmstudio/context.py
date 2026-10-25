@@ -4,13 +4,16 @@ import socket
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Literal, cast
+from typing import TYPE_CHECKING, Annotated, Literal, cast
 
 from fastapi import Depends
 from starlette.requests import HTTPConnection
 
 from .config import Config
 from .libvirt_conn import LibvirtConnection
+
+if TYPE_CHECKING:
+    from .auth.roles import Sharing
 
 Mode = Literal["desktop", "web"]
 
@@ -24,6 +27,8 @@ class AppContext:
     open_console: Callable[[LibvirtConnection, str], socket.socket]
     # Where Preferences are saved; None when the app runs without a file (tests).
     config_path: Path | None = None
+    # LAN sharing (web mode with share_on_lan); None otherwise.
+    sharing: Sharing | None = None
 
 
 def get_context(conn: HTTPConnection) -> AppContext:

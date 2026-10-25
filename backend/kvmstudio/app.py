@@ -12,10 +12,10 @@ from fastapi import APIRouter, Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import APP_NAME, __version__
 from .api import (
+    auth,
     clone,
     create,
     display,
@@ -33,7 +33,9 @@ from .api import (
     uninstall,
     vms,
 )
-from .auth.token import require_token
+from .api import sharing as sharing_api
+from .auth.roles import HostCheck, require_access
+from .auth.roles import Sharing as LanSharing
 from .config import Config, default_config_path, load_config
 from .console.vnc import ConsoleOpener, open_vnc_socket, vnc_console
 from .context import AppContext, Mode
@@ -51,8 +53,6 @@ from .services import vm_view
 from .services.tasks import TaskRegistry
 
 # Only loopback names are accepted, which defeats DNS rebinding.
-LOOPBACK_HOSTS = ["127.0.0.1", "localhost"]
-
 _ERROR_RESPONSES: dict[int | str, dict[str, object]] = {
     401: {"model": ApiError},
     403: {"model": ApiError},
@@ -72,6 +72,7 @@ def create_app(
     open_console: ConsoleOpener = open_vnc_socket,
     config_path: Path | None = None,
     on_restart: Callable[[], None] | None = None,
+    sharing: LanSharing | None = None,
 ) -> FastAPI:
     def describe(uuid: str) -> dict[str, object] | None:
         # Read the config at call time: Preferences may have replaced it.
@@ -91,6 +92,8 @@ def create_app(
     )
     app.state.events = hub
     app.state.tasks = TaskRegistry()
+    # Open console connections by VM uuid (shared console, F-104).
+    app.state.viewers = {}
     # Set by the shell that started us; tests and --reload have none.
     app.state.on_restart = on_restart
     app.state.context = AppContext(
@@ -100,17 +103,19 @@ def create_app(
         mode=mode,
         open_console=open_console,
         config_path=config_path,
+        sharing=sharing,
     )
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=LOOPBACK_HOSTS)
+    app.add_middleware(HostCheck)
     app.add_exception_handler(libvirt.libvirtError, libvirt_error_handler)
     app.add_exception_handler(ApiException, api_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)
 
     public = APIRouter(prefix="/api")
     public.add_api_route("/health", system.health, methods=["GET"], tags=["system"])
+    public.include_router(auth.router)
 
     private = APIRouter(
-        prefix="/api", dependencies=[Depends(require_token)], responses=_ERROR_RESPONSES
+        prefix="/api", dependencies=[Depends(require_access)], responses=_ERROR_RESPONSES
     )
     private.add_api_route("/info", system.info, methods=["GET"], tags=["system"])
     private.add_api_route(
@@ -130,6 +135,7 @@ def create_app(
     private.include_router(guest.router)
     private.include_router(isos.router)
     private.include_router(setup.router)
+    private.include_router(sharing_api.router)
     private.include_router(uninstall.router)
 
     app.include_router(public)

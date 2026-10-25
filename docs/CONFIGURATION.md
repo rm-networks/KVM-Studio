@@ -9,7 +9,8 @@ The Edit > Preferences screen changes this file. It rewrites it without the
 comments and only keeps the values that differ from the defaults: a default
 changed in a later version therefore applies to whoever did not change it.
 `port = 8765`, the former default, is ignored when reading. The interface mode,
-the port and the libvirt URI apply at the next start; the rest applies at once.
+the ports, LAN sharing and the libvirt URI apply at the next start; the rest
+applies at once.
 
 An unknown key or an invalid value prevents starting, with a message naming the
 faulty key. `kvm-studio --check` validates the file without starting anything.
@@ -26,11 +27,16 @@ faulty key. `kvm-studio --check` validates the file without starting anything.
 | Key | Default | Description |
 | --- | --- | --- |
 | `port` | `60080` | HTTP port of web mode (local access, 127.0.0.1), between 1024 and 65535. Window mode uses a random port. |
-| `https_port` | `60443` | HTTPS port for sharing on the local network (V1). |
-| `share_on_lan` | `false` | Sharing on the local network (V1). Must stay `false`: KVM Studio refuses to start otherwise. |
-| `tls` | `"auto"` | Self-signed certificate for LAN sharing (V1). |
-| `guest_enabled` | `true` | Guest account for LAN sharing (V1). |
-| `login_max_attempts` | `5` | Failed logins before a temporary lockout (V1). |
+| `https_port` | `60443` | HTTPS port for sharing on the local network, other than `port`. |
+| `share_on_lan` | `false` | Web mode: also listen on the local network in HTTPS, for the guest account. Needs the guest password (Preferences > Interface), otherwise KVM Studio refuses to start. The helper opens the port in firewalld (service `kvm-studio` on the default port) or ufw while KVM Studio runs. |
+| `tls` | `"auto"` | Self-signed certificate, made with openssl at the first start in `$XDG_CONFIG_HOME/kvm-studio/tls/` (EC P-256, ten years). Its fingerprint is shown in Preferences. |
+| `guest_enabled` | `true` | Guest account of LAN sharing; `false` keeps sharing off. |
+| `login_max_attempts` | `5` | Failed logins from one address before a five minute lockout. |
+
+The guest password is stored as an argon2 hash in
+`$XDG_CONFIG_HOME/kvm-studio/guest.hash` (readable by the user only), set from
+Preferences > Interface. Guest sessions end after 30 minutes without a request,
+and setting a new password ends them all.
 
 ## [libvirt]
 

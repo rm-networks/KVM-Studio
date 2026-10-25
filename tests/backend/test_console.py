@@ -66,6 +66,26 @@ def test_console_relays_bytes_both_ways(
         assert ws.receive_bytes() == b"RFB HELLO"
 
 
+def test_people_on_a_console_are_counted(
+    config: Config, conn: LibvirtConnection, frontend_dir: Path
+) -> None:
+    client = make_client(config, conn, frontend_dir, echo_opener)
+    url = "ws://127.0.0.1/api/vms/u1/console"
+    told: list[object] = []
+    client.app.state.events.broadcast = told.append  # type: ignore[attr-defined]
+    with client.websocket_connect(url, subprotocols=PROTOCOLS) as first:
+        first.send_bytes(b"a")
+        first.receive_bytes()
+        with client.websocket_connect(url, subprotocols=PROTOCOLS) as second:
+            second.send_bytes(b"b")
+            second.receive_bytes()
+            assert client.app.state.viewers == {"u1": 2}  # type: ignore[attr-defined]
+    assert client.app.state.viewers == {}  # type: ignore[attr-defined]
+    counts = [m["count"] for m in told if isinstance(m, dict)]
+    assert counts[:2] == [1, 2]
+    assert counts[-1] == 0
+
+
 @pytest.mark.parametrize("protocols", [["binary"], ["binary", "kvmstudio.wrong"], []])
 def test_console_requires_the_token(
     config: Config, conn: LibvirtConnection, frontend_dir: Path, protocols: list[str]

@@ -79,6 +79,17 @@ describe("App", () => {
     expect(screen.getByText(/Redémarrez l'ordinateur pour utiliser le nouveau noyau/)).toBeTruthy();
   });
 
+  it("shows a guest of LAN sharing no host settings", async () => {
+    mockFetch((path) => [
+      200,
+      path === "/api/info" ? { ...info, role: "guest" } : apiResponse(path),
+    ]);
+    render(<App />);
+    expect(await screen.findByText("FW-VYOS")).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Fichier" })).toBeTruthy();
+    expect(screen.queryByRole("menuitem", { name: "Édition" })).toBeNull();
+  });
+
   it("explains an invalid session", async () => {
     mockFetch(() => [
       401,

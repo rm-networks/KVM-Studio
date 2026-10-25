@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import Annotated
 
 import libvirt
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from lxml import etree
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
+from ..auth.roles import check_guest_networks
 from ..context import Context
 from ..services import create
 from ..xml.profiles import PROFILES, DiskBus, Family, NicModel, guess_profile
@@ -141,7 +142,8 @@ async def host(ctx: Context) -> HostInfo:
 
 
 @router.post("/vms", status_code=201)
-async def create_vm(ctx: Context, body: NewVmRequest) -> Created:
+async def create_vm(ctx: Context, request: Request, body: NewVmRequest) -> Created:
+    await run_in_threadpool(check_guest_networks, request, [n.network for n in body.nics])
     vm = create.NewVm(
         name=body.name,
         folder=body.folder,

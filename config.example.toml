@@ -9,12 +9,13 @@ mode = "desktop"
 
 [web]
 port = 60080         # HTTP, this computer only
-https_port = 60443   # HTTPS, for sharing on the local network (V1)
-# LAN sharing arrives in V1. Must stay false for now.
+https_port = 60443   # HTTPS, for sharing on the local network
+# Web mode only: other computers log in with the guest password (set it in
+# Edit > Preferences > Interface first, or KVM Studio refuses to start).
 share_on_lan = false
-tls = "auto"
+tls = "auto"           # self-signed certificate, made at the first start
 guest_enabled = true
-login_max_attempts = 5
+login_max_attempts = 5 # failed logins from one address before a 5 minute lockout
 
 [libvirt]
 uri = "qemu:///system"
