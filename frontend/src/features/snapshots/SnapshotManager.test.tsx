@@ -27,7 +27,8 @@ describe("SnapshotManager", () => {
       "fetch",
       vi.fn((path: string, init?: RequestInit) => {
         calls.push(`${init?.method ?? "GET"} ${path}`);
-        if (init?.method && init.method !== "GET") return Promise.resolve(new Response(null, { status: 204 }));
+        if (init?.method && init.method !== "GET")
+          return Promise.resolve(new Response(null, { status: 204 }));
         return Promise.resolve(new Response(JSON.stringify(snaps)));
       }),
     );
