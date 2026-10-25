@@ -90,8 +90,10 @@ function MainWindow() {
 
   useEffect(() => {
     if (!info) return;
-    void i18n.changeLanguage(info.ui.language);
-    document.documentElement.lang = info.ui.language;
+    // A guest keeps the language of their own browser.
+    const language = info.role === "guest" ? i18n.language : info.ui.language;
+    void i18n.changeLanguage(language);
+    document.documentElement.lang = language;
     document.documentElement.dataset.mode = info.mode;
     if (info.ui.theme === "system") delete document.documentElement.dataset.theme;
     else document.documentElement.dataset.theme = info.ui.theme;

@@ -61,7 +61,9 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
     print(t("cli.web_link", url=url), flush=True)
     if config.web.share_on_lan:
         for address in host_addresses():
-            print(t("cli.share_link", url=f"https://{address}:{config.web.https_port}/"))
+            print(
+                t("cli.share_link", url=f"https://{address}:{config.web.https_port}/"), flush=True
+            )
     if open_browser:
         # The default browser (xdg-open on Linux desktops), as if a link was clicked.
         webbrowser.open(url)
