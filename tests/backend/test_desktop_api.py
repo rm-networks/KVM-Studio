@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from kvmstudio.shell.clipboard import DesktopApi
@@ -40,6 +42,7 @@ def test_only_intended_methods_are_public() -> None:
         "guard_close",
         "open_link",
         "read_clipboard",
+        "save_file",
         "set_fullscreen",
         "toggle_fullscreen",
         "write_clipboard",
@@ -48,6 +51,27 @@ def test_only_intended_methods_are_public() -> None:
 
 def test_folder_picker_without_window() -> None:
     assert DesktopApi(FakeClipboard()).choose_folder() is None
+
+
+def test_save_file_writes_where_the_dialog_says(tmp_path: Path) -> None:
+    target = tmp_path / "chosen.json"
+
+    class Window:
+        asked: list[str] = []
+
+        def create_file_dialog(self, kind: object, save_filename: str) -> tuple[str]:
+            self.asked.append(save_filename)
+            return (str(target),)
+
+    api = DesktopApi(FakeClipboard())
+    api._attach(Window())
+    assert api.save_file("networks.json", '{"a": "é"}') is True
+    assert target.read_text(encoding="utf-8") == '{"a": "é"}'
+    assert Window.asked == ["networks.json"]
+    # A name with a folder in it, or no window: nothing asked, nothing written.
+    assert api.save_file("../x.json", "{}") is False
+    assert DesktopApi(FakeClipboard()).save_file("x.json", "{}") is False
+    assert Window.asked == ["networks.json"]
 
 
 def test_desktop_api_opens_only_https_links(monkeypatch: pytest.MonkeyPatch) -> None:

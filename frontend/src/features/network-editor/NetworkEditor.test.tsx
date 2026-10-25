@@ -63,6 +63,60 @@ function mockApi(plan = { restart: false, running: [] as string[] }) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("NetworkEditor", () => {
+  it("exports through the save dialog of the desktop window", async () => {
+    mockApi();
+    const save = vi.fn(() => Promise.resolve(true));
+    vi.stubGlobal("pywebview", { api: { save_file: save } });
+    render(
+      <NotificationProvider>
+        <NetworkEditor onClose={() => undefined} />
+      </NotificationProvider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Exporter…" }));
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+    const [name, text] = save.mock.calls[0] as unknown as [string, string];
+    expect(name).toBe("kvm-studio-networks.json");
+    expect(JSON.parse(text)).toEqual(exported);
+  });
+
+  it("exports as a download in a browser", async () => {
+    mockApi();
+    const created = vi.fn(() => "blob:x");
+    const revoked = vi.fn();
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, { createObjectURL: created, revokeObjectURL: revoked }),
+    );
+    const clicked = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    render(
+      <NotificationProvider>
+        <NetworkEditor onClose={() => undefined} />
+      </NotificationProvider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Exporter…" }));
+    await waitFor(() => expect(clicked).toHaveBeenCalledTimes(1));
+    // Not revoked at once: the download reads the blob after the click.
+    expect(revoked).not.toHaveBeenCalled();
+    clicked.mockRestore();
+  });
+
+  it("imports a file and reports what was created", async () => {
+    const calls = mockApi();
+    const { container } = render(
+      <NotificationProvider>
+        <NetworkEditor onClose={() => undefined} />
+      </NotificationProvider>,
+    );
+    await screen.findByText("kvmnet8");
+    const input = container.ownerDocument.querySelector<HTMLInputElement>('input[type="file"]');
+    const file = new File([JSON.stringify(exported)], "networks.json", {
+      type: "application/json",
+    });
+    fireEvent.change(input as HTMLInputElement, { target: { files: [file] } });
+    await screen.findByText("1 réseau importé");
+    expect(calls.find((c) => c.path === "/api/networks/import")?.body).toEqual(exported);
+  });
+
   it("lists networks and applies an edit", async () => {
     const calls = mockApi();
     render(

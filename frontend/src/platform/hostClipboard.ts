@@ -6,6 +6,7 @@ interface DesktopApi {
   read_clipboard(): Promise<string>;
   write_clipboard(text: string): Promise<void>;
   choose_folder(start: string | null): Promise<string | null>;
+  save_file(name: string, text: string): Promise<boolean>;
   close_window(): Promise<void>;
   guard_close(on: boolean): Promise<void>;
   close_answered(): Promise<void>;

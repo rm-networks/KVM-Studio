@@ -12,6 +12,7 @@ import {
 import { Dialog } from "../../components/Dialog";
 import { useNotifier } from "../../components/notifier";
 import { PromptDialog } from "../../components/PromptDialog";
+import { saveTextFile } from "../../platform/files";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import { DhcpSettingsDialog } from "./DhcpSettingsDialog";
 import { NatSettingsDialog } from "./NatSettingsDialog";
@@ -171,12 +172,11 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
   const exportAll = () =>
     run(async () => {
       const data = await api.exportNetworks();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "kvm-studio-networks.json";
-      link.click();
-      URL.revokeObjectURL(link.href);
+      await saveTextFile(
+        "kvm-studio-networks.json",
+        JSON.stringify(data, null, 2),
+        "application/json",
+      );
     }, t("networks.export"));
 
   const importFile = (e: ChangeEvent<HTMLInputElement>) => {

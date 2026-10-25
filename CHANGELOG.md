@@ -5,6 +5,8 @@
 - New Virtual Machine assistant: its backdrop covered it, so the page was
   dimmed and any click closed it. Interface tests in a real browser
   (Playwright) now go through it to the last page.
+- Virtual network editor: Export no longer closes the window (it now opens a
+  save dialog); the list of VMs using each network is gone.
 
 ## 0.4.0 (2026-10-25)
 

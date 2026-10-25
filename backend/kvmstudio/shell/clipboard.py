@@ -12,9 +12,11 @@ import importlib
 import threading
 import webbrowser
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any, Literal, Protocol
 
 CLIPBOARD_TIMEOUT = 5.0
+MAX_SAVED_TEXT = 4 * 1024 * 1024
 
 
 class HostClipboard(Protocol):
@@ -90,6 +92,27 @@ class DesktopApi:
         folder_kind = kind.FOLDER if kind is not None else webview.FOLDER_DIALOG
         result = self._window.create_file_dialog(folder_kind, directory=start or "")
         return str(result[0]) if result else None
+
+    def save_file(self, name: str, text: str) -> bool:
+        """Save dialog, then writes the text (network export).
+
+        The engine's own downloads go through pywebview, whose Qt handler calls a
+        method Qt 6 no longer has and takes the whole window down.
+        """
+        if self._window is None or not isinstance(name, str) or not isinstance(text, str):
+            return False
+        if Path(name).name != name or len(text) > MAX_SAVED_TEXT:
+            return False
+        import webview
+
+        kind = getattr(webview, "FileDialog", None)
+        save_kind = kind.SAVE if kind is not None else webview.SAVE_DIALOG
+        result = self._window.create_file_dialog(save_kind, save_filename=name)
+        if not result:
+            return False
+        path = result if isinstance(result, str) else result[0]
+        Path(path).write_text(text, encoding="utf-8")
+        return True
 
     def open_link(self, url: str) -> None:
         """A help link, in the default browser (the window never leaves the app)."""

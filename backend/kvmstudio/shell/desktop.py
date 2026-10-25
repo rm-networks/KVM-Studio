@@ -119,8 +119,6 @@ def run(config: Config, config_path: Path | None = None, page: str | None = None
                 window.destroy()
 
         threading.Thread(target=watch_backend, daemon=True).start()
-        # Lets the network editor export its JSON file.
-        webview.settings["ALLOW_DOWNLOADS"] = True
         webview.start(gui=gui, icon=str(icon) if icon and icon.is_file() else None)
     finally:
         backend.stop()
