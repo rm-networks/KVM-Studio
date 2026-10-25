@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import shutil
 import uuid as uuidlib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -221,7 +222,7 @@ def run(conn: LibvirtConnection, plan: ClonePlan, task: Task) -> dict[str, Any]:
         xml = clone_xml(plan)
         conn.run(lambda c: c.defineXML(xml))
         defined = True
-        warnings = _copy_state(plan, created)
+        warnings = _copy_state(conn, plan, created)
         task.report(1.0)
     except BaseException:
         _clean(conn, plan, created, defined)
@@ -229,19 +230,20 @@ def run(conn: LibvirtConnection, plan: ClonePlan, task: Task) -> dict[str, Any]:
     return {"uuid": plan.uuid, "name": plan.name, "warnings": warnings}
 
 
-def _copy_state(plan: ClonePlan, created: list[Path]) -> list[str]:
+def _copy_state(conn: LibvirtConnection, plan: ClonePlan, created: list[Path]) -> list[str]:
     """NVRAM and TPM through the helper; without it the clone starts afresh."""
     if plan.nvram_source is None and not plan.tpm:
         return []
-    params = {
-        "source_uuid": plan.source_uuid,
-        "target_uuid": plan.uuid,
-        "nvram_source": str(plan.nvram_source) if plan.nvram_source else None,
-        "nvram_target": str(plan.nvram_dest) if plan.nvram_dest else None,
-    }
-    if plan.nvram_source is not None and not plan.nvram_source.exists():
-        # Never started: libvirt makes the variables from its template.
-        params["nvram_source"] = params["nvram_target"] = None
+    if conn.uri.rstrip("/").endswith("/session"):
+        # QEMU runs as the user: the variables are the user's own file.
+        source, dest = plan.nvram_source, plan.nvram_dest
+        if source is not None and dest is not None and source.is_file():
+            created.append(dest)
+            shutil.copyfile(source, dest)
+            dest.chmod(0o600)
+        return ["state_not_copied"] if plan.tpm else []
+    # The helper takes both files from libvirt: only the two VMs are named.
+    params = {"source_uuid": plan.source_uuid, "target_uuid": plan.uuid}
     try:
         result = helper_client.call("clone_vm_state", params)
     except ApiException as exc:

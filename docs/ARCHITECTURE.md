@@ -76,6 +76,7 @@ How it works:
 | `clear_iso_libraries` | `org.kvmstudio.helper.iso-library` | at uninstall: forgets every declared library, taking back every entry the helper added when asked to |
 | `list_iso_libraries` | none | the libraries of helper.toml and the caller's; changes nothing |
 | `join_libvirt` | `org.kvmstudio.helper.join-libvirt` | adds the caller to the `libvirt` group; no parameter, refused for root and UIDs below 1000, administrator password on every call |
+| `clone_vm_state` | `org.kvmstudio.helper.clone-state` | copies the UEFI variables and the TPM state of a powered off VM to its clone; takes the two UUIDs only and reads both files from libvirt (`qemu:///system`); both VMs shut off, checked before and after the password; the copy goes to a new file in a folder of the caller's under `KVM-Studio/VM/`, with the owner and mode of the original (QEMU for the NVRAM, swtpm's account for the TPM); links, hard links and existing files are refused; administrator password on every call |
 | `remove_package` | `org.kvmstudio.helper.remove-package` | removes the `kvm-studio` package in a transient systemd unit; no parameter, administrator password on every call |
 
 Every ACL bit the helper adds is written to its state with the inode it was
@@ -179,7 +180,7 @@ kvm-studio/
 │   ├── paths.py             # resolution, confinement, race-free opening
 │   ├── polkit.py            # caller identity, pkcheck
 │   ├── state.py, acl.py     # declared libraries, record of the ACL entries added
-│   └── ops/                 # iso_acl, iso_library, join_libvirt, remove_package (then firewall_port, nat_portfwd)
+│   └── ops/                 # iso_acl, iso_library, join_libvirt, clone_state, remove_package (then firewall_port, nat_portfwd)
 ├── frontend/src/
 │   ├── app/                 # menus, toolbar, library, tabs, status bar
 │   ├── features/            # one folder per screen or dialog

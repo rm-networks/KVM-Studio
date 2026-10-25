@@ -225,7 +225,7 @@ def test_state_is_copied_by_the_helper(
 
     def helper(op: str, params: dict[str, Any]) -> dict[str, Any]:
         calls.append((op, params))
-        Path(params["nvram_target"]).write_bytes(b"vars")
+        (library / "linked" / "linked_VARS.fd").write_bytes(b"vars")
         return {"nvram": True, "tpm": True}
 
     monkeypatch.setattr(helper_client, "call", helper)
@@ -235,11 +235,6 @@ def test_state_is_copied_by_the_helper(
     assert calls == [
         (
             "clone_vm_state",
-            {
-                "source_uuid": source,
-                "target_uuid": result["uuid"],
-                "nvram_source": str(library / "src-vm" / "src-vm_VARS.fd"),
-                "nvram_target": str(library / "linked" / "linked_VARS.fd"),
-            },
+            {"source_uuid": source, "target_uuid": result["uuid"]},
         )
     ]
