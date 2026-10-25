@@ -778,6 +778,43 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/session/running": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Running */
+    get: operations["running_api_session_running_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/session/running/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Act
+     * @description Suspend, shut down or power off every running VM; reports each failure.
+     */
+    post: operations["act_api_session_running__action__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/vms/{uuid}/guest-tools": {
     parameters: {
       query?: never;
@@ -1028,6 +1065,13 @@ export interface components {
       /** Commands */
       commands: string[];
     };
+    /** ActionResult */
+    ActionResult: {
+      /** Done */
+      done: string[];
+      /** Failed */
+      failed: components["schemas"]["Failure"][];
+    };
     /** AgentStatus */
     AgentStatus: {
       /** Responding */
@@ -1118,6 +1162,7 @@ export interface components {
       /** Iso Libraries */
       iso_libraries?: components["schemas"]["IsoLibrary"][];
       defaults?: components["schemas"]["DefaultsSettings"];
+      workspace?: components["schemas"]["WorkspaceSettings"];
       ui?: components["schemas"]["UiSettings"];
     };
     /** CpuMemory */
@@ -1233,6 +1278,15 @@ export interface components {
     };
     /** ErrorBody */
     ErrorBody: {
+      /** Code */
+      code: string;
+      /** Detail */
+      detail: string;
+    };
+    /** Failure */
+    Failure: {
+      /** Name */
+      name: string;
       /** Code */
       code: string;
       /** Detail */
@@ -1925,6 +1979,13 @@ export interface components {
        */
       restarting: true;
     };
+    /** RunningVm */
+    RunningVm: {
+      /** Uuid */
+      uuid: string;
+      /** Name */
+      name: string;
+    };
     /** SaveResult */
     SaveResult: {
       /** Restart Required */
@@ -2162,6 +2223,20 @@ export interface components {
        * @default 5
        */
       login_max_attempts: number;
+    };
+    /** WorkspaceSettings */
+    WorkspaceSettings: {
+      /**
+       * On Close
+       * @default keep
+       * @enum {string}
+       */
+      on_close: "keep" | "ask" | "suspend" | "shutdown";
+      /**
+       * Close Reminder
+       * @default true
+       */
+      close_reminder: boolean;
     };
   };
   responses: never;
@@ -6571,6 +6646,165 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Changed"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  running_api_session_running_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RunningVm"][];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  act_api_session_running__action__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        action: "suspend" | "shutdown" | "poweroff";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ActionResult"];
         };
       };
       /** @description Unauthorized */

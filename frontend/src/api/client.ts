@@ -35,6 +35,8 @@ export type NicChange = components["schemas"]["NicChange"];
 export type VmOptions = components["schemas"]["Options"];
 export type VmOptionsChange = components["schemas"]["OptionsChange"];
 export type BootDevice = components["schemas"]["BootDevice"];
+export type RunningVm = components["schemas"]["RunningVm"];
+export type CloseResult = components["schemas"]["ActionResult"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
 export type Preferences = components["schemas"]["Preferences"] & { config: Config };
 export type SaveResult = components["schemas"]["SaveResult"];
@@ -194,6 +196,9 @@ export const api = {
     request<{ restart_required: boolean }>("POST", `${vmPath(uuid)}/display/vnc`),
   enableClipboard: (uuid: string) =>
     request<{ restart_required: boolean }>("POST", `${vmPath(uuid)}/display/clipboard`),
+  runningVms: () => request<RunningVm[]>("GET", "/api/session/running"),
+  closeAction: (action: "suspend" | "shutdown" | "poweroff") =>
+    request<CloseResult>("POST", `/api/session/running/${action}`),
   restart: () => request<{ restarting: boolean }>("POST", "/api/restart"),
   preferences: () => request<Preferences>("GET", "/api/preferences"),
   savePreferences: (config: Config) => request<SaveResult>("PUT", "/api/preferences", config),

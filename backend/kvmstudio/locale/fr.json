@@ -76,5 +76,21 @@
   "uninstall.ask_iso_rights": "Retirer les droits ajoutés par le helper (ceux posés avant restent) ?",
   "uninstall.summary_iso_rights": "droits d'accès ISO : {action}",
   "uninstall.removed_acls": "Droits d'accès retirés : {count}",
-  "uninstall.iso_failed": "Le helper n'a pas répondu : les droits d'accès des bibliothèques ISO sont restés tels quels."
+  "uninstall.iso_failed": "Le helper n'a pas répondu : les droits d'accès des bibliothèques ISO sont restés tels quels.",
+  "close.title_quit": "Quitter {app}",
+  "close.title_switch": "Passer en mode fenêtre",
+  "close.still_running": "Machines virtuelles encore allumées ({count}) :",
+  "close.why": "Elles continuent de tourner après la fermeture de {app} : c'est libvirt et QEMU qui les font tourner, pas {app}. Vous les retrouvez au prochain lancement.",
+  "close.quit": "Quitter",
+  "close.restart": "Redémarrer",
+  "close.cancel": "Annuler",
+  "close.dont_show": "Ne plus afficher",
+  "close.keep_running": "Les laisser tourner",
+  "close.suspend": "Les suspendre",
+  "close.shutdown": "Les éteindre",
+  "close.stopping": "Arrêt des machines virtuelles…",
+  "close.stuck": "Ces machines virtuelles tournent encore ({count}) :",
+  "close.power_off": "Couper l'alimentation",
+  "close.leave_running": "Les laisser tourner",
+  "close.power_off_warning": "Couper l'alimentation revient à débrancher la prise : le travail non enregistré dans l'invité est perdu."
 }

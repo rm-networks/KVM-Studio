@@ -54,6 +54,14 @@ class DefaultsSettings(_Section):
     virtio_win_iso: ExpandedPath | None = None
 
 
+class WorkspaceSettings(_Section):
+    # VMs are run by libvirt and QEMU: closing KVM Studio leaves them running
+    # unless asked otherwise.
+    on_close: Literal["keep", "ask", "suspend", "shutdown"] = "keep"
+    # Reminder that VMs keep running when KVM Studio closes or changes mode.
+    close_reminder: bool = True
+
+
 class UiSettings(_Section):
     theme: Literal["system", "light", "dark"] = "system"
     language: Literal["system", "en", "fr"] = "system"
@@ -66,6 +74,7 @@ class Config(_Section):
     storage: StorageSettings = Field(default_factory=StorageSettings)
     iso_libraries: list[IsoLibrary] = Field(default_factory=list)
     defaults: DefaultsSettings = Field(default_factory=DefaultsSettings)
+    workspace: WorkspaceSettings = Field(default_factory=WorkspaceSettings)
     ui: UiSettings = Field(default_factory=UiSettings)
 
 

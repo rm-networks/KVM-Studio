@@ -484,7 +484,16 @@
     "virtioLink": {
       "fedora": "Fedora documentation: Windows virtual machines with the virtio drivers",
       "readme": "virtio-win project README (downloads and versions)"
-    }
+    },
+    "onClose": "When {{app}} closes",
+    "onCloseLabel": "Running virtual machines",
+    "onCloseChoice": {
+      "keep": "Keep them running",
+      "ask": "Ask each time",
+      "suspend": "Suspend them",
+      "shutdown": "Shut them down (forced after 60 s if asked)"
+    },
+    "closeReminder": "Remind me that virtual machines keep running"
   },
   "iso": {
     "title": "Choose an ISO Image",
@@ -890,5 +899,26 @@
     "riskyTitle": "Change the firmware or the TPM?",
     "riskyConfirm": "{{name}} already has a system installed. After this change it may no longer start: Windows 11 needs UEFI and a TPM, BitLocker asks for its recovery key, and a system installed for BIOS does not boot in UEFI (or the other way round). Apply anyway?",
     "riskyApply": "Apply anyway"
+  },
+  "close": {
+    "titleQuit": "Quit {{app}}",
+    "titleSwitch": "Change the interface mode",
+    "stillRunning_one": "This virtual machine is still running:",
+    "stillRunning_other": "These {{count}} virtual machines are still running:",
+    "why": "Virtual machines keep running when {{app}} closes: libvirt and QEMU run them, not {{app}}. You find them again the next time it starts.",
+    "quit": "Quit",
+    "restart": "Restart",
+    "dontShow": "Do not show this again",
+    "keepRunning": "Keep them running",
+    "suspend": "Suspend them",
+    "shutdown": "Shut them down",
+    "suspending": "Suspending the virtual machines (their state is saved to disk)…",
+    "stopping": "Shutting down the virtual machines: {{seconds}} s left before offering to force.",
+    "stuck_one": "This virtual machine is still running:",
+    "stuck_other": "These {{count}} virtual machines are still running:",
+    "powerOff": "Power off",
+    "leaveRunning": "Leave them running",
+    "powerOffWarning": "Powering off is like pulling the plug: unsaved work in the guest is lost.",
+    "failed": "Could not act on the virtual machines"
   }
 }

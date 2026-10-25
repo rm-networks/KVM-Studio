@@ -30,6 +30,10 @@ class DesktopApi:
         self._window: Any = None
         # pywebview only toggles: remember the state to set it.
         self._fullscreen = False
+        # The page asks what to do with running VMs before the window closes.
+        self._close_guarded = False
+        self._close_allowed = False
+        self._close_pending = False
 
     def _attach(self, window: Any) -> None:
         self._window = window
@@ -48,9 +52,33 @@ class DesktopApi:
         return before
 
     def close_window(self) -> None:
-        """Lets the uninstall assistant close its own window."""
+        """Close for good (the uninstall assistant, Quit, or after the reminder)."""
+        self._close_allowed = True
         if self._window is not None:
             self._window.destroy()
+
+    def guard_close(self, on: bool) -> None:
+        """The page handles closing requests itself (running VMs reminder)."""
+        self._close_guarded = bool(on)
+
+    def close_answered(self) -> None:
+        """The page got the closing request: a second one is not a stuck page."""
+        self._close_pending = False
+
+    def _on_closing(self) -> bool:
+        """pywebview closing event: False keeps the window open for the page to ask."""
+        if self._close_allowed or not self._close_guarded or self._window is None:
+            return True
+        if self._close_pending:
+            # The page never answered the previous request: do not trap the user.
+            return True
+        self._close_pending = True
+        window = self._window
+        threading.Thread(
+            target=lambda: window.evaluate_js("window.dispatchEvent(new Event('kvmstudio:close'))"),
+            daemon=True,
+        ).start()
+        return False
 
     def choose_folder(self, start: str | None = None) -> str | None:
         """Native folder picker (Preferences, ISO libraries)."""

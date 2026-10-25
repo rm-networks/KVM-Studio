@@ -66,6 +66,16 @@ Values offered by the new VM assistant.
 | `nic_model` | `"virtio"` | `"virtio"`, `"e1000e"`, `"rtl8139"`, `"vmxnet3"` |
 | `virtio_win_iso` | none | virtio-win ISO, in an ISO library. Only read: its `virtio-win-guest-tools.exe` is copied onto the Windows guest tools CD. |
 
+## [workspace]
+
+Virtual machines keep running when KVM Studio closes: libvirt and QEMU run them,
+not KVM Studio. You find them again the next time it starts.
+
+| Key | Default | Values |
+| --- | --- | --- |
+| `on_close` | `"keep"` | What happens to running VMs when KVM Studio closes or changes between window and web mode: `"keep"` (they keep running), `"ask"` (keep, suspend or shut down, each time), `"suspend"` (state saved to disk, resumed at their next start), `"shutdown"` (clean shutdown; after 60 s the VMs still running can be powered off or left running). Preferences > Workspace. |
+| `close_reminder` | `true` | With `"keep"`: list the running VMs and remind that they keep running, with a "Do not show this again" box that sets it to `false`. |
+
 ## [ui]
 
 | Key | Default | Values |
@@ -78,6 +88,7 @@ Values offered by the new VM assistant.
 | Variable | Purpose |
 | --- | --- |
 | `XDG_CONFIG_HOME` | Location of the configuration folder. |
+| `XDG_STATE_HOME` | Location of the state folder (`kvm-studio/library-order.json`: display order of the library folders). |
 | `LC_ALL`, `LC_MESSAGES`, `LANG` | Desktop language, used when `language = "system"`. |
 | `KVMSTUDIO_FRONTEND_DIR` | Folder of the built interface, when it is not at its usual place. |
 | `KVMSTUDIO_BACKEND` | Development: API address for the Vite server (default `http://127.0.0.1:60080`). |

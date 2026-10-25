@@ -17,6 +17,7 @@ import { GuestToolsDialog } from "../features/guest-tools/GuestToolsDialog";
 import { VmSettings } from "../features/vm-settings/VmSettings";
 import { NewVmWizard } from "../features/wizard/NewVmWizard";
 import { FullscreenBar } from "../features/console/FullscreenBar";
+import { CloseDialog } from "../features/session/CloseDialog";
 import { useConsole } from "../features/console/consoleRegistry";
 import { useCdroms } from "../features/vm/useCdroms";
 import {
@@ -42,9 +43,8 @@ export interface Layout {
 }
 
 /** Closing the desktop window quits; a browser tab is the user's to close. */
-function quitWindow(): (() => void) | undefined {
-  const close = window.pywebview?.api?.close_window;
-  return close ? () => void close() : undefined;
+function desktopWindow(): boolean {
+  return Boolean(window.pywebview?.api?.close_window);
 }
 
 export function App() {
@@ -75,6 +75,8 @@ function MainWindow() {
   // Names given when a tab opens on a VM the list does not have yet (just created).
   const [tabNames, setTabNames] = useState<ReadonlyMap<string, string>>(new Map());
   const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
+  // Quitting asks first what to do with the VMs still running.
+  const [quitting, setQuitting] = useState(false);
   // VM whose console fills the screen, and the window state to put back after.
   const [fullscreenVm, setFullscreenVm] = useState<string | null>(null);
   const windowWasFullscreen = useRef(false);
@@ -95,6 +97,19 @@ function MainWindow() {
   useEffect(() => {
     if (missingTab) refresh();
   }, [missingTab, refresh]);
+
+  // The desktop window hands its close button to the page, for that question.
+  useEffect(() => {
+    const api = window.pywebview?.api;
+    if (!api?.guard_close) return;
+    void api.guard_close(true);
+    const onClose = () => {
+      void api.close_answered?.();
+      setQuitting(true);
+    };
+    window.addEventListener("kvmstudio:close", onClose);
+    return () => window.removeEventListener("kvmstudio:close", onClose);
+  }, [info]);
 
   // The assistant opens by itself until a VM location is chosen.
   useEffect(() => {
@@ -235,7 +250,7 @@ function MainWindow() {
           tabs={[{ id: HOME_TAB, label: t("home.tab") }, ...tabs]}
           activeTab={activeTab}
           onActivateTab={setActiveTab}
-          onQuit={info?.mode === "desktop" ? quitWindow() : undefined}
+          onQuit={info?.mode === "desktop" && desktopWindow() ? () => setQuitting(true) : undefined}
           drives={drives}
           onChangeMedia={setMediaTarget}
           onEject={(target) => setMedia(target, null)}
@@ -339,6 +354,13 @@ function MainWindow() {
         )}
         {preferencesOpen && (
           <PreferencesDialog onClose={() => setPreferencesOpen(false)} onSaved={refresh} />
+        )}
+        {quitting && (
+          <CloseDialog
+            reason="quit"
+            onCancel={() => setQuitting(false)}
+            onProceed={() => void window.pywebview?.api?.close_window?.()}
+          />
         )}
         {firstRunOpen && (
           <FirstRunWizard onClose={() => setFirstRunOpen(false)} onSaved={refresh} />

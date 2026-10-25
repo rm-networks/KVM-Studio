@@ -15,6 +15,7 @@ import { Dialog } from "../../components/Dialog";
 import { useNotifier } from "../../components/notifier";
 import { folderPicker } from "../../platform/folders";
 import { openLink } from "../../platform/links";
+import { CloseDialog } from "../session/CloseDialog";
 import { IsoPicker } from "../iso-picker/IsoPicker";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import "./PreferencesDialog.css";
@@ -237,6 +238,38 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
 
           {config && section === "workspace" && (
             <>
+              <Group title={t("prefs.onClose")}>
+                <label className="prefs-field prefs-inline">
+                  <span>{t("prefs.onCloseLabel")}</span>
+                  <select
+                    value={config.workspace.on_close}
+                    onChange={(e) =>
+                      update("workspace", {
+                        ...config.workspace,
+                        on_close: e.target.value as Config["workspace"]["on_close"],
+                      })
+                    }
+                  >
+                    {(["keep", "ask", "suspend", "shutdown"] as const).map((v) => (
+                      <option key={v} value={v}>
+                        {t(`prefs.onCloseChoice.${v}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="prefs-check">
+                  <input
+                    type="checkbox"
+                    checked={config.workspace.close_reminder}
+                    disabled={config.workspace.on_close !== "keep"}
+                    onChange={(e) =>
+                      update("workspace", { ...config.workspace, close_reminder: e.target.checked })
+                    }
+                  />
+                  {t("prefs.closeReminder")}
+                </label>
+                <p className="prefs-muted">{t("close.why")}</p>
+              </Group>
               <Group title={t("prefs.vmLocation")}>
                 <PathField
                   label={t("prefs.vmLocationLabel")}
@@ -650,6 +683,7 @@ export function RestartPrompt({ next, onClose }: { next: Config; onClose: () => 
   const { t } = useTranslation();
   const { notifyError } = useNotifier();
   const [restarting, setRestarting] = useState(false);
+  const [closing, setClosing] = useState(false);
   const current = document.documentElement.dataset.mode;
   const toWeb = next.interface.mode === "web" && current !== "web";
   const toDesktop = next.interface.mode === "desktop" && current !== "desktop";
@@ -676,11 +710,9 @@ export function RestartPrompt({ next, onClose }: { next: Config; onClose: () => 
               type="button"
               className="button button-primary"
               onClick={() => {
-                setRestarting(true);
-                api.restart().catch((err: unknown) => {
-                  setRestarting(false);
-                  notifyError(t("prefs.restartTitle"), err);
-                });
+                // Changing mode closes this window or page: VMs keep running.
+                if (toWeb || toDesktop) setClosing(true);
+                else restart();
               }}
             >
               {t("prefs.restartNow")}
@@ -693,6 +725,24 @@ export function RestartPrompt({ next, onClose }: { next: Config; onClose: () => 
       }
     >
       <p className="prefs-restart">{message}</p>
+      {closing && (
+        <CloseDialog
+          reason="switch"
+          onCancel={() => setClosing(false)}
+          onProceed={() => {
+            setClosing(false);
+            restart();
+          }}
+        />
+      )}
     </Dialog>
   );
+
+  function restart() {
+    setRestarting(true);
+    api.restart().catch((err: unknown) => {
+      setRestarting(false);
+      notifyError(t("prefs.restartTitle"), err);
+    });
+  }
 }

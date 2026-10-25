@@ -19,6 +19,7 @@ const config: Config = {
   storage: { vm_default_location: null },
   iso_libraries: [],
   defaults: { firmware: "uefi", disk_bus: "virtio", nic_model: "virtio", virtio_win_iso: null },
+  workspace: { on_close: "keep", close_reminder: true },
   ui: { theme: "system", language: "fr" },
 };
 
@@ -44,6 +45,9 @@ function mockApi(restart = false) {
         return Promise.resolve(
           new Response(JSON.stringify({ restart_required: restart, library_root: root })),
         );
+      }
+      if (path === "/api/session/running") {
+        return Promise.resolve(new Response(JSON.stringify([{ uuid: "u1", name: "fw" }])));
       }
       if (path === "/api/isos") {
         const listing = {
@@ -171,6 +175,9 @@ describe("PreferencesDialog", () => {
     expect(await screen.findByText(/http:\/\/127\.0\.0\.1:60080/)).toBeTruthy();
     expect(screen.queryByText(/60443/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Redémarrer maintenant" }));
+    // A VM still runs: the reminder comes first.
+    expect(await screen.findByText("Cette machine virtuelle est encore allumée :")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Redémarrer" }));
     expect(await screen.findByText("KVM Studio redémarre…")).toBeTruthy();
   });
 });

@@ -76,5 +76,21 @@
   "uninstall.ask_iso_rights": "Take back the rights the helper added (those set before stay)?",
   "uninstall.summary_iso_rights": "ISO access rights: {action}",
   "uninstall.removed_acls": "Access rights taken back: {count}",
-  "uninstall.iso_failed": "The helper did not answer: the access rights on the ISO libraries were left as they are."
+  "uninstall.iso_failed": "The helper did not answer: the access rights on the ISO libraries were left as they are.",
+  "close.title_quit": "Quit {app}",
+  "close.title_switch": "Switch to window mode",
+  "close.still_running": "Virtual machines still running ({count}):",
+  "close.why": "They keep running after {app} closes: libvirt and QEMU run them, not {app}. You find them again the next time it starts.",
+  "close.quit": "Quit",
+  "close.restart": "Restart",
+  "close.cancel": "Cancel",
+  "close.dont_show": "Do not show this again",
+  "close.keep_running": "Keep them running",
+  "close.suspend": "Suspend them",
+  "close.shutdown": "Shut them down",
+  "close.stopping": "Shutting down the virtual machines…",
+  "close.stuck": "These virtual machines are still running ({count}):",
+  "close.power_off": "Power off",
+  "close.leave_running": "Leave them running",
+  "close.power_off_warning": "Powering off is like pulling the plug: unsaved work in the guest is lost."
 }

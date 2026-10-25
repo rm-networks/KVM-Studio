@@ -484,7 +484,16 @@
     "virtioLink": {
       "fedora": "Documentation Fedora : machines virtuelles Windows avec les pilotes virtio",
       "readme": "README du projet virtio-win (téléchargements et versions)"
-    }
+    },
+    "onClose": "À la fermeture de {{app}}",
+    "onCloseLabel": "Machines virtuelles allumées",
+    "onCloseChoice": {
+      "keep": "Les laisser tourner",
+      "ask": "Demander à chaque fois",
+      "suspend": "Les suspendre",
+      "shutdown": "Les éteindre (forcé après 60 s si vous le demandez)"
+    },
+    "closeReminder": "Me rappeler que les machines virtuelles continuent de tourner"
   },
   "iso": {
     "title": "Choisir une image ISO",
@@ -890,5 +899,26 @@
     "riskyTitle": "Modifier le firmware ou le TPM ?",
     "riskyConfirm": "{{name}} a déjà un système installé. Après ce changement, elle risque de ne plus démarrer : Windows 11 exige UEFI et un TPM, BitLocker demande sa clé de récupération, et un système installé en BIOS ne démarre pas en UEFI (ni l'inverse). Appliquer quand même ?",
     "riskyApply": "Appliquer quand même"
+  },
+  "close": {
+    "titleQuit": "Quitter {{app}}",
+    "titleSwitch": "Changer de mode d'interface",
+    "stillRunning_one": "Cette machine virtuelle est encore allumée :",
+    "stillRunning_other": "Ces {{count}} machines virtuelles sont encore allumées :",
+    "why": "Les machines virtuelles continuent de tourner quand {{app}} se ferme : c'est libvirt et QEMU qui les font tourner, pas {{app}}. Vous les retrouvez au prochain lancement.",
+    "quit": "Quitter",
+    "restart": "Redémarrer",
+    "dontShow": "Ne plus afficher",
+    "keepRunning": "Les laisser tourner",
+    "suspend": "Les suspendre",
+    "shutdown": "Les éteindre",
+    "suspending": "Suspension des machines virtuelles (leur état est enregistré sur le disque)…",
+    "stopping": "Arrêt des machines virtuelles : encore {{seconds}} s avant de proposer de forcer.",
+    "stuck_one": "Cette machine virtuelle tourne encore :",
+    "stuck_other": "Ces {{count}} machines virtuelles tournent encore :",
+    "powerOff": "Couper l'alimentation",
+    "leaveRunning": "Les laisser tourner",
+    "powerOffWarning": "Couper l'alimentation revient à débrancher la prise : le travail non enregistré dans l'invité est perdu.",
+    "failed": "Impossible d'agir sur les machines virtuelles"
   }
 }

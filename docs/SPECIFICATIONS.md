@@ -200,7 +200,7 @@ The context menu of a VM in the library holds Open in a Tab, the power actions, 
 | Firmware and boot | BIOS or UEFI, Secure Boot, TPM 2.0 (VM powered off; an installed VM gets a warning and a confirmation before changing between BIOS and UEFI or removing its TPM), boot order per device (drag or arrows, a box to leave a device out), boot menu at start. Turning Secure Boot on or off rebuilds the UEFI variables the next time KVM Studio starts the VM (`VIR_DOMAIN_START_RESET_NVRAM`) |
 | Advanced | Raw XML editor, priority |
 
-**Preferences.** Workspace (VM location, ISO folders, remembered tabs, VMs that keep running on close, thumbnails, screenshots), Interface (window or web mode, port, LAN sharing, certificate, guest account password, connected people), Input, Shortcuts, Display (theme, language, scaling), USB, Memory (reserve for the host), Devices.
+**Preferences.** Workspace (VM location, ISO folders, remembered tabs, VMs that keep running on close, thumbnails, screenshots; "When KVM Studio closes": keep the VMs running (default), ask, suspend, or shut down cleanly with a 60 s delay then an offer to force; closing the window, File > Quit, the tray icon's Quit and a change between window and web mode list the running VMs and recall that libvirt and QEMU run them, with a "Do not show this again" box; the same sentence ends the first-run assistant), Interface (window or web mode, port, LAN sharing, certificate, guest account password, connected people), Input, Shortcuts, Display (theme, language, scaling), USB, Memory (reserve for the host), Devices.
 
 **Shortcuts** the same as those of Workstation listed above, all remappable (the browser takes some combinations in web mode).
 

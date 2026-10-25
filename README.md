@@ -10,6 +10,10 @@ virt-manager and `virsh`.
 The interface is in English, or in French when the desktop is in French
 (Edit > Preferences > Interface changes it).
 
+Virtual machines keep running when KVM Studio closes: libvirt and QEMU run them,
+not KVM Studio. You find them again the next time it starts (Edit > Preferences >
+Workspace can suspend or shut them down instead).
+
 ## Status
 
 Version 0.2.1 is the current version (Fedora). Work continues towards V1,

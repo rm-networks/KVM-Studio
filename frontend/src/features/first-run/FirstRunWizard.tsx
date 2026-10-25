@@ -289,6 +289,7 @@ export function FirstRunWizard({ onClose, onSaved }: Props) {
             <p>{t("firstRun.done.networks", { names: created.join(", ") })}</p>
           )}
           {group === "relogin" && <p className="note note-warn">{t("firstRun.group.relogin")}</p>}
+          <p>{t("close.why")}</p>
           <p className="muted">{t("firstRun.done.again")}</p>
         </>
       )}

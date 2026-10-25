@@ -35,7 +35,9 @@ def test_only_intended_methods_are_public() -> None:
     public = [name for name in dir(DesktopApi) if not name.startswith("_")]
     assert public == [
         "choose_folder",
+        "close_answered",
         "close_window",
+        "guard_close",
         "open_link",
         "read_clipboard",
         "set_fullscreen",
@@ -73,3 +75,30 @@ def test_set_fullscreen_remembers_the_state() -> None:
     api.toggle_fullscreen()
     assert api.set_fullscreen(False) is False
     assert window.toggles == 2
+
+
+def test_closing_waits_for_the_page_once() -> None:
+    scripts: list[str] = []
+
+    class Window:
+        destroyed = False
+
+        def evaluate_js(self, script: str) -> None:
+            scripts.append(script)
+
+        def destroy(self) -> None:
+            self.destroyed = True
+
+    api = DesktopApi(FakeClipboard())
+    window = Window()
+    api._attach(window)
+    assert api._on_closing() is True  # page not ready: nothing to ask
+    api.guard_close(True)
+    assert api._on_closing() is False
+    api.close_answered()
+    assert api._on_closing() is False
+    # No answer this time: the next request closes.
+    assert api._on_closing() is True
+    api.close_window()
+    assert window.destroyed
+    assert api._on_closing() is True

@@ -7,6 +7,8 @@ interface DesktopApi {
   write_clipboard(text: string): Promise<void>;
   choose_folder(start: string | null): Promise<string | null>;
   close_window(): Promise<void>;
+  guard_close(on: boolean): Promise<void>;
+  close_answered(): Promise<void>;
   open_link(url: string): Promise<void>;
 }
 

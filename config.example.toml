@@ -37,6 +37,11 @@ disk_bus = "virtio"      # "virtio" | "scsi" | "sata" | "nvme" | "ide"
 nic_model = "virtio"     # "virtio" | "e1000e" | "rtl8139" | "vmxnet3"
 # virtio_win_iso = "/srv/iso/drivers/virtio-win.iso"
 
+[workspace]
+# Virtual machines keep running when KVM Studio closes: libvirt and QEMU run them.
+on_close = "keep"        # "keep" | "ask" | "suspend" | "shutdown"
+close_reminder = true    # remind that VMs keep running (with "keep")
+
 [ui]
 theme = "system"         # "system" | "light" | "dark"
 language = "system"      # "system" (the desktop language) | "en" | "fr"

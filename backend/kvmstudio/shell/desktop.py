@@ -103,7 +103,9 @@ def run(config: Config, config_path: Path | None = None, page: str | None = None
             print(t("cli.no_window"), file=sys.stderr)
             return 1
         api._attach(window)
+        window.events.closing += api._on_closing
         if seconds := os.environ.get(SMOKE_ENV):
+            api._close_allowed = True
             _close_after_load(window, float(seconds))
 
         def watch_backend() -> None:
@@ -112,6 +114,7 @@ def run(config: Config, config_path: Path | None = None, page: str | None = None
                 time.sleep(0.5)
             if backend.wants_restart():
                 restart.set()
+            api._close_allowed = True
             with contextlib.suppress(Exception):  # already closed by the user
                 window.destroy()
 
