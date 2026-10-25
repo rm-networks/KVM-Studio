@@ -64,6 +64,26 @@ python3 packaging/stage.py
 VERSION=0.4.0 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
 ```
 
+## .deb package (Debian 13, Ubuntu 26.04 LTS)
+
+The same releases carry a .deb (CI artifact `kvm-studio-deb` for development
+builds). It pulls its dependencies from the distribution: `libvirt-daemon-system`,
+`qemu-system-x86`, `ovmf`, `swtpm-tools`, the Python modules (`python3-fastapi`,
+`python3-pyqt6.qtwebengine`...).
+
+```bash
+sudo apt install ./kvm-studio_*.deb
+```
+
+The files are the same as in the .rpm; QEMU runs as `libvirt-qemu` instead of
+`qemu`, which the helper finds by itself. Add your account to the `libvirt`
+group (the first-run assistant offers it), then log in again. On Ubuntu, ufw
+is used for the LAN sharing port when firewalld is not running.
+
+`sudo apt remove kvm-studio` keeps the settings and `/etc/kvm-studio`;
+`sudo apt purge kvm-studio` removes them too. VMs and networks stay unless
+"Uninstall KVM Studio" was used.
+
 ## System updates
 
 KVM Studio relies on the kernel (KVM modules), QEMU, libvirt, NetworkManager

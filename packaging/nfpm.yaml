@@ -47,6 +47,36 @@ overrides:
       - polkit
     recommends:
       - firewalld
+  deb:
+    # Debian 13 and Ubuntu 26.04 LTS package names.
+    depends:
+      - python3 (>= 3.11)
+      - python3-libvirt
+      - python3-gi
+      - gir1.2-libosinfo-1.0
+      - python3-fastapi
+      - python3-uvicorn
+      - python3-pydantic (>= 2.7)
+      - python3-websockets
+      - python3-lxml
+      - python3-tomli-w
+      - python3-argon2
+      - python3-bottle
+      - python3-typing-extensions
+      - python3-pyqt6.qtwebengine
+      - python3-qtpy
+      - openssl
+      - libvirt-daemon-system
+      - qemu-system-x86
+      - qemu-utils
+      - xorriso
+      - libosinfo-bin
+      - ovmf
+      - swtpm-tools
+      - acl
+      - polkitd
+    recommends:
+      - firewalld | ufw
 
 contents:
   - dst: /opt/kvm-studio
