@@ -18,6 +18,7 @@ import { VmSettings } from "../features/vm-settings/VmSettings";
 import { NewVmWizard } from "../features/wizard/NewVmWizard";
 import { FullscreenBar } from "../features/console/FullscreenBar";
 import { CloseDialog } from "../features/session/CloseDialog";
+import { type SnapshotKind, SnapshotRequest } from "../features/snapshots/SnapshotRequest";
 import { useConsole } from "../features/console/consoleRegistry";
 import { useCdroms } from "../features/vm/useCdroms";
 import {
@@ -77,6 +78,7 @@ function MainWindow() {
   const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
   // Quitting asks first what to do with the VMs still running.
   const [quitting, setQuitting] = useState(false);
+  const [snapshotFor, setSnapshotFor] = useState<{ uuid: string; kind: SnapshotKind } | null>(null);
   // VM whose console fills the screen, and the window state to put back after.
   const [fullscreenVm, setFullscreenVm] = useState<string | null>(null);
   const windowWasFullscreen = useRef(false);
@@ -161,6 +163,7 @@ function MainWindow() {
       ? fullscreenVm
       : null;
   const exitConsoleFullscreen = useCallback(() => setFullscreenVm(null), []);
+  const closeSnapshot = useCallback(() => setSnapshotFor(null), []);
   // The window goes back to how it was once the console full screen ends.
   const wasConsoleFullscreen = useRef(false);
   useEffect(() => {
@@ -239,6 +242,9 @@ function MainWindow() {
           onFirstRun={() => setFirstRunOpen(true)}
           onNewVm={() => setWizardOpen(true)}
           onSettings={() => currentVm && setSettingsFor(currentVm.uuid)}
+          onSnapshot={
+            currentVm ? (kind) => setSnapshotFor({ uuid: currentVm.uuid, kind }) : undefined
+          }
           onGuestTools={() => currentVm && setGuestToolsFor(currentVm.uuid)}
           vmConsole={vmConsole}
           onFullscreen={consoleFullscreenFor ? toggleConsoleFullscreen : undefined}
@@ -263,6 +269,9 @@ function MainWindow() {
             vm={currentVm}
             vmConsole={vmConsole}
             onFullscreen={consoleFullscreenFor ? toggleConsoleFullscreen : undefined}
+            onSnapshot={
+              currentVm ? (kind) => setSnapshotFor({ uuid: currentVm.uuid, kind }) : undefined
+            }
           />
         )}
         <div className="app-body">
@@ -354,6 +363,13 @@ function MainWindow() {
         )}
         {preferencesOpen && (
           <PreferencesDialog onClose={() => setPreferencesOpen(false)} onSaved={refresh} />
+        )}
+        {snapshotFor && vmByUuid.get(snapshotFor.uuid) && (
+          <SnapshotRequest
+            vm={vmByUuid.get(snapshotFor.uuid) as VmSummary}
+            kind={snapshotFor.kind}
+            onClose={closeSnapshot}
+          />
         )}
         {quitting && (
           <CloseDialog

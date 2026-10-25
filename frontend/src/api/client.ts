@@ -38,6 +38,7 @@ export type VmOptions = components["schemas"]["Options"];
 export type VmOptionsChange = components["schemas"]["OptionsChange"];
 export type BootDevice = components["schemas"]["BootDevice"];
 export type PortForward = components["schemas"]["PortForward"];
+export type Snapshot = components["schemas"]["Snapshot"];
 export type RunningVm = components["schemas"]["RunningVm"];
 export type CloseResult = components["schemas"]["ActionResult"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
@@ -156,6 +157,13 @@ export const api = {
   host: () => request<HostCapabilities>("GET", "/api/host"),
   createVm: (body: NewVmRequest) => request<{ uuid: string }>("POST", "/api/vms", body),
   hardware: (uuid: string) => request<Hardware>("GET", `${vmPath(uuid)}/hardware`),
+  snapshots: (uuid: string) => request<Snapshot[]>("GET", `${vmPath(uuid)}/snapshots`),
+  takeSnapshot: (uuid: string, name: string, description: string) =>
+    request<Snapshot>("POST", `${vmPath(uuid)}/snapshots`, { name, description }),
+  revertSnapshot: (uuid: string, name: string) =>
+    request<undefined>("POST", `${vmPath(uuid)}/snapshots/${encodeURIComponent(name)}/revert`),
+  deleteSnapshot: (uuid: string, name: string) =>
+    request<undefined>("DELETE", `${vmPath(uuid)}/snapshots/${encodeURIComponent(name)}`),
   options: (uuid: string) => request<VmOptions>("GET", `${vmPath(uuid)}/options`),
   setOptions: (uuid: string, change: VmOptionsChange) =>
     request<{ restart_required: boolean }>("PUT", `${vmPath(uuid)}/options`, change),

@@ -411,6 +411,21 @@ def move_folder(
     return target
 
 
+def _no_snapshots(conn: LibvirtConnection, uuids: list[str]) -> None:
+    """Snapshots keep the old disk paths in libvirt: such VMs do not move."""
+
+    def op(c: libvirt.virConnect) -> list[str]:
+        doms = [c.lookupByUUIDString(u) for u in uuids]
+        return sorted(d.name() for d in doms if d.snapshotNum(0) > 0)
+
+    if names := conn.run(op):
+        raise ApiException(
+            409,
+            "library.has_snapshots",
+            "Delete their snapshots before moving: " + ", ".join(names),
+        )
+
+
 def _relocate(conn: LibvirtConnection, config: Config, folder: str, target: str) -> str:
     """Rename or move a folder on disk and in libvirt: VMs off, no linked clone outside."""
     root = _require_root(config)
@@ -424,6 +439,7 @@ def _relocate(conn: LibvirtConnection, config: Config, folder: str, target: str)
             raise ApiException(
                 409, "library.vms_running", "Power off first: " + ", ".join(sorted(running))
             )
+        _no_snapshots(conn, [u for u, _n, _a, _x, p in inside if p.managed])
         old_dir, new_dir = _folder_dir(root, folder), _folder_dir(root, target)
         if new_dir.exists():
             raise ApiException(409, "library.exists", f"{target} already exists")
@@ -594,6 +610,7 @@ def move_vm(conn: LibvirtConnection, config: Config, uuid: str, folder: str) -> 
 
         if active:
             raise ApiException(409, "vm.not_shut_off", "Power the virtual machine off first")
+        _no_snapshots(conn, [uuid])
         if "missing_files" in place.drift:
             raise ApiException(
                 409, "library.drift", "Files were moved by hand; fix the gap before moving"

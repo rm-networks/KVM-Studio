@@ -38,14 +38,21 @@
     "sendKeys": "Envoyer une combinaison",
     "firstRun": "Assistant de premier lancement…",
     "clone": "Cloner…",
-    "appFullscreen": "Basculer l'application en plein écran"
+    "appFullscreen": "Basculer l'application en plein écran",
+    "snapshot": "Instantané",
+    "takeSnapshot": "Prendre un instantané…",
+    "revertSnapshot": "Restaurer l'instantané courant…",
+    "snapshotManager": "Gestionnaire d'instantanés…"
   },
   "toolbar": {
     "start": "Démarrer",
     "powerMenu": "Autres actions d'alimentation",
     "sendCad": "Envoyer Ctrl+Alt+Suppr",
     "library": "Afficher ou masquer la bibliothèque",
-    "fullscreen": "Plein écran"
+    "fullscreen": "Plein écran",
+    "snapshot": "Prendre un instantané",
+    "revert": "Restaurer l'instantané courant",
+    "snapshotManager": "Gestionnaire d'instantanés"
   },
   "library": {
     "title": "Bibliothèque",
@@ -957,5 +964,32 @@
     "leaveRunning": "Les laisser tourner",
     "powerOffWarning": "Couper l'alimentation revient à débrancher la prise : le travail non enregistré dans l'invité est perdu.",
     "failed": "Impossible d'agir sur les machines virtuelles"
+  },
+  "snapshots": {
+    "title": "Instantanés de {{name}}",
+    "list": "Instantanés",
+    "youAreHere": "Vous êtes ici",
+    "none": "Aucun instantané pour l'instant.",
+    "takenOff": "pris éteinte",
+    "takenOn": "pris allumée, mémoire comprise",
+    "noDescription": "Pas de description.",
+    "pick": "Choisissez un instantané pour le voir.",
+    "take": "Prendre un instantané…",
+    "revert": "Restaurer",
+    "delete": "Supprimer",
+    "working": "En cours, cela peut prendre un moment…",
+    "hint": "Les instantanés sont rangés dans le disque qcow2 de la VM (instantanés internes). Une VM dont les disques servent de base à des clones liés ne peut ni prendre, ni restaurer, ni supprimer d'instantané.",
+    "confirmRevert": "Restaurer {{name}} à l'instantané {{snapshot}} ? Tout ce qui a changé depuis, sur ses disques et dans sa mémoire, est perdu.",
+    "confirmDelete": "Supprimer l'instantané {{snapshot}} ? L'état qu'il contient ne pourra plus être restauré ; les autres instantanés restent.",
+    "defaultName": "Instantané {{n}}",
+    "takeTitle": "Prendre un instantané de {{name}}",
+    "takeButton": "Prendre l'instantané",
+    "name": "Nom",
+    "description": "Description",
+    "nameTaken": "Un instantané porte déjà ce nom.",
+    "takeRunning": "La VM est allumée : ses disques et sa mémoire sont enregistrés, et elle continue de tourner.",
+    "takeOff": "La VM est éteinte : ses disques sont enregistrés.",
+    "taken": "Instantané {{name}} pris",
+    "noCurrent": "{{name}} n'a pas d'instantané auquel revenir."
   }
 }

@@ -1,10 +1,21 @@
-import { ChevronDown, Keyboard, type LucideIcon, Maximize, PanelLeft, Play } from "lucide-react";
+import {
+  Camera,
+  ChevronDown,
+  History,
+  Keyboard,
+  ListTree,
+  type LucideIcon,
+  Maximize,
+  PanelLeft,
+  Play,
+} from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useTranslation } from "react-i18next";
 
 import type { VmSummary } from "../api/client";
 import type { ConsoleHandle } from "../features/console/consoleRegistry";
 import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
+import type { SnapshotKind } from "../features/snapshots/SnapshotRequest";
 import { useVmActions } from "../features/vm/vmActionsContext";
 
 import "./Toolbar.css";
@@ -15,6 +26,7 @@ interface Props {
   vm: VmSummary | null;
   vmConsole: ConsoleHandle | null;
   onFullscreen?: () => void;
+  onSnapshot?: (kind: SnapshotKind) => void;
 }
 
 interface ToolProps {
@@ -41,7 +53,14 @@ function Tool({ icon: Icon, label, onClick, pressed, narrow }: ToolProps) {
   );
 }
 
-export function Toolbar({ libraryVisible, onToggleLibrary, vm, vmConsole, onFullscreen }: Props) {
+export function Toolbar({
+  libraryVisible,
+  onToggleLibrary,
+  vm,
+  vmConsole,
+  onFullscreen,
+  onSnapshot,
+}: Props) {
   const { t } = useTranslation();
   const actions = useVmActions();
   const l = (key: string) => t(`toolbar.${key}`);
@@ -84,6 +103,22 @@ export function Toolbar({ libraryVisible, onToggleLibrary, vm, vmConsole, onFull
         icon={Keyboard}
         label={l("sendCad")}
         onClick={vmConsole ? () => vmConsole.sendCtrlAltDel() : undefined}
+      />
+      <span className="toolbar-separator" />
+      <Tool
+        icon={Camera}
+        label={l("snapshot")}
+        onClick={onSnapshot ? () => onSnapshot("take") : undefined}
+      />
+      <Tool
+        icon={History}
+        label={l("revert")}
+        onClick={onSnapshot ? () => onSnapshot("revert") : undefined}
+      />
+      <Tool
+        icon={ListTree}
+        label={l("snapshotManager")}
+        onClick={onSnapshot ? () => onSnapshot("manager") : undefined}
       />
       <span className="toolbar-separator" />
       <Tool

@@ -1,0 +1,68 @@
+.snap-manager {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: var(--space-3);
+  min-height: 300px;
+}
+
+.snap-tree {
+  margin: 0;
+  padding: var(--space-1) 0;
+  overflow: auto;
+}
+
+.snap-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
+}
+
+.snap-row svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.snap-here {
+  color: var(--accent-fg);
+  font-weight: 600;
+}
+
+.snap-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.snap-name {
+  margin: 0;
+  font-size: var(--font-size);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.snap-description {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.snap-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+
+.snap-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.snap-field textarea {
+  resize: vertical;
+  font: inherit;
+}

@@ -38,14 +38,21 @@
     "sendKeys": "Send Key Combination",
     "firstRun": "First-run assistant…",
     "clone": "Clone…",
-    "appFullscreen": "Toggle Application Full Screen"
+    "appFullscreen": "Toggle Application Full Screen",
+    "snapshot": "Snapshot",
+    "takeSnapshot": "Take Snapshot…",
+    "revertSnapshot": "Restore Current Snapshot…",
+    "snapshotManager": "Snapshot Manager…"
   },
   "toolbar": {
     "start": "Start",
     "powerMenu": "More power actions",
     "sendCad": "Send Ctrl+Alt+Del",
     "library": "Show or hide the library",
-    "fullscreen": "Full screen"
+    "fullscreen": "Full screen",
+    "snapshot": "Take a snapshot",
+    "revert": "Restore the current snapshot",
+    "snapshotManager": "Snapshot Manager"
   },
   "library": {
     "title": "Library",
@@ -957,5 +964,32 @@
     "leaveRunning": "Leave them running",
     "powerOffWarning": "Powering off is like pulling the plug: unsaved work in the guest is lost.",
     "failed": "Could not act on the virtual machines"
+  },
+  "snapshots": {
+    "title": "{{name}} Snapshots",
+    "list": "Snapshots",
+    "youAreHere": "You are here",
+    "none": "No snapshot yet.",
+    "takenOff": "taken powered off",
+    "takenOn": "taken running, memory included",
+    "noDescription": "No description.",
+    "pick": "Choose a snapshot to see it.",
+    "take": "Take Snapshot…",
+    "revert": "Restore",
+    "delete": "Delete",
+    "working": "Working, this can take a while…",
+    "hint": "Snapshots are stored inside the VM's qcow2 disk (internal snapshots). A VM whose disks back linked clones cannot take, restore or delete snapshots.",
+    "confirmRevert": "Restore {{name}} to the snapshot {{snapshot}}? Everything that changed since, on its disks and in its memory, is lost.",
+    "confirmDelete": "Delete the snapshot {{snapshot}}? The state it holds can no longer be restored; the other snapshots stay.",
+    "defaultName": "Snapshot {{n}}",
+    "takeTitle": "Take a Snapshot of {{name}}",
+    "takeButton": "Take Snapshot",
+    "name": "Name",
+    "description": "Description",
+    "nameTaken": "A snapshot already has this name.",
+    "takeRunning": "The VM is running: its disks and its memory are saved, and it goes on running.",
+    "takeOff": "The VM is powered off: its disks are saved.",
+    "taken": "Snapshot {{name}} taken",
+    "noCurrent": "{{name}} has no snapshot to go back to."
   }
 }

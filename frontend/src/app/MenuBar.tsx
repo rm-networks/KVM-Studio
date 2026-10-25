@@ -6,6 +6,7 @@ import type { CdromDevice, VmSummary } from "../api/client";
 import type { ConsoleHandle } from "../features/console/consoleRegistry";
 import { COMBOS } from "../features/console/keys";
 import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
+import type { SnapshotKind } from "../features/snapshots/SnapshotRequest";
 import { useVmActions } from "../features/vm/vmActionsContext";
 import type { Layout } from "./App";
 import "./MenuBar.css";
@@ -34,6 +35,7 @@ interface Props {
   onFirstRun: () => void;
   onNewVm: () => void;
   onSettings: () => void;
+  onSnapshot?: (kind: SnapshotKind) => void;
   onGuestTools: () => void;
   vmConsole: ConsoleHandle | null;
   onFullscreen?: () => void;
@@ -63,6 +65,7 @@ export function MenuBar({
   onFirstRun,
   onNewVm,
   onSettings,
+  onSnapshot,
   onGuestTools,
   vmConsole,
   onFullscreen,
@@ -163,6 +166,17 @@ export function MenuBar({
         ),
         item(m("grab"), ["Ctrl", "G"], vmConsole ? () => vmConsole.grab() : undefined),
         sep,
+        sub(
+          m("snapshot"),
+          onSnapshot
+            ? [
+                item(m("takeSnapshot"), undefined, () => onSnapshot("take")),
+                item(m("revertSnapshot"), undefined, () => onSnapshot("revert")),
+                sep,
+                item(m("snapshotManager"), undefined, () => onSnapshot("manager")),
+              ]
+            : undefined,
+        ),
         sub(m("manage"), vm ? manageEntries : undefined),
         item(m("guestTools"), undefined, vm?.state === "running" ? onGuestTools : undefined),
         sep,

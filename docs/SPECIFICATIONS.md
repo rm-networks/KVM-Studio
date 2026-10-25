@@ -307,7 +307,7 @@ The library folders are real folders on disk: what the user sees in the tree mat
 
 - **F-80** Take, revert, delete a snapshot, with a name and a description.
 - **F-81** Tree manager with "You are here".
-- **F-82** Internal qcow2 snapshots; external snapshots for UEFI VMs depending on the libvirt version.
+- **F-82** Internal qcow2 snapshots: with libvirt 12 they work for UEFI VMs whose firmware variables are stored as qcow2, TPM included, powered off (disks) or running (disks and memory, the VM goes on). Where libvirt refuses (raw disk, raw firmware variables of older VMs), its message is shown. A snapshot taken powered off does not hold the TPM state. Take, Restore and Delete with a name and a description, from the toolbar, VM > Snapshot and the Snapshot Manager (tree with "You are here"); Restore and Delete ask first. A VM whose disks back linked clones can neither take, restore nor delete snapshots, and a VM with snapshots is not moved to another folder (libvirt keeps the disk paths in them).
 - **F-83** AutoProtect: scheduled snapshots with rotation.
 - **F-84** Full clone and linked clone (details in 6.9.1).
 - **F-85** OVA/OVF/VMDK import: extraction, qcow2 conversion, translation of the OVF hardware, import report.

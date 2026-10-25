@@ -28,6 +28,7 @@ from .api import (
     preferences,
     session,
     setup,
+    snapshots,
     system,
     uninstall,
     vms,
@@ -125,6 +126,7 @@ def create_app(
     private.include_router(hardware.router)
     private.include_router(options.router)
     private.include_router(session.router)
+    private.include_router(snapshots.router)
     private.include_router(guest.router)
     private.include_router(isos.router)
     private.include_router(setup.router)
