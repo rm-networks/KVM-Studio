@@ -16,7 +16,7 @@ Workspace can suspend or shut them down instead).
 
 ## Status
 
-Version 0.3.0 is the current version (Fedora). Work continues towards V1,
+Version 0.4.0 is the current version (Fedora). Work continues towards V1,
 see the [roadmap](docs/ROADMAP.md).
 
 ## Running from the sources

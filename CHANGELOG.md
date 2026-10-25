@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0 (2026-10-25)
+
+- Virtual network editor: the host address can be anywhere in the subnet (the
+  DHCP range moves off it); DHCP Settings choose the gateway announced on a
+  host-only network (none, the host, or another address such as a firewall
+  VM). Changes that restart a network list the running VMs using it and stop
+  and start them again after a confirmation.
+- NAT Settings > Port Forwarding: host port, type, VM IP address, VM port and
+  description, written by the administrator; host address 127.0.0.1 by
+  default. The rules live in KVM Studio's own nftables table, kept across
+  network restarts.
+- Snapshots: take, restore and delete, powered off or running with the
+  memory, from the toolbar, VM > Snapshot and the Snapshot Manager.
+
 ## 0.3.0 (2026-10-25)
 
 - VM settings, new Options tab: name and guest system, start with the host
