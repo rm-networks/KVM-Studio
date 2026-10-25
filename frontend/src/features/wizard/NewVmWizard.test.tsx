@@ -59,7 +59,6 @@ const networks = [
     subnet: null,
     host_ip: null,
     dhcp: null,
-    used_by: [],
   },
   {
     name: "kvmnet8",
@@ -73,7 +72,6 @@ const networks = [
     subnet: null,
     host_ip: null,
     dhcp: null,
-    used_by: [],
   },
 ];
 

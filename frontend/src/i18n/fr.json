@@ -405,7 +405,6 @@
     "subnetMask": "Masque",
     "started": "Démarré",
     "autostart": "Démarrage automatique avec l'hôte",
-    "usedBy": "Utilisé par : {{names}}",
     "notEditable": "Réseau libvirt de type « {{mode}} » : ses réglages se modifient dans virt-manager. Il peut être démarré, arrêté, renommé ou supprimé ici.",
     "restore": "Restaurer les valeurs par défaut",
     "confirmRestore": "kvmnet1 (Host-only) et kvmnet8 (NAT) seront créés s'ils n'existent pas, ou remis à leurs réglages par défaut. Les autres réseaux ne changent pas.",
@@ -423,8 +422,6 @@
       "hostIp": "L'adresse de l'hôte doit être dans le sous-réseau, ni sa première ni sa dernière adresse.",
       "gateway": "L'adresse de la passerelle doit être dans le sous-réseau."
     },
-    "usedByMore_one": "Utilisé par : {{names}} et {{count}} autre",
-    "usedByMore_other": "Utilisé par : {{names}} et {{count}} autres",
     "dhcpSettings": "Réglages DHCP…",
     "dhcpSettingsTitle": "Réglages DHCP : {{name}}",
     "gateway": "Passerelle annoncée par le DHCP",

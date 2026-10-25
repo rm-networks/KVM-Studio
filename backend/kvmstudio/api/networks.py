@@ -32,7 +32,6 @@ class Network(BaseModel):
     subnet: str | None
     host_ip: str | None
     dhcp: Dhcp | None
-    used_by: list[str]
     gateway: net.GatewayMode = "host"
     gateway_ip: str | None = None
 
@@ -140,7 +139,6 @@ def _model(info: net.NetworkInfo) -> Network:
         subnet=info.subnet,
         host_ip=info.host_ip,
         dhcp=Dhcp(start=info.dhcp.start, end=info.dhcp.end) if info.dhcp else None,
-        used_by=list(info.used_by),
         gateway=info.gateway,
         gateway_ip=info.gateway_ip,
     )

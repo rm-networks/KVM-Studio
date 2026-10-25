@@ -184,7 +184,6 @@ def test_changes_needing_a_restart_wait_for_running_vms(
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "net.in_use"
     assert vm.name() in response.json()["error"]["detail"]
-    assert networks(client)["kvmnet3"]["used_by"] == [vm.name()]
 
 
 def test_rename_follows_vm_configs(client: TestClient, conn: LibvirtConnection) -> None:

@@ -18,7 +18,6 @@ const kvmnet8: Network = {
   subnet: "192.168.108.0/24",
   host_ip: "192.168.108.1",
   dhcp: { start: "192.168.108.128", end: "192.168.108.254" },
-  used_by: ["FW-OPN"],
   gateway: "host",
   gateway_ip: null,
 };
@@ -32,8 +31,9 @@ const bridged: Network = {
   subnet: null,
   host_ip: null,
   dhcp: null,
-  used_by: [],
 };
+
+const exported = { version: 1, networks: [{ name: "LAN-9", xml: "<network/>" }] };
 
 function mockApi(plan = { restart: false, running: [] as string[] }) {
   const calls: { method: string; path: string; body: unknown }[] = [];
@@ -47,7 +47,11 @@ function mockApi(plan = { restart: false, running: [] as string[] }) {
           ? [kvmnet8, bridged]
           : path.endsWith("/plan")
             ? plan
-            : null;
+            : path.endsWith("/export")
+              ? exported
+              : path.endsWith("/import")
+                ? { created: ["LAN-9"], skipped: [] }
+                : null;
       return Promise.resolve(
         new Response(body ? JSON.stringify(body) : null, { status: body ? 200 : 204 }),
       );
@@ -67,7 +71,7 @@ describe("NetworkEditor", () => {
       </NotificationProvider>,
     );
     expect(await screen.findByText("kvmnet8")).toBeTruthy();
-    expect(screen.getByText("Utilisé par : FW-OPN")).toBeTruthy();
+    expect(screen.queryByText(/Utilisé par/)).toBeNull();
 
     fireEvent.click(screen.getByLabelText(/Host-only/));
     fireEvent.change(screen.getByDisplayValue("192.168.108.128"), {
@@ -110,19 +114,6 @@ describe("NetworkEditor", () => {
       dhcp: { start: "192.168.108.128", end: "192.168.108.253" },
       stop_vms: "shutdown",
     });
-  });
-
-  it("shortens a long list of VMs and shows it all on hover", async () => {
-    kvmnet8.used_by = ["FW-OPN", "SRV-AD", "CLT-1", "CLT-2"];
-    mockApi();
-    render(
-      <NotificationProvider>
-        <NetworkEditor onClose={() => undefined} />
-      </NotificationProvider>,
-    );
-    const line = await screen.findByText("Utilisé par : FW-OPN, SRV-AD et 2 autres");
-    expect(line.getAttribute("title")).toBe("FW-OPN, SRV-AD, CLT-1, CLT-2");
-    kvmnet8.used_by = ["FW-OPN"];
   });
 
   it("explains that other network types are edited elsewhere", async () => {

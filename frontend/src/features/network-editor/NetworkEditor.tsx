@@ -524,16 +524,6 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
                 {t("networks.autostart")}
               </label>
             </div>
-            {network.used_by.length > 0 && (
-              <p className="muted" title={network.used_by.join(", ")}>
-                {network.used_by.length <= 2
-                  ? t("networks.usedBy", { names: network.used_by.join(", ") })
-                  : t("networks.usedByMore", {
-                      names: network.used_by.slice(0, 2).join(", "),
-                      count: network.used_by.length - 2,
-                    })}
-              </p>
-            )}
           </fieldset>
         )}
       </Dialog>

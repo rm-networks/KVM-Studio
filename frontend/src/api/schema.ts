@@ -1748,8 +1748,6 @@ export interface components {
       /** Host Ip */
       host_ip: string | null;
       dhcp: components["schemas"]["Dhcp"] | null;
-      /** Used By */
-      used_by: string[];
       /**
        * Gateway
        * @default host

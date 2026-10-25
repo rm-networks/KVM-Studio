@@ -405,7 +405,6 @@
     "subnetMask": "Subnet mask",
     "started": "Started",
     "autostart": "Start with the host",
-    "usedBy": "Used by: {{names}}",
     "notEditable": "libvirt network of type \"{{mode}}\": edit its settings in virt-manager. It can be started, stopped, renamed or removed here.",
     "restore": "Restore Defaults",
     "confirmRestore": "kvmnet1 (Host-only) and kvmnet8 (NAT) will be created if missing, or reset to their default settings. Other networks are left alone.",
@@ -423,8 +422,6 @@
       "hostIp": "The host address must be in the subnet, neither its first nor its last address.",
       "gateway": "The gateway address must be in the subnet."
     },
-    "usedByMore_one": "Used by: {{names}} and {{count}} other",
-    "usedByMore_other": "Used by: {{names}} and {{count}} others",
     "dhcpSettings": "DHCP Settings…",
     "dhcpSettingsTitle": "DHCP Settings: {{name}}",
     "gateway": "Gateway announced by DHCP",
