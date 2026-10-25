@@ -101,13 +101,12 @@ def test_guest_manages_vms(guest_client: TestClient) -> None:
 
 
 def _forbidden_routes(app: FastAPI) -> list[tuple[str, str]]:
+    # From the OpenAPI schema: FastAPI versions differ in how app.routes
+    # holds included routers.
     found = []
-    for route in app.routes:
-        # HTTP routes, whatever class the FastAPI version gives them.
-        methods = getattr(route, "methods", None)
-        if methods:
-            path = re.sub(r"\{[^}]+\}", "x", getattr(route, "path", ""))
-            found += [(m, path) for m in sorted(methods) if guest_forbidden(m, path)]
+    for path, operations in app.openapi()["paths"].items():
+        concrete = re.sub(r"\{[^}]+\}", "x", path)
+        found += [(m.upper(), concrete) for m in sorted(operations) if guest_forbidden(m, concrete)]
     return found
 
 
