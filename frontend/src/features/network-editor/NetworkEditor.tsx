@@ -14,6 +14,7 @@ import { useNotifier } from "../../components/notifier";
 import { PromptDialog } from "../../components/PromptDialog";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import { DhcpSettingsDialog } from "./DhcpSettingsDialog";
+import { NatSettingsDialog } from "./NatSettingsDialog";
 import { type Draft, draftFrom, firstHost, fittedRange, sameDraft, settingsFrom } from "./draft";
 import { defaultDhcp, joinCidr } from "./subnet";
 import "./NetworkEditor.css";
@@ -25,6 +26,7 @@ type Pending =
   | { kind: "rename"; network: Network }
   | { kind: "defaults" }
   | { kind: "dhcp"; network: Network }
+  | { kind: "nat"; network: Network }
   // The network must restart while VMs use it: they are stopped, then started again.
   | { kind: "stop"; name: string; settings: NetworkSettings; running: string[]; force: boolean }
   | null;
@@ -348,6 +350,15 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
                     onChange={() => edit({ kind: "nat" })}
                   />
                   {t("networks.natLabel")}
+                  {draft.kind === "nat" && network.kind === "nat" && (
+                    <button
+                      type="button"
+                      className="button net-inline-button"
+                      onClick={() => setPending({ kind: "nat", network })}
+                    >
+                      {t("networks.natSettings")}
+                    </button>
+                  )}
                 </label>
                 <label className="check">
                   <input
@@ -527,6 +538,9 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
         )}
       </Dialog>
 
+      {pending?.kind === "nat" && (
+        <NatSettingsDialog network={pending.network} onClose={() => setPending(null)} />
+      )}
       {pending?.kind === "dhcp" && draft && (
         <DhcpSettingsDialog
           network={pending.network}

@@ -8,6 +8,8 @@ case "$1" in
         rm -f /etc/kvm-studio/helper.toml.rpmsave /etc/kvm-studio/helper.toml
         rmdir /etc/kvm-studio 2>/dev/null || :
         rm -rf /var/lib/kvm-studio
+        # The libvirt hook folder, when KVM Studio's hook was the only one.
+        rmdir /etc/libvirt/hooks/network.d 2>/dev/null || :
         ;;
 esac
 

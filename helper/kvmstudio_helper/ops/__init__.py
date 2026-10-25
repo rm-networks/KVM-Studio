@@ -21,7 +21,7 @@ Task = Callable[[Runner], dict[str, Any]]
 
 @dataclass(frozen=True, slots=True)
 class Operation:
-    # None for the one read-only operation, which changes nothing.
+    # None for the read-only operations, which change nothing.
     action: str | None
     prepare: Callable[[Mapping[str, object], HelperConfig, Peer], Task]
 
@@ -36,7 +36,7 @@ def expect_keys(params: Mapping[str, object], keys: set[str]) -> None:
 
 
 def registry() -> dict[str, Operation]:
-    from . import clone_state, iso_acl, iso_library, join_libvirt, remove_package
+    from . import clone_state, iso_acl, iso_library, join_libvirt, port_forward, remove_package
 
     return {
         "iso_acl": Operation(iso_acl.ACTION, iso_acl.prepare),
@@ -46,5 +46,7 @@ def registry() -> dict[str, Operation]:
         "list_iso_libraries": Operation(None, iso_library.prepare_list),
         "join_libvirt": Operation(join_libvirt.ACTION, join_libvirt.prepare),
         "clone_vm_state": Operation(clone_state.ACTION, clone_state.prepare),
+        "set_port_forwards": Operation(port_forward.ACTION, port_forward.prepare_set),
+        "list_port_forwards": Operation(None, port_forward.prepare_list),
         "remove_package": Operation(remove_package.ACTION, remove_package.prepare),
     }

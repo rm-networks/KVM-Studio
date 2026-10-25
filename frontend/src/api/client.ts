@@ -37,6 +37,7 @@ export type NicChange = components["schemas"]["NicChange"];
 export type VmOptions = components["schemas"]["Options"];
 export type VmOptionsChange = components["schemas"]["OptionsChange"];
 export type BootDevice = components["schemas"]["BootDevice"];
+export type PortForward = components["schemas"]["PortForward"];
 export type RunningVm = components["schemas"]["RunningVm"];
 export type CloseResult = components["schemas"]["ActionResult"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
@@ -216,6 +217,14 @@ export const api = {
       ...body,
       stop_vms: stopVms ?? null,
     }),
+  portForwards: (name: string) =>
+    request<{ rules: PortForward[] }>("GET", `/api/networks/${encodeURIComponent(name)}/forwards`),
+  setPortForwards: (name: string, rules: PortForward[]) =>
+    request<{ rules: PortForward[] }>("PUT", `/api/networks/${encodeURIComponent(name)}/forwards`, {
+      rules,
+    }),
+  portsInUse: () =>
+    request<{ tcp: number[]; udp: number[] }>("GET", "/api/networks/host/ports-in-use"),
   networkPlan: (name: string, body: NetworkSettings) =>
     request<{ restart: boolean; running: string[] }>(
       "POST",

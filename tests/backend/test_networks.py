@@ -387,3 +387,49 @@ def test_static_hosts_set_with_virsh_are_kept() -> None:
     assert "192.168.150.20" in again
     # Nothing of the kind is ever added by KVM Studio itself.
     assert "<host" not in xml
+
+
+def test_port_forwards_go_through_the_helper(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from kvmstudio import helper_client
+
+    stored: dict[str, list[dict[str, Any]]] = {}
+    calls: list[tuple[str, dict[str, Any]]] = []
+
+    def fake(op: str, params: dict[str, Any]) -> dict[str, Any]:
+        calls.append((op, params))
+        if op == "list_port_forwards":
+            return {"networks": stored}
+        stored[params["network"]] = params["rules"]
+        if not params["rules"]:
+            del stored[params["network"]]
+        return {"rules": len(params["rules"])}
+
+    monkeypatch.setattr(helper_client, "call", fake)
+    rule = {"proto": "tcp", "host_port": 2222, "vm_ip": "192.168.150.9", "vm_port": 22}
+    r = client.put("/api/networks/kvmnet5/forwards", headers=AUTH, json={"rules": [rule]})
+    assert r.status_code == 200
+    # Host address 127.0.0.1 unless written otherwise; nothing else is decided here.
+    assert calls[0] == (
+        "set_port_forwards",
+        {"network": "kvmnet5", "rules": [{**rule, "host_address": "127.0.0.1", "description": ""}]},
+    )
+    got = client.get("/api/networks/kvmnet5/forwards", headers=AUTH).json()
+    assert got["rules"][0]["vm_ip"] == "192.168.150.9"
+
+    # Deleting the network takes its rules away.
+    client.post("/api/networks", headers=AUTH, json={**host_only(), **NEW}).raise_for_status()
+    assert client.delete("/api/networks/kvmnet5", headers=AUTH).status_code == 204
+    assert calls[-1] == ("set_port_forwards", {"network": "kvmnet5", "rules": []})
+
+
+def test_listening_ports(tmp_path: Any) -> None:
+    header = "  sl  local_address rem_address   st\n"
+    (tmp_path / "tcp").write_text(
+        header
+        + "   0: 0100007F:1F90 00000000:0000 0A 0\n"  # 127.0.0.1:8080 LISTEN
+        + "   1: 0100007F:0016 0200007F:9C40 01 0\n"  # established, not a listener
+    )
+    (tmp_path / "udp6").write_text(header + "   0: 00000000000000000000000000000000:0035 0 07\n")
+    assert net.listening_ports(str(tmp_path)) == {"tcp": [8080], "udp": [53]}

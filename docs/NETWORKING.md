@@ -57,6 +57,37 @@ running VMs back into the bridge afterwards. When running VMs use the network,
 the editor lists them and asks first: they are shut down (powered off after
 60 s if confirmed again), the network restarts, then they start again.
 
+## NAT port forwarding
+
+NAT Settings > Port Forwarding, as in Workstation: Host port, Type (TCP or
+UDP), VM IP address, VM port and Description, with Add, Remove and Properties.
+The administrator writes every field; KVM Studio neither looks the VM address
+up nor fixes it. The host address is 127.0.0.1 by default and can be any
+address, 0.0.0.0 included. A host port something already listens on is only
+mentioned.
+
+The rules are a root operation of the helper (`set_port_forwards`,
+administrator password every time). It checks the protocol (tcp or udp), the
+ports (1 to 65535), the host address, and that the VM address lies in the
+subnet of the libvirt network, which it reads from libvirt itself. It keeps the
+rules in `/var/lib/kvm-studio/port-forwards.json` and writes the whole nftables
+table `inet kvmstudio` again at each change; no other table, firewalld
+included, is touched. A libvirt network hook
+(`/etc/libvirt/hooks/network.d/50-kvm-studio`) writes it again when a network
+starts, so the rules survive a restart (libvirt reads its hooks when its
+network daemon starts). Deleting a network deletes its rules, and removing the
+package deletes the table.
+
+- From the host itself (127.0.0.1 or another of its addresses), connections go
+  through the `output` chain. For 127.0.0.1, the network bridge gets
+  `route_localnet`, and a rule drops anything a VM sends to 127.0.0.0/8 through
+  it.
+- From other machines (a host address other than 127.0.0.1, or 0.0.0.0), the
+  `prerouting` chain forwards the connection, but libvirt 12's own rules
+  (`ip libvirt_network`, chain `guest_input`) refuse new connections to a NAT
+  network. KVM Studio does not change that table: opening a forwarded port to
+  the LAN needs a rule of the administrator's.
+
 ## Hidden from the network applet
 
 The package installs `/etc/NetworkManager/conf.d/90-kvm-studio.conf`, which

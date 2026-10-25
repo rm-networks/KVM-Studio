@@ -355,6 +355,26 @@ def host_subnets() -> list[tuple[str, ipaddress.IPv4Network]]:
     return result
 
 
+def listening_ports(proc: str = "/proc/net") -> dict[str, list[int]]:
+    """TCP ports in LISTEN state and bound UDP ports on the host, IPv4 and IPv6."""
+    found: dict[str, set[int]] = {"tcp": set(), "udp": set()}
+    for proto in ("tcp", "udp"):
+        for suffix in ("", "6"):
+            try:
+                with open(f"{proc}/{proto}{suffix}", encoding="ascii") as table:
+                    next(table, None)
+                    for line in table:
+                        fields = line.split()
+                        if len(fields) < 4:
+                            continue
+                        if proto == "tcp" and fields[3] != "0A":  # LISTEN
+                            continue
+                        found[proto].add(int(fields[1].rsplit(":", 1)[1], 16))
+            except OSError:
+                continue
+    return {k: sorted(v) for k, v in found.items()}
+
+
 def interface_names() -> set[str]:
     return {name for _i, name in socket.if_nameindex()}
 

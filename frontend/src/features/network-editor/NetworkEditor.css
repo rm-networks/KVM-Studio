@@ -61,3 +61,19 @@
   height: 14px;
   color: var(--text-muted);
 }
+
+.net-forwards {
+  height: 150px;
+  overflow: auto;
+}
+
+.net-form {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+}
+
+.net-form label {
+  display: contents;
+}

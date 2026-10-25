@@ -7,6 +7,7 @@ from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
+from .. import helper_client
 from ..context import Context
 from ..errors import ApiException
 from ..services import networks as net
@@ -66,6 +67,26 @@ class NetworkSettings(BaseModel):
 class NetworkUpdate(NetworkSettings):
     # Asked after the confirmation: stop the running VMs that use the network.
     stop_vms: Literal["shutdown", "poweroff"] | None = None
+
+
+class PortForward(BaseModel):
+    """A NAT port forwarding rule, written by the administrator; the helper checks it."""
+
+    proto: Literal["tcp", "udp"]
+    host_address: str = "127.0.0.1"
+    host_port: int
+    vm_ip: str
+    vm_port: int
+    description: str = ""
+
+
+class PortForwards(BaseModel):
+    rules: list[PortForward]
+
+
+class PortsInUse(BaseModel):
+    tcp: list[int]
+    udp: list[int]
 
 
 class UpdatePlan(BaseModel):
@@ -191,7 +212,40 @@ async def set_state(ctx: Context, name: str, body: NetworkState) -> Response:
 @router.delete("/{name}", status_code=204)
 async def delete(ctx: Context, name: str) -> Response:
     await run_in_threadpool(net.delete_network, ctx.conn, name)
+    # Its port forwarding rules go with it (the helper asks for the password).
+    try:
+        if await run_in_threadpool(_forwards, name):
+            await run_in_threadpool(
+                helper_client.call, "set_port_forwards", {"network": name, "rules": []}
+            )
+    except ApiException:
+        pass  # no helper: nothing was forwarded through it
     return Response(status_code=204)
+
+
+def _forwards(name: str) -> list[dict[str, object]]:
+    networks = helper_client.call("list_port_forwards", {}).get("networks", {})
+    return list(networks.get(name, []))
+
+
+@router.get("/{name}/forwards")
+async def forwards(name: str) -> PortForwards:
+    rules = await run_in_threadpool(_forwards, name)
+    return PortForwards(rules=[PortForward.model_validate(r) for r in rules])
+
+
+@router.put("/{name}/forwards")
+async def set_forwards(name: str, body: PortForwards) -> PortForwards:
+    """Root operation: the helper checks every rule and asks for the password."""
+    params = {"network": name, "rules": [r.model_dump() for r in body.rules]}
+    await run_in_threadpool(helper_client.call, "set_port_forwards", params)
+    return await forwards(name)
+
+
+@router.get("/host/ports-in-use")
+async def ports_in_use() -> PortsInUse:
+    """Ports something on the host already listens on (shown as information only)."""
+    return PortsInUse(**await run_in_threadpool(net.listening_ports))
 
 
 @router.post("/defaults")
