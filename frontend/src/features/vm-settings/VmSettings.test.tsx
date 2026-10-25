@@ -30,6 +30,26 @@ const host = {
   secure_boot: true,
   tpm: true,
 };
+const options = {
+  name: "FW-OPN",
+  profile: "firewall",
+  active: false,
+  installed: true,
+  autostart: false,
+  on_reboot: "restart",
+  on_crash: "destroy",
+  firmware: "uefi",
+  secure_boot: false,
+  tpm: true,
+  boot_menu: true,
+  boot: [
+    { kind: "disk", id: "vda", detail: "FW.qcow2", enabled: true },
+    { kind: "cdrom", id: "sda", detail: "", enabled: true },
+    { kind: "nic", id: "52:54:00:aa:bb:cc", detail: "kvmnet8", enabled: false },
+  ],
+  clipboard: true,
+  reset_nvram_pending: false,
+};
 const networks = [
   { name: "kvmnet8", kind: "nat" },
   { name: "LAN-1", kind: "host_only" },
@@ -47,7 +67,13 @@ function mockApi() {
           new Response(JSON.stringify({ restart_required: method === "PUT" })),
         );
       }
-      const body = path.endsWith("/hardware") ? hardware : path === "/api/host" ? host : networks;
+      const body = path.endsWith("/hardware")
+        ? hardware
+        : path.endsWith("/options")
+          ? options
+          : path === "/api/host"
+            ? host
+            : networks;
       return Promise.resolve(new Response(JSON.stringify(body)));
     }),
   );
@@ -99,5 +125,59 @@ describe("VmSettings", () => {
     expect(screen.getByText("Retirer cette carte réseau de la machine virtuelle ?")).toBeTruthy();
     fireEvent.click(screen.getAllByRole("button", { name: "Retirer" }).at(-1) as HTMLElement);
     await waitFor(() => expect(calls[0]?.method).toBe("DELETE"));
+  });
+
+  it("changes the boot order and asks before removing the TPM of an installed VM", async () => {
+    const calls = mockApi();
+    const onClose = vi.fn();
+    render(
+      <NotificationProvider>
+        <VmSettings vm={makeVm({ uuid: "u1", name: "FW-OPN" })} onClose={onClose} />
+      </NotificationProvider>,
+    );
+    fireEvent.click(await screen.findByRole("tab", { name: "Options" }));
+    fireEvent.click(screen.getByText("Firmware et démarrage"));
+    fireEvent.click(screen.getByLabelText("Carte réseau (52:54:00:aa:bb:cc)"));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Monter Carte réseau (52:54:00:aa:bb:cc)" }),
+    );
+    fireEvent.click(screen.getByLabelText("CD/DVD (sda)"));
+    fireEvent.click(screen.getByLabelText("TPM 2.0 (émulé)"));
+    expect(screen.getByText(/peut l'empêcher de démarrer/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "OK" }));
+    expect(await screen.findByText("Modifier le firmware ou le TPM ?")).toBeTruthy();
+    expect(calls).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Appliquer quand même" }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toEqual({
+      method: "PUT",
+      path: "/api/vms/u1/options",
+      body: {
+        tpm: false,
+        boot: [
+          { kind: "disk", id: "vda", enabled: true },
+          { kind: "nic", id: "52:54:00:aa:bb:cc", enabled: true },
+          { kind: "cdrom", id: "sda", enabled: false },
+        ],
+        confirmed: true,
+      },
+    });
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("needs at least one boot device", async () => {
+    mockApi();
+    render(
+      <NotificationProvider>
+        <VmSettings vm={makeVm({ uuid: "u1", name: "FW-OPN" })} onClose={() => undefined} />
+      </NotificationProvider>,
+    );
+    fireEvent.click(await screen.findByRole("tab", { name: "Options" }));
+    fireEvent.click(screen.getByText("Firmware et démarrage"));
+    fireEvent.click(screen.getByLabelText("Disque dur (vda)"));
+    fireEvent.click(screen.getByLabelText("CD/DVD (sda)"));
+    expect(screen.getByText("Cochez au moins un périphérique de démarrage.")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "OK" }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

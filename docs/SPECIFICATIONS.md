@@ -184,20 +184,20 @@ The context menu of a VM in the library holds Open in a Tab, the power actions, 
 
 **VM settings, Hardware tab.** Memory, Processors, Disks, CD/DVD, Network adapters, USB controller, Sound card, Display, Serial port, TPM. The Memory panel has the vertical slider from 4 MB to the host maximum, with three marks: guest OS minimum, recommended, recommended maximum.
 
-**VM settings, Options tab.**
+**VM settings, Options tab.** Changes that need the VM powered off are disabled while it runs, with a note; the others apply at its next start.
 
 | Option | Content |
 | --- | --- |
-| General | Name, guest OS + version, working folder |
-| Power | Start/stop actions, behavior on close |
+| General | Name (VM powered off), guest system (the profile in `<metadata>`, the hardware is not changed) |
+| Power | Start with the host (libvirt autostart), action when the guest restarts (`on_reboot`) or crashes (`on_crash`) |
 | Shared folders | virtiofs shares host → VM |
 | Snapshots | Behavior at power off (nothing, revert, ask) |
 | AutoProtect | Scheduled snapshots with rotation |
-| Guest isolation | Copy and paste and drag and drop allowed or not |
+| Guest isolation | Copy and paste allowed or not (`<clipboard copypaste>` of the qemu-vdagent channel; turned off, the console no longer offers to turn it on) |
 | Access control | Disk encryption (LUKS qcow2) |
 | Guest tools | Agent state, time synchronization |
 | VNC connections | External VNC access with port and password |
-| Boot | Firmware, Secure Boot, boot order and menu |
+| Firmware and boot | BIOS or UEFI, Secure Boot, TPM 2.0 (VM powered off; an installed VM gets a warning and a confirmation before changing between BIOS and UEFI or removing its TPM), boot order per device (drag or arrows, a box to leave a device out), boot menu at start. Turning Secure Boot on or off rebuilds the UEFI variables the next time KVM Studio starts the VM (`VIR_DOMAIN_START_RESET_NVRAM`) |
 | Advanced | Raw XML editor, priority |
 
 **Preferences.** Workspace (VM location, ISO folders, remembered tabs, VMs that keep running on close, thumbnails, screenshots), Interface (window or web mode, port, LAN sharing, certificate, guest account password, connected people), Input, Shortcuts, Display (theme, language, scaling), USB, Memory (reserve for the host), Devices.

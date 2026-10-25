@@ -20,11 +20,20 @@ class DisplayInfo(BaseModel):
     clipboard: bool  # qemu-vdagent channel with copy/paste
     # Same, in the config: the running VM gets it at next boot.
     clipboard_config: bool
+    # Turned off on purpose in Options > Isolation: no offer to turn it on.
+    clipboard_isolated: bool = False
     active: bool
 
 
 class DisplayChange(BaseModel):
     restart_required: bool
+
+
+def _isolated(xml: str) -> bool:
+    """Copy and paste turned off in Options > Isolation (channel kept, copypaste='no')."""
+    root = etree.fromstring(xml.encode(), parser=etree.XMLParser(resolve_entities=False))
+    clips = root.findall("devices/channel[@type='qemu-vdagent']/source/clipboard")
+    return bool(clips) and all(c.get("copypaste") == "no" for c in clips)
 
 
 def _has_vdagent(xml: str) -> bool:
@@ -48,6 +57,7 @@ async def display(ctx: Context, uuid: str) -> DisplayInfo:
             config=graphics_types(config),
             clipboard=_has_vdagent(live if active else config),
             clipboard_config=_has_vdagent(config),
+            clipboard_isolated=_isolated(config),
             active=active,
         )
 

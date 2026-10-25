@@ -31,6 +31,9 @@ export type NewVmRequest = components["schemas"]["NewVmRequest"];
 export type Hardware = components["schemas"]["Hardware"];
 export type HardwareNic = components["schemas"]["Nic"];
 export type NicChange = components["schemas"]["NicChange"];
+export type VmOptions = components["schemas"]["Options"];
+export type VmOptionsChange = components["schemas"]["OptionsChange"];
+export type BootDevice = components["schemas"]["BootDevice"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
 export type Preferences = components["schemas"]["Preferences"] & { config: Config };
 export type SaveResult = components["schemas"]["SaveResult"];
@@ -138,6 +141,9 @@ export const api = {
   host: () => request<HostCapabilities>("GET", "/api/host"),
   createVm: (body: NewVmRequest) => request<{ uuid: string }>("POST", "/api/vms", body),
   hardware: (uuid: string) => request<Hardware>("GET", `${vmPath(uuid)}/hardware`),
+  options: (uuid: string) => request<VmOptions>("GET", `${vmPath(uuid)}/options`),
+  setOptions: (uuid: string, change: VmOptionsChange) =>
+    request<{ restart_required: boolean }>("PUT", `${vmPath(uuid)}/options`, change),
   setCpuMemory: (uuid: string, memory_mib: number, vcpus: number) =>
     request<{ restart_required: boolean }>("PUT", `${vmPath(uuid)}/hardware/cpu-memory`, {
       memory_mib,

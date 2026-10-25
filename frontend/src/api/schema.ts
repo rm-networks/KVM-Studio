@@ -709,6 +709,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/vms/{uuid}/options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Options */
+    get: operations["get_options_api_vms__uuid__options_get"];
+    /** Set Options */
+    put: operations["set_options_api_vms__uuid__options_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/vms/{uuid}/guest-tools": {
     parameters: {
       query?: never;
@@ -980,6 +998,32 @@ export interface components {
       libvirt: components["schemas"]["LibvirtInfo"];
       ui: components["schemas"]["UiPreferences"];
     };
+    /** BootDevice */
+    BootDevice: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "disk" | "cdrom" | "nic";
+      /** Id */
+      id: string;
+      /** Detail */
+      detail: string;
+      /** Enabled */
+      enabled: boolean;
+    };
+    /** BootEntry */
+    BootEntry: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "disk" | "cdrom" | "nic";
+      /** Id */
+      id: string;
+      /** Enabled */
+      enabled: boolean;
+    };
     /** CdromCreate */
     CdromCreate: {
       /** Path */
@@ -1112,6 +1156,11 @@ export interface components {
       clipboard: boolean;
       /** Clipboard Config */
       clipboard_config: boolean;
+      /**
+       * Clipboard Isolated
+       * @default false
+       */
+      clipboard_isolated: boolean;
       /** Active */
       active: boolean;
     };
@@ -1662,6 +1711,68 @@ export interface components {
        * @enum {string}
        */
       model: "virtio" | "e1000e" | "rtl8139" | "vmxnet3";
+    };
+    /** Options */
+    Options: {
+      /** Name */
+      name: string;
+      /** Profile */
+      profile: string | null;
+      /** Active */
+      active: boolean;
+      /** Installed */
+      installed: boolean;
+      /** Autostart */
+      autostart: boolean;
+      /** On Reboot */
+      on_reboot: string;
+      /** On Crash */
+      on_crash: string;
+      /**
+       * Firmware
+       * @enum {string}
+       */
+      firmware: "uefi" | "bios";
+      /** Secure Boot */
+      secure_boot: boolean;
+      /** Tpm */
+      tpm: boolean;
+      /** Boot Menu */
+      boot_menu: boolean;
+      /** Boot */
+      boot: components["schemas"]["BootDevice"][];
+      /** Clipboard */
+      clipboard: boolean;
+      /** Reset Nvram Pending */
+      reset_nvram_pending: boolean;
+    };
+    /** OptionsChange */
+    OptionsChange: {
+      /** Profile */
+      profile?: string | null;
+      /** Autostart */
+      autostart?: boolean | null;
+      /** On Reboot */
+      on_reboot?: ("restart" | "destroy") | null;
+      /** On Crash */
+      on_crash?: ("destroy" | "restart" | "preserve") | null;
+      /** Firmware */
+      firmware?: ("uefi" | "bios") | null;
+      /** Secure Boot */
+      secure_boot?: boolean | null;
+      /** Tpm */
+      tpm?: boolean | null;
+      /** Boot Menu */
+      boot_menu?: boolean | null;
+      /** Boot */
+      boot?: components["schemas"]["BootEntry"][] | null;
+      /** Clipboard */
+      clipboard?: boolean | null;
+      /**
+       * Confirmed
+       * @default false
+       */
+      confirmed: boolean;
     };
     /** PackageState */
     PackageState: {
@@ -5933,6 +6044,180 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Changed"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  get_options_api_vms__uuid__options_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        uuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Options"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  set_options_api_vms__uuid__options_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        uuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OptionsChange"];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {

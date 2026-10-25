@@ -603,7 +603,11 @@
     "nextBoot": "Some changes apply the next time the virtual machine starts.",
     "applyFailed": "Could not change {{name}}",
     "confirmRemoveNic": "Remove this network adapter from the virtual machine?",
-    "confirmRemoveCdrom": "Remove this CD/DVD drive from the virtual machine?"
+    "confirmRemoveCdrom": "Remove this CD/DVD drive from the virtual machine?",
+    "tab": {
+      "hardware": "Hardware",
+      "options": "Options"
+    }
   },
   "guestTools": {
     "title": "Install the guest tools: {{name}}",
@@ -829,5 +833,54 @@
     "startSource": "The disks of \"{{name}}\" are the base of these linked clones: {{clones}}. Starting it writes to those disks and would damage the clones. Start it all the same?",
     "startAnyway": "Start Anyway",
     "linkedClones": "Linked clones"
+  },
+  "options": {
+    "setting": "Setting",
+    "pane": {
+      "general": "General",
+      "power": "Power",
+      "boot": "Firmware and boot",
+      "isolation": "Isolation"
+    },
+    "needsOff": "Power off the virtual machine to change these settings.",
+    "nextStart": "The virtual machine is running: this change applies the next time it starts.",
+    "name": "Name",
+    "os": "Guest system",
+    "osHint": "Used for the defaults {{app}} suggests; the hardware is not changed.",
+    "autostart": "Start this virtual machine with the host",
+    "autostartShort": "Starts with the host",
+    "onReboot": "When the guest restarts",
+    "onCrash": "When the guest crashes",
+    "action": {
+      "restart": "Restart the virtual machine",
+      "destroy": "Power off the virtual machine",
+      "preserve": "Keep it paused for analysis"
+    },
+    "firmware": "Firmware",
+    "secureBoot": "Secure Boot",
+    "tpm": "TPM 2.0 (emulated)",
+    "uefiSecure": "UEFI, Secure Boot",
+    "riskyNote": "A system is installed on this virtual machine: changing between BIOS and UEFI, or removing the TPM, can stop it from starting (Windows 11 needs UEFI and a TPM; BitLocker asks for its recovery key without its TPM).",
+    "nvramReset": "The UEFI variables are rebuilt the next time {{app}} starts the virtual machine, so that Secure Boot matches. Started from another tool, it keeps the previous ones.",
+    "bootOrder": "Boot order",
+    "bootOrderHint": "Drag the devices or use the arrows; untick a device to leave it out of the boot.",
+    "device": {
+      "disk": "Hard disk ({{id}})",
+      "cdrom": "CD/DVD ({{id}})",
+      "nic": "Network adapter ({{id}})"
+    },
+    "up": "Move {{device}} up",
+    "down": "Move {{device}} down",
+    "upShort": "Up",
+    "downShort": "Down",
+    "noBootDevice": "Tick at least one device to boot from.",
+    "bootMenu": "Show the boot menu at start (3 s)",
+    "clipboard": "Copy and paste between the host and the virtual machine",
+    "clipboardHint": "Text only, through the guest agent. Turned off, nothing goes in or out, and the console no longer offers to turn it on.",
+    "clipboardOn": "Copy and paste on",
+    "clipboardOff": "Copy and paste off",
+    "riskyTitle": "Change the firmware or the TPM?",
+    "riskyConfirm": "{{name}} already has a system installed. After this change it may no longer start: Windows 11 needs UEFI and a TPM, BitLocker asks for its recovery key, and a system installed for BIOS does not boot in UEFI (or the other way round). Apply anyway?",
+    "riskyApply": "Apply anyway"
   }
 }

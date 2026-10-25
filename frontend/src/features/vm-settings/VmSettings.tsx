@@ -17,12 +17,15 @@ import {
   type HostCapabilities,
   type Network,
   type NicChange,
+  type VmOptions,
   type VmSummary,
 } from "../../api/client";
 import { Dialog } from "../../components/Dialog";
 import { useNotifier } from "../../components/notifier";
 import { IsoPicker } from "../iso-picker/IsoPicker";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
+import { OptionsTab } from "./OptionsTab";
+import { type OptionsDraft, draftOf, optionsChange, risky } from "./optionsDraft";
 import "./VmSettings.css";
 
 type Selection =
@@ -55,6 +58,11 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
   const [busy, setBusy] = useState(false);
   const [picking, setPicking] = useState<string | null>(null);
   const [removing, setRemoving] = useState<Selection | null>(null);
+  const [tab, setTab] = useState<"hardware" | "options">("hardware");
+  const [opts, setOpts] = useState<VmOptions | null>(null);
+  const [optDraft, setOptDraft] = useState<OptionsDraft | null>(null);
+  // Risky firmware or TPM change waiting for a confirmation; close: from OK.
+  const [confirmRisky, setConfirmRisky] = useState<{ close: boolean } | null>(null);
 
   const receive = useCallback((data: Hardware) => {
     setHw(data);
@@ -63,21 +71,29 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
     setNicEdits({});
   }, []);
 
+  const receiveOptions = useCallback((data: VmOptions) => {
+    setOpts(data);
+    setOptDraft(draftOf(data));
+  }, []);
+
   const reload = useCallback(
     () =>
-      api
-        .hardware(vm.uuid)
-        .then(receive)
+      Promise.all([api.hardware(vm.uuid), api.options(vm.uuid)])
+        .then(([h, o]) => {
+          receive(h);
+          receiveOptions(o);
+        })
         .catch((err: unknown) => notifyError(t("settings.title", { name: vm.name }), err)),
-    [vm.uuid, vm.name, receive, notifyError, t],
+    [vm.uuid, vm.name, receive, receiveOptions, notifyError, t],
   );
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([api.hardware(vm.uuid), api.host(), api.networks()])
-      .then(([h, caps, nets]) => {
+    Promise.all([api.hardware(vm.uuid), api.host(), api.networks(), api.options(vm.uuid)])
+      .then(([h, caps, nets, o]) => {
         if (cancelled) return;
         receive(h);
+        receiveOptions(o);
         setHost(caps);
         setNetworks(nets);
       })
@@ -87,22 +103,34 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
     return () => {
       cancelled = true;
     };
-  }, [vm.uuid, vm.name, receive, notifyError, t]);
+  }, [vm.uuid, vm.name, receive, receiveOptions, notifyError, t]);
 
   const nicOf = (n: HardwareNic): NicEdit =>
     nicEdits[n.mac] ?? { network: n.network, model: n.model, connected: n.connected };
 
+  const optChange = opts && optDraft ? optionsChange(opts, optDraft) : {};
+  const renamed = opts !== null && optDraft !== null && optDraft.name.trim() !== opts.name;
+  const optionsDirty = renamed || Object.keys(optChange).length > 0;
+  const invalid =
+    optDraft !== null && (!optDraft.boot.some((d) => d.enabled) || !optDraft.name.trim());
   const dirty =
-    hw !== null &&
-    (memory !== hw.memory_mib ||
-      vcpus !== hw.vcpus ||
-      hw.nics.some((n) => {
-        const e = nicEdits[n.mac];
-        return e && (e.network !== n.network || e.model !== n.model || e.connected !== n.connected);
-      }));
+    optionsDirty ||
+    (hw !== null &&
+      (memory !== hw.memory_mib ||
+        vcpus !== hw.vcpus ||
+        hw.nics.some((n) => {
+          const e = nicEdits[n.mac];
+          return (
+            e && (e.network !== n.network || e.model !== n.model || e.connected !== n.connected)
+          );
+        })));
 
-  const apply = async (): Promise<boolean> => {
+  const apply = async (confirmed = false, close = false): Promise<boolean> => {
     if (!hw) return false;
+    if (opts && optDraft && risky(opts, optDraft) && !confirmed) {
+      setConfirmRisky({ close });
+      return false;
+    }
     setBusy(true);
     let restart = false;
     try {
@@ -119,6 +147,13 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
         if (Object.keys(change).length) {
           restart = (await api.changeNic(vm.uuid, nic.mac, change)).restart_required || restart;
         }
+      }
+      if (opts && optDraft) {
+        if (Object.keys(optChange).length) {
+          const result = await api.setOptions(vm.uuid, { ...optChange, confirmed });
+          restart = result.restart_required || restart;
+        }
+        if (renamed) await api.rename(vm.uuid, optDraft.name.trim());
       }
       if (restart) notify(t("settings.saved"), t("settings.nextBoot"));
       await reload();
@@ -199,9 +234,11 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
             <button
               type="button"
               className="button button-primary"
-              disabled={busy}
+              disabled={busy || invalid}
               onClick={() =>
-                void (dirty ? apply() : Promise.resolve(true)).then((ok) => ok && onClose())
+                void (dirty ? apply(false, true) : Promise.resolve(true)).then(
+                  (ok) => ok && onClose(),
+                )
               }
             >
               {t("common.ok")}
@@ -212,7 +249,7 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
             <button
               type="button"
               className="button"
-              disabled={!dirty || busy}
+              disabled={!dirty || busy || invalid}
               onClick={() => void apply()}
             >
               {t("common.apply")}
@@ -220,7 +257,24 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
           </>
         }
       >
-        <div className="settings">
+        <div className="settings-tabs" role="tablist">
+          {(["hardware", "options"] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              className="settings-tab"
+              onClick={() => setTab(id)}
+            >
+              {t(`settings.tab.${id}`)}
+            </button>
+          ))}
+        </div>
+        {tab === "options" && opts && optDraft && (
+          <OptionsTab options={opts} draft={optDraft} onChange={setOptDraft} />
+        )}
+        <div className="settings" hidden={tab !== "hardware"}>
           <div className="settings-left">
             <div className="list settings-devices">
               <div className="settings-device settings-device-header" aria-hidden>
@@ -434,6 +488,20 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
             void run(() => api.changeMedia(vm.uuid, target, path));
           }}
           onClose={() => setPicking(null)}
+        />
+      )}
+      {confirmRisky && (
+        <ConfirmDialog
+          title={t("options.riskyTitle")}
+          message={t("options.riskyConfirm", { name: vm.name })}
+          confirmLabel={t("options.riskyApply")}
+          danger
+          onCancel={() => setConfirmRisky(null)}
+          onConfirm={() => {
+            const { close } = confirmRisky;
+            setConfirmRisky(null);
+            void apply(true).then((ok) => ok && close && onClose());
+          }}
         />
       )}
       {removing && (

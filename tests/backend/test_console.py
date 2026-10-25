@@ -164,6 +164,7 @@ def test_display_info_and_adding_vnc(
             "config": ["spice"],
             "clipboard": False,
             "clipboard_config": False,
+            "clipboard_isolated": False,
             "active": False,
         }
         result = client.post(f"/api/vms/{uuid}/display/vnc", headers=auth).json()

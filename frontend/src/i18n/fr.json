@@ -603,7 +603,11 @@
     "nextBoot": "Certains changements s'appliqueront au prochain démarrage de la machine virtuelle.",
     "applyFailed": "Impossible de modifier {{name}}",
     "confirmRemoveNic": "Retirer cette carte réseau de la machine virtuelle ?",
-    "confirmRemoveCdrom": "Retirer ce lecteur CD/DVD de la machine virtuelle ?"
+    "confirmRemoveCdrom": "Retirer ce lecteur CD/DVD de la machine virtuelle ?",
+    "tab": {
+      "hardware": "Matériel",
+      "options": "Options"
+    }
   },
   "guestTools": {
     "title": "Installer les outils invités : {{name}}",
@@ -829,5 +833,54 @@
     "startSource": "Les disques de « {{name}} » servent de base à ces clones liés : {{clones}}. La démarrer écrit sur ces disques et abîmerait les clones. La démarrer quand même ?",
     "startAnyway": "Démarrer quand même",
     "linkedClones": "Clones liés"
+  },
+  "options": {
+    "setting": "Réglage",
+    "pane": {
+      "general": "Général",
+      "power": "Alimentation",
+      "boot": "Firmware et démarrage",
+      "isolation": "Isolation"
+    },
+    "needsOff": "Éteignez la machine virtuelle pour modifier ces réglages.",
+    "nextStart": "La machine virtuelle est allumée : ce changement s'applique à son prochain démarrage.",
+    "name": "Nom",
+    "os": "Système invité",
+    "osHint": "Sert aux valeurs que {{app}} propose ; le matériel n'est pas modifié.",
+    "autostart": "Démarrer cette machine virtuelle avec l'hôte",
+    "autostartShort": "Démarre avec l'hôte",
+    "onReboot": "Quand l'invité redémarre",
+    "onCrash": "Quand l'invité plante",
+    "action": {
+      "restart": "Redémarrer la machine virtuelle",
+      "destroy": "Éteindre la machine virtuelle",
+      "preserve": "La garder en pause pour analyse"
+    },
+    "firmware": "Firmware",
+    "secureBoot": "Secure Boot",
+    "tpm": "TPM 2.0 (émulé)",
+    "uefiSecure": "UEFI, Secure Boot",
+    "riskyNote": "Un système est installé sur cette machine virtuelle : passer de BIOS à UEFI (ou l'inverse), ou retirer le TPM, peut l'empêcher de démarrer (Windows 11 exige UEFI et un TPM ; BitLocker demande sa clé de récupération sans son TPM).",
+    "nvramReset": "Les variables UEFI sont reconstruites au prochain démarrage par {{app}}, pour que Secure Boot corresponde. Démarrée depuis un autre outil, la VM garde les anciennes.",
+    "bootOrder": "Ordre de démarrage",
+    "bootOrderHint": "Glissez les périphériques ou utilisez les flèches ; décochez un périphérique pour l'exclure du démarrage.",
+    "device": {
+      "disk": "Disque dur ({{id}})",
+      "cdrom": "CD/DVD ({{id}})",
+      "nic": "Carte réseau ({{id}})"
+    },
+    "up": "Monter {{device}}",
+    "down": "Descendre {{device}}",
+    "upShort": "Monter",
+    "downShort": "Descendre",
+    "noBootDevice": "Cochez au moins un périphérique de démarrage.",
+    "bootMenu": "Afficher le menu de démarrage au lancement (3 s)",
+    "clipboard": "Copier-coller entre l'hôte et la machine virtuelle",
+    "clipboardHint": "Texte seulement, par l'agent invité. Désactivé, rien n'entre ni ne sort, et la console ne propose plus de l'activer.",
+    "clipboardOn": "Copier-coller activé",
+    "clipboardOff": "Copier-coller désactivé",
+    "riskyTitle": "Modifier le firmware ou le TPM ?",
+    "riskyConfirm": "{{name}} a déjà un système installé. Après ce changement, elle risque de ne plus démarrer : Windows 11 exige UEFI et un TPM, BitLocker demande sa clé de récupération, et un système installé en BIOS ne démarre pas en UEFI (ni l'inverse). Appliquer quand même ?",
+    "riskyApply": "Appliquer quand même"
   }
 }

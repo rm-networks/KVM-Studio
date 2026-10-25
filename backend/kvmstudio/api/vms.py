@@ -14,7 +14,7 @@ from ..errors import ApiException
 from ..events import EventHub
 from ..libvirt_conn import DomainState
 from ..paths import is_strictly_within, library_root
-from ..services import clone, deletion, library, vm_view
+from ..services import clone, deletion, library, options, vm_view
 from ..services.library import Drift
 
 router = APIRouter(prefix="/vms", tags=["vms"])
@@ -96,7 +96,11 @@ def power(
             state = "running" if action == "start" else "not running"
             raise ApiException(409, "libvirt.invalid_state", f"The virtual machine is {state}")
         if action == "start":
-            dom.create()
+            # UEFI variables rebuilt once after Secure Boot was turned on or off.
+            flags = options.start_flags(dom.XMLDesc(libvirt.VIR_DOMAIN_XML_INACTIVE))
+            dom.createWithFlags(flags)
+            if flags:
+                options.started(dom)
         elif action == "shutdown":
             dom.shutdownFlags(0)
         elif action == "reboot":

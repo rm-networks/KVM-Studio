@@ -24,6 +24,7 @@ from .api import (
     isos,
     library,
     networks,
+    options,
     preferences,
     setup,
     system,
@@ -121,6 +122,7 @@ def create_app(
     private.include_router(preferences.router)
     private.include_router(display.router)
     private.include_router(hardware.router)
+    private.include_router(options.router)
     private.include_router(guest.router)
     private.include_router(isos.router)
     private.include_router(setup.router)

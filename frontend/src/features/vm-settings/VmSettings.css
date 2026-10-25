@@ -80,3 +80,63 @@
   gap: var(--space-2);
   margin-top: var(--space-2);
 }
+
+.settings-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-tab {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.settings-tab[aria-selected="true"] {
+  margin-bottom: -1px;
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.boot-order {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+}
+
+.boot-order-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px var(--space-1);
+  cursor: grab;
+}
+
+.boot-order-row[data-dragging="true"] {
+  opacity: 0.5;
+}
+
+.boot-order-row > svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.boot-order-grip {
+  color: var(--text-muted);
+}
+
+.boot-order-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

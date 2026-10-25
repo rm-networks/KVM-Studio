@@ -74,7 +74,7 @@ export function VmConsole({ uuid }: { uuid: string }) {
   if (display.live.includes("vnc")) {
     return (
       <VncScreen uuid={uuid} splash={splash} onConnected={setConnected}>
-        {!display.clipboard && (
+        {!display.clipboard && !display.clipboard_isolated && (
           <ClipboardNotice
             uuid={uuid}
             pending={display.clipboard_config}
