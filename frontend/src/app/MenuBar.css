@@ -2,13 +2,12 @@
   display: flex;
   align-items: stretch;
   height: var(--menubar-height);
-  padding: 0 4px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  padding: 0 var(--space-1);
+  background: var(--bg);
 }
 
 .menubar-trigger {
-  padding: 0 9px;
+  padding: 0 var(--space-2);
   border: 0;
   background: transparent;
   outline: none;
@@ -22,20 +21,19 @@
 }
 
 .menu {
-  min-width: 260px;
-  padding: 3px 0;
+  min-width: 240px;
+  padding: var(--space-1) 0;
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
   z-index: 50;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  height: 24px;
-  padding: 0 12px 0 0;
+  height: 26px;
+  padding: 0 var(--space-3) 0 0;
   outline: none;
   cursor: default;
 }
@@ -53,7 +51,7 @@
 .menu-indicator {
   display: inline-flex;
   justify-content: center;
-  width: 26px;
+  width: 32px;
   flex: none;
 }
 
@@ -63,9 +61,14 @@
 }
 
 .menu-keys {
-  margin-left: 32px;
+  margin-left: var(--space-4);
+  padding-left: var(--space-4);
   color: var(--text-muted);
   font-size: var(--font-size-small);
+}
+
+.menu-item[data-highlighted] .menu-keys {
+  color: inherit;
 }
 
 .menu-item[data-disabled] .menu-keys {
@@ -73,17 +76,17 @@
 }
 
 .menu-chevron {
-  margin-left: 24px;
+  margin-left: var(--space-4);
 }
 
 .menu-separator {
   height: 1px;
-  margin: 3px 0 3px 26px;
+  margin: var(--space-1) 0 var(--space-1) 32px;
   background: var(--border);
 }
 
 .menu-group-label {
-  padding: 4px 12px 2px 26px;
+  padding: var(--space-1) var(--space-3) 2px 32px;
   color: var(--text-muted);
   font-size: var(--font-size-small);
 }

@@ -51,7 +51,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                 aria-label={t("about.close")}
                 onClick={() => dismiss(n.id)}
               >
-                <X size={13} />
+                <X />
               </button>
             </div>
             {n.error && (

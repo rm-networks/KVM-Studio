@@ -182,16 +182,16 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
       }
     >
       <div className="prefs">
-        <ul className="prefs-sections" role="tablist" aria-orientation="vertical">
+        <ul className="list prefs-sections" role="tablist" aria-orientation="vertical">
           {SECTIONS.map(({ id, icon: Icon }) => (
             <li
               key={id}
               role="tab"
               aria-selected={section === id}
-              className={section === id ? "selected" : undefined}
+              className="list-row"
               onClick={() => setSection(id)}
             >
-              <Icon size={14} strokeWidth={1.75} aria-hidden />
+              <Icon aria-hidden />
               {t(`prefs.section.${id}`)}
             </li>
           ))}
@@ -222,21 +222,21 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
           {config && section === "iso" && (
             <Group title={t("prefs.isoLibraries")}>
               <p className="prefs-muted">{t("prefs.isoIntro")}</p>
-              <ul className="prefs-list" role="listbox">
+              <ul className="list prefs-list" role="listbox">
                 {config.iso_libraries.map((lib, i) => (
                   <li
                     key={i}
                     role="option"
                     aria-selected={i === selectedIso}
-                    className={i === selectedIso ? "selected" : undefined}
+                    className="list-row"
                     onClick={() => setSelectedIso(i)}
                   >
-                    <strong>{lib.name || t("prefs.unnamed")}</strong>
-                    <span>{lib.path}</span>
+                    <span>{lib.name || t("prefs.unnamed")}</span>
+                    <span className="muted mono">{lib.path}</span>
                   </li>
                 ))}
                 {config.iso_libraries.length === 0 && (
-                  <li className="prefs-muted">{t("prefs.noIsoLibrary")}</li>
+                  <li className="list-empty">{t("prefs.noIsoLibrary")}</li>
                 )}
               </ul>
               <div className="prefs-list-buttons">
@@ -378,22 +378,6 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                   value={config.web.port}
                   onChange={(e) => update("web", { ...config.web, port: Number(e.target.value) })}
                 />
-              </label>
-              <label className="prefs-field prefs-inline prefs-indent">
-                <span>{t("prefs.httpsPort")}</span>
-                <input
-                  type="number"
-                  min={1024}
-                  max={65535}
-                  value={config.web.https_port}
-                  onChange={(e) =>
-                    update("web", { ...config.web, https_port: Number(e.target.value) })
-                  }
-                />
-              </label>
-              <label className="prefs-check prefs-indent" title={t("networks.bridgedLater")}>
-                <input type="checkbox" checked={false} disabled />
-                <span className="prefs-disabled">{t("prefs.shareLan")}</span>
               </label>
               <p className="prefs-muted">{t("prefs.appliedOnRestart")}</p>
             </Group>
@@ -563,7 +547,7 @@ export function RestartPrompt({ next, onClose }: { next: Config; onClose: () => 
       ? t("prefs.restartingToDesktop")
       : t("prefs.restarting")
     : toWeb
-      ? t("prefs.restartToWeb", { http: next.web.port, https: next.web.https_port })
+      ? t("prefs.restartToWeb", { http: next.web.port })
       : toDesktop
         ? t("prefs.restartToDesktop")
         : t("prefs.restartRequired");

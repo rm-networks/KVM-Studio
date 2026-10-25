@@ -13,7 +13,7 @@ import "./MenuBar.css";
 type Entry =
   | { kind: "item"; label: string; keys?: string[]; onSelect?: () => void }
   | { kind: "sub"; label: string; entries?: Entry[] }
-  | { kind: "check"; label: string; checked: boolean; onChange: () => void }
+  | { kind: "check"; label: string; checked: boolean; onChange: () => void; keepOpen?: boolean }
   | { kind: "sep" };
 
 const item = (label: string, keys?: string[], onSelect?: () => void): Entry => ({
@@ -41,6 +41,12 @@ interface Props {
   onCloseTab?: () => void;
   onNextTab?: () => void;
   onPreviousTab?: () => void;
+  /** Open tabs, Home first, for the Tabs menu. */
+  tabs: { id: string; label: string }[];
+  activeTab: string;
+  onActivateTab: (id: string) => void;
+  /** Closes the window; only in window mode. */
+  onQuit?: () => void;
   drives: CdromDevice[];
   onChangeMedia: (target: string) => void;
   onEject: (target: string) => void;
@@ -63,6 +69,10 @@ export function MenuBar({
   onCloseTab,
   onNextTab,
   onPreviousTab,
+  tabs,
+  activeTab,
+  onActivateTab,
+  onQuit,
   drives,
   onChangeMedia,
   onEject,
@@ -101,33 +111,23 @@ export function MenuBar({
     label: m(key),
     checked: layout[key],
     onChange: () => onToggle(key),
+    keepOpen: true,
   });
 
-  // Entries without a handler are shown disabled until their feature lands.
+  // Only what works is listed: features still to come have no entry at all.
   const menus: [string, Entry[]][] = [
     [
       "file",
       [
         item(m("newVm"), ["Ctrl", "N"], onNewVm),
-        item(m("open"), ["Ctrl", "O"]),
-        item(m("scan")),
-        item(m("autostart")),
         sep,
         item(m("closeTab"), ["Ctrl", "W"], onCloseTab),
-        sep,
-        item(m("connect"), ["Ctrl", "L"]),
-        item(m("exportOvf")),
-        sep,
-        item(m("quit")),
+        ...(onQuit ? [sep, item(m("quit"), undefined, onQuit)] : []),
       ],
     ],
     [
       "edit",
       [
-        item(m("cut"), ["Ctrl", "X"]),
-        item(m("copy"), ["Ctrl", "C"]),
-        item(m("paste"), ["Ctrl", "V"]),
-        sep,
         item(m("networkEditor"), undefined, onNetworkEditor),
         item(m("preferences"), ["Ctrl", "P"], onPreferences),
       ],
@@ -136,11 +136,6 @@ export function MenuBar({
       "view",
       [
         item(m("fullscreen"), ["Ctrl", "Alt", "Enter"], onFullscreen),
-        item(m("consoleView")),
-        sep,
-        item(m("fitGuest")),
-        item(m("fitWindow")),
-        sub(m("autosize")),
         sep,
         sub(m("customize"), [check("library"), check("toolbar"), check("statusBar")]),
       ],
@@ -150,7 +145,6 @@ export function MenuBar({
       [
         sub(m("power"), vm ? powerEntries : undefined),
         sub(m("removable"), removableEntries.length ? removableEntries : undefined),
-        item(m("pause"), ["Ctrl", "Shift", "P"]),
         sep,
         item(m("sendCad"), undefined, vmConsole ? () => vmConsole.sendCtrlAltDel() : undefined),
         sub(
@@ -165,9 +159,6 @@ export function MenuBar({
         ),
         item(m("grab"), ["Ctrl", "G"], vmConsole ? () => vmConsole.grab() : undefined),
         sep,
-        sub(m("snapshot")),
-        item(m("capture"), ["Ctrl", "Alt", "PrintScreen"]),
-        sep,
         sub(m("manage"), vm ? manageEntries : undefined),
         item(m("guestTools"), undefined, vm?.state === "running" ? onGuestTools : undefined),
         sep,
@@ -177,7 +168,12 @@ export function MenuBar({
     [
       "tabs",
       [
-        item(`1  ${t("home.tab")}`, undefined, () => undefined),
+        ...tabs.map((tab) => ({
+          kind: "check" as const,
+          label: tab.label,
+          checked: tab.id === activeTab,
+          onChange: () => onActivateTab(tab.id),
+        })),
         sep,
         item(m("goHome"), undefined, onGoHome),
         sep,
@@ -187,16 +183,7 @@ export function MenuBar({
     ],
     [
       "help",
-      [
-        item(m("docs")),
-        item(m("shortcuts")),
-        sep,
-        item(m("firstRun"), undefined, onFirstRun),
-        sep,
-        item(m("about"), undefined, onAbout),
-        sep,
-        item(m("bug")),
-      ],
+      [item(m("firstRun"), undefined, onFirstRun), sep, item(m("about"), undefined, onAbout)],
     ],
   ];
 
@@ -228,11 +215,11 @@ export function MenuBar({
               className="menu-item"
               checked={entry.checked}
               onCheckedChange={entry.onChange}
-              onSelect={(e) => e.preventDefault()}
+              onSelect={(e) => entry.keepOpen && e.preventDefault()}
             >
               <span className="menu-indicator">
                 <Menubar.ItemIndicator>
-                  <Check size={13} />
+                  <Check />
                 </Menubar.ItemIndicator>
               </span>
               <span className="menu-label">{entry.label}</span>
@@ -244,7 +231,7 @@ export function MenuBar({
               <Menubar.SubTrigger className="menu-item" disabled={!entry.entries}>
                 <span className="menu-indicator" />
                 <span className="menu-label">{entry.label}</span>
-                <ChevronRight size={13} className="menu-chevron" />
+                <ChevronRight className="menu-chevron" />
               </Menubar.SubTrigger>
               {entry.entries && (
                 <Menubar.Portal>

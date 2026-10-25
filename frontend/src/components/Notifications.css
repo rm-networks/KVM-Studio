@@ -1,32 +1,32 @@
 .notices {
   position: fixed;
-  right: 12px;
-  bottom: calc(var(--statusbar-height) + 10px);
+  right: var(--space-3);
+  bottom: calc(var(--statusbar-height) + var(--space-3));
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
   width: 340px;
   z-index: 60;
 }
 
 .notice {
-  padding: 8px 10px;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--surface);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
   user-select: text;
 }
 
 .notice-error {
   border-color: var(--danger-border);
-  border-left: 3px solid var(--state-crashed);
+  background: var(--danger-bg);
+  color: var(--danger-text);
 }
 
 .notice-head {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .notice-head strong {
@@ -35,20 +35,19 @@
 }
 
 .notice p {
-  margin: 4px 0 0;
+  margin: var(--space-1) 0 0;
 }
 
 .notice details {
-  margin-top: 4px;
+  margin-top: var(--space-1);
   font-size: var(--font-size-small);
-  color: var(--text-muted);
 }
 
 .notice pre {
-  margin: 4px 0 0;
+  margin: var(--space-1) 0 0;
   font-family: var(--font-mono);
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .notice-close {
@@ -57,7 +56,7 @@
   border: 0;
   border-radius: var(--radius);
   background: transparent;
-  color: var(--text-muted);
+  color: inherit;
 }
 
 .notice-close:hover {

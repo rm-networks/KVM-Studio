@@ -16,7 +16,7 @@ export function ErrorMessage({ error, onRetry }: Props) {
   return (
     <div className="error-message" role="alert">
       <div className="error-message-head">
-        <CircleAlert size={14} aria-hidden />
+        <CircleAlert aria-hidden />
         <span>{message}</span>
       </div>
       {error.detail && (
@@ -26,7 +26,7 @@ export function ErrorMessage({ error, onRetry }: Props) {
         </details>
       )}
       {onRetry && (
-        <button type="button" className="error-message-retry" onClick={onRetry}>
+        <button type="button" className="button error-message-retry" onClick={onRetry}>
           {t("errors.retry")}
         </button>
       )}

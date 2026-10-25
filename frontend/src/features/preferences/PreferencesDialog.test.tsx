@@ -113,7 +113,7 @@ describe("PreferencesDialog", () => {
     fireEvent.click(screen.getByLabelText(/Web : dans le navigateur/));
     fireEvent.click(screen.getByRole("button", { name: "Appliquer" }));
     expect(await screen.findByText(/http:\/\/127\.0\.0\.1:60080/)).toBeTruthy();
-    expect(screen.getByText(/port 60443 en HTTPS/)).toBeTruthy();
+    expect(screen.queryByText(/60443/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Redémarrer maintenant" }));
     expect(await screen.findByText("KVM Studio redémarre…")).toBeTruthy();
   });

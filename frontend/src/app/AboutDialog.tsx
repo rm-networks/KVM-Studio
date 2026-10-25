@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { APP_NAME } from "../brand";
 import "../components/Dialog.css";
+import { focusFirstField } from "../components/focus";
 import "./AboutDialog.css";
 
 interface Props {
@@ -18,11 +19,15 @@ export function AboutDialog({ open, onOpenChange, version }: Props) {
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
-        <Dialog.Content className="dialog about">
+        <Dialog.Content
+          className="dialog"
+          style={{ width: "min(460px, calc(100vw - 32px))" }}
+          onOpenAutoFocus={(e) => focusFirstField(e, ".dialog-body", ".dialog-buttons .button")}
+        >
           <div className="dialog-titlebar">
             <Dialog.Title className="dialog-title">{t("about.title")}</Dialog.Title>
-            <Dialog.Close className="dialog-x" aria-label={t("about.close")}>
-              <X size={14} />
+            <Dialog.Close className="icon-button" aria-label={t("about.close")}>
+              <X />
             </Dialog.Close>
           </div>
           <div className="dialog-body">
@@ -38,7 +43,7 @@ export function AboutDialog({ open, onOpenChange, version }: Props) {
             <p className="about-notice">{t("about.notice")}</p>
           </div>
           <div className="dialog-buttons">
-            <Dialog.Close className="button">{t("about.close")}</Dialog.Close>
+            <Dialog.Close className="button button-primary">{t("about.close")}</Dialog.Close>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

@@ -7,44 +7,26 @@
     "tabs": "Tabs",
     "help": "Help",
     "newVm": "New Virtual Machine…",
-    "open": "Open…",
-    "scan": "Scan for Virtual Machines…",
-    "autostart": "Configure VM Autostart…",
     "closeTab": "Close Tab",
-    "connect": "Connect to Server…",
-    "exportOvf": "Export to OVF…",
     "quit": "Quit",
-    "cut": "Cut",
-    "copy": "Copy",
-    "paste": "Paste",
     "networkEditor": "Virtual Network Editor…",
     "preferences": "Preferences…",
     "fullscreen": "Full Screen",
-    "consoleView": "Console View",
-    "fitGuest": "Fit Guest Now",
-    "fitWindow": "Fit Window Now",
-    "autosize": "Autosize",
     "customize": "Customize",
     "library": "Library",
     "toolbar": "Toolbar",
     "statusBar": "Status Bar",
     "power": "Power",
     "removable": "Removable Devices",
-    "pause": "Pause",
     "sendCad": "Send Ctrl+Alt+Del",
     "grab": "Grab Input",
-    "snapshot": "Snapshot",
-    "capture": "Capture Screen",
     "manage": "Manage",
     "guestTools": "Install Guest Tools…",
     "settings": "Settings…",
     "goHome": "Go to Home Tab",
     "nextTab": "Next Tab",
     "previousTab": "Previous Tab",
-    "docs": "Documentation",
-    "shortcuts": "Keyboard Shortcuts",
     "about": "About {{app}}",
-    "bug": "Report a Bug",
     "rename": "Rename…",
     "removeFromLibrary": "Remove from Library…",
     "deleteFromDisk": "Delete from Disk…",
@@ -60,13 +42,8 @@
     "start": "Start",
     "powerMenu": "More power actions",
     "sendCad": "Send Ctrl+Alt+Del",
-    "snapshot": "Take a snapshot",
-    "revert": "Revert to snapshot",
-    "snapshotManager": "Snapshot Manager",
     "library": "Show or hide the library",
-    "thumbnails": "Thumbnails",
-    "fullscreen": "Full screen",
-    "console": "Console view"
+    "fullscreen": "Full screen"
   },
   "library": {
     "title": "Library",
@@ -127,10 +104,7 @@
   },
   "home": {
     "tab": "Home",
-    "create": "Create a Virtual Machine",
-    "open": "Open a Virtual Machine",
-    "connect": "Connect to a Server",
-    "later": "Available in a future version"
+    "create": "Create a Virtual Machine"
   },
   "status": {
     "connected": "Connected to {{uri}}",
@@ -217,7 +191,7 @@
       "already_inside": "The disks are already in the {{app}} folder."
     },
     "prefs": {
-      "share_later": "Sharing on the local network arrives in the next version.",
+      "share_later": "Sharing on the local network is not available.",
       "location_relative": "Enter a full path (starting with /).",
       "location_missing": "This folder does not exist.",
       "iso_missing": "The folder of an ISO library does not exist.",
@@ -291,7 +265,8 @@
     "restartForClipboard": "Copy and paste is set up: shut the virtual machine down and start it again to use it."
   },
   "tabs": {
-    "close": "Close tab"
+    "close": "Close tab",
+    "more": "More Tabs"
   },
   "power": {
     "start": "Start",
@@ -383,7 +358,6 @@
     "newName": "New name",
     "info": "Network {{name}}",
     "bridged": "Bridged (connect VMs directly to the external network)",
-    "bridgedLater": "Available in a future version",
     "natLabel": "NAT (shares the host's IP address with the VMs)",
     "hostOnlyLabel": "Host-only (private network between the VMs)",
     "hostAdapter": "Connect a host virtual adapter to this network",
@@ -449,7 +423,6 @@
     "modeDesktop": "Desktop: native window",
     "modeWeb": "Web: in the browser, on this computer",
     "port": "HTTP port (access on this computer)",
-    "shareLan": "Share on the local network (next version)",
     "appliedOnRestart": "Mode and port changes apply the next time {{app}} starts.",
     "appearance": "Appearance",
     "theme": "Theme",
@@ -464,11 +437,10 @@
     "saved": "Preferences saved",
     "restartRequired": "{{app}} must restart to apply the new port or URI.",
     "saveFailed": "Preferences not saved",
-    "httpsPort": "HTTPS port (sharing on the local network)",
     "restartTitle": "Restart {{app}}",
     "restartNow": "Restart Now",
     "restartLater": "Later",
-    "restartToWeb": "{{app}} will restart in web mode.\nAccess on this computer: http://127.0.0.1:{{http}} (HTTP)\nSharing on the local network: port {{https}} over HTTPS (next version)\nThe page will open in your default browser, and an icon in the notification area will show that {{app}} is running.",
+    "restartToWeb": "{{app}} will restart in web mode, at http://127.0.0.1:{{http}} on this computer.\nThe page will open in your default browser, and an icon in the notification area will show that {{app}} is running.",
     "restartToDesktop": "{{app}} will restart in window mode. This browser tab will no longer be used.",
     "restarting": "{{app}} is restarting…",
     "restartingToDesktop": "{{app}} is restarting in window mode. You can close this tab.",
@@ -566,7 +538,9 @@
     "customize": "Customize Hardware…",
     "addNic": "Add a card",
     "removeNic": "Remove the card",
-    "startAfter": "Power on the virtual machine once created"
+    "startAfter": "Power on the virtual machine once created",
+    "stepOf": "Step {{step}} of {{count}}",
+    "hardware": "Hardware"
   },
   "settings": {
     "title": "{{name}} Settings",
@@ -588,7 +562,6 @@
     "hostCpus_one": "The host has {{count}} logical processor.",
     "hostCpus_other": "The host has {{count}} logical processors.",
     "diskTitle": "Disk",
-    "diskLater": "Expand, compact and convert come in a future version.",
     "nicTitle": "Network adapter",
     "connected": "Connected (cable plugged in)",
     "network": "Network",

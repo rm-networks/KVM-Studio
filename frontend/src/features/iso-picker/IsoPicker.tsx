@@ -54,8 +54,8 @@ function FolderRow({
         role="treeitem"
         aria-selected={selected === folder.id}
         aria-expanded={folder.folders.length > 0 ? open : undefined}
-        className={selected === folder.id ? "selected" : undefined}
-        style={{ paddingLeft: 4 + depth * 14 }}
+        className="list-row"
+        style={{ paddingLeft: 4 + depth * 16 }}
         onClick={() => onSelect(folder.id)}
         onDoubleClick={() => onToggle(folder.id)}
       >
@@ -66,10 +66,9 @@ function FolderRow({
             onToggle(folder.id);
           }}
         >
-          {folder.folders.length > 0 &&
-            (open ? <ChevronDown size={12} /> : <ChevronRight size={12} />)}
+          {folder.folders.length > 0 && (open ? <ChevronDown /> : <ChevronRight />)}
         </span>
-        {isRoot ? <Library size={13} aria-hidden /> : <Folder size={13} aria-hidden />}
+        {isRoot ? <Library aria-hidden /> : <Folder aria-hidden />}
         <span className="iso-label">{folder.name}</span>
       </li>
       {open &&
@@ -214,7 +213,7 @@ export function IsoPicker({ title, onPick, onClose }: Props) {
       }
     >
       <div className="iso-search">
-        <Search size={13} aria-hidden />
+        <Search aria-hidden />
         <input
           type="search"
           value={query}
@@ -227,7 +226,7 @@ export function IsoPicker({ title, onPick, onClose }: Props) {
         <p className="iso-empty">{t("iso.noLibrary")}</p>
       ) : (
         <div className="iso-body">
-          <ul className="iso-tree" role="tree" aria-label={t("iso.libraries")}>
+          <ul className="list iso-tree" role="tree" aria-label={t("iso.libraries")}>
             {roots.map((root) => (
               <FolderRow
                 key={root.id}
@@ -243,8 +242,8 @@ export function IsoPicker({ title, onPick, onClose }: Props) {
               />
             ))}
           </ul>
-          <div className="iso-files">
-            <table>
+          <div className="list iso-files">
+            <table className="table">
               <thead>
                 <tr>
                   {header("name", t("iso.name"))}
@@ -266,8 +265,10 @@ export function IsoPicker({ title, onPick, onClose }: Props) {
                     onDoubleClick={() => onPick(file.path)}
                   >
                     <td>
-                      <Disc3 size={13} aria-hidden />
-                      {searching ? file.relative : fileName(file)}
+                      <span className="iso-name">
+                        <Disc3 aria-hidden />
+                        {searching ? file.relative : fileName(file)}
+                      </span>
                     </td>
                     <td className="iso-num">{formatSize(file.size, units)}</td>
                     <td className="iso-num">{dateFormat.format(new Date(file.mtime * 1000))}</td>
@@ -282,23 +283,23 @@ export function IsoPicker({ title, onPick, onClose }: Props) {
         </div>
       )}
       {unavailable.length > 0 && (
-        <p className="iso-warning">
-          <TriangleAlert size={13} aria-hidden />
+        <p className="note note-warn iso-note">
+          <TriangleAlert aria-hidden />
           {t("iso.unavailable", {
             names: unavailable.map((l) => `${l.name} (${l.path})`).join(", "),
           })}
         </p>
       )}
       {picked && report && (
-        <div className={report.readable ? "iso-access ok" : "iso-access problem"}>
+        <div className={report.readable ? "note iso-note" : "note note-error iso-note"}>
           {report.readable ? (
             <p>
-              <CircleCheck size={13} aria-hidden /> {t("iso.readable")}
+              <CircleCheck aria-hidden /> {t("iso.readable")}
             </p>
           ) : (
             <>
               <p>
-                <TriangleAlert size={13} aria-hidden />{" "}
+                <TriangleAlert aria-hidden />{" "}
                 {t("iso.notReadable", { who: report.identity ?? "QEMU" })}
               </p>
               <ul>
@@ -313,6 +314,7 @@ export function IsoPicker({ title, onPick, onClose }: Props) {
                   <p>
                     <button
                       type="button"
+                      className="button"
                       disabled={fixing}
                       onClick={() => {
                         setFixing(true);

@@ -89,9 +89,9 @@ export function GuestToolsDialog({ vm, onClose }: { vm: VmSummary; onClose: () =
   const step = (done: boolean, text: string, pending = false) => (
     <li className={done ? "guest-tools-step done" : "guest-tools-step"}>
       {done ? (
-        <CircleCheck size={14} aria-hidden />
+        <CircleCheck aria-hidden />
       ) : pending ? (
-        <LoaderCircle size={14} className="spin" aria-hidden />
+        <LoaderCircle className="spin" aria-hidden />
       ) : (
         <span className="guest-tools-dot" />
       )}
@@ -177,8 +177,7 @@ export function GuestToolsDialog({ vm, onClose }: { vm: VmSummary; onClose: () =
                   <div className="guest-tools-command">
                     <code>{info.linux_command}</code>
                     <button type="button" className="button" onClick={copyCommand}>
-                      <Copy size={13} aria-hidden />{" "}
-                      {copied ? t("guestTools.copied") : t("guestTools.copy")}
+                      <Copy aria-hidden /> {copied ? t("guestTools.copied") : t("guestTools.copy")}
                     </button>
                   </div>
                 </>

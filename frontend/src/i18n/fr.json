@@ -7,44 +7,26 @@
     "tabs": "Onglets",
     "help": "Aide",
     "newVm": "Nouvelle machine virtuelle…",
-    "open": "Ouvrir…",
-    "scan": "Rechercher des machines virtuelles…",
-    "autostart": "Configurer le démarrage auto des VMs…",
     "closeTab": "Fermer l'onglet",
-    "connect": "Se connecter à un serveur…",
-    "exportOvf": "Exporter en OVF…",
     "quit": "Quitter",
-    "cut": "Couper",
-    "copy": "Copier",
-    "paste": "Coller",
     "networkEditor": "Éditeur de réseaux virtuels…",
     "preferences": "Préférences…",
     "fullscreen": "Plein écran",
-    "consoleView": "Vue console",
-    "fitGuest": "Ajuster l'invité maintenant",
-    "fitWindow": "Ajuster la fenêtre maintenant",
-    "autosize": "Redimensionnement auto",
     "customize": "Personnaliser",
     "library": "Bibliothèque",
     "toolbar": "Barre d'outils",
     "statusBar": "Barre d'état",
     "power": "Alimentation",
     "removable": "Périphériques amovibles",
-    "pause": "Pause",
     "sendCad": "Envoyer Ctrl+Alt+Suppr",
     "grab": "Capturer la saisie",
-    "snapshot": "Snapshot",
-    "capture": "Capture d'écran",
     "manage": "Gérer",
     "guestTools": "Installer les outils invités…",
     "settings": "Paramètres…",
     "goHome": "Aller à l'onglet Accueil",
     "nextTab": "Onglet suivant",
     "previousTab": "Onglet précédent",
-    "docs": "Documentation",
-    "shortcuts": "Raccourcis clavier",
     "about": "À propos de {{app}}",
-    "bug": "Signaler un bug",
     "rename": "Renommer…",
     "removeFromLibrary": "Retirer de la bibliothèque…",
     "deleteFromDisk": "Supprimer du disque…",
@@ -60,13 +42,8 @@
     "start": "Démarrer",
     "powerMenu": "Autres actions d'alimentation",
     "sendCad": "Envoyer Ctrl+Alt+Suppr",
-    "snapshot": "Prendre un snapshot",
-    "revert": "Revenir au snapshot",
-    "snapshotManager": "Gestionnaire de snapshots",
     "library": "Afficher ou masquer la bibliothèque",
-    "thumbnails": "Miniatures",
-    "fullscreen": "Plein écran",
-    "console": "Vue console"
+    "fullscreen": "Plein écran"
   },
   "library": {
     "title": "Bibliothèque",
@@ -127,10 +104,7 @@
   },
   "home": {
     "tab": "Accueil",
-    "create": "Créer une machine virtuelle",
-    "open": "Ouvrir une machine virtuelle",
-    "connect": "Se connecter à un serveur",
-    "later": "Disponible dans une prochaine version"
+    "create": "Créer une machine virtuelle"
   },
   "status": {
     "connected": "Connecté à {{uri}}",
@@ -217,7 +191,7 @@
       "already_inside": "Les disques sont déjà dans le dossier {{app}}."
     },
     "prefs": {
-      "share_later": "Le partage sur le réseau local arrive dans la prochaine version.",
+      "share_later": "Le partage sur le réseau local n'est pas disponible.",
       "location_relative": "Indiquez un chemin complet (qui commence par /).",
       "location_missing": "Ce dossier n'existe pas.",
       "iso_missing": "Le dossier d'une bibliothèque ISO n'existe pas.",
@@ -291,7 +265,8 @@
     "restartForClipboard": "Copier-coller configuré : arrêtez puis redémarrez la machine virtuelle pour l'utiliser."
   },
   "tabs": {
-    "close": "Fermer l'onglet"
+    "close": "Fermer l'onglet",
+    "more": "Autres onglets"
   },
   "power": {
     "start": "Démarrer",
@@ -383,7 +358,6 @@
     "newName": "Nouveau nom",
     "info": "Réseau {{name}}",
     "bridged": "Bridged (relié directement au réseau externe)",
-    "bridgedLater": "Disponible dans une prochaine version",
     "natLabel": "NAT (partage l'adresse IP de l'hôte avec les machines virtuelles)",
     "hostOnlyLabel": "Host-only (réseau privé entre les machines virtuelles)",
     "hostAdapter": "Connecter une carte virtuelle de l'hôte à ce réseau",
@@ -449,7 +423,6 @@
     "modeDesktop": "Logiciel : fenêtre native",
     "modeWeb": "Web : dans le navigateur, sur cet ordinateur",
     "port": "Port HTTP (accès sur cet ordinateur)",
-    "shareLan": "Partager sur le réseau local (prochaine version)",
     "appliedOnRestart": "Le changement de mode et de port s'applique au prochain lancement de {{app}}.",
     "appearance": "Apparence",
     "theme": "Thème",
@@ -464,11 +437,10 @@
     "saved": "Préférences enregistrées",
     "restartRequired": "{{app}} doit redémarrer pour appliquer le nouveau port ou la nouvelle URI.",
     "saveFailed": "Préférences non enregistrées",
-    "httpsPort": "Port HTTPS (partage sur le réseau local)",
     "restartTitle": "Redémarrer {{app}}",
     "restartNow": "Redémarrer maintenant",
     "restartLater": "Plus tard",
-    "restartToWeb": "{{app}} va redémarrer en mode web.\nAccès sur cet ordinateur : http://127.0.0.1:{{http}} (HTTP)\nPartage sur le réseau local : port {{https}} en HTTPS (prochaine version)\nLa page s'ouvrira dans votre navigateur par défaut, et une icône dans la zone de notification indiquera que {{app}} tourne.",
+    "restartToWeb": "{{app}} va redémarrer en mode web, à l'adresse http://127.0.0.1:{{http}} sur cet ordinateur.\nLa page s'ouvrira dans votre navigateur par défaut, et une icône dans la zone de notification indiquera que {{app}} tourne.",
     "restartToDesktop": "{{app}} va redémarrer en mode fenêtre. Cet onglet du navigateur ne servira plus.",
     "restarting": "{{app}} redémarre…",
     "restartingToDesktop": "{{app}} redémarre en mode fenêtre. Vous pouvez fermer cet onglet.",
@@ -566,7 +538,9 @@
     "customize": "Personnaliser le matériel…",
     "addNic": "Ajouter une carte",
     "removeNic": "Retirer la carte",
-    "startAfter": "Démarrer la machine virtuelle après sa création"
+    "startAfter": "Démarrer la machine virtuelle après sa création",
+    "stepOf": "Étape {{step}} sur {{count}}",
+    "hardware": "Matériel"
   },
   "settings": {
     "title": "Paramètres de {{name}}",
@@ -588,7 +562,6 @@
     "hostCpus_one": "L'hôte a {{count}} processeur logique.",
     "hostCpus_other": "L'hôte a {{count}} processeurs logiques.",
     "diskTitle": "Disque",
-    "diskLater": "Agrandir, compacter et convertir arriveront dans une prochaine version.",
     "nicTitle": "Carte réseau",
     "connected": "Connectée (câble branché)",
     "network": "Réseau",

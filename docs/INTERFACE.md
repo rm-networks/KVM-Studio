@@ -1,7 +1,33 @@
 # Interface
 
 The layout follows that of a classic desktop virtualization application, with
-a style of its own: dense, light or dark theme, Lucide icons.
+a style of its own: a sober and dense desktop application, light or dark theme,
+Lucide icons.
+
+## Look
+
+- Neutral grey window, white views (lists, fields, pages), 1 px borders, a
+  single corner radius, no gradients, glows or decorative shadows.
+- One accent colour, taken from the logo, for the main button, the selection
+  and the focus.
+- The system font; one spacing scale (4, 8, 12, 16 px); one icon size and
+  stroke for every Lucide icon.
+- Text keeps a contrast of at least 4.5:1 in both themes, on main and disabled
+  buttons too; a test checks every colour pair.
+- A selected row is coloured whole, in one tint, and its text wraps rather
+  than being cut.
+- Bars that run out of room keep their first items and move the others to a
+  "»" menu (tabs).
+- Only what works is shown: a feature still to come has no menu entry, button
+  or setting.
+
+## Assistants
+
+New virtual machine, first run, uninstall and cloning share one frame: a header
+with the logo, the title of the page and a discreet "Step 2 of 7" with a thin
+progress bar; the page; a fixed footer with Cancel, Back and Next aligned to the
+right, Next being the main button. The uninstall assistant is alone in its own
+window.
 
 ## Main window
 

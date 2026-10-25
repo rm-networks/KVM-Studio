@@ -1,16 +1,4 @@
-import {
-  Camera,
-  ChevronDown,
-  History,
-  Keyboard,
-  LayoutGrid,
-  type LucideIcon,
-  Maximize,
-  PanelLeft,
-  Play,
-  RotateCcw,
-  SquareTerminal,
-} from "lucide-react";
+import { ChevronDown, Keyboard, type LucideIcon, Maximize, PanelLeft, Play } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useTranslation } from "react-i18next";
 
@@ -41,14 +29,14 @@ function Tool({ icon: Icon, label, onClick, pressed, narrow }: ToolProps) {
   return (
     <button
       type="button"
-      className={narrow ? "tool tool-narrow" : "tool"}
+      className={narrow ? "icon-button tool-narrow" : "icon-button"}
       title={label}
       aria-label={label}
       aria-pressed={pressed}
       disabled={!onClick}
       onClick={onClick}
     >
-      <Icon size={narrow ? 12 : 16} strokeWidth={1.75} />
+      <Icon />
     </button>
   );
 }
@@ -68,12 +56,12 @@ export function Toolbar({ libraryVisible, onToggleLibrary, vm, vmConsole, onFull
       />
       <DropdownMenu.Root>
         <DropdownMenu.Trigger
-          className="tool tool-narrow"
+          className="icon-button tool-narrow"
           title={l("powerMenu")}
           aria-label={l("powerMenu")}
           disabled={!vm}
         >
-          <ChevronDown size={12} strokeWidth={1.75} />
+          <ChevronDown />
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content className="menu" align="start" sideOffset={2}>
@@ -98,20 +86,13 @@ export function Toolbar({ libraryVisible, onToggleLibrary, vm, vmConsole, onFull
         onClick={vmConsole ? () => vmConsole.sendCtrlAltDel() : undefined}
       />
       <span className="toolbar-separator" />
-      <Tool icon={Camera} label={l("snapshot")} />
-      <Tool icon={RotateCcw} label={l("revert")} />
-      <Tool icon={History} label={l("snapshotManager")} />
-      <span className="toolbar-separator" />
       <Tool
         icon={PanelLeft}
         label={l("library")}
         pressed={libraryVisible}
         onClick={onToggleLibrary}
       />
-      <Tool icon={LayoutGrid} label={l("thumbnails")} />
       <Tool icon={Maximize} label={l("fullscreen")} onClick={onFullscreen} />
-      <span className="toolbar-separator" />
-      <Tool icon={SquareTerminal} label={l("console")} />
     </div>
   );
 }

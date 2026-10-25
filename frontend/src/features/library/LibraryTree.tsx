@@ -211,14 +211,14 @@ export function LibraryTree({
                       toggle(folder.path);
                     }}
                   >
-                    {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                    {open ? <ChevronDown /> : <ChevronRight />}
                   </span>
                   {isRoot ? (
-                    <MonitorSmartphone size={14} strokeWidth={1.75} className="tree-icon" />
+                    <MonitorSmartphone className="tree-icon" />
                   ) : open ? (
-                    <FolderOpen size={14} strokeWidth={1.75} className="tree-icon" />
+                    <FolderOpen className="tree-icon" />
                   ) : (
-                    <Folder size={14} strokeWidth={1.75} className="tree-icon" />
+                    <Folder className="tree-icon" />
                   )}
                   <span className="tree-label">
                     {isRoot ? t("library.myComputer") : folder.name}
@@ -259,12 +259,12 @@ export function LibraryTree({
                 onContextMenu={() => onSelect(vmId(vm.uuid))}
               >
                 <span className="tree-icon tree-vm-icon">
-                  <Monitor size={14} strokeWidth={1.75} />
+                  <Monitor />
                   <StateDot state={vm.state} />
                 </span>
                 <span className="tree-label">{vm.name}</span>
                 {vm.drift.length > 0 && (
-                  <TriangleAlert size={12} className="tree-drift" role="img" aria-label={drift} />
+                  <TriangleAlert className="tree-drift" role="img" aria-label={drift} />
                 )}
               </div>
             </VmContextMenu>

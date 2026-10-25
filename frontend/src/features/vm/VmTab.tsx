@@ -25,12 +25,12 @@ export function VmTab({ vm, onSettings }: { vm: VmSummary | undefined; onSetting
           className="vm-summary-action"
           onClick={() => actions.power(vm, "start")}
         >
-          <Play size={14} />
+          <Play />
           {t("summary.start")}
         </button>
       )}
       <button type="button" className="vm-summary-action" onClick={onSettings}>
-        <Settings2 size={14} />
+        <Settings2 />
         {t("summary.settings")}
       </button>
       <h2 className="vm-summary-heading">{t("summary.devices")}</h2>
@@ -38,8 +38,10 @@ export function VmTab({ vm, onSettings }: { vm: VmSummary | undefined; onSetting
         <tbody>
           <tr>
             <td>
-              <MemoryStick size={14} aria-hidden />
-              {t("summary.memory")}
+              <span className="vm-summary-device">
+                <MemoryStick aria-hidden />
+                {t("summary.memory")}
+              </span>
             </td>
             <td>
               {vm.memory_mib >= 1024 && vm.memory_mib % 1024 === 0
@@ -49,8 +51,10 @@ export function VmTab({ vm, onSettings }: { vm: VmSummary | undefined; onSetting
           </tr>
           <tr>
             <td>
-              <Cpu size={14} aria-hidden />
-              {t("summary.processors")}
+              <span className="vm-summary-device">
+                <Cpu aria-hidden />
+                {t("summary.processors")}
+              </span>
             </td>
             <td>{vm.vcpus}</td>
           </tr>

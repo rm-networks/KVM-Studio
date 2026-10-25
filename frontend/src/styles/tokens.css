@@ -1,89 +1,139 @@
+/*
+ * One look for the whole application: neutral greys, 1 px borders, a single
+ * accent taken from the logo, the system font. Text keeps a contrast of at
+ * least 4.5:1 in both themes, buttons and disabled controls included.
+ */
 :root {
   --font-ui: system-ui, "Noto Sans", "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "Noto Sans Mono", monospace;
   --font-size: 13px;
   --font-size-small: 12px;
+  --font-size-title: 15px;
 
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
   --radius: 3px;
+  --control-height: 26px;
+  --icon: 16px;
+
   --menubar-height: 26px;
   --toolbar-height: 34px;
   --statusbar-height: 24px;
   --tabbar-height: 30px;
   --library-width: 240px;
 
-  --bg: #ecedef;
+  /* Window and bars, views (lists, fields, pages), headers and footers. */
+  --bg: #eff0f1;
   --surface: #ffffff;
   --surface-alt: #f5f6f7;
-  --surface-sunken: #e2e4e7;
-  --border: #c9ccd1;
-  --border-strong: #aeb2b9;
-  --text: #1c1e21;
-  --text-muted: #5e636b;
-  --text-disabled: #a0a4ab;
-  --accent: #2b6f8e;
+  --surface-sunken: #e8eaec;
+  --border: #c3c7cb;
+  --border-strong: #a7acb1;
+  --text: #232629;
+  --text-muted: #5c6166;
+  --text-disabled: #63686d;
+  --button-disabled: #e8eaec;
+  --accent: #1764c4;
+  --accent-hover: #1458ad;
   --accent-text: #ffffff;
-  --selection: #cfe3ec;
-  --selection-text: #10303e;
-  --focus: #2b6f8e;
-  --hover: rgba(0, 0, 0, 0.06);
+  --accent-fg: #1764c4;
+  --selection: #1764c4;
+  --selection-text: #ffffff;
+  --hover: #e3ecf8;
+  --focus: #1764c4;
 
-  --state-running: #2e8540;
-  --state-paused: #b7791f;
+  --state-running: #2e7d32;
+  --state-paused: #9a6700;
   --state-crashed: #b3261e;
-  --state-off: #8a8f97;
+  --state-off: #767b81;
 
+  --warn-bg: #fdf3dc;
+  --warn-border: #e2c37a;
+  --warn-text: #5c3c00;
+  --danger: #b3261e;
+  --danger-hover: #9c2019;
   --danger-bg: #fbeaea;
   --danger-border: #e4b4b1;
   --danger-text: #8c1d18;
+  --info-bg: #e8f0fb;
+  --info-border: #9dbde8;
 
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1b1d20;
-    --surface: #24272b;
-    --surface-alt: #2a2d32;
-    --surface-sunken: #181a1d;
-    --border: #393d43;
-    --border-strong: #4b5058;
-    --text: #e3e5e8;
-    --text-muted: #9aa0a8;
-    --text-disabled: #5d636b;
-    --accent: #4d9ec2;
-    --accent-text: #0d1b22;
-    --selection: #234556;
-    --selection-text: #e6f3f9;
-    --focus: #5fb0d4;
-    --hover: rgba(255, 255, 255, 0.06);
-    --state-off: #7b818a;
+    --bg: #202326;
+    --surface: #1a1c1f;
+    --surface-alt: #25282c;
+    --surface-sunken: #141618;
+    --border: #3a3f45;
+    --border-strong: #50565d;
+    --text: #e8eaed;
+    --text-muted: #a3a9b0;
+    --text-disabled: #959ca3;
+    --button-disabled: #2c3034;
+    --accent: #1764c4;
+    --accent-hover: #1d72dc;
+    --accent-text: #ffffff;
+    --accent-fg: #6cb2f2;
+    --selection: #1d5fae;
+    --selection-text: #ffffff;
+    --hover: #2a3440;
+    --focus: #6cb2f2;
+    --state-running: #5cb85f;
+    --state-paused: #d6a23a;
+    --state-crashed: #ef6b62;
+    --state-off: #8c9299;
+    --warn-bg: #3a2f17;
+    --warn-border: #6b5422;
+    --warn-text: #f2cf8a;
+    --danger: #b3261e;
+    --danger-hover: #c52d24;
     --danger-bg: #3a1f1e;
     --danger-border: #6b3431;
     --danger-text: #f2b8b5;
+    --info-bg: #1c2a3b;
+    --info-border: #2f4a6b;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #1b1d20;
-  --surface: #24272b;
-  --surface-alt: #2a2d32;
-  --surface-sunken: #181a1d;
-  --border: #393d43;
-  --border-strong: #4b5058;
-  --text: #e3e5e8;
-  --text-muted: #9aa0a8;
-  --text-disabled: #5d636b;
-  --accent: #4d9ec2;
-  --accent-text: #0d1b22;
-  --selection: #234556;
-  --selection-text: #e6f3f9;
-  --focus: #5fb0d4;
-  --hover: rgba(255, 255, 255, 0.06);
-  --state-off: #7b818a;
+  --bg: #202326;
+  --surface: #1a1c1f;
+  --surface-alt: #25282c;
+  --surface-sunken: #141618;
+  --border: #3a3f45;
+  --border-strong: #50565d;
+  --text: #e8eaed;
+  --text-muted: #a3a9b0;
+  --text-disabled: #959ca3;
+  --button-disabled: #2c3034;
+  --accent: #1764c4;
+  --accent-hover: #1d72dc;
+  --accent-text: #ffffff;
+  --accent-fg: #6cb2f2;
+  --selection: #1d5fae;
+  --selection-text: #ffffff;
+  --hover: #2a3440;
+  --focus: #6cb2f2;
+  --state-running: #5cb85f;
+  --state-paused: #d6a23a;
+  --state-crashed: #ef6b62;
+  --state-off: #8c9299;
+  --warn-bg: #3a2f17;
+  --warn-border: #6b5422;
+  --warn-text: #f2cf8a;
+  --danger: #b3261e;
+  --danger-hover: #c52d24;
   --danger-bg: #3a1f1e;
   --danger-border: #6b3431;
   --danger-text: #f2b8b5;
+  --info-bg: #1c2a3b;
+  --info-border: #2f4a6b;
   color-scheme: dark;
 }
 
@@ -105,10 +155,14 @@ body {
   color: var(--text);
   font-family: var(--font-ui);
   font-size: var(--font-size);
-  line-height: 1.35;
+  line-height: 1.4;
   overflow: hidden;
   user-select: none;
   -webkit-font-smoothing: antialiased;
+}
+
+p {
+  margin: 0 0 var(--space-2);
 }
 
 button {
@@ -121,17 +175,12 @@ button {
   outline-offset: -1px;
 }
 
-.button {
-  min-width: 80px;
-  height: 24px;
-  padding: 0 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.button:hover {
-  background: var(--hover);
+/* One icon size and stroke everywhere. */
+svg.lucide {
+  width: var(--icon);
+  height: var(--icon);
+  flex: none;
+  stroke-width: 1.75px;
 }
 
 [hidden] {

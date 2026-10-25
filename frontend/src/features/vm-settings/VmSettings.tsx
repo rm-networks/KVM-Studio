@@ -1,5 +1,12 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Cpu, Disc3, HardDrive, MemoryStick, Network as NetworkIcon } from "lucide-react";
+import {
+  Cpu,
+  Disc3,
+  HardDrive,
+  MemoryStick,
+  Network as NetworkIcon,
+  TriangleAlert,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -215,29 +222,29 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
       >
         <div className="settings">
           <div className="settings-left">
-            <table className="settings-devices">
-              <thead>
-                <tr>
-                  <th>{t("settings.device")}</th>
-                  <th>{t("settings.summary")}</th>
-                </tr>
-              </thead>
-              <tbody>
+            <div className="list settings-devices">
+              <div className="settings-device settings-device-header" aria-hidden>
+                <span>{t("settings.device")}</span>
+                <span>{t("settings.summary")}</span>
+              </div>
+              <ul role="listbox" aria-label={t("settings.device")}>
                 {rows.map((row) => (
-                  <tr
+                  <li
                     key={JSON.stringify(row.sel)}
-                    className={same(row.sel, selection) ? "selected" : undefined}
+                    role="option"
+                    aria-selected={same(row.sel, selection)}
+                    className="list-row settings-device"
                     onClick={() => setSelection(row.sel)}
                   >
-                    <td>
-                      <row.icon size={13} aria-hidden />
+                    <span className="settings-device-name">
+                      <row.icon aria-hidden />
                       {row.label}
-                    </td>
-                    <td>{row.summary}</td>
-                  </tr>
+                    </span>
+                    <span className="muted">{row.summary}</span>
+                  </li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+            </div>
             <div className="settings-left-buttons">
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger className="button" disabled={busy || !hw}>
@@ -278,9 +285,14 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
           </div>
 
           <div className="settings-panel">
-            {hw?.active && <p className="settings-note">{t("settings.runningNote")}</p>}
+            {hw?.active && (
+              <p className="note note-warn">
+                <TriangleAlert aria-hidden />
+                <span>{t("settings.runningNote")}</span>
+              </p>
+            )}
             {hw && selection.kind === "memory" && (
-              <fieldset className="settings-group">
+              <fieldset className="group">
                 <legend>{t("summary.memory")}</legend>
                 <p>{t("settings.memoryIntro")}</p>
                 <label className="settings-inline">
@@ -296,7 +308,7 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
                   {t("units.mibShort")}
                 </label>
                 {host && (
-                  <p className="settings-muted">
+                  <p className="muted">
                     {t("settings.hostMemory", { value: Math.round(host.memory_mib / 1024) })}
                   </p>
                 )}
@@ -304,7 +316,7 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
               </fieldset>
             )}
             {hw && selection.kind === "cpu" && (
-              <fieldset className="settings-group">
+              <fieldset className="group">
                 <legend>{t("summary.processors")}</legend>
                 <label className="settings-inline">
                   {t("settings.vcpus")}
@@ -316,25 +328,22 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
                     onChange={(e) => setVcpus(Number(e.target.value))}
                   />
                 </label>
-                {host && (
-                  <p className="settings-muted">{t("settings.hostCpus", { count: host.cpus })}</p>
-                )}
+                {host && <p className="muted">{t("settings.hostCpus", { count: host.cpus })}</p>}
               </fieldset>
             )}
             {disk && (
-              <fieldset className="settings-group">
+              <fieldset className="group">
                 <legend>{t("settings.diskTitle")}</legend>
-                <p className="settings-mono">{disk.path}</p>
-                <p className="settings-muted">
+                <p className="mono">{disk.path}</p>
+                <p className="muted">
                   {disk.bus.toUpperCase()} {disk.target}, {disk.format}
                 </p>
-                <p className="settings-muted">{t("settings.diskLater")}</p>
               </fieldset>
             )}
             {cdrom && (
-              <fieldset className="settings-group">
+              <fieldset className="group">
                 <legend>{t("settings.cdrom", { target: cdrom.target })}</legend>
-                <p className="settings-mono">{cdrom.path ?? t("menu.noMedia")}</p>
+                <p className="mono">{cdrom.path ?? t("menu.noMedia")}</p>
                 <div className="settings-row">
                   <button type="button" className="button" onClick={() => setPicking(cdrom.target)}>
                     {t("menu.changeIso")}
@@ -351,9 +360,9 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
               </fieldset>
             )}
             {nic && (
-              <fieldset className="settings-group">
+              <fieldset className="group">
                 <legend>{t("settings.nicTitle")}</legend>
-                <label className="settings-check">
+                <label className="check">
                   <input
                     type="checkbox"
                     checked={nicOf(nic).connected}
@@ -403,13 +412,12 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
                     ))}
                   </select>
                 </label>
-                <p className="settings-muted">
-                  {t("settings.mac")} <span className="settings-mono">{nic.mac}</span>
+                <p className="muted">
+                  {t("settings.mac")} <span className="mono">{nic.mac}</span>
                 </p>
                 {nic.target && (
-                  <p className="settings-muted">
-                    {t("settings.hostInterface")}{" "}
-                    <span className="settings-mono">{nic.target}</span>
+                  <p className="muted">
+                    {t("settings.hostInterface")} <span className="mono">{nic.target}</span>
                   </p>
                 )}
               </fieldset>

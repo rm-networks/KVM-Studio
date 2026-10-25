@@ -1,3 +1,7 @@
+// Shared styles first: the screens' own sheets come after them.
+import "./styles/tokens.css";
+import "./styles/controls.css";
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -6,7 +10,6 @@ import { App } from "./app/App";
 import { NotificationProvider } from "./components/Notifications";
 import { UninstallWizard } from "./features/uninstall/UninstallWizard";
 import "./i18n";
-import "./styles/tokens.css";
 
 captureToken();
 

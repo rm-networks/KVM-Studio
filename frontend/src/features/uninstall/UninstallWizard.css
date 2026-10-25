@@ -1,48 +1,9 @@
-.uninstall-files {
-  max-height: 180px;
-  margin: 8px 0;
-  padding: 6px 8px;
-  overflow: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface-sunken);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-small);
-  user-select: text;
+ul.uninstall-paths {
+  list-style: disc inside;
 }
 
-.uninstall-files ul {
-  margin: 2px 0 6px;
-  padding-left: 16px;
-}
-
-ul.uninstall-files {
-  padding-left: 24px;
-}
-
-.uninstall-done svg {
-  color: var(--state-running);
-}
-
-.uninstall-failed svg {
-  color: var(--danger-text);
-}
-
-.uninstall-skipped {
-  color: var(--text-muted);
-}
-
-.uninstall-blank {
+.checklist-blank {
   display: inline-block;
-  width: 14px;
-}
-
-.uninstall-spin {
-  animation: uninstall-spin 1s linear infinite;
-}
-
-@keyframes uninstall-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  width: var(--icon);
+  flex: none;
 }

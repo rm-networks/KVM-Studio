@@ -2,130 +2,75 @@
   position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
-.iso-search svg {
+.iso-search > svg {
   position: absolute;
-  left: 7px;
+  left: var(--space-2);
   color: var(--text-muted);
+  pointer-events: none;
 }
 
 .iso-search input {
   flex: 1;
-  height: 24px;
-  padding: 0 6px 0 24px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  user-select: text;
+  padding-left: 28px;
 }
 
 .iso-body {
   display: flex;
-  gap: 8px;
-  height: 330px;
+  gap: var(--space-2);
+  height: min(340px, calc(100vh - 300px));
+  min-height: 160px;
 }
 
 .iso-tree {
   width: 230px;
   flex: none;
-  margin: 0;
   padding: 2px 0;
-  overflow: auto;
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  list-style: none;
 }
 
-.iso-tree li {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 21px;
-  padding-right: 6px;
+.iso-tree .list-row {
+  gap: var(--space-1);
+  min-height: 22px;
+  padding-right: var(--space-2);
   white-space: nowrap;
-  cursor: default;
 }
 
-.iso-tree li:hover {
-  background: var(--hover);
-}
-
-.iso-tree li.selected {
-  background: var(--selection);
-  color: var(--selection-text);
-}
-
-.iso-tree svg {
-  flex: none;
+.iso-tree .list-row > svg {
   color: var(--text-muted);
+}
+
+.iso-tree .list-row[aria-selected="true"] > svg {
+  color: inherit;
 }
 
 .iso-twisty {
   display: inline-flex;
-  width: 12px;
-}
-
-.iso-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: var(--icon);
+  flex: none;
 }
 
 .iso-files {
   flex: 1;
   min-width: 0;
-  overflow: auto;
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
 }
 
-.iso-files table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.iso-files th {
-  position: sticky;
-  top: 0;
-  padding: 3px 8px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-alt);
-  font-weight: 400;
-  text-align: left;
+.iso-files .table td {
   white-space: nowrap;
-  cursor: default;
 }
 
-.iso-files td {
-  padding: 1px 8px;
-  white-space: nowrap;
-  cursor: default;
-}
-
-.iso-files td:first-child {
+.iso-name {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
-.iso-files td svg {
-  flex: none;
+.iso-name > svg {
   color: var(--text-muted);
 }
 
-.iso-files tbody tr:hover {
-  background: var(--hover);
-}
-
-.iso-files tbody tr.selected {
-  background: var(--accent);
-  color: var(--accent-text);
-}
-
-.iso-files tbody tr.selected svg {
+.iso-files tr.selected .iso-name > svg {
   color: inherit;
 }
 
@@ -139,47 +84,30 @@ tr.selected .iso-num {
 }
 
 .iso-empty {
-  margin: 10px;
+  margin: var(--space-3);
   color: var(--text-muted);
 }
 
-.iso-warning,
-.iso-access p {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 6px 0 0;
-}
-
-.iso-warning {
-  color: var(--state-paused);
-}
-
-.iso-access {
-  margin-top: 8px;
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+.iso-note {
+  display: block;
+  margin: var(--space-2) 0 0;
   user-select: text;
 }
 
-.iso-access.ok {
-  color: var(--state-running);
+.iso-note p {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1);
 }
 
-.iso-access.problem {
-  border-color: var(--danger-border);
-  background: var(--danger-bg);
-  color: var(--danger-text);
+.iso-note ul {
+  margin: var(--space-1) 0;
+  padding-left: var(--space-4);
 }
 
-.iso-access ul {
-  margin: 4px 0;
-  padding-left: 20px;
-}
-
-.iso-access pre {
-  margin: 4px 0 0;
+.iso-note pre {
+  margin: var(--space-1) 0 0;
   font-family: var(--font-mono);
   font-size: var(--font-size-small);
   white-space: pre-wrap;

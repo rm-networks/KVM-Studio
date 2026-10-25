@@ -28,7 +28,7 @@ function RadioItem({ value, label }: { value: string; label: string }) {
     <DropdownMenu.RadioItem className="menu-item" value={value}>
       <span className="menu-indicator">
         <DropdownMenu.ItemIndicator>
-          <Check size={13} />
+          <Check />
         </DropdownMenu.ItemIndicator>
       </span>
       <span className="menu-label">{label}</span>
@@ -71,7 +71,7 @@ export function LibraryPanel({
           onClick={onRefresh}
           disabled={loading}
         >
-          <RefreshCw size={13} className={loading ? "spin" : undefined} />
+          <RefreshCw className={loading ? "spin" : undefined} />
         </button>
         <button
           type="button"
@@ -80,11 +80,11 @@ export function LibraryPanel({
           aria-label={t("library.close")}
           onClick={onClose}
         >
-          <X size={14} />
+          <X />
         </button>
       </div>
       <div className="library-search">
-        <Search size={13} className="library-search-icon" aria-hidden />
+        <Search className="library-search-icon" aria-hidden />
         <input
           type="search"
           value={query}
@@ -101,7 +101,7 @@ export function LibraryPanel({
             title={t("library.filter")}
             aria-label={t("library.filter")}
           >
-            <ListFilter size={13} />
+            <ListFilter />
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content className="menu" align="end" sideOffset={2}>

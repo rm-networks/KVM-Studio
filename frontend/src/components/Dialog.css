@@ -1,7 +1,7 @@
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .dialog {
@@ -11,110 +11,58 @@
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
+  max-height: calc(100vh - 32px);
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+}
+
+.dialog:focus-visible {
+  outline: none;
 }
 
 .dialog-titlebar {
   display: flex;
   align-items: center;
-  height: 30px;
-  padding: 0 4px 0 12px;
+  gap: var(--space-2);
+  min-height: 34px;
+  padding: 0 var(--space-1) 0 var(--space-3);
   border-bottom: 1px solid var(--border);
+  background: var(--bg);
 }
 
 .dialog-title {
   flex: 1;
+  min-width: 0;
   margin: 0;
+  overflow: hidden;
   font-size: var(--font-size);
-  font-weight: 400;
-}
-
-.dialog-x {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 22px;
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-}
-
-.dialog-x:hover {
-  background: var(--hover);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dialog-body {
-  padding: 14px 16px;
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-4);
+  overflow: auto;
   user-select: text;
-}
-
-.dialog-body p {
-  margin: 0 0 8px;
 }
 
 .dialog-buttons {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 6px;
-  padding: 10px 12px;
-  background: var(--surface-alt);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg);
   border-top: 1px solid var(--border);
 }
 
-.button-primary {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--accent-text);
-}
-
-.button-primary:hover {
-  background: var(--accent);
-  filter: brightness(1.08);
-}
-
-.button-danger {
-  border-color: var(--state-crashed);
-  background: var(--state-crashed);
-  color: #fff;
-}
-
-.button-danger:hover {
-  background: var(--state-crashed);
-  filter: brightness(1.08);
-}
-
-.button:disabled {
-  opacity: 0.5;
-}
-
-.field {
+.dialog-buttons-start {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-
-.field input[type="text"] {
-  height: 24px;
-  padding: 0 6px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  user-select: text;
-}
-
-.field input[type="text"]:focus {
-  outline: none;
-  border-color: var(--focus);
-}
-
-.field-error {
-  color: var(--danger-text);
-  font-size: var(--font-size-small);
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-right: auto;
 }

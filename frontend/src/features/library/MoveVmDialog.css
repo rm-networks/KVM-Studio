@@ -1,20 +1,15 @@
 .folder-choices {
   max-height: 220px;
-  margin: 8px 0 0;
+  margin: var(--space-2) 0 0;
   padding: 2px 0;
-  overflow: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  list-style: none;
 }
 
 .folder-choices li {
   display: flex;
   align-items: center;
-  gap: 6px;
-  height: 21px;
-  padding-right: 8px;
+  gap: var(--space-2);
+  min-height: 24px;
+  padding-right: var(--space-2);
   cursor: default;
 }
 
@@ -29,6 +24,10 @@
 
 .folder-choices svg {
   color: var(--text-muted);
+}
+
+.folder-choices li.selected svg {
+  color: inherit;
 }
 
 .dialog-muted {

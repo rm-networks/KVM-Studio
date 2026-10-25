@@ -3,11 +3,10 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, type Config, type GroupState, type SetupStatus } from "../../api/client";
-import { Dialog } from "../../components/Dialog";
+import { Wizard } from "../../components/Wizard";
 import { useNotifier } from "../../components/notifier";
 import { folderPicker } from "../../platform/folders";
 import { RestartPrompt } from "../preferences/PreferencesDialog";
-import "../wizard/NewVmWizard.css";
 import "./FirstRunWizard.css";
 
 const STEPS = ["welcome", "checks", "group", "locations", "mode", "networks", "done"] as const;
@@ -25,7 +24,7 @@ function FolderInput({ value, onChange }: { value: string; onChange: (v: string)
   const { t } = useTranslation();
   const pick = folderPicker();
   return (
-    <span className="firstrun-path">
+    <span className="field-with-button">
       <input type="text" value={value} onChange={(e) => onChange(e.target.value)} />
       {pick && (
         <button
@@ -132,11 +131,12 @@ export function FirstRunWizard({ onClose, onSaved }: Props) {
   const finish = () => (restart ? setShowRestart(true) : onClose());
 
   return (
-    <Dialog
-      open
-      width={640}
-      onOpenChange={(open) => !open && !busy && onClose()}
-      title={t("firstRun.title")}
+    <Wizard
+      name={t("firstRun.title")}
+      title={step === "welcome" ? t("firstRun.title") : t(`firstRun.step.${step}`)}
+      step={index}
+      steps={STEPS.length}
+      onCancel={() => !busy && onClose()}
       buttons={
         step === "done" ? (
           <button type="button" className="button button-primary" onClick={finish}>
@@ -144,6 +144,9 @@ export function FirstRunWizard({ onClose, onSaved }: Props) {
           </button>
         ) : (
           <>
+            <button type="button" className="button" disabled={busy} onClick={onClose}>
+              {t("common.cancel")}
+            </button>
             <button
               type="button"
               className="button"
@@ -171,137 +174,124 @@ export function FirstRunWizard({ onClose, onSaved }: Props) {
                 {t("wizard.next")}
               </button>
             )}
-            <button type="button" className="button" disabled={busy} onClick={onClose}>
-              {t("common.cancel")}
-            </button>
           </>
         )
       }
     >
-      <ol className="wizard-steps">
-        {STEPS.map((s) => (
-          <li key={s} className={s === step ? "current" : undefined}>
-            {t(`firstRun.step.${s}`)}
-          </li>
-        ))}
-      </ol>
+      {step === "welcome" && (
+        <>
+          <p>{t("firstRun.welcome.intro")}</p>
+          <p>{t("firstRun.welcome.license")}</p>
+          <p className="muted">{t("about.notice")}</p>
+        </>
+      )}
 
-      <div className="wizard-page">
-        {step === "welcome" && (
-          <>
-            <p>{t("firstRun.welcome.intro")}</p>
-            <p>{t("firstRun.welcome.license")}</p>
-            <p className="firstrun-muted">{t("about.notice")}</p>
-          </>
-        )}
-
-        {step === "checks" && status && (
-          <ul className="firstrun-checks">
-            {status.checks.map((c) => {
-              const Icon = LEVEL_ICON[c.level];
-              return (
-                <li key={c.id} className={`firstrun-${c.level}`}>
-                  <Icon size={14} aria-hidden />
-                  <span>
-                    {t(`firstRun.check.${c.id}.${c.level}`, { detail: c.detail })}
-                    {c.level !== "ok" && (
-                      <small>{t(`firstRun.check.${c.id}.hint`, { detail: c.detail })}</small>
-                    )}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        {step === "group" && group && (
-          <>
-            <p>{t("firstRun.group.why")}</p>
-            <p className={group === "member" || group === "not_needed" ? "firstrun-ok" : ""}>
-              {t(`firstRun.group.state.${group}`, { user: status?.user })}
-            </p>
-            {group === "not_member" && (
-              <button
-                type="button"
-                className="button"
-                disabled={busy}
-                onClick={() => void joinGroup()}
-              >
-                {t("firstRun.group.join")}
-              </button>
-            )}
-          </>
-        )}
-
-        {step === "locations" && (
-          <>
-            <label className="firstrun-field">
-              <span>{t("firstRun.locations.vm")}</span>
-              <FolderInput value={vmLocation} onChange={setVmLocation} />
-            </label>
-            <p className="firstrun-muted">{t("firstRun.locations.vmHint")}</p>
-            <label className="firstrun-field">
-              <span>{t("firstRun.locations.iso")}</span>
-              <FolderInput value={isoPath} onChange={setIsoPath} />
-            </label>
-            <p className="firstrun-muted">{t("firstRun.locations.isoHint")}</p>
-            {!isoValid && <p className="firstrun-warn">{t("firstRun.locations.absolute")}</p>}
-          </>
-        )}
-
-        {step === "mode" && (
-          <>
-            {(["desktop", "web"] as const).map((m) => (
-              <label key={m} className="wizard-choice firstrun-mode">
-                <input type="radio" checked={mode === m} onChange={() => setMode(m)} />
+      {step === "checks" && status && (
+        <ul className="checklist">
+          {status.checks.map((c) => {
+            const Icon = LEVEL_ICON[c.level];
+            return (
+              <li key={c.id} className={`checklist-${c.level}`}>
+                <Icon aria-hidden />
                 <span>
-                  {t(`firstRun.mode.${m}`)}
-                  <small>{t(`firstRun.mode.${m}Hint`)}</small>
+                  {t(`firstRun.check.${c.id}.${c.level}`, { detail: c.detail })}
+                  {c.level !== "ok" && (
+                    <small>{t(`firstRun.check.${c.id}.hint`, { detail: c.detail })}</small>
+                  )}
                 </span>
-              </label>
-            ))}
-          </>
-        )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
-        {step === "networks" && status && (
-          <>
-            <p>{t("firstRun.networks.intro")}</p>
-            <table className="firstrun-table">
-              <tbody>
-                {status.networks.map((n) => (
-                  <tr key={n.name}>
-                    <td>{n.name}</td>
-                    <td>{t(`networks.kind.${n.kind}`)}</td>
-                    <td>{n.subnet}</td>
-                    <td>{n.exists ? t("firstRun.networks.exists") : ""}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {status.networks.some((n) => !n.exists) && (
-              <label className="wizard-choice">
-                <input
-                  type="checkbox"
-                  checked={createNetworks}
-                  onChange={(e) => setCreateNetworks(e.target.checked)}
-                />
-                {t("firstRun.networks.create")}
-              </label>
-            )}
-          </>
-        )}
+      {step === "group" && group && (
+        <>
+          <p>{t("firstRun.group.why")}</p>
+          <p className={group === "member" || group === "not_needed" ? "note" : "note note-warn"}>
+            {t(`firstRun.group.state.${group}`, { user: status?.user })}
+          </p>
+          {group === "not_member" && (
+            <button
+              type="button"
+              className="button"
+              disabled={busy}
+              onClick={() => void joinGroup()}
+            >
+              {t("firstRun.group.join")}
+            </button>
+          )}
+        </>
+      )}
 
-        {step === "done" && (
-          <>
-            <p>{t("firstRun.done.saved")}</p>
-            {created.length > 0 && (
-              <p>{t("firstRun.done.networks", { names: created.join(", ") })}</p>
-            )}
-            {group === "relogin" && <p className="firstrun-warn">{t("firstRun.group.relogin")}</p>}
-            <p className="firstrun-muted">{t("firstRun.done.again")}</p>
-          </>
-        )}
-      </div>
-    </Dialog>
+      {step === "locations" && (
+        <>
+          <label className="field">
+            <span>{t("firstRun.locations.vm")}</span>
+            <FolderInput value={vmLocation} onChange={setVmLocation} />
+            <span className="muted">{t("firstRun.locations.vmHint")}</span>
+          </label>
+          <label className="field">
+            <span>{t("firstRun.locations.iso")}</span>
+            <FolderInput value={isoPath} onChange={setIsoPath} />
+            <span className="muted">{t("firstRun.locations.isoHint")}</span>
+          </label>
+          {!isoValid && <p className="field-error">{t("firstRun.locations.absolute")}</p>}
+        </>
+      )}
+
+      {step === "mode" && (
+        <>
+          {(["desktop", "web"] as const).map((m) => (
+            <div key={m}>
+              <label className="check">
+                <input type="radio" checked={mode === m} onChange={() => setMode(m)} />
+                {t(`firstRun.mode.${m}`)}
+              </label>
+              <p className="check-hint">{t(`firstRun.mode.${m}Hint`)}</p>
+            </div>
+          ))}
+        </>
+      )}
+
+      {step === "networks" && status && (
+        <>
+          <p>{t("firstRun.networks.intro")}</p>
+          <table className="facts firstrun-networks">
+            <tbody>
+              {status.networks.map((n) => (
+                <tr key={n.name}>
+                  <td>{n.name}</td>
+                  <td>{t(`networks.kind.${n.kind}`)}</td>
+                  <td>{n.subnet}</td>
+                  <td>{n.exists ? t("firstRun.networks.exists") : ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {status.networks.some((n) => !n.exists) && (
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={createNetworks}
+                onChange={(e) => setCreateNetworks(e.target.checked)}
+              />
+              {t("firstRun.networks.create")}
+            </label>
+          )}
+        </>
+      )}
+
+      {step === "done" && (
+        <>
+          <p>{t("firstRun.done.saved")}</p>
+          {created.length > 0 && (
+            <p>{t("firstRun.done.networks", { names: created.join(", ") })}</p>
+          )}
+          {group === "relogin" && <p className="note note-warn">{t("firstRun.group.relogin")}</p>}
+          <p className="muted">{t("firstRun.done.again")}</p>
+        </>
+      )}
+    </Wizard>
   );
 }

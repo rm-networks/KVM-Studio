@@ -1,0 +1,369 @@
+/* Controls shared by every screen: buttons, fields, groups, lists, notes. */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: 80px;
+  height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.button:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--hover);
+}
+
+.button.button-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.button.button-primary:not(:disabled):hover {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
+
+.button.button-danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.button.button-danger:not(:disabled):hover {
+  border-color: var(--danger-hover);
+  background: var(--danger-hover);
+}
+
+.button:disabled,
+.button.button-primary:disabled,
+.button.button-danger:disabled {
+  border-color: var(--border);
+  background: var(--button-disabled);
+  color: var(--text-disabled);
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+}
+
+.icon-button:not(:disabled):hover {
+  border-color: var(--border);
+  background: var(--hover);
+}
+
+.icon-button[aria-pressed="true"] {
+  border-color: var(--border-strong);
+  background: var(--surface-sunken);
+}
+
+.icon-button:disabled {
+  color: var(--text-disabled);
+}
+
+input[type="text"],
+input[type="number"],
+input[type="password"],
+input[type="search"],
+select,
+textarea {
+  height: var(--control-height);
+  min-width: 0;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  user-select: text;
+}
+
+textarea {
+  height: auto;
+  padding: var(--space-1) var(--space-2);
+}
+
+select {
+  padding-right: var(--space-1);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--focus);
+}
+
+input:disabled,
+select:disabled {
+  background: var(--button-disabled);
+  color: var(--text-disabled);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--accent);
+}
+
+input[type="number"] {
+  width: 100px;
+}
+
+/* A checkbox or a radio button with its label. */
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+}
+
+.check-hint {
+  margin: 0 0 var(--space-2) 22px;
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+/* Label above its field. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+/* Label and field side by side, the labels in one column. */
+.form {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.form > .form-wide {
+  grid-column: 1 / -1;
+}
+
+.field-with-button {
+  display: flex;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.field-with-button > input {
+  flex: 1;
+}
+
+.field-error {
+  color: var(--danger-text);
+  font-size: var(--font-size-small);
+}
+
+.group {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-width: 0;
+}
+
+.group > legend {
+  padding: 0 var(--space-1);
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+/* A short message above the content: information, warning, error. */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius);
+  background: var(--info-bg);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.note-warn {
+  border-color: var(--warn-border);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.note-error {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.note > svg {
+  margin-top: 1px;
+}
+
+/* A framed list: whole rows, one selection colour, nothing cut. */
+.list {
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  list-style: none;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
+  padding: 2px var(--space-2);
+  cursor: default;
+}
+
+.list-row:hover {
+  background: var(--hover);
+}
+
+.list-row.selected,
+.list-row[aria-selected="true"] {
+  background: var(--selection);
+  color: var(--selection-text);
+}
+
+.list-row.selected .muted,
+.list-row[aria-selected="true"] .muted {
+  color: inherit;
+}
+
+.list-empty {
+  padding: var(--space-2);
+  color: var(--text-muted);
+}
+
+/* Tables: header on the alternate surface, a selected row is coloured whole. */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-alt);
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 3px var(--space-2);
+  vertical-align: top;
+}
+
+.table tbody tr {
+  cursor: default;
+}
+
+.table tbody tr:hover {
+  background: var(--hover);
+}
+
+.table tbody tr.selected {
+  background: var(--selection);
+  color: var(--selection-text);
+}
+
+.table tbody tr.selected .muted {
+  color: inherit;
+}
+
+/* Two columns of facts: muted names, values. */
+.facts {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.facts td {
+  padding: var(--space-1) var(--space-2) var(--space-1) 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.facts td:first-child {
+  width: 1%;
+  padding-right: var(--space-4);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.code-box {
+  max-height: 180px;
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-small);
+  user-select: text;
+}
+
+.code-box ul {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-4);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

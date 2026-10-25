@@ -160,10 +160,10 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
     <>
       <Dialog
         open
-        width={680}
+        width={760}
         onOpenChange={(open) => !open && onClose()}
         title={t("networks.title")}
-        buttons={
+        extraButtons={
           <>
             <button
               type="button"
@@ -189,7 +189,10 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
             >
               {t("networks.export")}
             </button>
-            <span className="net-spacer" />
+          </>
+        }
+        buttons={
+          <>
             <button
               type="button"
               className="button button-primary"
@@ -219,8 +222,8 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
           hidden
           onChange={importFile}
         />
-        <div className="net-table-wrap">
-          <table className="net-table">
+        <div className="list net-table-wrap">
+          <table className="table">
             <thead>
               <tr>
                 <th>{t("networks.col.name")}</th>
@@ -245,7 +248,7 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
                   >
                     <td>
                       {n.name}
-                      {!n.active && <span className="net-muted"> ({t("networks.stopped")})</span>}
+                      {!n.active && <span className="muted"> ({t("networks.stopped")})</span>}
                     </td>
                     <td>{kindLabel(n, d)}</td>
                     <td>
@@ -291,49 +294,44 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
         </div>
 
         {network && (
-          <fieldset className="net-panel">
+          <fieldset className="group net-panel">
             <legend>{t("networks.info", { name: network.name })}</legend>
             {!draft ? (
-              <p className="net-muted">
-                {t("networks.notEditable", { mode: network.forward_mode })}
-              </p>
+              <p className="muted">{t("networks.notEditable", { mode: network.forward_mode })}</p>
             ) : (
               <>
-                <label className="net-radio net-disabled" title={t("networks.bridgedLater")}>
-                  <input type="radio" disabled /> {t("networks.bridged")}
-                </label>
-                <label className="net-radio">
+                <label className="check">
                   <input
                     type="radio"
                     checked={draft.kind === "nat"}
                     onChange={() => edit({ kind: "nat" })}
-                  />{" "}
+                  />
                   {t("networks.natLabel")}
                 </label>
-                <label className="net-radio">
+                <label className="check">
                   <input
                     type="radio"
                     checked={draft.kind === "host_only"}
                     onChange={() => edit({ kind: "host_only" })}
-                  />{" "}
+                  />
                   {t("networks.hostOnlyLabel")}
                 </label>
                 <hr />
-                <label className="net-check">
+                <label className="check">
                   <input
                     type="checkbox"
                     checked={effectiveAdapter}
                     disabled={draft.kind === "nat"}
                     onChange={(e) => edit({ hostAdapter: e.target.checked })}
-                  />{" "}
+                  />
                   {t("networks.hostAdapter")}
                 </label>
                 {network.bridge && (
-                  <p className="net-indent net-muted">
+                  <p className="check-hint">
                     {t("networks.bridgeName", { bridge: network.bridge })}
                   </p>
                 )}
-                <label className="net-check">
+                <label className="check">
                   <input
                     type="checkbox"
                     checked={draft.dhcpEnabled && effectiveAdapter}
@@ -347,11 +345,11 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
                           : {}),
                       });
                     }}
-                  />{" "}
+                  />
                   {t("networks.dhcp")}
                 </label>
                 {!effectiveAdapter && (
-                  <p className="net-indent net-muted">{t("networks.dhcpNeedsAdapter")}</p>
+                  <p className="check-hint">{t("networks.dhcpNeedsAdapter")}</p>
                 )}
                 {draft.dhcpEnabled && effectiveAdapter && (
                   <div className="net-grid net-indent">
@@ -399,7 +397,7 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
               </>
             )}
             <div className="net-state">
-              <label className="net-check">
+              <label className="check">
                 <input
                   type="checkbox"
                   checked={network.active}
@@ -413,7 +411,7 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
                 />{" "}
                 {t("networks.started")}
               </label>
-              <label className="net-check">
+              <label className="check">
                 <input
                   type="checkbox"
                   checked={network.autostart}
@@ -429,7 +427,7 @@ export function NetworkEditor({ onClose }: { onClose: () => void }) {
               </label>
             </div>
             {network.used_by.length > 0 && (
-              <p className="net-muted" title={network.used_by.join(", ")}>
+              <p className="muted" title={network.used_by.join(", ")}>
                 {network.used_by.length <= 2
                   ? t("networks.usedBy", { names: network.used_by.join(", ") })
                   : t("networks.usedByMore", {

@@ -1,5 +1,5 @@
 .delete-heading {
-  margin: 12px 0 4px;
+  margin: var(--space-3) 0 var(--space-1);
   font-size: var(--font-size);
   font-weight: 600;
 }
@@ -7,11 +7,11 @@
 .delete-files {
   max-height: 160px;
   margin: 0;
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   overflow: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--surface-alt);
+  background: var(--surface-sunken);
   font-family: var(--font-mono);
   font-size: var(--font-size-small);
   list-style: none;
@@ -19,7 +19,7 @@
 
 .delete-files li {
   padding: 1px 0;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 .delete-files-danger {
@@ -29,9 +29,13 @@
 }
 
 .delete-reason {
-  margin-left: 8px;
-  font-family: var(--font-ui);
+  margin-left: var(--space-2);
   color: var(--text-muted);
+  font-family: var(--font-ui);
+}
+
+.delete-files-danger .delete-reason {
+  color: inherit;
 }
 
 .delete-muted {

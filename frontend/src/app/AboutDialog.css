@@ -1,31 +1,24 @@
-.about {
-  width: 440px;
-}
-
 .about-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.about-head p {
-  margin: 0 !important;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
 }
 
 .about-name {
-  font-size: 18px;
+  margin: 0;
+  font-size: var(--font-size-title);
   font-weight: 600;
-  letter-spacing: 0.01em;
 }
 
 .about-version {
+  margin: 0;
   color: var(--text-muted);
 }
 
 .about-notice {
-  margin-top: 14px !important;
-  padding-top: 10px;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--border);
   color: var(--text-muted);
   font-size: var(--font-size-small);

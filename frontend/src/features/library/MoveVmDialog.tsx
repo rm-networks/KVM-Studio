@@ -66,7 +66,7 @@ export function MoveVmDialog({ vm, folders, importFiles, onSubmit, onClose }: Pr
             : t("library.moveIntroVirtual", { name: vm.name })}
       </p>
       {blocked && <p className="field-error">{t("delete.mustBeOff")}</p>}
-      <ul className="folder-choices" role="listbox" aria-label={t("library.destination")}>
+      <ul className="list folder-choices" role="listbox" aria-label={t("library.destination")}>
         {choices.map((path) => {
           const depth = path ? path.split("/").length : 0;
           return (
@@ -78,11 +78,7 @@ export function MoveVmDialog({ vm, folders, importFiles, onSubmit, onClose }: Pr
               style={{ paddingLeft: 6 + depth * 16 }}
               onClick={() => setTarget(path)}
             >
-              {path ? (
-                <Folder size={13} aria-hidden />
-              ) : (
-                <MonitorSmartphone size={13} aria-hidden />
-              )}
+              {path ? <Folder aria-hidden /> : <MonitorSmartphone aria-hidden />}
               {path ? path.slice(path.lastIndexOf("/") + 1) : t("library.myComputer")}
             </li>
           );

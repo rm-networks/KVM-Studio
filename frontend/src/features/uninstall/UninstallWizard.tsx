@@ -3,9 +3,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, ApiError, type UninstallPlan, type UninstallReport } from "../../api/client";
-import { Dialog } from "../../components/Dialog";
+import { Wizard } from "../../components/Wizard";
 import { ErrorMessage } from "../../components/ErrorMessage";
-import "../wizard/NewVmWizard.css";
 import "../first-run/FirstRunWizard.css";
 import "./UninstallWizard.css";
 
@@ -48,11 +47,11 @@ function Choice({
 }) {
   return (
     <>
-      <label className="wizard-choice">
+      <label className="check">
         <input type="radio" name={name} checked={!value} onChange={() => onChange(false)} />
         {keepLabel}
       </label>
-      <label className="wizard-choice">
+      <label className="check">
         <input type="radio" name={name} checked={value} onChange={() => onChange(true)} />
         {deleteLabel}
       </label>
@@ -171,10 +170,10 @@ export function UninstallWizard() {
 
   const TASK_ICON = {
     pending: null,
-    running: <Loader size={14} className="uninstall-spin" aria-hidden />,
-    done: <CircleCheck size={14} aria-hidden />,
+    running: <Loader className="spin" aria-hidden />,
+    done: <CircleCheck aria-hidden />,
     skipped: null,
-    failed: <CircleX size={14} aria-hidden />,
+    failed: <CircleX aria-hidden />,
   } as const;
 
   const choice = (remove: boolean) => (remove ? t("uninstall.delete") : t("uninstall.keep"));
@@ -185,6 +184,9 @@ export function UninstallWizard() {
       </button>
     ) : (
       <>
+        <button type="button" className="button" onClick={closeWindow}>
+          {t("common.cancel")}
+        </button>
         <button
           type="button"
           className="button"
@@ -207,263 +209,251 @@ export function UninstallWizard() {
             {t("wizard.next")}
           </button>
         )}
-        <button type="button" className="button" onClick={closeWindow}>
-          {t("common.cancel")}
-        </button>
       </>
     );
 
   return (
-    <Dialog
-      open
-      width={700}
-      onOpenChange={(open) => !open && step !== "progress" && closeWindow()}
-      title={t("uninstall.title")}
+    <Wizard
+      name={t("uninstall.title")}
+      title={step === "welcome" ? t("uninstall.title") : t(`uninstall.step.${step}`)}
+      step={index}
+      steps={STEPS.length}
+      mode="window"
       buttons={buttons}
     >
-      <ol className="wizard-steps">
-        {STEPS.map((s) => (
-          <li key={s} className={s === step ? "current" : undefined}>
-            {t(`uninstall.step.${s}`)}
-          </li>
-        ))}
-      </ol>
+      {error !== null && step !== "done" && <ErrorMessage error={error} />}
 
-      <div className="wizard-page">
-        {error !== null && step !== "done" && <ErrorMessage error={error} />}
+      {step === "welcome" && (
+        <>
+          <p>{t("uninstall.welcome.intro")}</p>
+          <p>{t("uninstall.welcome.choices")}</p>
+        </>
+      )}
 
-        {step === "welcome" && (
-          <>
-            <p>{t("uninstall.welcome.intro")}</p>
-            <p>{t("uninstall.welcome.choices")}</p>
-          </>
-        )}
-
-        {step === "vms" && plan && (
-          <>
-            {plan.vms.length === 0 ? (
-              <p>{t("uninstall.vms.none")}</p>
-            ) : (
-              <>
-                <Choice
-                  name="vms"
-                  value={deleteVms}
-                  onChange={(v) => {
-                    setDeleteVms(v);
-                    setConfirmed(false);
-                  }}
-                  keepLabel={t("uninstall.vms.keep")}
-                  deleteLabel={t("uninstall.vms.delete", { count: plan.vms.length })}
-                />
-                {deleteVms && (
-                  <div className="uninstall-files">
-                    {plan.vms.map((vm) => (
-                      <div key={vm.uuid}>
-                        <strong>{vm.name}</strong>
-                        <ul>
-                          {vm.delete.map((path) => (
-                            <li key={path}>{path}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                    {plan.extra_files.length > 0 && (
-                      <div>
-                        <strong>{t("uninstall.vms.extra")}</strong>
-                        <ul>
-                          {plan.extra_files.map((path) => (
-                            <li key={path}>{path}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {kept.length > 0 && (
-                      <div>
-                        <strong>{t("uninstall.vms.kept")}</strong>
-                        <ul>
-                          {kept.map((k) => (
-                            <li key={k.path}>
-                              {k.path} ({t(`delete.reason.${k.reason}`)})
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {deleteVms && blocked && (
-                  <p className="firstrun-warn">
-                    <TriangleAlert size={13} aria-hidden />{" "}
-                    {t("uninstall.vms.running", { names: plan.running.join(", ") })}
-                  </p>
-                )}
-                {deleteVms && !blocked && (
-                  <label className="wizard-choice">
-                    <input
-                      type="checkbox"
-                      checked={confirmed}
-                      onChange={(e) => setConfirmed(e.target.checked)}
-                    />
-                    {t("uninstall.vms.confirm", { count: files.length })}
-                  </label>
-                )}
-              </>
-            )}
-            {plan.kept_vms.length > 0 && (
-              <p className="firstrun-muted">
-                {t("uninstall.vms.foreign", { names: plan.kept_vms.join(", ") })}
-              </p>
-            )}
-          </>
-        )}
-
-        {step === "networks" && plan && (
-          <>
-            {plan.networks.length === 0 ? (
-              <p>{t("uninstall.networks.none")}</p>
-            ) : (
-              <>
-                <Choice
-                  name="networks"
-                  value={deleteNetworks}
-                  onChange={setDeleteNetworks}
-                  keepLabel={t("uninstall.networks.keep")}
-                  deleteLabel={t("uninstall.networks.delete")}
-                />
-                <table className="firstrun-table">
-                  <tbody>
-                    {plan.networks.map((n) => {
-                      const users = networkUsers(n);
-                      return (
-                        <tr key={n.name}>
-                          <td>{n.name}</td>
-                          <td>{n.bridge}</td>
-                          <td>
-                            {users.length > 0 &&
-                              t("uninstall.networks.usedBy", { names: users.join(", ") })}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </>
-            )}
-          </>
-        )}
-
-        {step === "rights" && plan && (
-          <>
-            {!rights ? (
-              <p>{t("uninstall.rights.none")}</p>
-            ) : (
-              <>
-                <p>{t("uninstall.rights.intro", { count: plan.iso_acl_entries })}</p>
-                <Choice
-                  name="rights"
-                  value={removeRights}
-                  onChange={setRemoveRights}
-                  keepLabel={t("uninstall.rights.keep")}
-                  deleteLabel={t("uninstall.rights.delete")}
-                />
-                <ul className="uninstall-files">
-                  {plan.iso_libraries.map((path) => (
-                    <li key={path}>{path}</li>
+      {step === "vms" && plan && (
+        <>
+          {plan.vms.length === 0 ? (
+            <p>{t("uninstall.vms.none")}</p>
+          ) : (
+            <>
+              <Choice
+                name="vms"
+                value={deleteVms}
+                onChange={(v) => {
+                  setDeleteVms(v);
+                  setConfirmed(false);
+                }}
+                keepLabel={t("uninstall.vms.keep")}
+                deleteLabel={t("uninstall.vms.delete", { count: plan.vms.length })}
+              />
+              {deleteVms && (
+                <div className="code-box">
+                  {plan.vms.map((vm) => (
+                    <div key={vm.uuid}>
+                      <strong>{vm.name}</strong>
+                      <ul>
+                        {vm.delete.map((path) => (
+                          <li key={path}>{path}</li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
-              </>
-            )}
-          </>
-        )}
+                  {plan.extra_files.length > 0 && (
+                    <div>
+                      <strong>{t("uninstall.vms.extra")}</strong>
+                      <ul>
+                        {plan.extra_files.map((path) => (
+                          <li key={path}>{path}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {kept.length > 0 && (
+                    <div>
+                      <strong>{t("uninstall.vms.kept")}</strong>
+                      <ul>
+                        {kept.map((k) => (
+                          <li key={k.path}>
+                            {k.path} ({t(`delete.reason.${k.reason}`)})
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+              {deleteVms && blocked && (
+                <p className="note note-warn">
+                  <TriangleAlert aria-hidden />
+                  {t("uninstall.vms.running", { names: plan.running.join(", ") })}
+                </p>
+              )}
+              {deleteVms && !blocked && (
+                <label className="check">
+                  <input
+                    type="checkbox"
+                    checked={confirmed}
+                    onChange={(e) => setConfirmed(e.target.checked)}
+                  />
+                  {t("uninstall.vms.confirm", { count: files.length })}
+                </label>
+              )}
+            </>
+          )}
+          {plan.kept_vms.length > 0 && (
+            <p className="muted">
+              {t("uninstall.vms.foreign", { names: plan.kept_vms.join(", ") })}
+            </p>
+          )}
+        </>
+      )}
 
-        {step === "settings" && plan && (
-          <>
-            {plan.settings.length === 0 ? (
-              <p>{t("uninstall.settings.none")}</p>
-            ) : (
-              <>
-                <Choice
-                  name="settings"
-                  value={deleteSettings}
-                  onChange={setDeleteSettings}
-                  keepLabel={t("uninstall.settings.keep")}
-                  deleteLabel={t("uninstall.settings.delete")}
-                />
-                <ul className="uninstall-files">
-                  {plan.settings.map((path) => (
-                    <li key={path}>{path}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </>
-        )}
+      {step === "networks" && plan && (
+        <>
+          {plan.networks.length === 0 ? (
+            <p>{t("uninstall.networks.none")}</p>
+          ) : (
+            <>
+              <Choice
+                name="networks"
+                value={deleteNetworks}
+                onChange={setDeleteNetworks}
+                keepLabel={t("uninstall.networks.keep")}
+                deleteLabel={t("uninstall.networks.delete")}
+              />
+              <table className="facts">
+                <tbody>
+                  {plan.networks.map((n) => {
+                    const users = networkUsers(n);
+                    return (
+                      <tr key={n.name}>
+                        <td>{n.name}</td>
+                        <td>{n.bridge}</td>
+                        <td>
+                          {users.length > 0 &&
+                            t("uninstall.networks.usedBy", { names: users.join(", ") })}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </>
+          )}
+        </>
+      )}
 
-        {step === "summary" && plan && (
-          <table className="firstrun-table">
-            <tbody>
-              <tr>
-                <td>{t("uninstall.step.vms")}</td>
-                <td>{plan.vms.length ? choice(deleteVms) : "-"}</td>
-              </tr>
-              <tr>
-                <td>{t("uninstall.step.networks")}</td>
-                <td>{plan.networks.length ? choice(deleteNetworks) : "-"}</td>
-              </tr>
-              <tr>
-                <td>{t("uninstall.step.rights")}</td>
-                <td>{rights ? choice(removeRights) : "-"}</td>
-              </tr>
-              <tr>
-                <td>{t("uninstall.step.settings")}</td>
-                <td>{plan.settings.length ? choice(deleteSettings) : "-"}</td>
-              </tr>
-              <tr>
-                <td>{t("uninstall.task.package")}</td>
-                <td>{plan.packaged ? t("uninstall.packageRemove") : t("uninstall.notPackaged")}</td>
-              </tr>
-            </tbody>
-          </table>
-        )}
+      {step === "rights" && plan && (
+        <>
+          {!rights ? (
+            <p>{t("uninstall.rights.none")}</p>
+          ) : (
+            <>
+              <p>{t("uninstall.rights.intro", { count: plan.iso_acl_entries })}</p>
+              <Choice
+                name="rights"
+                value={removeRights}
+                onChange={setRemoveRights}
+                keepLabel={t("uninstall.rights.keep")}
+                deleteLabel={t("uninstall.rights.delete")}
+              />
+              <ul className="code-box uninstall-paths">
+                {plan.iso_libraries.map((path) => (
+                  <li key={path}>{path}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </>
+      )}
 
-        {(step === "progress" || step === "done") && (
-          <ul className="firstrun-checks">
-            {(["vms", "networks", "rights", "settings", "package"] as const).map((task) => (
-              <li key={task} className={`uninstall-${tasks[task]}`}>
-                {TASK_ICON[tasks[task]] ?? <span className="uninstall-blank" />}
-                <span>
-                  {t(`uninstall.task.${task}`)}
-                  <small>{t(`uninstall.state.${tasks[task]}`)}</small>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+      {step === "settings" && plan && (
+        <>
+          {plan.settings.length === 0 ? (
+            <p>{t("uninstall.settings.none")}</p>
+          ) : (
+            <>
+              <Choice
+                name="settings"
+                value={deleteSettings}
+                onChange={setDeleteSettings}
+                keepLabel={t("uninstall.settings.keep")}
+                deleteLabel={t("uninstall.settings.delete")}
+              />
+              <ul className="code-box uninstall-paths">
+                {plan.settings.map((path) => (
+                  <li key={path}>{path}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </>
+      )}
 
-        {step === "progress" && tasks.package === "running" && (
-          <p className="firstrun-muted">{t("uninstall.packageWait")}</p>
-        )}
+      {step === "summary" && plan && (
+        <table className="facts">
+          <tbody>
+            <tr>
+              <td>{t("uninstall.step.vms")}</td>
+              <td>{plan.vms.length ? choice(deleteVms) : "-"}</td>
+            </tr>
+            <tr>
+              <td>{t("uninstall.step.networks")}</td>
+              <td>{plan.networks.length ? choice(deleteNetworks) : "-"}</td>
+            </tr>
+            <tr>
+              <td>{t("uninstall.step.rights")}</td>
+              <td>{rights ? choice(removeRights) : "-"}</td>
+            </tr>
+            <tr>
+              <td>{t("uninstall.step.settings")}</td>
+              <td>{plan.settings.length ? choice(deleteSettings) : "-"}</td>
+            </tr>
+            <tr>
+              <td>{t("uninstall.task.package")}</td>
+              <td>{plan.packaged ? t("uninstall.packageRemove") : t("uninstall.notPackaged")}</td>
+            </tr>
+          </tbody>
+        </table>
+      )}
 
-        {step === "done" && (
-          <>
-            {error !== null && <ErrorMessage error={error} />}
-            {report && report.failed_files.length > 0 && (
-              <>
-                <p>{t("uninstall.failedFiles")}</p>
-                <ul className="uninstall-files">
-                  {report.failed_files.map((path) => (
-                    <li key={path}>{path}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-            {report && report.kept_networks.length > 0 && (
-              <p>{t("uninstall.keptNetworks", { names: report.kept_networks.join(", ") })}</p>
-            )}
-            {error === null && <p>{t("uninstall.finished")}</p>}
-          </>
-        )}
-      </div>
-    </Dialog>
+      {(step === "progress" || step === "done") && (
+        <ul className="checklist">
+          {(["vms", "networks", "rights", "settings", "package"] as const).map((task) => (
+            <li key={task} className={`checklist-${tasks[task]}`}>
+              {TASK_ICON[tasks[task]] ?? <span className="checklist-blank" />}
+              <span>
+                {t(`uninstall.task.${task}`)}
+                <small>{t(`uninstall.state.${tasks[task]}`)}</small>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {step === "progress" && tasks.package === "running" && (
+        <p className="muted">{t("uninstall.packageWait")}</p>
+      )}
+
+      {step === "done" && (
+        <>
+          {error !== null && <ErrorMessage error={error} />}
+          {report && report.failed_files.length > 0 && (
+            <>
+              <p>{t("uninstall.failedFiles")}</p>
+              <ul className="code-box uninstall-paths">
+                {report.failed_files.map((path) => (
+                  <li key={path}>{path}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {report && report.kept_networks.length > 0 && (
+            <p>{t("uninstall.keptNetworks", { names: report.kept_networks.join(", ") })}</p>
+          )}
+          {error === null && <p>{t("uninstall.finished")}</p>}
+        </>
+      )}
+    </Wizard>
   );
 }

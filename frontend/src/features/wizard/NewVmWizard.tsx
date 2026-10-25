@@ -10,7 +10,7 @@ import {
   type ProfileInfo,
   type VmSummary,
 } from "../../api/client";
-import { Dialog } from "../../components/Dialog";
+import { Wizard } from "../../components/Wizard";
 import { useNotifier } from "../../components/notifier";
 import { IsoPicker } from "../iso-picker/IsoPicker";
 import { isValidName } from "../library/names";
@@ -162,15 +162,22 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
 
   const libraryPath = library?.root ? `${library.root}${folder ? `/${folder}` : ""}/${name}` : "";
 
+  const at = visible.indexOf(step);
+
   return (
     <>
-      <Dialog
-        open
-        width={640}
-        onOpenChange={(open) => !open && !busy && onClose()}
-        title={t("wizard.title")}
+      <Wizard
+        name={t("wizard.title")}
+        title={t(`wizard.step.${step}`)}
+        step={at}
+        steps={visible.length}
+        width={660}
+        onCancel={() => !busy && onClose()}
         buttons={
           <>
+            <button type="button" className="button" disabled={busy} onClick={onClose}>
+              {t("common.cancel")}
+            </button>
             <button
               type="button"
               className="button"
@@ -198,37 +205,26 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                 {busy ? t("wizard.creating") : t("wizard.finish")}
               </button>
             )}
-            <button type="button" className="button" disabled={busy} onClick={onClose}>
-              {t("common.cancel")}
-            </button>
           </>
         }
       >
-        <ol className="wizard-steps">
-          {visible.map((s) => (
-            <li key={s} className={s === step ? "current" : undefined}>
-              {t(`wizard.step.${s}`)}
-            </li>
-          ))}
-        </ol>
-
         {step === "source" && (
-          <div className="wizard-page">
+          <>
             <p>{t("wizard.sourceIntro")}</p>
-            <label className="wizard-choice">
+            <label className="check">
               <input type="radio" checked={source === "iso"} onChange={() => setSource("iso")} />
               {t("wizard.sourceIso")}
             </label>
             {source === "iso" && (
               <div className="wizard-indent wizard-iso">
-                <Disc3 size={14} aria-hidden />
-                <span className="wizard-mono">{iso ?? t("wizard.noIso")}</span>
+                <Disc3 aria-hidden />
+                <span className="mono">{iso ?? t("wizard.noIso")}</span>
                 <button type="button" className="button" onClick={() => setPickingIso(true)}>
                   {t("wizard.chooseIso")}
                 </button>
               </div>
             )}
-            <label className="wizard-choice">
+            <label className="check">
               <input
                 type="radio"
                 checked={source === "later"}
@@ -236,7 +232,7 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
               />
               {t("wizard.sourceLater")}
             </label>
-            <label className="wizard-choice">
+            <label className="check">
               <input
                 type="radio"
                 checked={source === "existing"}
@@ -248,45 +244,44 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
               <div className="wizard-indent">
                 <input
                   type="text"
-                  className="wizard-input wizard-mono"
+                  className="wizard-wide"
                   value={existingDisk}
                   placeholder="/…/KVM-Studio/VM/appliance.qcow2"
                   onChange={(e) => setExistingDisk(e.target.value)}
                 />
-                <p className="wizard-muted">{t("wizard.existingHint")}</p>
+                <p className="muted">{t("wizard.existingHint")}</p>
               </div>
             )}
-          </div>
+          </>
         )}
 
         {step === "os" && (
-          <div className="wizard-page">
+          <>
             <p>{t("wizard.osIntro")}</p>
-            <ul className="wizard-profiles" role="listbox">
+            <ul className="list" role="listbox">
               {profiles.map((p) => (
                 <li
                   key={p.id}
                   role="option"
                   aria-selected={p.id === profileId}
-                  className={p.id === profileId ? "selected" : undefined}
+                  className="list-row wizard-profile"
                   onClick={() => applyProfile(p.id)}
                 >
-                  <strong>{t(`wizard.profile.${p.id}`)}</strong>
-                  <span>{t(`wizard.profileHint.${p.id}`)}</span>
+                  <span>{t(`wizard.profile.${p.id}`)}</span>
+                  <span className="muted">{t(`wizard.profileHint.${p.id}`)}</span>
                 </li>
               ))}
             </ul>
-          </div>
+          </>
         )}
 
         {step === "name" && (
-          <div className="wizard-page">
-            {noLibrary && <p className="field-error">{t("wizard.noLibrary")}</p>}
+          <>
+            {noLibrary && <p className="note note-error">{t("wizard.noLibrary")}</p>}
             <label className="field">
               <span>{t("wizard.vmName")}</span>
               <input
                 type="text"
-                className="wizard-input"
                 value={name}
                 maxLength={64}
                 autoFocus
@@ -302,11 +297,7 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
             {taken.has(name) && <p className="field-error">{t("errors.vm.exists")}</p>}
             <label className="field">
               <span>{t("wizard.folder")}</span>
-              <select
-                className="wizard-input"
-                value={folder}
-                onChange={(e) => setFolder(e.target.value)}
-              >
+              <select value={folder} onChange={(e) => setFolder(e.target.value)}>
                 <option value="">{t("library.myComputer")}</option>
                 {(library?.folders ?? []).map((f) => (
                   <option key={f} value={f}>
@@ -315,28 +306,28 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                 ))}
               </select>
             </label>
-            {libraryPath && <p className="wizard-muted wizard-mono">{libraryPath}</p>}
-          </div>
+            {libraryPath && <p className="muted mono">{libraryPath}</p>}
+          </>
         )}
 
         {step === "disk" && (
-          <div className="wizard-page">
-            <label className="field wizard-inline">
+          <>
+            <div className="form">
               <span>{t("wizard.diskSize")}</span>
-              <input
-                type="number"
-                min={1}
-                max={16384}
-                className="wizard-input wizard-narrow"
-                value={diskGib}
-                onChange={(e) => setDiskGib(Number(e.target.value))}
-              />
-              <span>{t("units.gb")}</span>
-            </label>
-            <label className="field wizard-inline">
+              <span className="row">
+                <input
+                  type="number"
+                  min={1}
+                  max={16384}
+                  aria-label={t("wizard.diskSize")}
+                  value={diskGib}
+                  onChange={(e) => setDiskGib(Number(e.target.value))}
+                />
+                {t("units.gb")}
+              </span>
               <span>{t("wizard.diskBus")}</span>
               <select
-                className="wizard-input"
+                aria-label={t("wizard.diskBus")}
                 value={diskBus}
                 onChange={(e) => setDiskBus(e.target.value as ProfileInfo["disk_bus"])}
               >
@@ -346,19 +337,17 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                   </option>
                 ))}
               </select>
-            </label>
-            <label className="field wizard-inline">
               <span>{t("wizard.diskFormat")}</span>
               <select
-                className="wizard-input"
+                aria-label={t("wizard.diskFormat")}
                 value={diskFormat}
                 onChange={(e) => setDiskFormat(e.target.value as "qcow2" | "raw")}
               >
                 <option value="qcow2">{t("wizard.qcow2")}</option>
                 <option value="raw">{t("wizard.raw")}</option>
               </select>
-            </label>
-            <label className="wizard-choice">
+            </div>
+            <label className="check">
               <input
                 type="checkbox"
                 checked={preallocate}
@@ -367,14 +356,14 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
               {t("wizard.preallocate")}
             </label>
             {profile?.family === "windows" && diskBus === "sata" && (
-              <p className="wizard-muted">{t("wizard.windowsSata")}</p>
+              <p className="muted">{t("wizard.windowsSata")}</p>
             )}
-          </div>
+          </>
         )}
 
         {step === "summary" && (
-          <div className="wizard-page">
-            <table className="wizard-summary">
+          <>
+            <table className="facts">
               <tbody>
                 <tr>
                   <td>{t("wizard.vmName")}</td>
@@ -386,7 +375,7 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                 </tr>
                 <tr>
                   <td>{t("wizard.location")}</td>
-                  <td className="wizard-mono">{libraryPath}</td>
+                  <td className="mono">{libraryPath}</td>
                 </tr>
                 <tr>
                   <td>{t("summary.memory")}</td>
@@ -410,9 +399,7 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                 </tr>
                 <tr>
                   <td>CD/DVD</td>
-                  <td className="wizard-mono">
-                    {source === "iso" && iso ? iso : t("menu.noMedia")}
-                  </td>
+                  <td className="mono">{source === "iso" && iso ? iso : t("menu.noMedia")}</td>
                 </tr>
                 <tr>
                   <td>{t("wizard.network")}</td>
@@ -428,102 +415,106 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                 </tr>
               </tbody>
             </table>
-            <button
-              type="button"
-              className="button wizard-customize"
-              onClick={() => setCustomize((c) => !c)}
-            >
-              {t("wizard.customize")}
-            </button>
+            <div className="row wizard-customize">
+              <button
+                type="button"
+                className="button"
+                aria-expanded={customize}
+                onClick={() => setCustomize((c) => !c)}
+              >
+                {t("wizard.customize")}
+              </button>
+            </div>
             {customize && (
-              <div className="wizard-hardware">
-                <label className="field wizard-inline">
+              <fieldset className="group">
+                <legend>{t("wizard.hardware")}</legend>
+                <div className="form">
                   <span>{t("summary.memory")}</span>
-                  <input
-                    type="number"
-                    min={256}
-                    step={256}
-                    max={host?.memory_mib}
-                    className="wizard-input wizard-narrow"
-                    value={memory}
-                    onChange={(e) => setMemory(Number(e.target.value))}
-                  />
-                  <span>{t("units.mibShort")}</span>
-                </label>
-                <label className="field wizard-inline">
+                  <span className="row">
+                    <input
+                      type="number"
+                      min={256}
+                      step={256}
+                      max={host?.memory_mib}
+                      aria-label={t("summary.memory")}
+                      value={memory}
+                      onChange={(e) => setMemory(Number(e.target.value))}
+                    />
+                    {t("units.mibShort")}
+                  </span>
                   <span>{t("summary.processors")}</span>
                   <input
                     type="number"
                     min={1}
                     max={host?.cpus}
-                    className="wizard-input wizard-narrow"
+                    aria-label={t("summary.processors")}
                     value={vcpus}
                     onChange={(e) => setVcpus(Number(e.target.value))}
                   />
-                </label>
-                <div className="wizard-nics">
-                  <span>{t("wizard.network")}</span>
-                  {nics.map((nic, i) => (
-                    <div key={i} className="wizard-nic">
-                      <select
-                        className="wizard-input"
-                        value={nic.network}
-                        onChange={(e) =>
-                          setNics(
-                            nics.map((n, j) => (j === i ? { ...n, network: e.target.value } : n)),
-                          )
-                        }
-                      >
-                        {networks.map((n) => (
-                          <option key={n.name} value={n.name}>
-                            {n.name}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        className="wizard-input"
-                        value={nic.model}
-                        onChange={(e) =>
-                          setNics(
-                            nics.map((n, j) =>
-                              j === i ? { ...n, model: e.target.value as NicDraft["model"] } : n,
-                            ),
-                          )
-                        }
-                      >
-                        {(host?.nic_models ?? ["virtio"]).map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      </select>
+                  <span className="wizard-nics-label">{t("wizard.network")}</span>
+                  <div className="wizard-nics">
+                    {nics.map((nic, i) => (
+                      <div key={i} className="wizard-nic">
+                        <select
+                          value={nic.network}
+                          onChange={(e) =>
+                            setNics(
+                              nics.map((n, j) => (j === i ? { ...n, network: e.target.value } : n)),
+                            )
+                          }
+                        >
+                          {networks.map((n) => (
+                            <option key={n.name} value={n.name}>
+                              {n.name}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={nic.model}
+                          onChange={(e) =>
+                            setNics(
+                              nics.map((n, j) =>
+                                j === i ? { ...n, model: e.target.value as NicDraft["model"] } : n,
+                              ),
+                            )
+                          }
+                        >
+                          {(host?.nic_models ?? ["virtio"]).map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="icon-button"
+                          title={t("wizard.removeNic")}
+                          aria-label={t("wizard.removeNic")}
+                          onClick={() => setNics(nics.filter((_n, j) => j !== i))}
+                        >
+                          <Trash2 />
+                        </button>
+                      </div>
+                    ))}
+                    <div>
                       <button
                         type="button"
-                        className="library-button"
-                        title={t("wizard.removeNic")}
-                        aria-label={t("wizard.removeNic")}
-                        onClick={() => setNics(nics.filter((_n, j) => j !== i))}
+                        className="button"
+                        disabled={networks.length === 0 || nics.length >= 10}
+                        onClick={() =>
+                          networks[0] &&
+                          setNics([
+                            ...nics,
+                            { network: networks[0].name, model: profile?.nic_model ?? "virtio" },
+                          ])
+                        }
                       >
-                        <Trash2 size={13} />
+                        <Plus /> {t("wizard.addNic")}
                       </button>
                     </div>
-                  ))}
-                  <button
-                    type="button"
-                    className="button"
-                    disabled={networks.length === 0 || nics.length >= 10}
-                    onClick={() =>
-                      networks[0] &&
-                      setNics([
-                        ...nics,
-                        { network: networks[0].name, model: profile?.nic_model ?? "virtio" },
-                      ])
-                    }
-                  >
-                    <Plus size={13} /> {t("wizard.addNic")}
-                  </button>
+                  </div>
                 </div>
-                <label className="wizard-choice">
+                <label className="check">
                   <input
                     type="checkbox"
                     checked={uefi}
@@ -532,7 +523,7 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                   />
                   UEFI
                 </label>
-                <label className="wizard-choice wizard-indent">
+                <label className="check wizard-indent">
                   <input
                     type="checkbox"
                     checked={uefi && secureBoot}
@@ -541,7 +532,7 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                   />
                   Secure Boot
                 </label>
-                <label className="wizard-choice">
+                <label className="check">
                   <input
                     type="checkbox"
                     checked={tpm}
@@ -550,15 +541,15 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                   />
                   TPM 2.0
                 </label>
-              </div>
+              </fieldset>
             )}
-            <label className="wizard-choice">
+            <label className="check">
               <input type="checkbox" checked={start} onChange={(e) => setStart(e.target.checked)} />
               {t("wizard.startAfter")}
             </label>
-          </div>
+          </>
         )}
-      </Dialog>
+      </Wizard>
       {pickingIso && <IsoPicker onPick={chooseIso} onClose={() => setPickingIso(false)} />}
     </>
   );

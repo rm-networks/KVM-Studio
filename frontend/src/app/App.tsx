@@ -35,6 +35,12 @@ export interface Layout {
   statusBar: boolean;
 }
 
+/** Closing the desktop window quits; a browser tab is the user's to close. */
+function quitWindow(): (() => void) | undefined {
+  const close = window.pywebview?.api?.close_window;
+  return close ? () => void close() : undefined;
+}
+
 export function App() {
   return (
     <NotificationProvider>
@@ -167,6 +173,10 @@ function MainWindow() {
           onCloseTab={activeTab !== HOME_TAB ? () => closeTab(activeTab) : undefined}
           onNextTab={allTabs.length > 1 ? () => cycleTab(1) : undefined}
           onPreviousTab={allTabs.length > 1 ? () => cycleTab(-1) : undefined}
+          tabs={[{ id: HOME_TAB, label: t("home.tab") }, ...tabs]}
+          activeTab={activeTab}
+          onActivateTab={setActiveTab}
+          onQuit={info?.mode === "desktop" ? quitWindow() : undefined}
           drives={drives}
           onChangeMedia={setMediaTarget}
           onEject={(target) => setMedia(target, null)}

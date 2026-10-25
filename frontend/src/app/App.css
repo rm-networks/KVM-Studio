@@ -21,14 +21,14 @@
 .workspace-content {
   flex: 1;
   overflow: auto;
-  background: var(--surface-alt);
+  background: var(--surface);
 }
 
 .session-error {
   display: grid;
   place-items: center;
   height: 100%;
-  padding: 24px;
+  padding: var(--space-4);
 }
 
 .session-error .error-message {
