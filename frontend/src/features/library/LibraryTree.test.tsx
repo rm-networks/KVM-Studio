@@ -116,12 +116,15 @@ describe("LibraryTree", () => {
     expect(opened).toEqual(["a", "b"]);
   });
 
-  it("opens the settings from the context menu, right after Open in a Tab", async () => {
+  it("opens the settings from the context menu, last after Delete from disk", async () => {
     const settings: string[] = [];
     render(<Harness vms={[makeVm({ name: "a" })]} onSettings={(uuid) => settings.push(uuid)} />);
     fireEvent.contextMenu(screen.getByText("a"));
     const items = (await screen.findAllByRole("menuitem")).map((el) => el.textContent);
-    expect(items.slice(0, 2)).toEqual(["Ouvrir dans un onglet", "Paramètres…Ctrl+D"]);
+    expect(items[0]).toBe("Ouvrir dans un onglet");
+    expect(items.slice(-2)).toEqual(["Supprimer du disque…", "Paramètres…Ctrl+D"]);
+    const last = screen.getAllByRole("menuitem").at(-1) as HTMLElement;
+    expect(last.previousElementSibling?.getAttribute("role")).toBe("separator");
     fireEvent.click(screen.getByRole("menuitem", { name: /Paramètres/ }));
     expect(settings).toEqual(["a"]);
   });

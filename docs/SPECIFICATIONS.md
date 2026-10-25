@@ -180,7 +180,7 @@ Only what works is shown: an entry, a tile or a setting that is not available ye
 
 The Power submenu holds: Start, Shut Down Guest, Restart Guest, Suspend, Resume, Power Off, Reset.
 
-The context menu of a VM in the library holds, after Open in a Tab: Settings… (Ctrl+D, as in the VM menu), then the power actions, Clone…, Rename, Move To, Delete.
+The context menu of a VM in the library holds Open in a Tab, the power actions, Clone…, Rename, Move To, Delete, then Settings… (Ctrl+D) last, after a separator, as in the VM menu.
 
 **VM settings, Hardware tab.** Memory, Processors, Disks, CD/DVD, Network adapters, USB controller, Sound card, Display, Serial port, TPM. The Memory panel has the vertical slider from 4 MB to the host maximum, with three marks: guest OS minimum, recommended, recommended maximum.
 

@@ -44,7 +44,6 @@ export function VmContextMenu({ vm, onOpen, onSettings, children }: Props) {
       <ContextMenu.Portal>
         <ContextMenu.Content className="menu">
           <Item label={t("menu.openTab")} onSelect={() => onOpen(vm.uuid)} />
-          <Item label={t("menu.settings")} keys="Ctrl+D" onSelect={() => onSettings(vm.uuid)} />
           <ContextMenu.Separator className="menu-separator" />
           {POWER_ACTIONS.map((action) => (
             <Item
@@ -67,6 +66,8 @@ export function VmContextMenu({ vm, onOpen, onSettings, children }: Props) {
           )}
           <Item label={t("menu.removeFromLibrary")} onSelect={() => actions.remove(vm, false)} />
           <Item label={t("menu.deleteFromDisk")} onSelect={() => actions.remove(vm, true)} />
+          <ContextMenu.Separator className="menu-separator" />
+          <Item label={t("menu.settings")} keys="Ctrl+D" onSelect={() => onSettings(vm.uuid)} />
         </ContextMenu.Content>
       </ContextMenu.Portal>
     </ContextMenu.Root>
