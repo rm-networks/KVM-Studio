@@ -36,7 +36,8 @@
     "changeIso": "Changer d'image ISO…",
     "eject": "Éjecter",
     "sendKeys": "Envoyer une combinaison",
-    "firstRun": "Assistant de premier lancement…"
+    "firstRun": "Assistant de premier lancement…",
+    "clone": "Cloner…"
   },
   "toolbar": {
     "start": "Démarrer",
@@ -151,7 +152,8 @@
       "secure_boot_needs_uefi": "Secure Boot demande l'UEFI.",
       "exists": "Une machine virtuelle porte déjà ce nom.",
       "disk_failed": "La création du disque a échoué.",
-      "no_nic": "Cette carte réseau n'existe plus."
+      "no_nic": "Cette carte réseau n'existe plus.",
+      "has_linked_clones": "Des clones liés dépendent de cette machine virtuelle : elle ne peut être ni supprimée ni déplacée tant qu'ils existent."
     },
     "request": {
       "invalid": "Requête invalide."
@@ -229,6 +231,14 @@
       "iso_failed": "La création du CD des outils a échoué.",
       "no_virtio_iso": "Indiquez l'ISO virtio-win dans Préférences > Machines virtuelles.",
       "unsupported": "Pas d'outils invités automatiques pour ce système."
+    },
+    "clone": {
+      "unreadable_disk": "Un disque de la source n'est pas lisible par votre compte.",
+      "unsupported_disk": "Un disque de la source n'est pas un fichier : il ne peut pas être cloné."
+    },
+    "task": {
+      "failed": "L'opération a échoué.",
+      "not_found": "Cette opération n'est plus connue."
     }
   },
   "about": {
@@ -750,5 +760,45 @@
   },
   "loading": {
     "brand": "{{app}}"
+  },
+  "clone": {
+    "title": "Cloner {{name}}",
+    "step": {
+      "source": "Machine virtuelle source",
+      "kind": "Type de clone",
+      "name": "Nom",
+      "folder": "Dossier de la bibliothèque",
+      "summary": "Récapitulatif",
+      "copy": "Clonage"
+    },
+    "sourceIntro": "Cet assistant crée une nouvelle machine virtuelle à partir de « {{name}} » : un nouveau nom, de nouvelles adresses MAC, le même matériel.",
+    "sourceVm": "Machine virtuelle source",
+    "state": "État",
+    "mustBeOff": "Arrêtez d'abord la machine virtuelle : seule une machine éteinte peut être clonée.",
+    "kindIntro": "Comment le clone doit-il utiliser les disques de la source ?",
+    "kind": {
+      "full": "Clone complet",
+      "linked": "Clone lié"
+    },
+    "kindLabel": "Type de clone",
+    "kindHint": {
+      "full": "Une copie indépendante de chaque disque, des variables du firmware et de l'état du TPM. Prend autant de place que la source et un peu de temps à copier.",
+      "linked": "De nouveaux disques qui ne contiennent que les modifications et lisent le reste sur les disques de la source. Prêt tout de suite et léger, mais la source doit ensuite rester éteinte : la démarrer abîmerait ses clones."
+    },
+    "name": "Nom du clone",
+    "folder": "Dossier de la bibliothèque",
+    "defaultName": "{{name}}-clone",
+    "summaryHint": "La source n'est pas modifiée. Les variables du firmware et l'état du TPM sont copiés avec le mot de passe administrateur.",
+    "linkedWarning": "Tant que ce clone existe, « {{name}} » demande une confirmation avant de démarrer, et ne peut être ni supprimée ni déplacée.",
+    "start": "Cloner",
+    "copying": "Création de « {{name}} »…",
+    "percent": "{{value}} %",
+    "done": "« {{name}} » est prête.",
+    "cancelled": "Le clonage a été annulé ; tout ce qu'il avait créé a été retiré.",
+    "stateNotCopied": "Les variables du firmware et l'état du TPM n'ont pas pu être copiés : le clone démarre avec des neufs.",
+    "startSourceTitle": "Des clones liés dépendent de cette machine virtuelle",
+    "startSource": "Les disques de « {{name}} » servent de base à ces clones liés : {{clones}}. La démarrer écrit sur ces disques et abîmerait les clones. La démarrer quand même ?",
+    "startAnyway": "Démarrer quand même",
+    "linkedClones": "Clones liés"
   }
 }

@@ -44,6 +44,8 @@ export type GroupState = SetupStatus["libvirt_group"];
 export type UninstallPlan = components["schemas"]["UninstallPlan"];
 export type UninstallRequest = components["schemas"]["UninstallRequest"];
 export type UninstallReport = components["schemas"]["UninstallReport"];
+export type CloneRequest = components["schemas"]["CloneRequest"];
+export type TaskInfo = components["schemas"]["TaskInfo"];
 export type PackageState = components["schemas"]["PackageState"];
 type ApiErrorBody = components["schemas"]["ApiError"];
 
@@ -102,8 +104,16 @@ const vmPath = (uuid: string) => `/api/vms/${encodeURIComponent(uuid)}`;
 export const api = {
   info: () => request<AppInfo>("GET", "/api/info"),
   listVms: () => request<VmSummary[]>("GET", "/api/vms"),
-  power: (uuid: string, action: PowerAction) =>
-    request<undefined>("POST", `${vmPath(uuid)}/power/${action}`),
+  /** force: start a VM even though linked clones depend on its disks. */
+  power: (uuid: string, action: PowerAction, force = false) =>
+    request<undefined>("POST", `${vmPath(uuid)}/power/${action}${force ? "?force=true" : ""}`),
+  cloneVm: (uuid: string, body: CloneRequest) =>
+    request<TaskInfo>("POST", `${vmPath(uuid)}/clone`, body),
+  linkedClones: (uuid: string) =>
+    request<{ names: string[] }>("GET", `${vmPath(uuid)}/linked-clones`),
+  task: (id: string) => request<TaskInfo>("GET", `/api/tasks/${encodeURIComponent(id)}`),
+  cancelTask: (id: string) =>
+    request<TaskInfo>("POST", `/api/tasks/${encodeURIComponent(id)}/cancel`),
   rename: (uuid: string, name: string) => request<undefined>("PATCH", vmPath(uuid), { name }),
   deletionPlan: (uuid: string) => request<DeletionPlan>("GET", `${vmPath(uuid)}/deletion-plan`),
   deleteVm: (uuid: string, files: boolean) =>

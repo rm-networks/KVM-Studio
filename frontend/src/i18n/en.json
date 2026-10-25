@@ -36,7 +36,8 @@
     "changeIso": "Change ISO Image…",
     "eject": "Eject",
     "sendKeys": "Send Key Combination",
-    "firstRun": "First-run assistant…"
+    "firstRun": "First-run assistant…",
+    "clone": "Clone…"
   },
   "toolbar": {
     "start": "Start",
@@ -151,7 +152,8 @@
       "secure_boot_needs_uefi": "Secure Boot needs UEFI.",
       "exists": "A virtual machine already has this name.",
       "disk_failed": "Creating the disk failed.",
-      "no_nic": "This network adapter no longer exists."
+      "no_nic": "This network adapter no longer exists.",
+      "has_linked_clones": "Linked clones depend on this virtual machine: it cannot be deleted or moved while they exist."
     },
     "request": {
       "invalid": "Invalid request."
@@ -229,6 +231,14 @@
       "iso_failed": "Making the tools CD failed.",
       "no_virtio_iso": "Choose the virtio-win ISO in Preferences > Virtual machines.",
       "unsupported": "No automatic guest tools for this system."
+    },
+    "clone": {
+      "unreadable_disk": "A disk of the source cannot be read by your account.",
+      "unsupported_disk": "A disk of the source is not a file: it cannot be cloned."
+    },
+    "task": {
+      "failed": "The operation failed.",
+      "not_found": "This operation is no longer known."
     }
   },
   "about": {
@@ -750,5 +760,45 @@
   },
   "loading": {
     "brand": "{{app}}"
+  },
+  "clone": {
+    "title": "Clone {{name}}",
+    "step": {
+      "source": "Source Virtual Machine",
+      "kind": "Clone Type",
+      "name": "Name",
+      "folder": "Library Folder",
+      "summary": "Summary",
+      "copy": "Cloning"
+    },
+    "sourceIntro": "This assistant makes a new virtual machine from \"{{name}}\": a new name, new MAC addresses, the same hardware.",
+    "sourceVm": "Source virtual machine",
+    "state": "State",
+    "mustBeOff": "Shut the virtual machine down first: only a powered off machine can be cloned.",
+    "kindIntro": "How should the clone use the disks of the source?",
+    "kind": {
+      "full": "Full clone",
+      "linked": "Linked clone"
+    },
+    "kindLabel": "Clone type",
+    "kindHint": {
+      "full": "An independent copy of every disk, of the firmware variables and of the TPM state. Takes as much space as the source and some time to copy.",
+      "linked": "New disks that only hold the changes and read the rest from the source disks. Ready at once and small, but the source must then stay powered off: starting it would damage its clones."
+    },
+    "name": "Name of the clone",
+    "folder": "Library folder",
+    "defaultName": "{{name}}-clone",
+    "summaryHint": "The source is not changed. The firmware variables and the TPM state are copied with the administrator password.",
+    "linkedWarning": "As long as this clone exists, \"{{name}}\" asks for a confirmation before starting, and cannot be deleted or moved.",
+    "start": "Clone",
+    "copying": "Making \"{{name}}\"…",
+    "percent": "{{value}}%",
+    "done": "\"{{name}}\" is ready.",
+    "cancelled": "Cloning was cancelled; everything it had made was removed.",
+    "stateNotCopied": "The firmware variables and the TPM state could not be copied: the clone starts with new ones.",
+    "startSourceTitle": "Linked clones depend on this virtual machine",
+    "startSource": "The disks of \"{{name}}\" are the base of these linked clones: {{clones}}. Starting it writes to those disks and would damage the clones. Start it all the same?",
+    "startAnyway": "Start Anyway",
+    "linkedClones": "Linked clones"
   }
 }

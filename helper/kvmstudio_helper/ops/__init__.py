@@ -36,7 +36,7 @@ def expect_keys(params: Mapping[str, object], keys: set[str]) -> None:
 
 
 def registry() -> dict[str, Operation]:
-    from . import iso_acl, iso_library, join_libvirt, remove_package
+    from . import clone_state, iso_acl, iso_library, join_libvirt, remove_package
 
     return {
         "iso_acl": Operation(iso_acl.ACTION, iso_acl.prepare),
@@ -45,5 +45,6 @@ def registry() -> dict[str, Operation]:
         "clear_iso_libraries": Operation(iso_library.ACTION, iso_library.prepare_clear),
         "list_iso_libraries": Operation(None, iso_library.prepare_list),
         "join_libvirt": Operation(join_libvirt.ACTION, join_libvirt.prepare),
+        "clone_vm_state": Operation(clone_state.ACTION, clone_state.prepare),
         "remove_package": Operation(remove_package.ACTION, remove_package.prepare),
     }

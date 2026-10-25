@@ -73,7 +73,18 @@ def used_elsewhere(other_xmls: list[str], config: Config, own: set[str]) -> set[
     return used
 
 
+def _no_linked_clones(conn: LibvirtConnection, uuid: str) -> None:
+    """Deleting the files of a VM would break the clones whose disks are overlays of them."""
+    from .clone import linked_clones
+
+    if clones := linked_clones(conn, uuid):
+        raise ApiException(
+            409, "vm.has_linked_clones", "Linked clones depend on it: " + ", ".join(clones)
+        )
+
+
 def plan_deletion(conn: LibvirtConnection, uuid: str, config: Config) -> DeletionPlan:
+    _no_linked_clones(conn, uuid)
     xml, _state, others = _snapshot(conn, uuid)
     return plan_files(xml, others, config)
 
@@ -131,6 +142,8 @@ def delete_vm(
     xml, state, others = _snapshot(conn, uuid)
     if state != libvirt.VIR_DOMAIN_SHUTOFF:
         raise ApiException(409, "vm.not_shut_off", "Power the virtual machine off first")
+    if delete_files:
+        _no_linked_clones(conn, uuid)
     plan = plan_files(xml, others, config) if delete_files else DeletionPlan()
 
     flags = (

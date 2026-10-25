@@ -14,7 +14,7 @@ from ..errors import ApiException
 from ..events import EventHub
 from ..libvirt_conn import DomainState
 from ..paths import is_strictly_within, library_root
-from ..services import deletion, library, vm_view
+from ..services import clone, deletion, library, vm_view
 from ..services.library import Drift
 
 router = APIRouter(prefix="/vms", tags=["vms"])
@@ -81,7 +81,15 @@ def list_vms(ctx: Context) -> list[VmSummary]:
 
 
 @router.post("/{uuid}/power/{action}", status_code=204)
-def power(ctx: Context, uuid: str, action: PowerAction) -> Response:
+def power(
+    ctx: Context, uuid: str, action: PowerAction, force: Annotated[bool, Query()] = False
+) -> Response:
+    """force: start a VM even though linked clones depend on its disks."""
+    if action == "start" and not force and (clones := clone.linked_clones(ctx.conn, uuid)):
+        raise ApiException(
+            409, "vm.has_linked_clones", "Linked clones depend on it: " + ", ".join(clones)
+        )
+
     def op(c: libvirt.virConnect) -> None:
         dom = c.lookupByUUIDString(uuid)
         if bool(dom.isActive()) == (action == "start"):

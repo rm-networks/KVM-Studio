@@ -101,6 +101,7 @@ export function MenuBar({
     ),
   );
   const manageEntries: Entry[] = [
+    item(m("clone"), undefined, vm ? () => actions.clone(vm) : undefined),
     item(m("rename"), undefined, vm ? () => actions.rename(vm) : undefined),
     sep,
     item(m("removeFromLibrary"), undefined, vm ? () => actions.remove(vm, false) : undefined),

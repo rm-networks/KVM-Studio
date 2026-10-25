@@ -30,6 +30,18 @@
     </defaults>
   </action>
 
+  <action id="org.kvmstudio.helper.clone-state">
+    <description>Copy the firmware variables and TPM state of a cloned virtual machine</description>
+    <description xml:lang="fr">Copier les variables du firmware et l'état du TPM d'une machine virtuelle clonée</description>
+    <message>Authentication is required to copy the firmware variables and TPM state of a virtual machine.</message>
+    <message xml:lang="fr">Une authentification est nécessaire pour copier les variables du firmware et l'état du TPM d'une machine virtuelle.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.kvmstudio.helper.join-libvirt">
     <description>Add your account to the libvirt group</description>
     <description xml:lang="fr">Ajouter votre compte au groupe libvirt</description>

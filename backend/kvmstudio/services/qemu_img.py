@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 QCOW2_MAGIC = b"QFI\xfb"
 TIMEOUT = 30
+# "-p" prints "    (12.50/100%)" and rewrites it with carriage returns.
+_PERCENT = re.compile(rb"\((\d+(?:\.\d+)?)/100%\)")
 
 
 class QemuImgError(Exception):
@@ -98,3 +102,39 @@ def create(path: Path, fmt: str, size_gib: int, *, preallocate: bool) -> None:
     if preallocate:
         args += ["-o", "preallocation=falloc"]
     _run([*args, str(path), f"{size_gib}G"], timeout=600)
+
+
+def convert_progress(src: Path, dest: Path, fmt: str, on_progress: Callable[[float], None]) -> None:
+    """convert(), telling on_progress how far it went (0 to 1).
+
+    on_progress may raise to stop the copy: qemu-img is then ended and the
+    exception goes on; the partial file is the caller's to remove.
+    """
+    args = [_qemu_img(), "convert", "-p", "-O", fmt, str(src), str(dest)]
+    proc = subprocess.Popen(  # noqa: S603
+        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0
+    )
+    out = proc.stdout
+    if out is None:  # never: stdout is a pipe
+        raise QemuImgError("no output from qemu-img")
+    buffer = b""
+    try:
+        while chunk := out.read(64):
+            buffer += chunk
+            *lines, buffer = re.split(rb"[\r\n]", buffer)
+            for line in lines:
+                if match := _PERCENT.search(line):
+                    on_progress(float(match.group(1)) / 100)
+        proc.wait()
+    except BaseException:
+        proc.kill()
+        proc.wait()
+        raise
+    if proc.returncode != 0:
+        error = proc.stderr.read().decode(errors="replace").strip() if proc.stderr else ""
+        raise QemuImgError(error or f"qemu-img convert ended with {proc.returncode}")
+
+
+def create_overlay(dest: Path, backing: Path, backing_format: str) -> None:
+    """A new qcow2 image whose unchanged blocks are read from backing (linked clone)."""
+    _run(["create", "-q", "-f", "qcow2", "-b", str(backing), "-F", backing_format, str(dest)])

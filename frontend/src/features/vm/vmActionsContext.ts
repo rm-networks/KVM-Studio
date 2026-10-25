@@ -6,6 +6,7 @@ export interface VmActions {
   power: (vm: VmSummary, action: PowerAction) => void;
   rename: (vm: VmSummary) => void;
   remove: (vm: VmSummary, deleteFiles: boolean) => void;
+  clone: (vm: VmSummary) => void;
 }
 
 export const VmActionsContext = createContext<VmActions | null>(null);

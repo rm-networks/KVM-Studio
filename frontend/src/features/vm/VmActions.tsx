@@ -1,8 +1,9 @@
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { api, type PowerAction, type VmSummary } from "../../api/client";
+import { api, ApiError, type PowerAction, type VmSummary } from "../../api/client";
 import { useNotifier } from "../../components/notifier";
+import { CloneWizard } from "../clone/CloneWizard";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { DeleteDialog } from "./DeleteDialog";
 import { RenameDialog } from "./RenameDialog";
@@ -15,6 +16,9 @@ type Pending =
   | { kind: "confirm"; vm: VmSummary; action: PowerAction }
   | { kind: "rename"; vm: VmSummary }
   | { kind: "delete"; vm: VmSummary; deleteFiles: boolean }
+  | { kind: "clone"; vm: VmSummary }
+  // Starting a VM whose disks are the base of linked clones.
+  | { kind: "linked"; vm: VmSummary; clones: string }
   | null;
 
 export function VmActionsProvider({ children }: { children: ReactNode }) {
@@ -23,12 +27,15 @@ export function VmActionsProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<Pending>(null);
 
   const runPower = useCallback(
-    (vm: VmSummary, action: PowerAction) => {
-      api
-        .power(vm.uuid, action)
-        .catch((err: unknown) =>
-          notifyError(t("actions.failed", { action: t(`power.${action}`), name: vm.name }), err),
-        );
+    (vm: VmSummary, action: PowerAction, force = false) => {
+      api.power(vm.uuid, action, force).catch((err: unknown) => {
+        if (err instanceof ApiError && err.code === "vm.has_linked_clones") {
+          const clones = err.detail.slice(err.detail.indexOf(":") + 1).trim();
+          setPending({ kind: "linked", vm, clones });
+          return;
+        }
+        notifyError(t("actions.failed", { action: t(`power.${action}`), name: vm.name }), err);
+      });
     },
     [notifyError, t],
   );
@@ -41,6 +48,7 @@ export function VmActionsProvider({ children }: { children: ReactNode }) {
       },
       rename: (vm) => setPending({ kind: "rename", vm }),
       remove: (vm, deleteFiles) => setPending({ kind: "delete", vm, deleteFiles }),
+      clone: (vm) => setPending({ kind: "clone", vm }),
     }),
     [runPower],
   );
@@ -63,6 +71,20 @@ export function VmActionsProvider({ children }: { children: ReactNode }) {
           onCancel={close}
         />
       )}
+      {pending?.kind === "linked" && (
+        <ConfirmDialog
+          title={t("clone.startSourceTitle")}
+          message={t("clone.startSource", { name: pending.vm.name, clones: pending.clones })}
+          confirmLabel={t("clone.startAnyway")}
+          danger
+          onConfirm={() => {
+            runPower(pending.vm, "start", true);
+            close();
+          }}
+          onCancel={close}
+        />
+      )}
+      {pending?.kind === "clone" && <CloneWizard source={pending.vm} onClose={close} />}
       {pending?.kind === "rename" && <RenameDialog vm={pending.vm} onClose={close} />}
       {pending?.kind === "delete" && (
         <DeleteDialog vm={pending.vm} deleteFiles={pending.deleteFiles} onClose={close} />

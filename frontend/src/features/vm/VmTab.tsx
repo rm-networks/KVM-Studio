@@ -1,7 +1,8 @@
-import { Cpu, MemoryStick, Play, Settings2 } from "lucide-react";
+import { Cpu, Link2, MemoryStick, Play, Settings2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { VmSummary } from "../../api/client";
+import { api, type VmSummary } from "../../api/client";
 import { VmConsole } from "../console/VmConsole";
 import { powerAllowed } from "./power";
 import { useVmActions } from "./vmActionsContext";
@@ -9,9 +10,27 @@ import "./VmTab.css";
 
 const LIVE_STATES: ReadonlySet<VmSummary["state"]> = new Set(["running", "paused"]);
 
+/** VMs whose disks are overlays of this one's: they break if it runs. */
+function useLinkedClones(uuid: string | undefined, state: string | undefined): string[] {
+  const [names, setNames] = useState<string[]>([]);
+  useEffect(() => {
+    if (!uuid) return;
+    let cancelled = false;
+    api
+      .linkedClones(uuid)
+      .then((r) => !cancelled && setNames(r.names))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [uuid, state]);
+  return names;
+}
+
 export function VmTab({ vm, onSettings }: { vm: VmSummary | undefined; onSettings: () => void }) {
   const { t } = useTranslation();
   const actions = useVmActions();
+  const clones = useLinkedClones(vm?.uuid, vm?.state);
   if (!vm) return <div className="vm-tab-note">{t("errors.libvirt.no_domain")}</div>;
   if (LIVE_STATES.has(vm.state)) return <VmConsole uuid={vm.uuid} />;
 
@@ -58,6 +77,17 @@ export function VmTab({ vm, onSettings }: { vm: VmSummary | undefined; onSetting
             </td>
             <td>{vm.vcpus}</td>
           </tr>
+          {clones.length > 0 && (
+            <tr>
+              <td>
+                <span className="vm-summary-device">
+                  <Link2 aria-hidden />
+                  {t("clone.linkedClones")}
+                </span>
+              </td>
+              <td>{clones.join(", ")}</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

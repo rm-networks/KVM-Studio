@@ -4,6 +4,7 @@
 
 # socket = "/run/kvmstudio-helper.sock"
 # state = "/var/lib/kvm-studio/helper-state.json"
+# swtpm_dir = "/var/lib/libvirt/swtpm"   # TPM states, copied when cloning
 
 # Account QEMU runs as. Detected when absent ("qemu", then "libvirt-qemu").
 # qemu_user = "qemu"

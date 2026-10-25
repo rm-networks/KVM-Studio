@@ -16,6 +16,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import APP_NAME, __version__
 from .api import (
+    clone,
     create,
     display,
     guest,
@@ -44,6 +45,7 @@ from .events import EventHub, events_socket
 from .frontend import find_frontend_dir
 from .libvirt_conn import LibvirtConnection
 from .services import vm_view
+from .services.tasks import TaskRegistry
 
 # Only loopback names are accepted, which defeats DNS rebinding.
 LOOPBACK_HOSTS = ["127.0.0.1", "localhost"]
@@ -85,6 +87,7 @@ def create_app(
         title=APP_NAME, version=__version__, docs_url=None, redoc_url=None, lifespan=lifespan
     )
     app.state.events = hub
+    app.state.tasks = TaskRegistry()
     # Set by the shell that started us; tests and --reload have none.
     app.state.on_restart = on_restart
     app.state.context = AppContext(
@@ -111,6 +114,7 @@ def create_app(
         "/restart", system.restart, methods=["POST"], status_code=202, tags=["system"]
     )
     private.include_router(create.router)
+    private.include_router(clone.router)
     private.include_router(vms.router)
     private.include_router(library.router)
     private.include_router(networks.router)

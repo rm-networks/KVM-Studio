@@ -17,6 +17,8 @@ from typing import Any
 DEFAULT_PATH = Path("/etc/kvm-studio/helper.toml")
 DEFAULT_SOCKET = Path("/run/kvmstudio-helper.sock")
 DEFAULT_STATE = Path("/var/lib/kvm-studio/helper-state.json")
+# Where libvirt keeps the state of emulated TPMs, one folder per domain UUID.
+DEFAULT_SWTPM = Path("/var/lib/libvirt/swtpm")
 DEFAULT_EXTENSIONS = (".iso", ".img")
 # Account QEMU runs as with qemu:///system (Fedora, then Debian/Ubuntu).
 QEMU_USERS = ("qemu", "libvirt-qemu")
@@ -36,6 +38,7 @@ class HelperConfig:
     qemu_uid: int | None
     iso_libraries: tuple[IsoLibrary, ...]
     state: Path
+    swtpm_dir: Path = DEFAULT_SWTPM
 
 
 class ConfigError(ValueError):
@@ -81,13 +84,16 @@ def _library(table: object, index: int) -> IsoLibrary:
 
 
 def parse(data: dict[str, Any]) -> HelperConfig:
-    _check_keys(data, {"socket", "state", "qemu_user", "iso_libraries"}, "helper.toml")
+    _check_keys(data, {"socket", "state", "swtpm_dir", "qemu_user", "iso_libraries"}, "helper.toml")
     socket = data.get("socket", str(DEFAULT_SOCKET))
     if not isinstance(socket, str) or not Path(socket).is_absolute():
         raise ConfigError("socket must be an absolute path")
     state = data.get("state", str(DEFAULT_STATE))
     if not isinstance(state, str) or not Path(state).is_absolute():
         raise ConfigError("state must be an absolute path")
+    swtpm = data.get("swtpm_dir", str(DEFAULT_SWTPM))
+    if not isinstance(swtpm, str) or not Path(swtpm).is_absolute():
+        raise ConfigError("swtpm_dir must be an absolute path")
     libraries = data.get("iso_libraries", [])
     if not isinstance(libraries, list):
         raise ConfigError("iso_libraries must be an array of tables")
@@ -96,6 +102,7 @@ def parse(data: dict[str, Any]) -> HelperConfig:
         qemu_uid=_qemu_uid(data.get("qemu_user")),
         iso_libraries=merge_libraries([_library(t, i) for i, t in enumerate(libraries)]),
         state=Path(state),
+        swtpm_dir=Path(swtpm),
     )
 
 
