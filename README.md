@@ -12,7 +12,7 @@ The interface is in English, or in French when the desktop is in French
 
 ## Status
 
-Version 0.1.0 is the first usable version (Fedora). Work continues towards V1,
+Version 0.2.0 is the current version (Fedora). Work continues towards V1,
 see the [roadmap](docs/ROADMAP.md).
 
 ## Running from the sources

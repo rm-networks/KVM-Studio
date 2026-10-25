@@ -3,7 +3,7 @@
 Run from the repository root after building the frontend:
 
     python3 packaging/stage.py
-    VERSION=0.1.0 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
+    VERSION=0.2.0 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
 """
 
 from __future__ import annotations
