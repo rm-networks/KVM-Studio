@@ -39,4 +39,4 @@ nic_model = "virtio"     # "virtio" | "e1000e" | "rtl8139" | "vmxnet3"
 
 [ui]
 theme = "system"         # "system" | "light" | "dark"
-language = "fr"          # "fr" | "en"
+language = "system"      # "system" (the desktop language) | "en" | "fr"

@@ -424,8 +424,10 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                     })
                   }
                 >
-                  <option value="fr">Français</option>
+                  <option value="system">{t("prefs.languageSystem")}</option>
+                  {/* Each language under its own name, whatever the current one. */}
                   <option value="en">English</option>
+                  <option value="fr">Français</option>
                 </select>
               </label>
             </Group>

@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=Uninstall KVM Studio
-Name[fr]=Désinstaller KVM Studio
-Comment=Remove KVM Studio, and optionally its virtual machines, networks and settings
-Comment[fr]=Retirer KVM Studio et, au choix, ses machines virtuelles, réseaux et réglages
+Name=Uninstall @APP_NAME@
+Name[fr]=Désinstaller @APP_NAME@
+Comment=Remove @APP_NAME@, and optionally its virtual machines, networks and settings
+Comment[fr]=Retirer @APP_NAME@ et, au choix, ses machines virtuelles, réseaux et réglages
 Exec=kvm-studio --uninstall-wizard
 Icon=kvm-studio
 Terminal=false

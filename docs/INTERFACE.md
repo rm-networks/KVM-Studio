@@ -1,41 +1,42 @@
 # Interface
 
-La disposition reprend celle d'un logiciel de virtualisation de bureau
-classique, avec un style propre au projet : rendu dense, thème clair ou sombre,
-icônes Lucide.
+The layout follows that of a classic desktop virtualization application, with
+a style of its own: dense, light or dark theme, Lucide icons.
 
-## Fenêtre principale
+## Main window
 
-- Menus : Fichier, Édition, Affichage, VM, Onglets, Aide.
-- Barre d'outils sous les menus.
-- Bibliothèque arborescente à gauche (dossiers et VMs).
-- Onglets au centre : Accueil, puis un onglet par VM ouverte.
-- Barre d'état en bas.
+- Menus: File, Edit, View, VM, Tabs, Help.
+- Toolbar under the menus.
+- Library tree on the left (folders and VMs).
+- Tabs in the middle: Home, then one tab per open VM.
+- Status bar at the bottom.
 
-Le détail des entrées de menu figure dans la section 5 du
-[cahier des charges](SPECIFICATIONS.md).
+The menu entries are detailed in section 5 of the
+[specifications](SPECIFICATIONS.md).
 
-## Dialogues
+## Dialogs
 
-- Paramètres de la VM (onglets Matériel et Options).
-- Assistant Nouvelle VM (Typique, Personnalisé, Installation simplifiée).
-- Gestionnaire de snapshots.
-- Éditeur de réseaux virtuels.
-- Préférences.
-- Sélecteur d'ISO.
-- Connexion (mode web partagé).
-- Assistant de premier lancement.
+- VM settings (Hardware and Options tabs).
+- New VM assistant (Typical, Custom, Easy Install).
+- Snapshot manager.
+- Virtual network editor.
+- Preferences.
+- ISO picker.
+- Login (shared web mode).
+- First-run assistant.
 
-Toute action destructive demande une confirmation. Les erreurs libvirt sont
-affichées en clair, avec le message brut dépliable.
+Every destructive action asks for a confirmation. libvirt errors are shown in
+plain words, with the raw message available on demand.
 
-## Raccourcis
+## Shortcuts
 
-Les raccourcis suivent les conventions habituelles des logiciels de
-virtualisation de bureau et sont remappables. En mode web, le navigateur
-intercepte Ctrl+W, Ctrl+N et Ctrl+T : il faut alors leur attribuer d'autres
-combinaisons. Le mode logiciel n'a pas cette limite.
+Shortcuts follow the usual conventions of desktop virtualization software and
+can be remapped. In web mode, the browser takes Ctrl+W, Ctrl+N and Ctrl+T:
+other combinations must then be assigned to them. Window mode has no such
+limit.
 
-## Langues
+## Languages
 
-Français et anglais (i18next).
+English (source language) and French, with i18next. With the "Same as the
+system" setting, French is used when the desktop is in French, English
+otherwise.

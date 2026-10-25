@@ -14,7 +14,7 @@ from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from . import __version__
+from . import APP_NAME, __version__
 from .api import (
     create,
     display,
@@ -82,7 +82,7 @@ def create_app(
         await hub.stop()
 
     app = FastAPI(
-        title="KVM Studio", version=__version__, docs_url=None, redoc_url=None, lifespan=lifespan
+        title=APP_NAME, version=__version__, docs_url=None, redoc_url=None, lifespan=lifespan
     )
     app.state.events = hub
     # Set by the shell that started us; tests and --reload have none.

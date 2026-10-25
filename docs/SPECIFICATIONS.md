@@ -1,113 +1,113 @@
-# KVM Studio : cahier des charges
+# KVM Studio: specifications
 
 Oct 22, 2026 · @Romain
 
-## 1. Contexte et objectifs
+## 1. Context and goals
 
-**KVM Studio** est un gestionnaire de machines virtuelles pour Linux qui reprend l'ergonomie et les fonctionnalités de VMware Workstation, en pilotant QEMU/KVM via libvirt. Projet communautaire open source sur GitHub, testé d'abord sur Fedora KDE Plasma 6.
+**KVM Studio** is a virtual machine manager for Linux that follows the ergonomics and features of VMware Workstation, driving QEMU/KVM through libvirt. An open source community project on GitHub, tested first on Fedora KDE Plasma 6.
 
-**Problème.** Les anciens utilisateurs de Workstation trouvent virt-manager daté, Cockpit limité, Incus incapable d'utiliser un dossier ISO existant, Karton trop simple. VirtualBox est exclu.
+**Problem.** Former Workstation users find virt-manager dated, Cockpit limited, Incus unable to use an existing ISO folder, Karton too simple. VirtualBox is ruled out.
 
-**Trajectoire.** Outil personnel d'abord (MVP sur Fedora), puis partagé avec des amis (V1, Fedora + Debian/Ubuntu), puis public si le résultat tient. Le code reste portable dès le premier jour pour que le partage ne demande aucune réécriture.
+**Path.** A personal tool first (MVP on Fedora), then shared with friends (V1, Fedora + Debian/Ubuntu), then public if the result holds. The code stays portable from day one so that sharing needs no rewrite.
 
-**Objectifs.**
+**Goals.**
 
-1. Retrouver l'organisation de Workstation : bibliothèque arborescente, onglets de VMs, résumé, assistants, mêmes menus et dialogues.
-2. Fonctionner au choix comme un logiciel de bureau (fenêtre native) ou comme une interface web partageable sur le LAN avec un compte invité, jamais les deux à la fois.
-3. Rendre tous les emplacements modifiables : dossiers ISO existants (sous-dossiers inclus, sans import ni copie), emplacement des VMs.
-4. Offrir des réseaux NAT et Host-only aussi précis que le Virtual Network Editor, fonctionnels sans bidouille ; Bridged en V2.
-5. Gérer les disques virtuels avec le même niveau de choix que Workstation.
-6. Assurer le copier-coller de texte natif entre l'hôte et les VMs, et installer les outils invités en un clic.
-7. Ne pas polluer le poste : aucune carte virtuelle dans l'applet réseau, pas de Docker, désinstallation complète.
-8. S'installer comme un logiciel normal : paquet .rpm ou .deb en double-clic, puis assistant de premier lancement.
-9. Rester compatible libvirt : VMs visibles et utilisables dans virt-manager et virsh.
+1. The organization of Workstation: library tree, VM tabs, summary, assistants, same menus and dialogs.
+2. Running either as desktop software (native window) or as a web interface that can be shared on the LAN with a guest account, never both at once.
+3. Every location can be changed: existing ISO folders (subfolders included, without import or copy), VM location.
+4. NAT and Host-only networks as precise as the Virtual Network Editor, working without tinkering; Bridged in V2.
+5. Virtual disks with the same range of choices as Workstation.
+6. Native text copy and paste between the host and the VMs, and guest tools installed in one click.
+7. A clean computer: no virtual card in the network applet, no Docker, complete uninstall.
+8. Installed like normal software: .rpm or .deb package with a double click, then a first-run assistant.
+9. libvirt compatible: VMs visible and usable in virt-manager and virsh.
 
-**Public cible.** Admins systèmes et réseaux, étudiants (TSSR, AIS, CCNA…), formateurs, homelabbers venant de Workstation. Usages : labs réseau et sécu (firewalls multi-NIC, Windows Server, Linux, hyperviseurs imbriqués).
+**Audience.** System and network administrators, students (TSSR, AIS, CCNA…), trainers, homelabbers coming from Workstation. Uses: network and security labs (multi-NIC firewalls, Windows Server, Linux, nested hypervisors).
 
-**Non-objectifs.**
+**Non-goals.**
 
-- Pas de conteneurs (LXC, Docker, Incus) : uniquement des VMs, comme Workstation.
-- Pas de gestion multi-hôtes ni de cluster.
-- Pas d'hyperviseur propre : tout passe par libvirt.
-- Pas d'hôte Windows ou macOS.
-- Pas d'exposition Internet.
-- Pas de copier-coller de fichiers ou d'images (texte uniquement).
+- No containers (LXC, Docker, Incus): only VMs, like Workstation.
+- No multi-host management or cluster.
+- No hypervisor of its own: everything goes through libvirt.
+- No Windows or macOS host.
+- No exposure on the Internet.
+- No copy and paste of files or images (text only).
 
-## 2. Principes et contraintes
+## 2. Principles and constraints
 
-libvirt est la seule source de vérité, et KVM Studio ne laisse sur le poste que ce que son paquet sait retirer.
+libvirt is the only source of truth, and KVM Studio only leaves on the computer what its package knows how to remove.
 
-| Domaine | Règle |
+| Area | Rule |
 | --- | --- |
-| Légal | Inspiration de l'interface et des fonctionnalités par simple observation du logiciel (captures, usage). Aucun reverse engineering ni décompilation de VMware, outils type REA exclus. Aucun nom, logo, icône, texte ou visuel VMware ; icônes Lucide (ISC). |
-| Positionnement | Mention dans le README et « À propos » : « KVM Studio est un projet communautaire inspiré de l'interface et des fonctionnalités de VMware Workstation. Il n'est affilié ni à VMware ni à Broadcom et ne reprend aucun de leurs codes ou éléments graphiques. » |
-| Compatibilité | Domaines, réseaux et volumes créés via l'API libvirt standard, visibles et modifiables dans virt-manager et virsh. |
-| Métadonnées | Données propres à l'appli (dossier de bibliothèque, notes, options) dans `<metadata>` du XML libvirt, namespace dédié. |
-| Portabilité | Aucun chemin, pool, réseau ou URI en dur : tout est réglable dans les Préférences et stocké dans la config. |
-| Poste propre | Aucune interface virtuelle dans l'applet réseau (NetworkManager configuré pour les ignorer). Pas de Docker, pas de service tiers. Tous les fichiers système appartiennent au paquet. L'assistant de désinstallation retire, au choix, les VMs, les réseaux kvmnet et les réglages, puis le paquet. |
-| Non destructif | Dossiers ISO en lecture seule : aucune copie, aucun déplacement, aucun renommage. |
-| Sécurité | Mode logiciel : serveur interne accessible uniquement par la fenêtre (loopback + jeton). Mode web : 127.0.0.1 par défaut, avec jeton ; partage LAN = HTTPS auto-signé + compte invité à mot de passe, aux droits limités aux VMs (section 6.11). |
-| Distribution | MVP : Fedora. V1 : Fedora, Debian, Ubuntu. Autres distros plus tard. |
-| Licence | GPL-3.0, cohérente avec libvirt et virt-manager. |
+| Legal | Interface and features inspired by simply observing the software (screenshots, use). No reverse engineering or decompilation of VMware, REA-type tools ruled out. No VMware name, logo, icon, text or visual; Lucide icons (ISC). |
+| Positioning | Notice in the README and in "About": "KVM Studio is a community project inspired by the interface and features of VMware Workstation. It is not affiliated with VMware or Broadcom and uses none of their code or artwork." |
+| Compatibility | Domains, networks and volumes created through the standard libvirt API, visible and editable in virt-manager and virsh. |
+| Metadata | The application's own data (library folder, notes, options) in the `<metadata>` of the libvirt XML, in a dedicated namespace. |
+| Portability | No hard-coded path, pool, network or URI: everything can be set in Preferences and is stored in the configuration. |
+| Clean computer | No virtual interface in the network applet (NetworkManager told to ignore them). No Docker, no third-party service. Every system file belongs to the package. The uninstall assistant removes, as chosen, the VMs, the kvmnet networks and the settings, then the package. |
+| Non destructive | ISO folders are read-only: no copy, no move, no rename. |
+| Security | Window mode: internal server only reachable by the window (loopback + token). Web mode: 127.0.0.1 by default, with a token; LAN sharing = self-signed HTTPS + password-protected guest account, with rights limited to the VMs (section 6.11). |
+| Distribution | MVP: Fedora. V1: Fedora, Debian, Ubuntu. Other distributions later. |
+| License | GPL-3.0, consistent with libvirt and virt-manager. |
 
-## 3. Architecture technique
+## 3. Technical architecture
 
-Un backend Python unique pilote libvirt ; le même frontend s'affiche soit dans une fenêtre native, soit dans un navigateur ; un petit service privilégié fait les rares opérations root.
+A single Python backend drives libvirt; the same frontend shows either in a native window or in a browser; a small privileged service does the few root operations.
 
-| Couche | Choix | Pourquoi |
+| Layer | Choice | Why |
 | --- | --- | --- |
-| Backend | Python 3.11+, FastAPI, Uvicorn, Pydantic v2 | Async, OpenAPI auto, lisible pour un admin |
-| Accès hyperviseur | libvirt-python, paquet de la distro (`python3-libvirt`) | Bindings alignés sur la libvirt installée |
-| Temps réel | Événements libvirt → WebSocket | États des VMs à jour sans rafraîchir |
-| XML | lxml, générateurs par profil d'OS | XML conforme au schéma libvirt, testable |
-| Frontend | React + TypeScript + Vite, Radix UI, Lucide | Interface dense type logiciel de bureau |
-| Mode logiciel | pywebview (Qt WebEngine, repli GTK WebKit) | Vraie fenêtre, lanceur dans le menu des applis, presse-papiers natif |
-| Processus | La fenêtre (ou l'icône de notification en mode web) seule dans le processus principal ; serveur, libvirt et sa boucle d'événements dans un sous-processus | La boucle libvirt et Qt partagent le contexte GLib par défaut : dans un même processus, la fenêtre plante |
-| Mode web | Même frontend servi en HTTPS, compte invité | Travail à plusieurs sur le LAN |
-| Console graphique | noVNC + canal QEMU `qemu-vdagent`, VNC en mode partagé | Copier-coller de texte natif ; plusieurs personnes sur la même console |
-| Console série | xterm.js | Firewalls et appliances sans GUI |
-| Fichiers de réponse | Modèles autounattend.xml (Windows), kickstart (Fedora/RHEL), preseed / autoinstall (Debian/Ubuntu) | Installation simplifiée avec outils invités |
-| Helper privilégié | `kvmstudio-helper` : service systemd root, socket Unix, autorisations polkit | Seul composant root : ajout au groupe libvirt, ouverture du port web dans le pare-feu, redirection de ports NAT, correctifs de droits ISO, désinstallation |
-| Détection OS | libosinfo, repli sur profils internes | Bonnes valeurs par défaut (virtio, UEFI, TPM) |
-| Packaging | Paquets .rpm et .deb construits par la CI (nfpm), publiés dans les Releases GitHub, puis dépôts COPR et APT | Double-clic pour installer, dépendances et désinstallation gérées par la distro |
-| Tests | pytest + URI `test:///default`, Playwright | Tests sans vraie VM, en CI GitHub Actions |
+| Backend | Python 3.11+, FastAPI, Uvicorn, Pydantic v2 | Async, automatic OpenAPI, readable for an administrator |
+| Hypervisor access | libvirt-python, distribution package (`python3-libvirt`) | Bindings matching the installed libvirt |
+| Real time | libvirt events → WebSocket | VM states up to date without refreshing |
+| XML | lxml, builders per OS profile | XML following the libvirt schema, testable |
+| Frontend | React + TypeScript + Vite, Radix UI, Lucide | Dense desktop software style interface |
+| Window mode | pywebview (Qt WebEngine, GTK WebKit fallback) | A real window, a launcher in the applications menu, native clipboard |
+| Processes | The window (or the tray icon in web mode) alone in the main process; server, libvirt and its event loop in a child process | The libvirt loop and Qt share the default GLib context: in a single process, the window crashes |
+| Web mode | Same frontend served over HTTPS, guest account | Working together on the LAN |
+| Graphical console | noVNC + QEMU `qemu-vdagent` channel, VNC in shared mode | Native text copy and paste; several people on the same console |
+| Serial console | xterm.js | Firewalls and appliances without a GUI |
+| Answer files | autounattend.xml (Windows), kickstart (Fedora/RHEL), preseed / autoinstall (Debian/Ubuntu) templates | Easy install with guest tools |
+| Privileged helper | `kvmstudio-helper`: root systemd service, Unix socket, polkit authorizations | The only root component: joining the libvirt group, opening the web port in the firewall, NAT port forwarding, ISO libraries and their access rights, uninstall |
+| OS detection | libosinfo, internal profiles as a fallback | Good defaults (virtio, UEFI, TPM) |
+| Packaging | .rpm and .deb packages built by the CI (nfpm), published in the GitHub Releases, then COPR and APT repositories | Double click to install, dependencies and uninstall handled by the distribution |
+| Tests | pytest + `test:///default` URI, Playwright | Tests without a real VM, in GitHub Actions CI |
 
-**Modes d'interface (exclusifs).** Choisis dans Préférences > Interface, appliqués au redémarrage de l'appli.
+**Interface modes (exclusive).** Chosen in Preferences > Interface, applied when the application restarts.
 
-- *Logiciel* (défaut) : le backend écoute sur 127.0.0.1, port aléatoire, jeton par session. Rien n'est joignable hors de la fenêtre.
-- *Web* : HTTP sur 127.0.0.1, port 60080 par défaut ; HTTPS port 60443 pour le partage sur le réseau local (V1) ; les deux ports se règlent dans Préférences > Interface. Au lancement, la page s'ouvre dans le navigateur par défaut avec le jeton dans le fragment de l'URL (comme un clic sur un lien) ; l'URL est aussi affichée dans le terminal. Une icône dans la zone de notification (StatusNotifierItem, logo KVM Studio) indique que KVM Studio tourne : Ouvrir dans le navigateur, Copier l'adresse, Passer en mode fenêtre, Quitter. Sans zone de notification (GNOME sans extension AppIndicator), l'appli tourne normalement sans icône. Option « Partager sur le réseau local » : écoute sur le LAN, HTTPS auto-signé, ouverture du port dans firewalld ou ufw, connexion par compte invité. Le propriétaire utilise lui aussi le navigateur dans ce mode.
-- *Changement de mode* : Préférences > Interface propose de redémarrer tout de suite ; le message indique les ports (60080 en HTTP pour l'accès local, 60443 en HTTPS pour le partage). L'appli se relance dans le nouveau mode.
+- *Window* (default): the backend listens on 127.0.0.1, random port, token per session. Nothing can be reached outside the window.
+- *Web*: HTTP on 127.0.0.1, port 60080 by default; HTTPS port 60443 for sharing on the local network (V1); both ports are set in Preferences > Interface. At start, the page opens in the default browser with the token in the URL fragment (like a click on a link); the URL is also printed in the terminal. An icon in the notification area (StatusNotifierItem, KVM Studio logo) shows that KVM Studio is running: Open in the Browser, Copy the Address, Switch to Window Mode, Quit. Without a notification area (GNOME without the AppIndicator extension), the application runs normally without an icon. "Share on the local network" option: listening on the LAN, self-signed HTTPS, port opened in firewalld or ufw, login with the guest account. The owner also uses the browser in this mode.
+- *Mode change*: Preferences > Interface offers to restart right away; the message gives the ports (60080 over HTTP for local access, 60443 over HTTPS for sharing). The application starts again in the new mode.
 
-**Connexion libvirt.** URI configurable, `qemu:///system` par défaut. L'assistant de premier lancement ajoute l'utilisateur au groupe `libvirt` par le helper (opération sans paramètre, authentification administrateur à chaque fois), puis invite à se reconnecter.
+**libvirt connection.** Configurable URI, `qemu:///system` by default. The first-run assistant adds the user to the `libvirt` group through the helper (operation without parameters, administrator authentication every time), then asks to log in again.
 
-**Droits sur les ISO.** QEMU tourne sous l'utilisateur `qemu` et doit lire les ISO. KVM Studio détecte un refus (droits Unix, ACL, SELinux, AppArmor) et propose un bouton « Corriger » qui passe par le helper après authentification polkit.
+**ISO access rights.** QEMU runs as the `qemu` user and must read the ISO images. KVM Studio detects a refusal (Unix rights, ACL, SELinux, AppArmor) and offers a "Fix" button that goes through the helper after polkit authentication.
 
-## 4. Configuration et installation
+## 4. Configuration and installation
 
-Tout se règle dans Préférences et dans l'assistant de premier lancement ; les réglages sont stockés en TOML lisible, et l'installation se fait par un paquet .rpm ou .deb.
+Everything is set in Preferences and in the first-run assistant; the settings are stored as readable TOML, and installation goes through a .rpm or .deb package.
 
-**Fichiers.** Réglages utilisateur dans `$XDG_CONFIG_HOME/kvm-studio/config.toml` ; réglages du helper dans `/etc/kvm-studio/helper.toml` ; mot de passe invité stocké hashé (argon2) dans `$XDG_CONFIG_HOME/kvm-studio/guest.hash`. `kvm-studio --check` valide la config et teste libvirt, pools et droits ISO.
+**Files.** User settings in `$XDG_CONFIG_HOME/kvm-studio/config.toml`; helper settings in `/etc/kvm-studio/helper.toml`; guest password stored hashed (argon2) in `$XDG_CONFIG_HOME/kvm-studio/guest.hash`. `kvm-studio --check` validates the configuration and tests libvirt, pools and ISO rights.
 
 ```toml
 [interface]
-mode = "desktop"          # "desktop" (fenêtre logicielle) | "web"
+mode = "desktop"          # "desktop" (window) | "web"
 
 [web]
-port = 60080              # HTTP, accès local (127.0.0.1)
-https_port = 60443        # HTTPS, partage sur le réseau local
-share_on_lan = false      # true = écoute LAN + HTTPS + compte invité
-tls = "auto"              # certificat auto-signé généré au 1er lancement
-guest_enabled = true      # mot de passe défini dans Préférences > Interface
-login_max_attempts = 5    # blocage temporaire au-delà
+port = 60080              # HTTP, local access (127.0.0.1)
+https_port = 60443        # HTTPS, sharing on the local network
+share_on_lan = false      # true = LAN listening + HTTPS + guest account
+tls = "auto"              # self-signed certificate generated at first start
+guest_enabled = true      # password set in Preferences > Interface
+login_max_attempts = 5    # temporary lockout beyond
 
 [libvirt]
 uri = "qemu:///system"
 
 [storage]
-# vm_default_location = "/srv/vm"     # choisi au premier lancement ; les VMs vont dans <emplacement>/KVM-Studio/VM
+# vm_default_location = "/srv/vm"     # chosen at first run; the VMs go in <location>/KVM-Studio/VM
 
 [[iso_libraries]]
-name = "ISO principales"
+name = "Main ISO"
 path = "/srv/iso"
 recursive = true
 extensions = [".iso", ".img"]
@@ -120,288 +120,305 @@ nic_model = "virtio"
 
 [ui]
 theme = "system"
-language = "fr"
+language = "system"       # "system" | "en" | "fr"
 ```
 
 **Installation.**
 
-1. Télécharger `kvm-studio-<version>.x86_64.rpm` (Fedora) ou `kvm-studio_<version>_amd64.deb` (Debian/Ubuntu) dans les Releases GitHub.
-2. Double-clic : Discover ou la Logithèque l'installe avec ses dépendances (libvirt, qemu, python3-libvirt, edk2/OVMF, swtpm…). En ligne de commande : `sudo dnf install ./kvm-studio-*.rpm` ou `sudo apt install ./kvm-studio_*.deb`.
-3. Le paquet installe `/opt/kvm-studio` (code + frontend), le lanceur et l'icône, le service `kvmstudio-helper`, les règles polkit, le fichier NetworkManager de masquage et la définition de service pare-feu.
-4. Mises à jour : nouveau paquet depuis les Releases ; plus tard, dépôts COPR (Fedora) et APT (Debian/Ubuntu) pour des mises à jour automatiques.
-5. Désinstallation : assistant « Désinstaller KVM Studio » (voir ci-dessous) ; un `dnf remove` / `apt remove` direct ne retire que les fichiers du paquet.
+1. Download `kvm-studio-<version>.x86_64.rpm` (Fedora) or `kvm-studio_<version>_amd64.deb` (Debian/Ubuntu) from the GitHub Releases.
+2. Double click: Discover or Software installs it with its dependencies (libvirt, qemu, python3-libvirt, edk2/OVMF, swtpm…). On the command line: `sudo dnf install ./kvm-studio-*.rpm` or `sudo apt install ./kvm-studio_*.deb`.
+3. The package installs `/opt/kvm-studio` (code + frontend), the launcher and the icon, the `kvmstudio-helper` service, the polkit rules, the NetworkManager hiding file and the firewall service definition.
+4. Updates: a new package from the Releases; later, COPR (Fedora) and APT (Debian/Ubuntu) repositories for automatic updates.
+5. Uninstall: "Uninstall KVM Studio" assistant (see below); a plain `dnf remove` / `apt remove` only removes the package files.
 
-**Assistant de premier lancement** (équivalent de l'assistant d'installation de Workstation) : Bienvenue et licence → Vérification (VT-x/AMD-V, module KVM, virtualisation imbriquée, service libvirt) → Ajout au groupe `libvirt` → Emplacements (VMs, bibliothèques ISO) → Mode d'interface → Création de kvmnet1 et kvmnet8 → Terminé. Il se relance depuis Aide.
+**First-run assistant** (the counterpart of the Workstation setup assistant): Welcome and license → Checks (VT-x/AMD-V, KVM module, nested virtualization, libvirt service) → Joining the `libvirt` group → Locations (VMs, ISO libraries) → Interface mode → Creating kvmnet1 and kvmnet8 → Done. It can be started again from Help.
 
-**Désinstallation** (équivalent du désinstalleur de Workstation) : entrée « Désinstaller KVM Studio » dans le menu des applications, qui ouvre un assistant (Suivant / Précédent / Annuler) : Bienvenue → Machines virtuelles (garder, ou supprimer avec la liste exacte des fichiers et une case de confirmation) → Réseaux kvmnet créés par KVM Studio (garder ou supprimer) → Réglages (garder ou supprimer) → Récapitulatif → Désinstallation en cours → Terminé. À la fin, le paquet est retiré par le helper après authentification polkit, sans terminal. Mêmes règles que la suppression d'une VM : aucun fichier supprimé hors de `KVM-Studio/VM`, jamais d'ISO, jamais un fichier dont une VM conservée a besoin ; les VMs créées hors de KVM Studio et les réseaux qu'elles utilisent sont toujours conservés. `kvm-studio --uninstall` pose les mêmes questions dans un terminal. Un `dnf remove` / `apt remove` direct ne retire que les fichiers du paquet (VMs, réseaux et réglages conservés) et le signale par une ligne qui renvoie vers l'entrée « Désinstaller KVM Studio ».
+**Uninstall** (the counterpart of the Workstation uninstaller): an "Uninstall KVM Studio" entry in the applications menu, which opens an assistant (Next / Back / Cancel): Welcome → Virtual machines (keep, or delete with the exact list of files and a confirmation box) → kvmnet networks created by KVM Studio (keep or delete) → Access rights granted on the ISO libraries (keep or remove) → Settings (keep or delete) → Summary → Uninstalling → Done. At the end, the helper removes the package after polkit authentication, without a terminal. Same rules as deleting a VM: no file deleted outside `KVM-Studio/VM`, never an ISO, never a file a kept VM needs; VMs created outside KVM Studio and the networks they use are always kept. `kvm-studio --uninstall` asks the same questions in a terminal. A plain `dnf remove` / `apt remove` only removes the package files (VMs, networks and settings kept) and says so with a line pointing to the "Uninstall KVM Studio" entry.
 
-Une doc INSTALL.md couvre aussi l'installation depuis le dépôt et le dépannage.
+An INSTALL.md document also covers installing from the repository and troubleshooting.
 
-## 5. Interface : écrans et menus
+## 5. Interface: screens and menus
 
-L'interface reprend la disposition, les menus et les dialogues de Workstation 17 (d'après captures), avec des visuels 100 % originaux et des libellés en français.
+The interface follows the layout, menus and dialogs of Workstation 17 (from screenshots), with 100% original visuals, in English and French.
 
-**Disposition.**
+**Layout.**
 
-- Barre de menus : Fichier, Édition, Affichage, VM, Onglets, Aide.
-- Barre d'outils : alimentation (avec menu déroulant), envoi Ctrl+Alt+Suppr, snapshot / revenir / gestionnaire, afficher la bibliothèque, miniatures, plein écran, console.
-- Bibliothèque à gauche : recherche avec filtre, arbre « Mon ordinateur » → dossiers → VMs, glisser-déposer entre dossiers. Un simple clic sur une VM affiche son onglet (et l'ouvre s'il ne l'est pas).
-- Zone centrale à onglets : Accueil + un onglet par VM ouverte.
-- Barre d'état : périphériques (disque, réseau, CD, USB) avec activité, rappel du raccourci de libération.
+- Menu bar: File, Edit, View, VM, Tabs, Help.
+- Toolbar: power (with a drop-down menu), send Ctrl+Alt+Del, snapshot / revert / manager, show the library, thumbnails, full screen, console.
+- Library on the left: search with a filter, "My Computer" tree → folders → VMs, drag and drop between folders. A single click on a VM shows its tab (and opens it if needed).
+- Tabbed central area: Home + one tab per open VM. A VM tab always shows the VM name.
+- Status bar: devices (disk, network, CD, USB) with activity, reminder of the release shortcut.
 
-**Écrans.**
+**Screens.**
 
-| Écran | Contenu |
+| Screen | Content |
 | --- | --- |
-| Accueil | Tuiles : Créer une machine virtuelle, Ouvrir une machine virtuelle, Se connecter à un serveur (V2) |
-| Résumé de VM | Actions (démarrer, paramètres), liste des périphériques, description, détails (état, dossier, IP via agent invité) |
-| Console | Console intégrée à l'onglet, mise à l'échelle, plein écran |
-| Paramètres de la VM | Onglets Matériel et Options, liste « Périphérique / Résumé » à gauche, détail à droite, boutons Ajouter… / Retirer |
-| Assistant Nouvelle VM | Typique / Personnalisé, avec Installation simplifiée (section 6.3) |
-| Gestionnaire de snapshots | Arbre, repère « Vous êtes ici », Prendre / Revenir / Supprimer / Cloner |
-| Éditeur de réseaux virtuels | Section 6.8 |
-| Préférences | Liste de sections à gauche, réglages à droite |
-| Sélecteur d'ISO | Arbre des bibliothèques ISO, recherche, taille, OS détecté |
-| Connexion (mode web partagé) | Mot de passe du compte invité, message en cas de blocage temporaire ; bandeau « Connecté en invité » ensuite |
+| Home | Tiles for what is available: Create a New Virtual Machine (Open a Virtual Machine and Connect to a Server arrive later) |
+| VM summary | Actions (start, settings), device list, description, details (state, folder, IP through the guest agent, linked clones depending on it) |
+| Console | Console inside the tab, scaling, full screen |
+| VM settings | Hardware and Options tabs, "Device / Summary" list on the left, details on the right, Add… / Remove buttons |
+| New VM assistant | Typical / Custom, with Easy Install (section 6.3) |
+| Clone assistant | Source VM, clone type (full or linked), name, library folder, summary (F-84) |
+| Snapshot manager | Tree, "You are here" marker, Take / Revert / Delete / Clone |
+| Virtual network editor | Section 6.8 |
+| Preferences | Section list on the left, settings on the right |
+| ISO picker | Tree of the ISO libraries, search, size, detected OS |
+| Login (shared web mode) | Guest account password, message during a temporary lockout; "Logged in as guest" banner afterwards |
+
+Only what works is shown: an entry, a tile or a setting that is not available yet is hidden, never shown disabled with a "coming later" notice.
 
 **Menus.**
 
-| Menu | Entrées |
+| Menu | Entries |
 | --- | --- |
-| Fichier | Nouvelle machine virtuelle… (Ctrl+N), Ouvrir… (Ctrl+O : XML libvirt, OVA/OVF), Rechercher des machines virtuelles…, Configurer le démarrage auto des VMs…, Fermer l'onglet (Ctrl+W), Se connecter à un serveur… (V2), Exporter en OVF…, Quitter |
-| Édition | Couper / Copier / Coller, Éditeur de réseaux virtuels…, Préférences… (Ctrl+P) |
-| Affichage | Plein écran (Ctrl+Alt+Entrée), Vue console, Ajuster l'invité maintenant, Ajuster la fenêtre maintenant, Redimensionnement auto ›, Personnaliser › (bibliothèque, barre d'outils, barre d'état, miniatures) |
-| VM | Alimentation ›, Périphériques amovibles ›, Pause (Ctrl+Maj+P), Envoyer Ctrl+Alt+Suppr, Capturer la saisie (Ctrl+G), Snapshot ›, Capture d'écran (Ctrl+Alt+Impr), Gérer › (cloner, renommer, supprimer du disque), Installer les outils invités…, Paramètres… (Ctrl+D) |
-| Onglets | Liste des onglets ouverts, Aller à l'onglet Accueil, Onglet suivant (Ctrl+Tab), Onglet précédent (Ctrl+Maj+Tab) |
-| Aide | Documentation, Raccourcis clavier, À propos (avec mention de non-affiliation), Signaler un bug |
+| File | New Virtual Machine… (Ctrl+N), Open… (Ctrl+O: libvirt XML, OVA/OVF), Scan for Virtual Machines…, Configure Auto Start of VMs…, Close Tab (Ctrl+W), Connect to a Server… (V2), Export to OVF…, Quit |
+| Edit | Cut / Copy / Paste, Virtual Network Editor…, Preferences… (Ctrl+P) |
+| View | Full Screen (Ctrl+Alt+Enter), Console View, Fit Guest Now, Fit Window Now, Autosize ›, Customize › (library, toolbar, status bar, thumbnails) |
+| VM | Power ›, Removable Devices ›, Pause (Ctrl+Shift+P), Send Ctrl+Alt+Del, Grab Input (Ctrl+G), Snapshot ›, Capture Screen (Ctrl+Alt+PrtScn), Manage › (clone, rename, delete from disk), Install Guest Tools…, Settings… (Ctrl+D) |
+| Tabs | List of the open tabs, Go to the Home Tab, Next Tab (Ctrl+Tab), Previous Tab (Ctrl+Shift+Tab) |
+| Help | Documentation, Keyboard Shortcuts, About (with the non-affiliation notice), Report a Bug |
 
-Le sous-menu Alimentation contient : Démarrer, Arrêter l'invité, Redémarrer l'invité, Suspendre, Reprendre, Forcer l'arrêt, Réinitialiser.
+The Power submenu holds: Start, Shut Down Guest, Restart Guest, Suspend, Resume, Power Off, Reset.
 
-**Paramètres de la VM, onglet Matériel.** Mémoire, Processeurs, Disques, CD/DVD, Cartes réseau, Contrôleur USB, Carte son, Affichage, Port série, TPM. Le panneau Mémoire reprend le curseur vertical de 4 Mo au maximum hôte, avec trois repères : minimum de l'OS invité, recommandé, maximum recommandé.
+The context menu of a VM in the library holds, after Open in a Tab: Settings… (Ctrl+D, as in the VM menu), then the power actions, Clone…, Rename, Move To, Delete.
 
-**Paramètres de la VM, onglet Options.**
+**VM settings, Hardware tab.** Memory, Processors, Disks, CD/DVD, Network adapters, USB controller, Sound card, Display, Serial port, TPM. The Memory panel has the vertical slider from 4 MB to the host maximum, with three marks: guest OS minimum, recommended, recommended maximum.
 
-| Option | Contenu |
+**VM settings, Options tab.**
+
+| Option | Content |
 | --- | --- |
-| Général | Nom, OS invité + version, dossier de travail |
-| Alimentation | Actions de démarrage/arrêt, comportement à la fermeture |
-| Dossiers partagés | Partages virtiofs hôte → VM |
-| Snapshots | Comportement à l'extinction (rien, revenir, demander) |
-| AutoProtect | Snapshots planifiés avec rotation |
-| Isolation de l'invité | Copier-coller et glisser-déposer autorisés ou non |
-| Contrôle d'accès | Chiffrement des disques (LUKS qcow2) |
-| Outils invités | État de l'agent, synchronisation de l'heure |
-| Connexions VNC | Accès VNC externe avec port et mot de passe |
-| Démarrage | Firmware, Secure Boot, ordre et menu de boot |
-| Avancé | Éditeur XML brut, priorité |
+| General | Name, guest OS + version, working folder |
+| Power | Start/stop actions, behavior on close |
+| Shared folders | virtiofs shares host → VM |
+| Snapshots | Behavior at power off (nothing, revert, ask) |
+| AutoProtect | Scheduled snapshots with rotation |
+| Guest isolation | Copy and paste and drag and drop allowed or not |
+| Access control | Disk encryption (LUKS qcow2) |
+| Guest tools | Agent state, time synchronization |
+| VNC connections | External VNC access with port and password |
+| Boot | Firmware, Secure Boot, boot order and menu |
+| Advanced | Raw XML editor, priority |
 
-**Préférences.** Espace de travail (emplacement des VMs, dossiers ISO, onglets mémorisés, VMs qui continuent à la fermeture, miniatures, captures d'écran), Interface (mode logiciel ou web, port, partage LAN, certificat, mot de passe du compte invité, personnes connectées), Saisie, Raccourcis, Affichage (thème, langue, mise à l'échelle), USB, Mémoire (réserve pour l'hôte), Périphériques.
+**Preferences.** Workspace (VM location, ISO folders, remembered tabs, VMs that keep running on close, thumbnails, screenshots), Interface (window or web mode, port, LAN sharing, certificate, guest account password, connected people), Input, Shortcuts, Display (theme, language, scaling), USB, Memory (reserve for the host), Devices.
 
-**Raccourcis** identiques à ceux de Workstation listés ci-dessus, tous remappables (le navigateur capture certaines combinaisons en mode web).
+**Shortcuts** the same as those of Workstation listed above, all remappable (the browser takes some combinations in web mode).
 
-## 6. Fonctionnalités détaillées
+## 6. Detailed features
 
-Chaque fonctionnalité porte un identifiant (F-xx) repris dans la priorisation.
+Each feature has an identifier (F-xx) used in the prioritization.
 
-### 6.1 Bibliothèque de VMs
+### 6.1 VM library
 
-- **F-01** Lister tous les domaines libvirt (actifs et inactifs), y compris ceux créés hors de KVM Studio.
-- **F-02** Dossiers de bibliothèque synchronisés avec le système de fichiers (détail en 6.1.1).
-- **F-03** Recherche, filtre (toutes / allumées), tri.
-- **F-04** État en temps réel via les événements libvirt.
-- **F-05** Rechercher des machines virtuelles : scanner un dossier pour retrouver des XML ou disques non inscrits.
+- **F-01** List every libvirt domain (active and inactive), including those created outside KVM Studio.
+- **F-02** Library folders synced with the file system (details in 6.1.1).
+- **F-03** Search, filter (all / running), sort.
+- **F-04** Live state through libvirt events.
+- **F-05** Scan for virtual machines: scan a folder to find unregistered XML files or disks.
 
-#### 6.1.1 Dossiers de bibliothèque synchronisés (F-02)
+#### 6.1.1 Library folders synced to disk (F-02)
 
-Les dossiers de la bibliothèque sont de vrais dossiers sur le disque : ce que l'utilisateur voit dans l'arbre correspond à ce qu'il trouve dans son gestionnaire de fichiers.
+The library folders are real folders on disk: what the user sees in the tree matches what they find in their file manager.
 
-- **Arborescence.** `<emplacement choisi>/KVM-Studio/VM/<dossiers>/<nom de la VM>/<disques>`. Exemple : `…/KVM-Studio/VM/Labs/SRV-WS22/SRV-WS22.qcow2`. Disques suivants : `SRV-WS22-2.qcow2`, `SRV-WS22-3.qcow2`… La NVRAM UEFI est aussi dans le dossier de la VM. Dossiers imbriqués autorisés.
-- **Dossiers.** Créer, renommer ou supprimer un dossier dans la bibliothèque fait la même chose sur le disque.
-- **Déplacement.** Déplacer une VM vers un autre dossier (menu ou glisser-déposer) déplace ses fichiers et met à jour les chemins dans le XML libvirt. Uniquement VM éteinte.
-- **Suppression.** Supprimer une VM ou un dossier entier supprime les fichiers associés, après une confirmation qui liste exactement ce qui sera effacé.
-- **Sécurités.** Jamais de suppression ni de déplacement d'un fichier hors de la racine `KVM-Studio`, d'un disque utilisé par une autre VM, ni d'une ISO. Clones liés (backing file) : la chaîne est mise à jour, sinon l'action est bloquée avec un message clair.
-- **VMs créées hors de KVM Studio** (virt-manager, disques ailleurs) : jamais déplacées automatiquement. Elles peuvent être rangées dans un dossier de la bibliothèque (rangement virtuel, noté dans `<metadata>`), avec une action « Déplacer les fichiers dans KVM Studio ».
-- **Reconstruction.** Le dossier de bibliothèque de chaque VM est aussi noté dans `<metadata>`, pour que la bibliothèque se reconstruise même si des fichiers ont été déplacés à la main. En cas d'écart entre `<metadata>` et l'emplacement réel, KVM Studio le signale et ne corrige pas seul.
-- **Compte invité (V1)** : peut créer, ranger et supprimer dans cette arborescence, toujours confiné à la racine `KVM-Studio`.
+- **Tree.** `<chosen location>/KVM-Studio/VM/<folders>/<VM name>/<disks>`. Example: `…/KVM-Studio/VM/Labs/SRV-WS22/SRV-WS22.qcow2`. Next disks: `SRV-WS22-2.qcow2`, `SRV-WS22-3.qcow2`… The UEFI NVRAM is also in the VM folder. Nested folders allowed.
+- **Folders.** Creating, renaming or deleting a folder in the library does the same on disk.
+- **Moving.** Moving a VM to another folder (menu or drag and drop) moves its files and updates the paths in the libvirt XML. Powered off VMs only.
+- **Deleting.** Deleting a VM or a whole folder deletes the related files, after a confirmation listing exactly what will be erased.
+- **Safeguards.** Never deleting or moving a file outside the `KVM-Studio` root, a disk used by another VM, or an ISO. Linked clones (backing file): the chain is updated, otherwise the action is blocked with a clear message.
+- **VMs created outside KVM Studio** (virt-manager, disks elsewhere): never moved automatically. They can be filed in a library folder (virtual filing, written in `<metadata>`), with a "Move the Files into KVM Studio" action.
+- **Rebuilding.** The library folder of each VM is also written in `<metadata>`, so that the library rebuilds even when files were moved by hand. When `<metadata>` and the real location differ, KVM Studio reports it and does not fix it by itself.
+- **Guest account (V1)**: can create, file and delete in this tree, always confined to the `KVM-Studio` root.
 
-### 6.2 Cycle de vie
+### 6.2 Life cycle
 
-- **F-10** Démarrer, arrêter l'invité (ACPI), forcer l'arrêt, redémarrer, réinitialiser.
-- **F-11** Pause (gel en RAM) et Suspendre (état sauvegardé sur disque), comme Workstation.
-- **F-12** Renommer, supprimer (désinscrire seulement ou supprimer aussi les disques, après une confirmation qui liste les fichiers).
-- **F-13** Configurer le démarrage auto des VMs avec l'hôte, avec délai entre VMs.
+- **F-10** Start, shut down the guest (ACPI), power off, restart, reset.
+- **F-11** Pause (frozen in RAM) and Suspend (state saved to disk), like Workstation.
+- **F-12** Rename, delete (unregister only or delete the disks too, after a confirmation listing the files).
+- **F-13** Configure the automatic start of VMs with the host, with a delay between VMs.
 
-### 6.3 Assistant Nouvelle VM
+### 6.3 New VM assistant
 
-- **F-20** Typique : source d'installation → OS invité → nom et emplacement (dossier par défaut des Préférences) → disque → récapitulatif avec « Personnaliser le matériel ».
-- **F-21** Personnalisé : firmware (BIOS/UEFI, Secure Boot), processeurs (sockets/cœurs/threads), mémoire, réseau, contrôleur et type de disque, disque (nouveau / existant / aucun).
-- **F-22** Source : ISO via le sélecteur (F-30), « installer l'OS plus tard », ou disque existant.
-- **F-23** Détection de l'OS depuis l'ISO (libosinfo), choix manuel en repli.
-- **F-24** Profils d'OS : Windows 11 (UEFI + Secure Boot + TPM 2.0), Windows Server, Linux, firewall/BSD (pfSense, OPNsense, FortiGate VM, Stormshield EVA… : 3 NIC + console série par défaut), hyperviseur imbriqué (CPU host-passthrough).
-- **F-25** Windows : 2e lecteur CD avec l'ISO virtio-win si elle est configurée.
-- **F-26** Installation simplifiée (équivalent de l'Easy Install de Workstation) : l'assistant demande nom d'utilisateur, mot de passe, langue, clavier et, pour Windows, la clé produit (facultative). KVM Studio génère un fichier de réponse (autounattend.xml, kickstart, preseed ou autoinstall) sur une petite ISO à part, sans toucher à l'ISO d'origine. L'OS s'installe sans intervention, outils invités compris. Systèmes visés : Windows 10/11, Windows Server, Fedora/RHEL, Debian, Ubuntu.
+- **F-20** Typical: installation source → guest OS → name and location (default folder from Preferences) → disk → summary with "Customize Hardware".
+- **F-21** Custom: firmware (BIOS/UEFI, Secure Boot), processors (sockets/cores/threads), memory, network, disk controller and type, disk (new / existing / none).
+- **F-22** Source: ISO through the picker (F-30), "install the OS later", or an existing disk.
+- **F-23** OS detection from the ISO (libosinfo), manual choice as a fallback.
+- **F-24** OS profiles: Windows 11 (UEFI + Secure Boot + TPM 2.0), Windows Server, Linux, firewall/BSD (pfSense, OPNsense, FortiGate VM, Stormshield EVA…: 3 NICs + serial console by default), nested hypervisor (host-passthrough CPU).
+- **F-25** Windows: a second CD drive with the virtio-win ISO when it is configured.
+- **F-26** Easy install (the counterpart of Workstation's Easy Install): the assistant asks for a user name, password, language, keyboard and, for Windows, the product key (optional). KVM Studio generates an answer file (autounattend.xml, kickstart, preseed or autoinstall) on a small separate ISO, without touching the original ISO. The OS installs without intervention, guest tools included. Targets: Windows 10/11, Windows Server, Fedora/RHEL, Debian, Ubuntu.
 
-### 6.4 Stockage et bibliothèques ISO
+### 6.4 Storage and ISO libraries
 
-- **F-30** Sélecteur d'ISO arborescent sur plusieurs dossiers racine, sous-dossiers inclus, en lecture seule.
-- **F-31** Recherche sur les noms, tri par nom/date/taille.
-- **F-32** Cache des métadonnées (taille, date, OS détecté), rafraîchissement à la demande.
-- **F-33** Vérification des droits de lecture par QEMU, bouton « Corriger » via le helper.
-- **F-34** Changer ou éjecter l'ISO d'une VM allumée.
-- **F-35** Emplacement des VMs modifiable (racine `<emplacement>/KVM-Studio/VM`) ; une VM = un dossier contenant ses disques et sa NVRAM, rangé dans l'arborescence des dossiers de bibliothèque (F-02).
+- **F-30** ISO picker as a tree over several root folders, subfolders included, read-only.
+- **F-31** Search on names, sort by name/date/size.
+- **F-32** Metadata cache (size, date, detected OS), refreshed on demand.
+- **F-33** Check that QEMU can read, "Fix" button through the helper.
+- **F-34** Change or eject the ISO of a running VM.
+- **F-35** Changeable VM location (root `<location>/KVM-Studio/VM`); one VM = one folder holding its disks and NVRAM, filed in the tree of library folders (F-02).
+- **F-36** ISO libraries declared and removed from Preferences > ISO Libraries, without editing a file: the helper checks the folder (owned by the user, outside system folders), keeps the list, and removes at the end only the access rights it granted itself.
 
-### 6.5 Disques virtuels
+### 6.5 Virtual disks
 
-- **F-40** Type de contrôleur au choix, avec recommandation selon l'OS : NVMe (si la version de libvirt le permet), SATA, SCSI (virtio-scsi), IDE, virtio-blk.
-- **F-41** Créer un disque : taille, format qcow2 ou raw, case « Allouer tout l'espace maintenant » (préallocation), emplacement (dossier de la VM par défaut).
-- **F-42** Utiliser un disque existant : qcow2, raw, VMDK, VDI, VHDX, avec proposition de conversion en qcow2 pour activer les snapshots.
-- **F-43** Modes : normal, indépendant persistant (exclu des snapshots), indépendant non persistant (modifications perdues à l'extinction).
-- **F-44** Utilitaires : Agrandir, Compacter (récupérer l'espace libre), Convertir, Informations (taille réelle/virtuelle, chaîne de backing), Monter sur l'hôte (V2, libguestfs).
-- **F-45** Avancé : cache, mode d'E/S, TRIM/discard, numéro de série, limites d'IOPS.
-- **F-46** Disque physique en passthrough (avancé, avec avertissement, propriétaire uniquement).
+- **F-40** Choice of controller type, with a recommendation by OS: NVMe (when the libvirt version allows it), SATA, SCSI (virtio-scsi), IDE, virtio-blk.
+- **F-41** Create a disk: size, qcow2 or raw format, "Allocate all disk space now" box (preallocation), location (VM folder by default).
+- **F-42** Use an existing disk: qcow2, raw, VMDK, VDI, VHDX, with a conversion to qcow2 offered to enable snapshots.
+- **F-43** Modes: normal, independent persistent (left out of snapshots), independent non persistent (changes lost at power off).
+- **F-44** Utilities: Expand, Compact (get free space back), Convert, Information (real/virtual size, backing chain), Mount on the host (V2, libguestfs).
+- **F-45** Advanced: cache, I/O mode, TRIM/discard, serial number, IOPS limits.
+- **F-46** Physical disk passthrough (advanced, with a warning, owner only).
 
-« Fractionner en plusieurs fichiers » n'a pas d'équivalent utile sous KVM et n'est pas repris.
+"Split into several files" has no useful counterpart with KVM and is not offered.
 
-### 6.6 Autre matériel virtuel
+### 6.6 Other virtual hardware
 
-- **F-50** Processeurs : nombre, topologie, mode (host-passthrough, host-model, personnalisé), virtualisation imbriquée.
-- **F-51** Mémoire avec curseur et repères (minimum invité, recommandé, maximum recommandé).
-- **F-52** Lecteurs CD/DVD : plusieurs par VM, ISO ou vide.
-- **F-53** Cartes réseau : plusieurs par VM, ajout en un clic, modèle (virtio, e1000e, rtl8139, vmxnet3), réseau kvmnet cible, MAC, carte connectée/déconnectée à chaud.
-- **F-54** Affichage (virtio-gpu, qxl, vga), carte son, contrôleur USB, port série, TPM.
-- **F-55** Firmware et démarrage : ordre de boot, menu de boot, Secure Boot.
-- **F-56** Éditeur XML brut avec validation avant application (propriétaire uniquement).
-- **F-57** USB passthrough (V2), PCI passthrough (plus tard), propriétaire uniquement.
+- **F-50** Processors: count, topology, mode (host-passthrough, host-model, custom), nested virtualization.
+- **F-51** Memory with a slider and marks (guest minimum, recommended, recommended maximum).
+- **F-52** CD/DVD drives: several per VM, ISO or empty.
+- **F-53** Network adapters: several per VM, added in one click, model (virtio, e1000e, rtl8139, vmxnet3), target kvmnet network, MAC, card connected/disconnected live.
+- **F-54** Display (virtio-gpu, qxl, vga), sound card, USB controller, serial port, TPM.
+- **F-55** Firmware and boot: boot order, boot menu, Secure Boot.
+- **F-56** Raw XML editor with validation before applying (owner only).
+- **F-57** USB passthrough (V2), PCI passthrough (later), owner only.
 
-### 6.7 Console et intégration invité
+### 6.7 Console and guest integration
 
-- **F-60** Console intégrée à l'onglet VM, mise à l'échelle, plein écran, Ajuster l'invité / la fenêtre. La console utilise l'affichage VNC de la VM (sans port d'écoute, via libvirt) ; pour une VM qui n'a que SPICE (créée dans virt-manager), l'onglet l'explique et propose d'ajouter un affichage VNC à côté de SPICE, actif au prochain démarrage.
-- **F-61** Copier-coller de texte natif hôte ↔ VM via le canal `qemu-vdagent` et l'agent `spice-vdagent` de l'invité ; désactivable dans Options > Isolation. Fichiers et images non pris en charge.
-- **F-62** Envoi de combinaisons (Ctrl+Alt+Suppr, Ctrl+Alt+F1…F12, Impr écran), Capturer la saisie (Ctrl+G).
-- **F-63** Console série (xterm.js) pour firewalls et appliances.
-- **F-64** Installer les outils invités sur une VM existante (VM > Installer les outils invités) : KVM Studio génère un petit CD (étiquette `KS_TOOLS`) dans son propre dossier `<emplacement>/KVM-Studio/Tools`, jamais dans une bibliothèque ISO, et l'insère dans un lecteur CD/DVD de la VM (un lecteur SATA est ajouté s'il en manque ; le contenu précédent des lecteurs est noté dans `<metadata>` et remis à l'éjection). Windows : le CD contient `autorun.inf` et `Install-Tools.bat`, qui demande l'élévation et lance `virtio-win-guest-tools.exe /quiet /norestart` depuis l'ISO `defaults.virtio_win_iso` (obligatoirement dans une bibliothèque ISO) insérée dans un second lecteur ; cet installeur comprend les pilotes virtio, qemu-guest-agent et spice-vdagent. Linux : `install.sh` détecte le gestionnaire de paquets (apt, dnf, zypper, pacman), installe qemu-guest-agent et spice-vdagent et active les services. C'est l'utilisateur qui lance l'installation dans la VM (double-clic, exécution automatique, ou commande courte affichée avec un bouton Copier) : rien ne dépend de la disposition du clavier de l'invité. Le canal de l'agent est ajouté à la VM s'il manque. Le dialogue affiche les étapes, interroge qemu-guest-agent toutes les 5 s pendant 10 min au plus, puis propose d'éjecter le CD.
-- **F-65** Dossiers partagés hôte → VM via virtiofs.
-- **F-66** Capture d'écran de la VM (presse-papiers et/ou fichier).
-- **F-67** Miniatures live des VMs allumées.
+- **F-60** Console inside the VM tab, scaling, full screen, Fit Guest / Window. The console uses the VNC display of the VM (no listening port, through libvirt). For a VM with only a SPICE display (made in virt-manager), the console works through it; when the VM lacks the QEMU vdagent channel, a single banner offers to turn copy and paste on, and no banner remains once it is on and the VM has been restarted.
+- **F-61** Native text copy and paste host ↔ VM through the `qemu-vdagent` channel and the guest's `spice-vdagent` agent; can be turned off in Options > Isolation. Files and images not supported.
+- **F-62** Sending key combinations (Ctrl+Alt+Del, Ctrl+Alt+F1…F12, Print Screen), Grab Input (Ctrl+G).
+- **F-63** Serial console (xterm.js) for firewalls and appliances.
+- **F-64** Install the guest tools on an existing VM (VM > Install Guest Tools): KVM Studio builds a small CD (label `KS_TOOLS`) in its own folder `<location>/KVM-Studio/Tools`, never in an ISO library, and inserts it in a CD/DVD drive of the VM (a SATA drive is added when none is free; what the drives held before is written in `<metadata>` and put back at eject). Windows: the CD holds `autorun.inf` and `Install-Tools.bat`, which asks for elevation and runs `virtio-win-guest-tools.exe /quiet /norestart` from the `defaults.virtio_win_iso` ISO (necessarily in an ISO library) inserted in a second drive; this installer includes the virtio drivers, qemu-guest-agent and spice-vdagent. Linux: `install.sh` detects the package manager (apt, dnf, zypper, pacman), installs qemu-guest-agent and spice-vdagent and enables the services. The user starts the installation inside the VM (double click, autorun, or a short command shown with a Copy button): nothing depends on the guest keyboard layout. The agent channel is added to the VM when missing. The dialog shows the steps, asks qemu-guest-agent every 5 s for 10 min at most, then offers to eject the CD.
+- **F-65** Shared folders host → VM through virtiofs.
+- **F-66** VM screenshot (clipboard and/or file).
+- **F-67** Live thumbnails of the running VMs.
 
-### 6.8 Réseaux virtuels
+### 6.8 Virtual networks
 
-- **F-70** Éditeur de réseaux virtuels : tableau Nom / Type / Connexion externe / Connexion hôte / DHCP / Sous-réseau ; boutons Ajouter, Supprimer, Renommer ; panneau du réseau sélectionné (type, adaptateur hôte, DHCP et ses réglages, IP et masque, VMs qui l'utilisent : « VM1, VM2 et N autres », liste complète au survol) ; Restaurer les valeurs par défaut, Importer, Exporter.
-- **F-71** Réseaux créés au premier lancement : kvmnet1 (Host-only, DHCP) et kvmnet8 (NAT, DHCP), sur des sous-réseaux qui ne chevauchent pas le LAN. kvmnet0 est réservé au Bridged (V2).
-- **F-72** Host-only : réseau isolé, case « Connecter un adaptateur virtuel de l'hôte » (l'hôte a une IP sur ce réseau ou non), DHCP activable.
-- **F-73** NAT : sortie via l'IP de l'hôte, DHCP, réglages NAT (passerelle, redirection de ports TCP/UDP) gérés dans une table nftables propre à KVM Studio.
-- **F-74** Bridged transparent (V2) : mini-routeur transparent par proxy ARP + relais DHCP, Wi-Fi ou filaire, sans toucher à la connexion de l'utilisateur. À prototyper avant de s'engager (box qui refusent le relais DHCP, réseaux d'entreprise avec port security).
-- **F-75** Bridged L2 complet (V2, option Ethernet uniquement) : vrai pont via NetworkManager.
-- **F-76** Segments de lab rapides (LAN-1, LAN-2, DMZ…) = Host-only sans adaptateur hôte.
-- **F-77** Poste propre : tout réseau créé par KVM Studio a un pont nommé `kvmnetN`, quel que soit son nom affiché (ex. Host-Only-3) ; cartes des VMs `ks-*` ; déclarés non gérés dans NetworkManager → invisibles dans l'applet réseau. `kvm-studio --check` signale l'absence de `/etc/NetworkManager/conf.d/90-kvm-studio.conf` et affiche la commande sudo qui l'installe.
-- **F-78** Diagnostic réseau : routage IP, nftables, conflit de sous-réseau avec le LAN, présence de Docker ou d'un pare-feu qui bloque le transfert, avec correction proposée.
-- **F-79** Vue topologie : quelles VMs et cartes sur quel kvmnet (V2).
+- **F-70** Virtual network editor: Name / Type / External connection / Host connection / DHCP / Subnet table; Add, Remove, Rename buttons; panel of the selected network (type, host adapter, DHCP and its settings, IP and mask, VMs using it: "VM1, VM2 and N others", full list on hover); Restore Defaults, Import, Export.
+- **F-71** Networks created at first run: kvmnet1 (Host-only, DHCP) and kvmnet8 (NAT, DHCP), on subnets that do not overlap the LAN. kvmnet0 is reserved for Bridged (V2).
+- **F-72** Host-only: isolated network, "Connect a host virtual adapter" box (the host has an IP on this network or not), optional DHCP.
+- **F-73** NAT: outside access through the host IP, DHCP, NAT settings (gateway, TCP/UDP port forwarding) handled in an nftables table of KVM Studio's own.
+- **F-74** Transparent Bridged (V2): small transparent router with proxy ARP + DHCP relay, Wi-Fi or wired, without touching the user's connection. To prototype before committing (boxes refusing the DHCP relay, corporate networks with port security).
+- **F-75** Full L2 Bridged (V2, Ethernet only option): a real bridge through NetworkManager.
+- **F-76** Quick lab segments (LAN-1, LAN-2, DMZ…) = Host-only without a host adapter.
+- **F-77** Clean computer: every network created by KVM Studio has a bridge named `kvmnetN`, whatever its displayed name (for example Host-Only-3); VM cards `ks-*`; they and the `vnet*` cards libvirt names itself are declared unmanaged in NetworkManager → invisible in the network applet (`virbr*` and the other interfaces are left alone). `kvm-studio --check` reports a missing `/etc/NetworkManager/conf.d/90-kvm-studio.conf` and prints the sudo command installing it.
+- **F-78** Network diagnostics: IP routing, nftables, subnet overlap with the LAN, Docker or a firewall blocking forwarding, with a fix offered.
+- **F-79** Topology view: which VMs and cards on which kvmnet (V2).
 
 ### 6.9 Snapshots, clones, import
 
-- **F-80** Prendre, revenir, supprimer un snapshot, avec nom et description.
-- **F-81** Gestionnaire en arbre avec « Vous êtes ici ».
-- **F-82** Snapshots internes qcow2 ; snapshots externes pour les VMs UEFI selon la version de libvirt.
-- **F-83** AutoProtect : snapshots planifiés avec rotation.
-- **F-84** Clone complet et clone lié.
-- **F-85** Import OVA/OVF/VMDK : extraction, conversion qcow2, traduction du matériel OVF, rapport d'import.
-- **F-86** Export en OVF.
+- **F-80** Take, revert, delete a snapshot, with a name and a description.
+- **F-81** Tree manager with "You are here".
+- **F-82** Internal qcow2 snapshots; external snapshots for UEFI VMs depending on the libvirt version.
+- **F-83** AutoProtect: scheduled snapshots with rotation.
+- **F-84** Full clone and linked clone (details in 6.9.1).
+- **F-85** OVA/OVF/VMDK import: extraction, qcow2 conversion, translation of the OVF hardware, import report.
+- **F-86** Export to OVF.
 
-### 6.10 Transverse
+#### 6.9.1 Cloning (F-84)
 
-- **F-90** Interface FR/EN.
-- **F-91** Thème clair/sombre/système.
-- **F-92** Journal des tâches longues avec progression.
-- **F-93** Erreurs libvirt traduites en langage clair, message brut dépliable.
-- **F-94** Modes d'interface logiciel / web (section 3).
-- **F-95** Paquets .rpm/.deb et assistant de premier lancement (section 4).
+- **Entries.** "Clone…" in the context menu of a VM (with Rename and Move To) and in VM > Manage.
+- **Assistant.** Source VM → clone type (full or linked) → name → destination library folder → summary. The source VM must be powered off.
+- **New VM.** New name, new UUID, new MAC addresses, the same hardware settings. Its files follow the same tree as the other VMs: `<location>/KVM-Studio/VM/<folder>/<name>/`.
+- **Full clone.** The disks are copied (`qemu-img convert`), and so are the UEFI NVRAM and the TPM state.
+- **Linked clone.** A new qcow2 disk with the source disk as its backing file. While linked clones depend on a VM, starting it asks for an explicit confirmation explaining that it would damage its clones; its summary lists them. Deleting or moving a source with linked clones stays blocked with a clear message.
+- **Progress.** A progress bar for long copies, with a Cancel button; a cancelled or failed clone removes everything it had created.
 
-### 6.11 Mode web partagé et compte invité
+### 6.10 Cross-cutting
 
-- **F-100** Un compte invité unique, mot de passe défini par le propriétaire dans Préférences > Interface, utilisable par plusieurs personnes en même temps.
-- **F-101** L'invité gère les VMs comme le propriétaire : créer, supprimer, modifier les paramètres, démarrer/arrêter, console, snapshots, clones.
-- **F-102** L'invité ne touche pas à l'hôte : pas d'accès aux Préférences, à l'éditeur de réseaux, aux bibliothèques ISO ni au partage LAN ; pas d'éditeur XML brut ; pas de passthrough (disque physique, USB, PCI).
-- **F-103** Confinement des chemins : un invité ne peut attacher que des disques de la racine `KVM-Studio` et des ISO des bibliothèques déclarées. Vérifié côté backend, pas seulement dans l'interface.
-- **F-104** Console partagée : plusieurs personnes sur la même VM voient le même écran et partagent clavier et souris ; indicateur « N personnes connectées ».
-- **F-105** Sécurité de connexion : HTTPS auto-signé, mot de passe hashé, blocage temporaire après 5 échecs, sessions expirées après inactivité.
-- **F-106** Ouverture et fermeture automatiques du port dans le pare-feu (firewalld ou ufw) quand le partage LAN est activé ou coupé.
+- **F-90** English and French interface; English is the source language, French is picked when the desktop is in French.
+- **F-91** Light/dark/system theme.
+- **F-92** Log of long tasks with progress.
+- **F-93** libvirt errors translated into plain words, raw message available on demand.
+- **F-94** Window / web interface modes (section 3).
+- **F-95** .rpm/.deb packages and first-run assistant (section 4).
 
-## 7. Priorisation
+### 6.11 Shared web mode and guest account
 
-Le MVP est l'outil perso de Romain sur Fedora : installé par le .rpm, il permet de monter un lab OPNsense à 3 NIC (NAT + 2 Host-only) depuis une ISO rangée dans un sous-dossier, avec copier-coller, en mode logiciel.
+- **F-100** A single guest account, password set by the owner in Preferences > Interface, usable by several people at once.
+- **F-101** The guest manages VMs like the owner: create, delete, change the settings, start/stop, console, snapshots, clones.
+- **F-102** The guest does not touch the host: no access to Preferences, the network editor, the ISO libraries or LAN sharing; no raw XML editor; no passthrough (physical disk, USB, PCI).
+- **F-103** Path confinement: a guest can only attach disks from the `KVM-Studio` root and ISO images from the declared libraries. Checked by the backend, not only in the interface.
+- **F-104** Shared console: several people on the same VM see the same screen and share keyboard and mouse; "N people connected" indicator.
+- **F-105** Login security: self-signed HTTPS, hashed password, temporary lockout after 5 failures, sessions expired after inactivity.
+- **F-106** Port opened and closed automatically in the firewall (firewalld or ufw) when LAN sharing is turned on or off.
 
-| Phase | Public | Fonctionnalités | Critère de sortie |
+## 7. Prioritization
+
+The MVP is Romain's personal tool on Fedora: installed from the .rpm, it builds an OPNsense lab with 3 NICs (NAT + 2 Host-only) from an ISO stored in a subfolder, with copy and paste, in window mode.
+
+| Phase | Audience | Features | Exit criterion |
 | --- | --- | --- | --- |
-| Phase 0 : socle | Romain | Backend + frontend, config TOML, connexion libvirt, fenêtre pywebview, CI GitHub Actions, tests sur `test:///default` | La fenêtre KVM Studio liste les domaines de l'hôte |
-| MVP | Romain, Fedora | F-01, F-02, F-03, F-04, F-10, F-12, F-20, F-22, F-24, F-30, F-31, F-33, F-34, F-35, F-40, F-41, F-52, F-53, F-60, F-61, F-62, F-64, F-70, F-71, F-72, F-73 (sans redirection de ports), F-76, F-77, F-90, F-93, F-94 (logiciel + web local), F-95 (.rpm + premier lancement) | Lab OPNsense 3 NIC + Windows 11 installés, outils invités en un clic, copier-coller OK, applet réseau propre |
-| V1 | Amis, Fedora + Debian/Ubuntu | F-05, F-11, F-13, F-21, F-23, F-25, F-26 (Installation simplifiée), F-42 à F-45, F-50, F-51, F-54, F-55, F-63, F-65, F-73 (redirection de ports), F-78, F-80 à F-82, F-91, F-92, F-95 (.deb), F-100 à F-106 (partage LAN + compte invité) | Un ami installe le .deb ou le .rpm et monte son lab seul ; travail à plusieurs sur le LAN |
-| V2 | Public | F-44 (montage hôte), F-46, F-56, F-57 (USB), F-66, F-67, F-74 et F-75 (Bridged), F-79, F-83 à F-86, dépôts COPR/APT, connexion à un serveur distant | Un ancien utilisateur de Workstation migre ses VMs sans retour arrière |
-| Plus tard | Public | Autres distros (Arch, openSUSE), PCI passthrough, modèles de labs partageables | - |
+| Phase 0: foundation | Romain | Backend + frontend, TOML configuration, libvirt connection, pywebview window, GitHub Actions CI, tests on `test:///default` | The KVM Studio window lists the host domains |
+| MVP | Romain, Fedora | F-01, F-02, F-03, F-04, F-10, F-12, F-20, F-22, F-24, F-30, F-31, F-33, F-34, F-35, F-40, F-41, F-52, F-53, F-60, F-61, F-62, F-64, F-70, F-71, F-72, F-73 (without port forwarding), F-76, F-77, F-90, F-93, F-94 (window + local web), F-95 (.rpm + first run) | OPNsense 3 NIC lab + Windows 11 installed, guest tools in one click, copy and paste OK, clean network applet |
+| Before V1 | Romain, Fedora | F-36, F-84, English as the source language, redesign of the interface, vnet* hidden from NetworkManager | Acceptance feedback of 0.1.0 handled |
+| V1 | Friends, Fedora + Debian/Ubuntu | F-05, F-11, F-13, F-21, F-23, F-25, F-26 (Easy Install), F-42 to F-45, F-50, F-51, F-54, F-55, F-63, F-65, F-73 (port forwarding), F-78, F-80 to F-82, F-91, F-92, F-95 (.deb), F-100 to F-106 (LAN sharing + guest account) | A friend installs the .deb or the .rpm and builds their lab alone; working together on the LAN |
+| V2 | Public | F-44 (host mount), F-46, F-56, F-57 (USB), F-66, F-67, F-74 and F-75 (Bridged), F-79, F-83, F-85, F-86, COPR/APT repositories, connection to a remote server | A former Workstation user moves their VMs over for good |
+| Later | Public | Other distributions (Arch, openSUSE), PCI passthrough, shareable lab templates | - |
 
-Ordre conseillé dans le MVP : socle → prototype copier-coller UTF-8 → liste et états → cycle de vie → dossiers de bibliothèque → kvmnet + masquage → sélecteur ISO → assistant → console + copier-coller + outils invités → multi-NIC → paquet .rpm.
+Advised order in the MVP: foundation → UTF-8 copy and paste prototype → list and states → life cycle → library folders → kvmnet + hiding → ISO picker → assistant → console + copy and paste + guest tools → several NICs → .rpm package.
 
-## 8. Exigences non fonctionnelles et recette
+## 8. Non-functional requirements and acceptance
 
-| Exigence | Cible |
+| Requirement | Target |
 | --- | --- |
-| Performance | Liste de 100 VMs affichée en moins de 1 s ; changement d'état visible en moins de 1 s |
-| Bibliothèque ISO | 5 000 fichiers sur 3 racines parcourus sans bloquer l'UI |
-| Poste propre | Après installation : aucune interface KVM Studio dans l'applet réseau ; après `dnf remove` / `apt remove` : aucun fichier, service, règle ou interface restant (hors VMs conservées) |
-| Sécurité | Aucune commande shell construite depuis une saisie ; chemins confinés au dossier des VMs et aux bibliothèques ISO ; helper root à API minimale autorisée par polkit ; droits invité vérifiés côté backend ; HTTPS + mot de passe hashé en partage LAN |
-| Robustesse | Reconnexion auto à libvirt ; aucune action destructive sans confirmation |
-| Accessibilité | Menus, dialogues et arbre utilisables au clavier |
-| Code | mypy strict, TypeScript strict, ruff, eslint, couverture backend ≥ 70 % |
-| Docs | README (avec mention de non-affiliation), INSTALL, CONFIGURATION, TROUBLESHOOTING, CONTRIBUTING, CHANGELOG |
+| Performance | A list of 100 VMs shown in less than 1 s; a state change visible in less than 1 s |
+| ISO library | 5,000 files on 3 roots browsed without blocking the UI |
+| Clean computer | After installation: no KVM Studio interface in the network applet; after `dnf remove` / `apt remove`: no file, service, rule or interface left (apart from kept VMs) |
+| Security | No shell command built from an input; paths confined to the VM folder and the ISO libraries; root helper with a minimal API authorized by polkit; guest rights checked by the backend; HTTPS + hashed password for LAN sharing |
+| Robustness | Automatic reconnection to libvirt; no destructive action without confirmation |
+| Accessibility | Menus, dialogs and tree usable with the keyboard |
+| Readability | Text contrast of at least 4.5:1 in both themes, buttons included |
+| Code | strict mypy, strict TypeScript, ruff, eslint, backend coverage ≥ 70% |
+| Docs | README (with the non-affiliation notice), INSTALL, CONFIGURATION, TROUBLESHOOTING, CONTRIBUTING, CHANGELOG |
 
-**Recette MVP (Fedora KDE Plasma 6).**
+**MVP acceptance (Fedora KDE Plasma 6).**
 
-- [ ] Installation du .rpm par double-clic, assistant de premier lancement déroulé sans commande manuelle.
-- [ ] kvmnet1 et kvmnet8 créés ; l'applet réseau de Plasma ne montre que le Wi-Fi et la carte filaire.
-- [ ] Deux bibliothèques ISO configurées dans Préférences, navigation sur 3 niveaux de sous-dossiers.
-- [ ] Dossiers de bibliothèque : créer « Labs », y déplacer une VM éteinte, les fichiers suivent sur le disque et la VM démarre ; suppression avec liste des fichiers.
-- [ ] VM Windows 11 (UEFI, Secure Boot, TPM) installée ; « Installer les outils invités » en un clic ; copier-coller de texte dans les deux sens.
-- [ ] OPNsense à 3 NIC (kvmnet8 + 2 segments Host-only), accès console.
-- [ ] VM créée dans KVM Studio visible et démarrable dans virt-manager, et inversement.
-- [ ] Changement d'ISO à chaud.
-- [ ] `sudo dnf remove kvm-studio` : plus aucune trace hors VMs conservées.
+- [ ] .rpm installed by double click, first-run assistant gone through without a manual command.
+- [ ] kvmnet1 and kvmnet8 created; the Plasma network applet only shows the Wi-Fi and the wired card.
+- [ ] Two ISO libraries set in Preferences, browsing 3 levels of subfolders.
+- [ ] Library folders: create "Labs", move a powered off VM into it, the files follow on disk and the VM starts; deletion with the list of files.
+- [ ] Windows 11 VM (UEFI, Secure Boot, TPM) installed; "Install Guest Tools" in one click; text copy and paste both ways.
+- [ ] OPNsense with 3 NICs (kvmnet8 + 2 Host-only segments), console access.
+- [ ] A VM created in KVM Studio visible and startable in virt-manager, and the other way round.
+- [ ] ISO changed live.
+- [ ] `sudo dnf remove kvm-studio`: no trace left apart from kept VMs.
 
-**Recette V1 (Fedora, Debian, Ubuntu).**
+**V1 acceptance (Fedora, Debian, Ubuntu).**
 
-- [ ] Même recette que le MVP avec le .deb sur Debian 13 et Ubuntu 26.04 LTS.
-- [ ] Installation simplifiée d'un Windows 11 et d'une Ubuntu sans aucune intervention.
-- [ ] Partage LAN activé : deux collègues se connectent en même temps avec le compte invité, créent et suppriment une VM, partagent une console.
-- [ ] L'invité ne peut ni ouvrir les Préférences, ni attacher un fichier hors des emplacements autorisés (testé aussi par appel direct à l'API).
-- [ ] Partage LAN coupé : le port est refermé dans le pare-feu.
+- [ ] Same acceptance as the MVP with the .deb on Debian 13 and Ubuntu 26.04 LTS.
+- [ ] Easy install of a Windows 11 and an Ubuntu without any intervention.
+- [ ] LAN sharing on: two colleagues log in at the same time with the guest account, create and delete a VM, share a console.
+- [ ] The guest can neither open Preferences nor attach a file outside the allowed locations (also tested by calling the API directly).
+- [ ] LAN sharing off: the port is closed again in the firewall.
 
-## 9. Décisions et risques
+## 9. Decisions and risks
 
-**Décisions prises.**
+**Decisions made.**
 
-- Nom KVM Studio ; aucun reverse engineering.
-- Trajectoire perso → amis → public ; MVP Fedora, V1 Fedora + Debian/Ubuntu.
-- Modes logiciel et web exclusifs ; partage LAN en V1 avec compte invité unique, HTTPS auto-signé.
-- Invité : gestion complète des VMs, aucun accès aux réglages de l'hôte, chemins confinés.
-- Copier-coller de texte uniquement, via qemu-vdagent ; outils invités en un clic (injection clavier) et Installation simplifiée (fichiers de réponse).
-- Réseaux NAT et Host-only (kvmnet1, kvmnet8) ; Bridged repoussé en V2.
-- Pas de Docker ; interfaces masquées dans NetworkManager.
-- Licence GPL-3.0 ; code et commits en anglais, interface FR + EN.
-- Ubuntu cible de la V1 : 26.04 LTS.
-- Installation par paquets .rpm / .deb + assistant de premier lancement (pas de Flatpak ni de Snap, incompatibles avec le helper et libvirt système).
+- Name KVM Studio; no reverse engineering.
+- Path personal → friends → public; MVP Fedora, V1 Fedora + Debian/Ubuntu.
+- Exclusive window and web modes; LAN sharing in V1 with a single guest account, self-signed HTTPS.
+- Guest: full VM management, no access to the host settings, confined paths.
+- Text copy and paste only, through qemu-vdagent; guest tools from a small CD started by the user, and Easy Install (answer files).
+- NAT and Host-only networks (kvmnet1, kvmnet8); Bridged postponed to V2.
+- No Docker; interfaces hidden in NetworkManager.
+- GPL-3.0 license; code and commits in English, English interface with French.
+- V1 target Ubuntu: 26.04 LTS.
+- Installation from .rpm / .deb packages + first-run assistant (no Flatpak or Snap, incompatible with the helper and system libvirt).
 
-**Décisions ouvertes.**
+**Open decisions.**
 
-- [ ] Vérifier la disponibilité de « KVM Studio » (GitHub, nom de domaine, dépôts de paquets).
+- [ ] Check the availability of "KVM Studio" (GitHub, domain name, package repositories).
 
-**Risques.**
+**Risks.**
 
-| Risque | Impact | Parade |
+| Risk | Impact | Mitigation |
 | --- | --- | --- |
-| Périmètre trop large pour un projet mené par une seule personne | Jamais de version utilisable | MVP strict, phase suivante seulement après la recette de la précédente |
-| Compte invité = accès libvirt ≈ accès root à l'hôte | Prise de contrôle du PC | Droits limités aux VMs, chemins confinés et vérifiés côté backend, pas de XML brut ni de passthrough |
-| Injection clavier pour les outils invités | Commande mal tapée (disposition clavier AZERTY/QWERTY) | Détection de la disposition de l'invité, vérification via l'agent après installation |
-| Fichiers de réponse spécifiques à chaque version d'OS | Installation simplifiée qui échoue | Modèles testés par version, repli sur l'installation manuelle |
-| Helper root | Surface d'attaque | API minimale, entrées validées, polkit, revue obligatoire des PR qui le touchent |
-| Qt WebEngine indisponible ou lourd | Mode logiciel dégradé | Repli GTK WebKit, sinon proposition du mode web |
-| Droits ISO (utilisateur qemu, SELinux) | Installation d'OS impossible | Détection + bouton « Corriger » |
-| Snapshots + UEFI selon versions de libvirt | Snapshots indisponibles | Détection de version, snapshots externes |
-| Proximité avec Workstation | Risque de marque | Visuels originaux, mention de non-affiliation, aucun asset VMware |
+| Scope too wide for a project run by one person | Never a usable version | Strict MVP, next phase only after the acceptance of the previous one |
+| Guest account = libvirt access ≈ root access to the host | Takeover of the PC | Rights limited to the VMs, paths confined and checked by the backend, no raw XML or passthrough |
+| Guest tools installation | Command typed wrongly (AZERTY/QWERTY layout) | Nothing is typed in the guest: a CD started by the user, checked through the agent afterwards |
+| Answer files specific to each OS version | Easy install failing | Templates tested per version, manual installation as a fallback |
+| Root helper | Attack surface | Minimal API, validated inputs, polkit, mandatory review of the PRs touching it |
+| Qt WebEngine missing or heavy | Degraded window mode | GTK WebKit fallback, otherwise web mode offered |
+| ISO rights (qemu user, SELinux) | OS installation impossible | Detection + "Fix" button |
+| Snapshots + UEFI depending on libvirt versions | Snapshots unavailable | Version detection, external snapshots |
+| Closeness to Workstation | Trademark risk | Original visuals, non-affiliation notice, no VMware asset |

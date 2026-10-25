@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=KVM Studio
+Name=@APP_NAME@
 GenericName=Virtual Machine Manager
 GenericName[fr]=Gestionnaire de machines virtuelles
 Comment=Create and run QEMU/KVM virtual machines

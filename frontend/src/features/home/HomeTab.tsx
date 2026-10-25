@@ -1,6 +1,7 @@
 import { FolderOpen, type LucideIcon, Plus, Server } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { APP_NAME } from "../../brand";
 import "./HomeTab.css";
 
 function Tile({
@@ -28,7 +29,7 @@ export function HomeTab({ onNewVm }: { onNewVm: () => void }) {
   return (
     <div className="home">
       <img className="home-logo" src="/logo.png" alt="" width={96} height={96} />
-      <h1 className="home-title">KVM Studio</h1>
+      <h1 className="home-title">{APP_NAME}</h1>
       <div className="home-tiles">
         <Tile icon={Plus} label={t("home.create")} onClick={onNewVm} />
         <Tile icon={FolderOpen} label={t("home.open")} hint={later} />

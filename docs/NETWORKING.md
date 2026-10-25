@@ -1,57 +1,55 @@
-# Réseaux virtuels
+# Virtual networks
 
-L'éditeur de réseaux virtuels (Édition > Éditeur de réseaux virtuels) affiche
-tous les réseaux libvirt de la machine, y compris ceux créés avec virt-manager.
+The virtual network editor (Edit > Virtual Network Editor) shows every libvirt
+network of the machine, including those created with virt-manager.
 
 ## Types
 
-| Type | Ce que fait libvirt | Accès |
+| Type | What libvirt does | Access |
 | --- | --- | --- |
-| Host-only | réseau sans `<forward>` | entre VMs, et avec l'hôte si la carte de l'hôte est connectée |
-| Host-only sans carte hôte | aucune adresse sur le pont | segment de lab isolé (LAN-1, DMZ...) |
-| NAT | `<forward mode='nat'/>` | sortie vers l'extérieur par l'adresse de l'hôte |
-| Bridged | prévu en V2 | |
+| Host-only | network without `<forward>` | between VMs, and with the host when the host card is connected |
+| Host-only without host card | no address on the bridge | isolated lab segment (LAN-1, DMZ...) |
+| NAT | `<forward mode='nat'/>` | outside access through the host address |
+| Bridged | planned for V2 | |
 
-Le service DHCP de libvirt a besoin d'une adresse sur le pont : cocher DHCP
-implique la carte virtuelle de l'hôte. Un réseau NAT a toujours cette adresse.
+The libvirt DHCP service needs an address on the bridge: ticking DHCP implies
+the host virtual card. A NAT network always has this address.
 
-Les réseaux d'un autre type (bridge, route, open...) s'affichent, se démarrent,
-s'arrêtent, se renomment et se suppriment ici, mais leurs réglages se modifient
-dans virt-manager.
+Networks of another type (bridge, route, open...) are shown, started, stopped,
+renamed and deleted here, but their settings are changed in virt-manager.
 
-## Noms
+## Names
 
-KVM Studio nomme ses ponts `kvmnetN` (1 à 99). `kvmnet0` est réservé au mode
-Bridged. Le nom du réseau libvirt peut différer du pont (par exemple `LAN-1`
-sur le pont `kvmnet4`). Renommer un réseau met à jour les VMs qui l'utilisent ;
-c'est refusé tant qu'une VM allumée y est connectée.
+KVM Studio names its bridges `kvmnetN` (1 to 99). `kvmnet0` is reserved for
+Bridged mode. The libvirt network name can differ from the bridge (for example
+`LAN-1` on bridge `kvmnet4`). Renaming a network updates the VMs using it; it is
+refused while a running VM is connected to it.
 
-Réseaux par défaut, créés au premier lancement ou par « Restaurer les valeurs
-par défaut » :
+Default networks, created at first run or by "Restore Defaults":
 
-- `kvmnet1` : Host-only avec DHCP ;
-- `kvmnet8` : NAT avec DHCP.
+- `kvmnet1`: Host-only with DHCP;
+- `kvmnet8`: NAT with DHCP.
 
-Leurs sous-réseaux sont choisis pour ne chevaucher ni le réseau local ni les
-autres réseaux libvirt (192.168.101.0/24 et 192.168.108.0/24 quand c'est libre).
+Their subnets are chosen so as not to overlap the local network or the other
+libvirt networks (192.168.101.0/24 and 192.168.108.0/24 when free).
 
-## Modifications
+## Changes
 
-Changer la plage DHCP s'applique à chaud. Changer le type ou le sous-réseau
-redémarre le réseau : c'est refusé tant qu'une VM allumée l'utilise.
+Changing the DHCP range applies live. Changing the type or the subnet restarts
+the network: it is refused while a running VM uses it.
 
-## Masquage dans l'applet réseau
+## Hidden from the network applet
 
-Le paquet installe `/etc/NetworkManager/conf.d/90-kvm-studio.conf`, qui rend
-les ponts `kvmnet*` et les cartes des VMs `ks-*` invisibles dans l'applet réseau
-du bureau. Il déclare une section `[device-kvm-studio]` (`managed=0`) plutôt que
-la clé `[keyfile] unmanaged-devices` : un autre fichier de `conf.d` qui définit
-cette clé (par exemple pour `virbr*`) la remplacerait, alors que les sections
-`[device-*]` s'additionnent. À l'installation, le paquet libère aussi les ponts
-et cartes que NetworkManager avait déjà pris (« connecté (en externe) ») et
-supprime les profils restés sur ces interfaces.
+The package installs `/etc/NetworkManager/conf.d/90-kvm-studio.conf`, which
+keeps the `kvmnet*` bridges and the `ks-*` VM cards out of the desktop network
+applet. It declares a `[device-kvm-studio]` section (`managed=0`) rather than
+the `[keyfile] unmanaged-devices` key: another `conf.d` file setting that key
+(for `virbr*`, for instance) would replace it, while `[device-*]` sections add
+up. At installation, the package also releases the bridges and cards
+NetworkManager had already taken ("connected (externally)") and deletes the
+profiles left on these interfaces.
 
-Depuis les sources, on peut l'installer à la main :
+From the sources, it can be installed by hand:
 
 ```bash
 sudo cp packaging/networkmanager/90-kvm-studio.conf /etc/NetworkManager/conf.d/
@@ -61,32 +59,32 @@ sudo cp packaging/networkmanager/90-kvm-studio.conf /etc/NetworkManager/conf.d/
 sudo systemctl reload NetworkManager
 ```
 
-Vérification : les interfaces `kvmnet*` doivent apparaître « unmanaged ».
+Check: the `kvmnet*` interfaces must show as "unmanaged".
 
 ```bash
 nmcli device status
 ```
 
-## Implémentation et calendrier
+## Implementation and schedule
 
-| Type | Implémentation | Phase |
+| Type | Implementation | Phase |
 | --- | --- | --- |
-| Host-only | réseau sans `<forward>` ; `<ip>` si la carte de l'hôte est connectée ; `<dhcp>` facultatif | MVP |
-| NAT | `<forward mode='nat'/>` avec DHCP | MVP |
-| Redirection de ports NAT | table nftables `inet kvmstudio` gérée par le helper ; les autres tables ne sont jamais modifiées | V1 |
-| Bridged transparent (proxy ARP et relais DHCP) | à prototyper | V2 |
-| Bridged L2 (pont NetworkManager, Ethernet) | option | V2 |
+| Host-only | network without `<forward>`; `<ip>` when the host card is connected; optional `<dhcp>` | MVP |
+| NAT | `<forward mode='nat'/>` with DHCP | MVP |
+| NAT port forwarding | nftables table `inet kvmstudio` managed by the helper; other tables are never changed | V1 |
+| Transparent Bridged (proxy ARP and DHCP relay) | to prototype | V2 |
+| L2 Bridged (NetworkManager bridge, Ethernet) | option | V2 |
 
-Les cartes des VMs sont nommées `ks-<id>-<n>` (15 caractères au plus). Les
-préfixes réservés par libvirt (`vnet`, `macvtap`, `macvlan`) ne sont jamais
-utilisés.
+VM cards are named `ks-<id>-<n>` (15 characters at most). The prefixes reserved
+by libvirt (`vnet`, `macvtap`, `macvlan`) are never used.
 
-Avec `qemu:///session`, les réseaux `kvmnet` ne sont pas disponibles.
+With `qemu:///session`, the `kvmnet` networks are not available.
 
-Docker met la chaîne FORWARD en DROP, ce qui coupe la sortie des réseaux NAT.
-KVM Studio le détecte et le signale sans modifier la configuration de l'hôte.
+Docker sets the FORWARD chain to DROP, which cuts the outside access of NAT
+networks. KVM Studio detects and reports it without changing the host
+configuration.
 
-Vérifications utiles :
+Useful checks:
 
 ```bash
 virsh -c qemu:///system net-list --all

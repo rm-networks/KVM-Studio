@@ -11,9 +11,11 @@ import time
 from pathlib import Path
 from typing import Any, Literal
 
+from .. import APP_NAME
 from ..auth.token import new_token
 from ..config import Config, default_config_path
 from ..frontend import find_frontend_dir
+from ..i18n import t
 from .backend_process import BackendError, BackendProcess
 from .clipboard import DesktopApi, make_clipboard
 from .restart import exec_restart
@@ -65,16 +67,12 @@ def run(config: Config, config_path: Path | None = None, page: str | None = None
     try:
         import webview
     except ImportError:
-        print("pywebview is not installed. Use --mode web instead.", file=sys.stderr)
+        print(t("cli.no_pywebview"), file=sys.stderr)
         return 1
 
     gui = _pick_gui()
     if gui is None:
-        print(
-            "No web engine found for the window. Install python3-pyqt6-webengine "
-            "(or webkit2gtk4.1), or start with --mode web.",
-            file=sys.stderr,
-        )
+        print(t("cli.no_web_engine"), file=sys.stderr)
         return 1
 
     _set_app_id(gui)
@@ -94,7 +92,7 @@ def run(config: Config, config_path: Path | None = None, page: str | None = None
         query = f"?page={page}" if page else ""
         width, height = (760, 600) if page else (1280, 800)
         window = webview.create_window(
-            "KVM Studio",
+            APP_NAME,
             f"http://127.0.0.1:{port}/{query}#token={token}",
             width=width,
             height=height,
@@ -102,7 +100,7 @@ def run(config: Config, config_path: Path | None = None, page: str | None = None
             js_api=api,
         )
         if window is None:
-            print("could not create the window", file=sys.stderr)
+            print(t("cli.no_window"), file=sys.stderr)
             return 1
         api._attach(window)
         if seconds := os.environ.get(SMOKE_ENV):

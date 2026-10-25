@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <service>
-  <short>KVM Studio</short>
-  <description>KVM Studio web interface shared on the local network (HTTPS).</description>
+  <short>@APP_NAME@</short>
+  <description>@APP_NAME@ web interface shared on the local network (HTTPS).</description>
   <port protocol="tcp" port="60443"/>
 </service>

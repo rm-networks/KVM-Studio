@@ -1606,7 +1606,7 @@ export interface components {
        * Language
        * @enum {string}
        */
-      language: "fr" | "en";
+      language: "en" | "fr";
     };
     /** UiSettings */
     UiSettings: {
@@ -1618,10 +1618,10 @@ export interface components {
       theme: "system" | "light" | "dark";
       /**
        * Language
-       * @default fr
+       * @default system
        * @enum {string}
        */
-      language: "fr" | "en";
+      language: "system" | "en" | "fr";
     };
     /** UninstallPlan */
     UninstallPlan: {

@@ -1,57 +1,56 @@
 # Installation
 
-## Paquet .rpm (Fedora)
+## .rpm package (Fedora)
 
-Chaque version publiée (tag `vX.Y.Z`) a son .rpm dans les Releases GitHub ; la CI
-construit aussi un paquet de développement à chaque build (artefact `kvm-studio-rpm`).
-Il installe ou tire toutes ses dépendances depuis les dépôts Fedora.
+Each release (tag `vX.Y.Z`) has its .rpm in the GitHub Releases; the CI also
+builds a development package on every build (artifact `kvm-studio-rpm`). It
+installs or pulls all its dependencies from the Fedora repositories.
 
 ```bash
 sudo dnf install ./kvm-studio-*.rpm
 ```
 
-Contenu :
+Contents:
 
-| Emplacement | Rôle |
+| Location | Purpose |
 | --- | --- |
-| `/opt/kvm-studio` | application, interface compilée, modules Python absents des dépôts (`vendor/`) |
-| `/usr/bin/kvm-studio` | lanceur |
-| `/usr/share/applications/kvm-studio.desktop` | entrée du menu des applications |
-| `/usr/share/applications/kvm-studio-uninstall.desktop` | entrée « Désinstaller KVM Studio » |
-| `kvmstudio-helper.socket` / `.service` | helper root, démarré à la demande |
-| `/usr/share/polkit-1/actions/org.kvmstudio.helper.policy` | autorisations du helper |
-| `/etc/kvm-studio/helper.toml` | bibliothèques ISO que le helper peut corriger |
-| `/etc/NetworkManager/conf.d/90-kvm-studio.conf` | masque `kvmnet*` et `ks-*` dans l'applet réseau |
-| `/usr/lib/firewalld/services/kvm-studio.xml` | service pare-feu du partage sur le LAN |
+| `/opt/kvm-studio` | application, built interface, Python modules missing from the repositories (`vendor/`) |
+| `/usr/bin/kvm-studio` | launcher |
+| `/usr/share/applications/kvm-studio.desktop` | applications menu entry |
+| `/usr/share/applications/kvm-studio-uninstall.desktop` | "Uninstall KVM Studio" entry |
+| `kvmstudio-helper.socket` / `.service` | root helper, started on demand |
+| `/usr/share/polkit-1/actions/org.kvmstudio.helper.policy` | helper authorizations |
+| `/etc/kvm-studio/helper.toml` | ISO libraries the helper may fix |
+| `/etc/NetworkManager/conf.d/90-kvm-studio.conf` | hides `kvmnet*` and `ks-*` from the network applet |
+| `/usr/lib/firewalld/services/kvm-studio.xml` | firewall service for sharing on the LAN |
 
-Pour que le bouton « Corriger » du sélecteur d'ISO fonctionne, déclarer les
-bibliothèques ISO dans `/etc/kvm-studio/helper.toml` (voir
-[Configuration](CONFIGURATION.md)) :
+For the "Fix" button of the ISO picker to work, declare the ISO libraries in
+`/etc/kvm-studio/helper.toml` (see [Configuration](CONFIGURATION.md)):
 
 ```bash
 sudoedit /etc/kvm-studio/helper.toml
 ```
 
-Vérifier que le socket du helper écoute :
+Check that the helper socket is listening:
 
 ```bash
 systemctl status kvmstudio-helper.socket
 ```
 
-Pour désinstaller, utiliser l'entrée « Désinstaller KVM Studio » du menu des
-applications : elle demande quoi faire des VMs, des réseaux `kvmnet` et des
-réglages, puis retire le paquet. Même chose dans un terminal :
+To uninstall, use the "Uninstall KVM Studio" entry of the applications menu:
+it asks what to do with the VMs, the `kvmnet` networks and the settings, then
+removes the package. The same in a terminal:
 
 ```bash
 kvm-studio --uninstall
 ```
 
-Un `dnf remove` direct ne retire que les fichiers du paquet (helper arrêté,
-service pare-feu retiré de toutes les zones) ; VMs, réseaux et réglages restent.
+A plain `dnf remove` only removes the package files (helper stopped, firewall
+service removed from every zone); VMs, networks and settings stay.
 
-### Construire le paquet
+### Building the package
 
-Il faut [nfpm](https://nfpm.goreleaser.com/) et l'interface compilée.
+It takes [nfpm](https://nfpm.goreleaser.com/) and the built interface.
 
 ```bash
 cd frontend && npm ci && npm run build && cd ..
@@ -65,36 +64,36 @@ python3 packaging/stage.py
 VERSION=0.1.0 nfpm package -f packaging/nfpm.yaml -p rpm -t dist/
 ```
 
-## Depuis les sources (Fedora)
+## From the sources (Fedora)
 
-### Paquets système
+### System packages
 
-Hyperviseur et bindings Python fournis par la distribution :
+Hypervisor and Python bindings from the distribution:
 
 ```bash
 sudo dnf install libvirt-daemon-kvm qemu-kvm python3-libvirt python3-gobject libosinfo xorriso
 ```
 
-Moteur de la fenêtre native (Qt WebEngine) :
+Engine of the native window (Qt WebEngine):
 
 ```bash
 sudo dnf install python3-pyqt6-webengine python3-QtPy
 ```
 
-Repli GTK WebKit, facultatif :
+GTK WebKit fallback, optional:
 
 ```bash
 sudo dnf install webkit2gtk4.1
 ```
 
-Node.js, uniquement pour compiler l'interface :
+Node.js, only to build the interface:
 
 ```bash
 sudo dnf install nodejs24 nodejs24-bin nodejs24-npm nodejs24-npm-bin
 ```
 
-Le compte doit faire partie du groupe `libvirt` (déconnexion puis reconnexion
-nécessaire après l'ajout) :
+The account must be in the `libvirt` group (log out and back in after adding
+it):
 
 ```bash
 sudo usermod -aG libvirt "$USER"
@@ -102,8 +101,8 @@ sudo usermod -aG libvirt "$USER"
 
 ### Backend
 
-`--system-site-packages` permet au venv de voir `python3-libvirt`,
-`python3-gobject` et PyQt6, installés par dnf.
+`--system-site-packages` lets the venv see `python3-libvirt`,
+`python3-gobject` and PyQt6, installed by dnf.
 
 ```bash
 python3 -m venv --system-site-packages .venv
@@ -123,63 +122,72 @@ pip install -e "backend[dev]"
 cd frontend && npm ci && npm run build && cd ..
 ```
 
-Le backend sert ensuite `frontend/dist` tout seul.
+The backend then serves `frontend/dist` by itself.
 
-### Lancement
+### Starting
 
-Fenêtre native :
+Native window:
 
 ```bash
 kvm-studio
 ```
 
-Navigateur (lien à jeton affiché dans le terminal, ouvert automatiquement) :
+Browser (link with the token printed in the terminal, opened automatically):
 
 ```bash
 kvm-studio --mode web
 ```
 
-Diagnostic de la configuration et de l'hôte :
+Check the configuration and the host:
 
 ```bash
 kvm-studio --check
 ```
 
-### Icône du lanceur (facultatif)
+### Launcher icon (optional)
 
-Sous Wayland, KDE prend l'icône de la fenêtre dans l'entrée de menu
-`kvm-studio.desktop`. Le paquet l'installera ; depuis les sources, on peut
-l'installer pour son seul compte :
+On Wayland, KDE takes the window icon from the `kvm-studio.desktop` menu entry.
+The package installs it; from the sources, it can be installed for one account:
 
 ```bash
-cp -r packaging/desktop/icons ~/.local/share/ && cp packaging/desktop/kvm-studio.desktop ~/.local/share/applications/
+python3 packaging/stage.py && cp -r packaging/desktop/icons ~/.local/share/ && cp build/stage/files/desktop/kvm-studio.desktop ~/.local/share/applications/
 ```
 
-## Développement
+## Development
 
-Deux terminaux. Le premier lance l'API, qui redémarre à chaque modification du
-code Python et affiche un lien contenant le jeton :
+Two terminals. The first one runs the API, which restarts on every change to
+the Python code and prints a link containing the token:
 
 ```bash
 kvm-studio --mode web --reload
 ```
 
-Le second lance Vite, qui recharge l'interface à chaque modification :
+The second one runs Vite, which reloads the interface on every change:
 
 ```bash
 cd frontend && npm run dev
 ```
 
-Ouvrir `http://127.0.0.1:5173/#token=...` en reprenant le jeton affiché par le
-premier terminal.
+Open `http://127.0.0.1:5173/#token=...` with the token printed by the first
+terminal.
 
-Après une modification de l'API, régénérer le client TypeScript (venv activé) :
+After a change to the API, regenerate the TypeScript client (venv active):
 
 ```bash
 cd frontend && npm run gen:api
 ```
 
-### Contrôles qualité
+### Translations
+
+English is the source language. Every visible string lives in
+`frontend/src/i18n/en.json` and `fr.json` (interface), and in
+`backend/kvmstudio/locale/en.json` and `fr.json` (command line, tray icon). The
+product name is never written in them: messages use `{{app}}` (interface) or
+`{app}` (backend), filled from `APP_NAME` in `backend/kvmstudio/__init__.py`.
+Tests fail when a key exists in one language only, or when a visible string is
+written in the code.
+
+### Quality checks
 
 ```bash
 ruff check . && ruff format --check . && mypy && pytest
@@ -189,17 +197,17 @@ ruff check . && ruff format --check . && mypy && pytest
 cd frontend && npm run lint && npm test
 ```
 
-Tests d'intégration avec un vrai QEMU (console et presse-papiers UTF-8). Ils
-démarrent une VM temporaire sans disque dans `qemu:///session`, qui disparaît à
-la fin du test :
+Integration tests with a real QEMU (console and UTF-8 clipboard). They start a
+temporary diskless VM in `qemu:///session`, which goes away at the end of the
+test:
 
 ```bash
 KVMSTUDIO_QEMU_TESTS=1 pytest tests/backend/test_qemu_clipboard.py tests/backend/test_qemu_console.py
 ```
 
-## Sécurité du serveur interne
+## Security of the internal server
 
-Dans les deux modes, le serveur n'écoute que sur 127.0.0.1. Chaque lancement
-génère un jeton ; toute requête à l'API sans ce jeton est refusée (401). Le jeton
-voyage dans le fragment de l'URL (`#token=...`), qui n'est jamais envoyé au
-serveur ni enregistré dans ses journaux.
+In both modes, the server only listens on 127.0.0.1. Each start generates a
+token; any API request without it is refused (401). The token travels in the
+URL fragment (`#token=...`), which is never sent to the server nor written to
+its logs.

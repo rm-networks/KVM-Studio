@@ -7,12 +7,22 @@ import libvirt
 import pytest
 from fastapi.testclient import TestClient
 
+from kvmstudio import i18n
 from kvmstudio.app import create_app
 from kvmstudio.config import Config, IsoLibrary, LibvirtSettings, StorageSettings
 from kvmstudio.libvirt_conn import LibvirtConnection
 
 TEST_URI = "test:///default"
 TOKEN = "test-token"
+
+
+@pytest.fixture(autouse=True)
+def english_desktop(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Messages in the source language, whatever the machine running the tests."""
+    for var in ("LC_ALL", "LC_MESSAGES", "LANGUAGE"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("LANG", "en_US.UTF-8")
+    i18n._current.clear()
 
 
 @pytest.fixture

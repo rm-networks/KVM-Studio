@@ -1,5 +1,5 @@
 [Unit]
-Description=KVM Studio privileged helper socket
+Description=@APP_NAME@ privileged helper socket
 
 [Socket]
 ListenStream=/run/kvmstudio-helper.sock

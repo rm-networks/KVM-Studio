@@ -1,178 +1,175 @@
 # Architecture
 
-KVM Studio pilote QEMU/KVM au travers de libvirt. Il s'utilise dans une fenêtre
-native ou depuis un navigateur, et s'installe par un paquet .rpm ou .deb.
+KVM Studio drives QEMU/KVM through libvirt. It runs in a native window or in a
+browser, and is installed from a .rpm or .deb package.
 
-## Principes
+## Principles
 
-- **libvirt est la source de vérité.** Aucun état de VM n'est stocké ailleurs.
-  Les données propres à KVM Studio vont dans le `<metadata>` du domaine, sous
-  le namespace `https://github.com/rm-networks/kvm-studio/ns/1.0` (préfixe
-  `kvmstudio`). Après chaque définition, le XML est relu avec `XMLDesc()`, car
-  libvirt le normalise.
-- **Compatibilité virt-manager et virsh.** Domaines, réseaux et volumes créés
-  par KVM Studio restent utilisables dans ces outils.
-- **Aucun chemin en dur.** URI, pools, réseaux, ports et dossiers viennent de la
-  configuration, avec des valeurs par défaut détectées.
-- **Dossiers ISO en lecture seule.** Jamais de copie, de déplacement ni
-  d'écriture dans une bibliothèque ISO.
-- **Confinement des chemins.** Tout chemin reçu du client est résolu puis doit
-  se trouver sous le dossier des VMs ou sous une bibliothèque ISO déclarée,
-  sinon la requête est refusée (403). Le contrôle est fait par le backend.
-- **Pas de shell.** Les outils externes (`qemu-img`, `nft`, `firewall-cmd`,
-  `ufw`, `semanage`, `setfacl`) sont appelés avec une liste d'arguments, jamais
-  par une commande construite en texte.
+- **libvirt is the source of truth.** No VM state is stored anywhere else.
+  KVM Studio's own data goes into the domain `<metadata>`, under the namespace
+  `https://github.com/rm-networks/kvm-studio/ns/1.0` (prefix `kvmstudio`).
+  After each definition, the XML is read back with `XMLDesc()`, since libvirt
+  normalizes it.
+- **virt-manager and virsh compatibility.** Domains, networks and volumes
+  created by KVM Studio stay usable in these tools.
+- **No hard-coded path.** URI, pools, networks, ports and folders come from the
+  configuration, with detected defaults.
+- **ISO folders are read-only.** Never a copy, a move or a write in an ISO
+  library.
+- **Path confinement.** Every path received from the client is resolved and
+  must then be under the VM folder or under a declared ISO library, otherwise
+  the request is refused (403). The backend does the check.
+- **No shell.** External tools (`qemu-img`, `nft`, `firewall-cmd`, `ufw`,
+  `semanage`, `setfacl`) are called with a list of arguments, never through a
+  command built as text.
 
-## Processus
+## Processes
 
-Le processus principal ne contient que la fenêtre (pywebview, Qt WebEngine ou
-à défaut GTK WebKit) ou l'icône de notification. Le backend (Uvicorn, FastAPI,
-connexion libvirt, boucle d'événements) tourne dans un sous-processus
-(`shell/backend_process.py`). libvirt n'est jamais chargé dans le processus Qt :
-les deux partagent le `GMainContext` de GLib, ce qui provoque des plantages.
+The main process only holds the window (pywebview, Qt WebEngine or else GTK
+WebKit) or the tray icon. The backend (Uvicorn, FastAPI, libvirt connection,
+event loop) runs in a child process (`shell/backend_process.py`). libvirt is
+never loaded in the Qt process: both share the GLib `GMainContext`, which leads
+to crashes.
 
-Les événements libvirt sont relayés au frontend par le WebSocket `/ws/events`.
+libvirt events reach the frontend through the `/ws/events` WebSocket.
 
-## Helper root
+## Root helper
 
-`kvmstudio-helper` est le seul composant qui tourne en root. C'est un service
-systemd qui écoute sur un socket Unix et n'expose que des opérations nommées,
-aux paramètres validés, chacune autorisée par polkit :
+`kvmstudio-helper` is the only component running as root. It is a systemd
+service listening on a Unix socket, exposing only named operations with
+validated parameters, each one authorized by polkit:
 
-- ouverture et fermeture du port web (firewalld ou ufw) ;
-- redirection de ports NAT (table nftables `inet kvmstudio`) ;
-- correctifs de droits sur les ISO (contexte SELinux `virt_content_t` ou ACL).
-- ajout du compte de l'appelant au groupe `libvirt` ;
-- retrait du paquet en fin de désinstallation.
+- opening and closing the web port (firewalld or ufw);
+- NAT port forwarding (nftables table `inet kvmstudio`);
+- access fixes on ISO images (SELinux context `virt_content_t` or ACL);
+- adding the caller's account to the `libvirt` group;
+- removing the package at the end of an uninstall.
 
-Il n'existe pas d'opération générique d'exécution de commande.
+There is no generic command execution operation.
 
-Fonctionnement :
+How it works:
 
-- systemd crée le socket `/run/kvmstudio-helper.sock` (unité
-  `kvmstudio-helper.socket`) et démarre le service à la première connexion ;
-- chaque connexion porte une requête JSON `{"op": ..., "params": {...}}` ;
-  toute clé en trop, tout type inattendu ou toute opération inconnue est
-  refusé avant de solliciter polkit ;
-- l'appelant est identifié par le noyau (`SO_PEERCRED` : pid, uid réel) et
-  jamais par un champ de la requête ; polkit (`pkcheck`) autorise ce processus
-  pour l'action de l'opération, en affichant au besoin la fenêtre
-  d'authentification du bureau ;
-- les chemins sont résolus (liens symboliques et `..` compris), puis doivent
-  se trouver strictement sous une bibliothèque déclarée dans
-  `/etc/kvm-studio/helper.toml` ;
-- le fichier est ensuite rouvert composant par composant avec `O_NOFOLLOW`
-  depuis la racine de la bibliothèque, et l'outil reçoit `/proc/self/fd/N` :
-  remplacer un dossier par un lien symbolique entre le contrôle et la
-  modification n'a donc aucun effet.
+- systemd creates the socket `/run/kvmstudio-helper.sock` (unit
+  `kvmstudio-helper.socket`) and starts the service at the first connection;
+- each connection carries one JSON request `{"op": ..., "params": {...}}`;
+  any extra key, unexpected type or unknown operation is refused before polkit
+  is asked;
+- the caller is identified by the kernel (`SO_PEERCRED`: pid, real uid) and
+  never by a field of the request; polkit (`pkcheck`) authorizes this process
+  for the action of the operation, showing the desktop authentication window
+  when needed;
+- paths are resolved (symbolic links and `..` included), and must then be
+  strictly under a library declared in `/etc/kvm-studio/helper.toml`;
+- the file is then reopened component by component with `O_NOFOLLOW` from the
+  library root, and the tool receives `/proc/self/fd/N`: replacing a folder
+  with a symbolic link between the check and the change therefore has no
+  effect.
 
-| Opération | Action polkit | Effet |
+| Operation | polkit action | Effect |
 | --- | --- | --- |
-| `iso_acl` | `org.kvmstudio.helper.iso-acl` | ACL `u:<qemu>:x` sur les dossiers de la bibliothèque jusqu'à l'image, `u:<qemu>:r` sur l'image |
-| `join_libvirt` | `org.kvmstudio.helper.join-libvirt` | ajoute l'appelant au groupe `libvirt` ; aucun paramètre, refusé pour root et les UID inférieurs à 1000, mot de passe administrateur à chaque appel |
-| `remove_package` | `org.kvmstudio.helper.remove-package` | retire le paquet `kvm-studio` dans une unité systemd transitoire ; aucun paramètre, mot de passe administrateur à chaque appel |
+| `iso_acl` | `org.kvmstudio.helper.iso-acl` | ACL `u:<qemu>:x` on the library folders down to the image, `u:<qemu>:r` on the image |
+| `join_libvirt` | `org.kvmstudio.helper.join-libvirt` | adds the caller to the `libvirt` group; no parameter, refused for root and UIDs below 1000, administrator password on every call |
+| `remove_package` | `org.kvmstudio.helper.remove-package` | removes the `kvm-studio` package in a transient systemd unit; no parameter, administrator password on every call |
 
-Les dossiers situés au-dessus de la racine d'une bibliothèque ne sont jamais
-modifiés : le sélecteur d'ISO indique la commande à lancer. Le masquage
-NetworkManager est porté uniquement par un fichier du paquet. L'ACL `u:qemu:x`
-sur les dossiers de VMs situés sous le home est posée par l'utilisateur
-lui-même, sans le helper.
+Folders above the root of a library are never changed: the ISO picker shows the
+command to run. The NetworkManager rule is only carried by a package file. The
+`u:qemu:x` ACL on VM folders under the home folder is set by the user, without
+the helper.
 
-## Modes d'interface
+## Interface modes
 
-Les deux modes sont exclusifs et se choisissent dans la configuration
-(appliqués au redémarrage).
+The two modes are exclusive and chosen in the configuration (applied on
+restart).
 
-| Mode | Écoute | Accès |
+| Mode | Listens on | Access |
 | --- | --- | --- |
-| Logiciel | 127.0.0.1, port aléatoire | jeton par session |
-| Web local | 127.0.0.1:60080 | jeton obligatoire, lien affiché au lancement |
-| Web partagé (`share_on_lan = true`) | LAN, HTTPS auto-signé sur 60443 | compte invité avec mot de passe, sinon refus de démarrer |
+| Window | 127.0.0.1, random port | token per session |
+| Local web | 127.0.0.1:60080 | token required, link printed at start |
+| Shared web (`share_on_lan = true`) | LAN, self-signed HTTPS on 60443 | guest account with a password, otherwise refuses to start |
 
-### Compte invité
+### Guest account
 
-Un seul compte invité, utilisable par plusieurs personnes en même temps. Son mot
-de passe est défini dans Préférences > Interface et stocké sous forme de hash
-argon2. Les tentatives de connexion sont limitées (`login_max_attempts`) et les
-sessions expirent après inactivité.
+A single guest account, usable by several people at once. Its password is set
+in Preferences > Interface and stored as an argon2 hash. Login attempts are
+limited (`login_max_attempts`) and sessions expire after inactivity.
 
-Deux rôles : `owner` (session du mode logiciel ou connexion depuis 127.0.0.1)
-et `guest`. Les droits sont vérifiés par le backend sur chaque route.
+Two roles: `owner` (window mode session or login from 127.0.0.1) and `guest`.
+The backend checks the rights on every route.
 
-- Autorisé à l'invité : créer, supprimer, modifier, démarrer et arrêter des VMs,
-  console, snapshots, clones, choix des ISO des bibliothèques et des réseaux
-  `kvmnet` existants.
-- Interdit à l'invité : Préférences, éditeur de réseaux, bibliothèques ISO,
-  partage LAN, éditeur XML brut, passthrough (disque physique, USB, PCI), tout
-  chemin hors confinement.
+- Allowed to the guest: creating, deleting, changing, starting and stopping
+  VMs, console, snapshots, clones, picking ISO images from the libraries and
+  existing `kvmnet` networks.
+- Forbidden to the guest: Preferences, network editor, ISO libraries, LAN
+  sharing, raw XML editor, passthrough (physical disk, USB, PCI), any path
+  outside the confinement.
 
-Activer ou couper le partage ouvre ou ferme le port par le helper. La console
-partagée utilise `<graphics type='vnc' sharePolicy='allow-exclusive'>` :
-plusieurs clients noVNC peuvent se connecter et l'interface indique le nombre
-de personnes connectées.
+Turning sharing on or off opens or closes the port through the helper. The
+shared console uses `<graphics type='vnc' sharePolicy='allow-exclusive'>`:
+several noVNC clients can connect and the interface shows how many people are
+connected.
 
-## Intégration invité
+## Guest integration
 
-- **Copier-coller (texte uniquement).** Chaque VM avec affichage reçoit
-  `<channel type='qemu-vdagent'>` avec `<clipboard copypaste='yes'/>`, sauf si
-  Options > Isolation le désactive. Le presse-papiers de l'hôte est relié à noVNC
-  par l'API pywebview en mode logiciel et par `navigator.clipboard` en mode web
-  (contexte sécurisé : 127.0.0.1 ou HTTPS).
-- **Installation des outils invités.** KVM Studio fabrique avec `xorriso` un
-  petit CD `KS_TOOLS` dans `<emplacement>/KVM-Studio/Tools` et l'insère dans un
-  lecteur de la VM (virtio-win en plus, dans un second lecteur, pour Windows).
-  L'utilisateur lance l'installation dans la VM : `Install-Tools.bat` sous
-  Windows, `install.sh` sous Linux. Rien n'est tapé à sa place, la disposition
-  du clavier ne compte donc pas. qemu-guest-agent confirme ensuite que l'agent
-  répond, et l'éjection remet ce que les lecteurs contenaient avant.
-- **Installation simplifiée.** L'assistant collecte utilisateur, mot de passe,
-  langue, clavier et clé produit facultative, puis génère le fichier de réponse
-  (autounattend.xml, kickstart, preseed, autoinstall) sur une petite ISO séparée.
-  L'ISO source n'est jamais modifiée. Cibles : Windows 10/11/Server,
-  Fedora/RHEL, Debian, Ubuntu.
+- **Copy and paste (text only).** Every VM with a display gets
+  `<channel type='qemu-vdagent'>` with `<clipboard copypaste='yes'/>`, unless
+  Options > Isolation turns it off. The host clipboard is linked to noVNC by the
+  pywebview API in window mode and by `navigator.clipboard` in web mode (secure
+  context: 127.0.0.1 or HTTPS).
+- **Guest tools installation.** KVM Studio builds with `xorriso` a small
+  `KS_TOOLS` CD in `<location>/KVM-Studio/Tools` and inserts it in a drive of
+  the VM (virtio-win as well, in a second drive, for Windows). The user starts
+  the installation inside the VM: `Install-Tools.bat` on Windows, `install.sh`
+  on Linux. Nothing is typed for them, so the keyboard layout does not matter.
+  qemu-guest-agent then confirms that the agent answers, and ejecting puts back
+  what the drives held before.
+- **Easy install.** The assistant collects user, password, language, keyboard
+  and an optional product key, then generates the answer file (autounattend.xml,
+  kickstart, preseed, autoinstall) on a small separate ISO. The source ISO is
+  never changed. Targets: Windows 10/11/Server, Fedora/RHEL, Debian, Ubuntu.
 
-## Disques
+## Disks
 
-Contrôleurs NVMe (masqué si la libvirt installée ne le gère pas), SATA,
-virtio-scsi, IDE et virtio-blk. Création qcow2 ou raw avec préallocation
-facultative. Disques existants qcow2, raw, VMDK, VDI ou VHDX, avec conversion
-proposée. Modes normal, indépendant persistant (`snapshot='no'`) et indépendant
-non persistant (`<transient/>`). Utilitaires : agrandir, compacter, convertir,
-informations.
+NVMe controllers (hidden when the installed libvirt lacks it), SATA,
+virtio-scsi, IDE and virtio-blk. qcow2 or raw creation with optional
+preallocation. Existing qcow2, raw, VMDK, VDI or VHDX disks, with a conversion
+offered. Normal, independent persistent (`snapshot='no'`) and independent non
+persistent (`<transient/>`) modes. Utilities: expand, compact, convert,
+information.
 
-## Arborescence cible
+## Source tree
 
-Certaines parties (helper, fichiers de réponse) arrivent dans les phases
-suivantes de la [feuille de route](ROADMAP.md).
+Some parts (answer files) arrive in later phases of the
+[roadmap](ROADMAP.md).
 
 ```
 kvm-studio/
 ├── backend/kvmstudio/
-│   ├── __main__.py          # CLI : run, --check, --mode
+│   ├── __main__.py          # CLI: run, --check, --mode
 │   ├── config.py
-│   ├── app.py               # FastAPI et frontend statique
-│   ├── shell/               # fenêtre (pywebview), mode web (TLS, invité)
-│   ├── auth/                # rôles owner/guest, sessions, limitation
+│   ├── i18n.py, locale/     # messages of the command line and tray icon
+│   ├── app.py               # FastAPI and static frontend
+│   ├── shell/               # window (pywebview), web mode (TLS, guest)
+│   ├── auth/                # owner/guest roles, sessions, rate limiting
 │   ├── libvirt_conn.py
 │   ├── api/                 # vms, isos, disks, networks, snapshots, console, prefs, tasks
 │   ├── services/
-│   ├── xml/                 # builders domaine et réseau, profils d'OS
-│   ├── unattended/          # modèles de fichiers de réponse, génération d'ISO
-│   ├── guesttools/          # CD des outils invités (scripts, fabrication, insertion)
-│   ├── isolib/              # scan des ISO, cache, contrôle des droits
-│   ├── paths.py             # confinement des chemins
-│   ├── console/             # proxy WebSocket VNC et série
+│   ├── xml/                 # domain and network builders, OS profiles
+│   ├── unattended/          # answer file templates, ISO generation
+│   ├── guesttools/          # guest tools CD (scripts, build, insertion)
+│   ├── isolib/              # ISO scan, cache, access check
+│   ├── paths.py             # path confinement
+│   ├── console/             # VNC and serial WebSocket proxy
 │   └── helper_client.py
 ├── helper/kvmstudio_helper/
-│   ├── server.py            # socket Unix, opérations nommées
-│   ├── paths.py             # résolution, confinement, ouverture sans course
-│   ├── polkit.py            # identité de l'appelant, pkcheck
-│   └── ops/                 # iso_acl, join_libvirt, remove_package (puis firewall_port, nat_portfwd)
+│   ├── server.py            # Unix socket, named operations
+│   ├── paths.py             # resolution, confinement, race-free opening
+│   ├── polkit.py            # caller identity, pkcheck
+│   └── ops/                 # iso_acl, join_libvirt, remove_package (then firewall_port, nat_portfwd)
 ├── frontend/src/
-│   ├── app/                 # menus, barre d'outils, bibliothèque, onglets, barre d'état
-│   ├── features/            # un dossier par écran ou dialogue
+│   ├── app/                 # menus, toolbar, library, tabs, status bar
+│   ├── features/            # one folder per screen or dialog
 │   ├── components/
-│   ├── api/                 # client typé généré depuis l'OpenAPI
+│   ├── api/                 # typed client generated from the OpenAPI
 │   └── i18n/
 ├── packaging/               # nfpm, scripts, systemd, polkit, NetworkManager, firewalld, .desktop
 └── tests/                   # backend, helper, e2e
@@ -180,60 +177,56 @@ kvm-studio/
 
 ## Stack
 
-| Couche | Choix |
+| Layer | Choice |
 | --- | --- |
 | Backend | Python 3.11+, FastAPI, Uvicorn, Pydantic v2 |
-| Hyperviseur | `libvirt-python` de la distribution |
-| XML | `lxml`, builders par profil d'OS |
-| Détection d'OS | libosinfo si disponible, sinon profils internes |
-| Frontend | React 18, TypeScript strict, Vite, Radix UI, Lucide, i18next (fr, en) |
-| Fenêtre | pywebview (Qt WebEngine, repli GTK WebKit) |
-| Console | noVNC, chardev `qemu-vdagent`, xterm.js pour la console série |
-| Fichiers de réponse | Jinja2 |
-| Configuration | TOML validé par Pydantic |
-| Paquets | nfpm (.rpm, .deb) |
-| Qualité | ruff, mypy --strict, pytest, eslint, prettier, vitest, Playwright |
+| Hypervisor | `libvirt-python` from the distribution |
+| XML | `lxml`, builders per OS profile |
+| OS detection | libosinfo when available, internal profiles otherwise |
+| Frontend | React 18, strict TypeScript, Vite, Radix UI, Lucide, i18next (en, fr) |
+| Window | pywebview (Qt WebEngine, GTK WebKit fallback) |
+| Console | noVNC, `qemu-vdagent` chardev, xterm.js for the serial console |
+| Answer files | Jinja2 |
+| Configuration | TOML validated by Pydantic |
+| Packages | nfpm (.rpm, .deb) |
+| Quality | ruff, mypy --strict, pytest, eslint, prettier, vitest, Playwright |
 
-Les tests automatisés tournent sur le pilote libvirt `test:///default` : ni KVM
-ni root ne sont nécessaires en CI. Le helper est testé avec des commandes
-simulées.
+The automated tests run on the libvirt `test:///default` driver: neither KVM
+nor root is needed in the CI. The helper is tested with simulated commands.
 
 ## Installation
 
-Le paquet installe `/opt/kvm-studio`, le lanceur `.desktop`, le service
-`kvmstudio-helper`, les règles polkit, le fichier NetworkManager et le service
-firewalld. Les dépendances Python absentes des dépôts sont embarquées dans
-`/opt/kvm-studio/vendor`. Flatpak et Snap
-ne sont pas proposés : leur bac à sable est incompatible avec libvirt système,
-le helper et polkit.
+The package installs `/opt/kvm-studio`, the `.desktop` launcher, the
+`kvmstudio-helper` service, the polkit rules, the NetworkManager file and the
+firewalld service. Python dependencies missing from the repositories are
+bundled in `/opt/kvm-studio/vendor`. Flatpak and Snap are not offered: their
+sandbox does not fit system libvirt, the helper and polkit.
 
-### Désinstallation
+### Uninstall
 
-L'entrée « Désinstaller KVM Studio » lance `kvm-studio --uninstall-wizard`,
-une fenêtre qui n'affiche que l'assistant de désinstallation ;
-`kvm-studio --uninstall` pose les mêmes questions dans un terminal.
+The "Uninstall KVM Studio" entry runs `kvm-studio --uninstall-wizard`, a window
+showing only the uninstall assistant; `kvm-studio --uninstall` asks the same
+questions in a terminal.
 
-1. Le backend calcule un plan (`GET /api/uninstall/plan`) : VMs dont les
-   fichiers sont dans `KVM-Studio/VM`, fichiers exacts à supprimer et fichiers
-   conservés avec leur raison, réseaux `kvmnet` et VMs qui les utilisent,
-   fichiers de réglages.
-2. L'exécution (`POST /api/uninstall`) reçoit l'empreinte du plan affiché et
-   la refuse si quoi que ce soit a changé entre-temps. Les règles sont celles
-   de la suppression d'une VM ; un réseau encore utilisé par une VM conservée
-   reste en place.
-3. Le paquet est retiré par l'opération helper `remove_package`, qui lance
-   `dnf remove` (ou `apt-get remove`) dans une unité systemd transitoire
-   `kvm-studio-removal` : retirer le paquet arrête le helper lui-même.
+1. The backend computes a plan (`GET /api/uninstall/plan`): VMs whose files are
+   in `KVM-Studio/VM`, exact files to delete and files kept with their reason,
+   `kvmnet` networks and the VMs using them, settings files.
+2. The execution (`POST /api/uninstall`) receives the fingerprint of the plan
+   shown and refuses it when anything changed in between. The rules are those
+   of deleting a VM; a network still used by a kept VM stays.
+3. The package is removed by the `remove_package` helper operation, which runs
+   `dnf remove` (or `apt-get remove`) in a transient systemd unit
+   `kvm-studio-removal`: removing the package stops the helper itself.
 
-Un `dnf remove` direct ne retire que les fichiers du paquet et affiche une
-ligne qui renvoie vers l'entrée « Désinstaller KVM Studio ».
+A plain `dnf remove` only removes the package files and prints a line pointing
+to the "Uninstall KVM Studio" entry.
 
-L'assistant de premier lancement enchaîne : bienvenue et licence, vérification
-(VT-x/AMD-V, module KVM, nested, service libvirt), ajout au groupe `libvirt`,
-emplacements des VMs et des ISO, mode d'interface, création de `kvmnet1` et
-`kvmnet8`. Il se relance depuis le menu Aide.
+The first-run assistant goes through: welcome and license, checks (VT-x/AMD-V,
+KVM module, nested, libvirt service), joining the `libvirt` group, VM and ISO
+locations, interface mode, creating `kvmnet1` and `kvmnet8`. It can be started
+again from the Help menu.
 
-## Hors périmètre
+## Out of scope
 
-Conteneurs, multi-hôtes, cluster, hyperviseur propre, exposition sur Internet,
-hôtes Windows ou macOS, copier-coller de fichiers ou d'images.
+Containers, multiple hosts, clusters, a hypervisor of its own, exposure on the
+Internet, Windows or macOS hosts, copy and paste of files or images.

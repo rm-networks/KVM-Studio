@@ -2,6 +2,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { APP_NAME } from "../brand";
 import "../components/Dialog.css";
 import "./AboutDialog.css";
 
@@ -28,7 +29,7 @@ export function AboutDialog({ open, onOpenChange, version }: Props) {
             <div className="about-head">
               <img src="/logo.png" alt="" width={56} height={56} />
               <div>
-                <p className="about-name">KVM Studio</p>
+                <p className="about-name">{APP_NAME}</p>
                 {version && <p className="about-version">{t("about.version", { version })}</p>}
               </div>
             </div>

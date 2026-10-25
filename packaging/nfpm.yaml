@@ -68,9 +68,9 @@ contents:
     dst: /usr/bin/kvm-studio
     type: symlink
 
-  - src: packaging/desktop/kvm-studio.desktop
+  - src: build/stage/files/desktop/kvm-studio.desktop
     dst: /usr/share/applications/kvm-studio.desktop
-  - src: packaging/desktop/kvm-studio-uninstall.desktop
+  - src: build/stage/files/desktop/kvm-studio-uninstall.desktop
     dst: /usr/share/applications/kvm-studio-uninstall.desktop
   - src: packaging/desktop/icons/hicolor/16x16/apps/kvm-studio.png
     dst: /usr/share/icons/hicolor/16x16/apps/kvm-studio.png
@@ -87,13 +87,13 @@ contents:
   - src: packaging/desktop/icons/hicolor/512x512/apps/kvm-studio.png
     dst: /usr/share/icons/hicolor/512x512/apps/kvm-studio.png
 
-  - src: packaging/systemd/kvmstudio-helper.service
+  - src: build/stage/files/systemd/kvmstudio-helper.service
     dst: /usr/lib/systemd/system/kvmstudio-helper.service
-  - src: packaging/systemd/kvmstudio-helper.socket
+  - src: build/stage/files/systemd/kvmstudio-helper.socket
     dst: /usr/lib/systemd/system/kvmstudio-helper.socket
-  - src: packaging/polkit/org.kvmstudio.helper.policy
+  - src: build/stage/files/polkit/org.kvmstudio.helper.policy
     dst: /usr/share/polkit-1/actions/org.kvmstudio.helper.policy
-  - src: packaging/firewalld/kvm-studio.xml
+  - src: build/stage/files/firewalld/kvm-studio.xml
     dst: /usr/lib/firewalld/services/kvm-studio.xml
 
   - src: packaging/networkmanager/90-kvm-studio.conf
@@ -111,5 +111,5 @@ contents:
 
 scripts:
   postinstall: packaging/scripts/postinstall.sh
-  preremove: packaging/scripts/preremove.sh
+  preremove: build/stage/files/scripts/preremove.sh
   postremove: packaging/scripts/postremove.sh

@@ -5,9 +5,10 @@ from typing import Literal
 from fastapi import Request
 from pydantic import BaseModel
 
-from .. import __version__
+from .. import APP_NAME, __version__
 from ..context import Context, Mode
 from ..errors import ApiException
+from ..i18n import resolve
 
 
 class Health(BaseModel):
@@ -24,7 +25,8 @@ class LibvirtInfo(BaseModel):
 
 class UiPreferences(BaseModel):
     theme: Literal["system", "light", "dark"]
-    language: Literal["fr", "en"]
+    # The language to show: the setting, or the desktop's when it is "system".
+    language: Literal["en", "fr"]
 
 
 class AppInfo(BaseModel):
@@ -50,7 +52,7 @@ def info(ctx: Context) -> AppInfo:
             libvirt_version=host.libvirt_version,
             hypervisor_version=host.hypervisor_version,
         ),
-        ui=UiPreferences(theme=ctx.config.ui.theme, language=ctx.config.ui.language),
+        ui=UiPreferences(theme=ctx.config.ui.theme, language=resolve(ctx.config.ui.language)),
     )
 
 
@@ -62,6 +64,6 @@ def restart(request: Request) -> Restarting:
     """Restart the whole app (after an interface mode change, for instance)."""
     on_restart = request.app.state.on_restart
     if on_restart is None:
-        raise ApiException(409, "restart.unavailable", "Restart KVM Studio by hand")
+        raise ApiException(409, "restart.unavailable", f"Restart {APP_NAME} by hand")
     on_restart()
     return Restarting()

@@ -56,7 +56,7 @@ class DefaultsSettings(_Section):
 
 class UiSettings(_Section):
     theme: Literal["system", "light", "dark"] = "system"
-    language: Literal["fr", "en"] = "fr"
+    language: Literal["system", "en", "fr"] = "system"
 
 
 class Config(_Section):

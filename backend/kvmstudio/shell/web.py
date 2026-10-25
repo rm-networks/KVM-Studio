@@ -13,6 +13,7 @@ import uvicorn
 from ..auth.token import new_token
 from ..config import Config, default_config_path, load_config, save_config
 from ..frontend import find_frontend_dir
+from ..i18n import t
 from .backend_process import BackendError, BackendProcess
 from .restart import exec_restart
 from .tray import run_tray
@@ -21,8 +22,7 @@ from .tray import run_tray
 def run(config: Config, config_path: Path | None, *, open_browser: bool, reload: bool) -> int:
     if config.web.share_on_lan:
         print(
-            "share_on_lan is not available yet (planned for V1). "
-            "Set [web] share_on_lan = false in the configuration.",
+            t("cli.share_unavailable"),
             file=sys.stderr,
         )
         return 2
@@ -36,7 +36,7 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
         os.environ["KVMSTUDIO_TOKEN"] = token
         if config_path is not None:
             os.environ["KVMSTUDIO_CONFIG"] = str(config_path)
-        print(f"KVM Studio (development): {url}", flush=True)
+        print(t("cli.web_dev", url=url), flush=True)
         uvicorn.run(
             "kvmstudio.app:create_app_from_env",
             factory=True,
@@ -55,8 +55,8 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
     except BackendError as exc:
         print(exc, file=sys.stderr)
         return 1
-    print(f"KVM Studio is listening on 127.0.0.1:{port}")
-    print(f"Open this link (it contains the session token): {url}", flush=True)
+    print(t("cli.web_listening", port=port))
+    print(t("cli.web_link", url=url), flush=True)
     if open_browser:
         # The default browser (xdg-open on Linux desktops), as if a link was clicked.
         webbrowser.open(url)

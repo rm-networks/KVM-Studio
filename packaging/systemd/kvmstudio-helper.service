@@ -1,5 +1,5 @@
 [Unit]
-Description=KVM Studio privileged helper
+Description=@APP_NAME@ privileged helper
 Documentation=https://github.com/rm-networks/kvm-studio/blob/main/docs/ARCHITECTURE.md
 Requires=kvmstudio-helper.socket
 

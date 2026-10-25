@@ -1,37 +1,40 @@
 # KVM Studio
 
-Gestionnaire de machines virtuelles pour Linux, construit sur QEMU/KVM et libvirt.
-Bibliothèque de VMs, onglets, assistants et éditeur de réseaux virtuels, dans une
-fenêtre native ou dans un navigateur.
+Virtual machine manager for Linux, built on QEMU/KVM and libvirt. A VM library,
+tabs, assistants and a virtual network editor, in a native window or in a
+browser.
 
-Les VMs créées restent des domaines libvirt standard : elles s'ouvrent aussi dans
-virt-manager et `virsh`.
+The VMs it creates stay standard libvirt domains: they also open in
+virt-manager and `virsh`.
 
-## État
+The interface is in English, or in French when the desktop is in French
+(Edit > Preferences > Interface changes it).
 
-Projet en cours de développement (phase 0 : socle). Rien n'est encore utilisable
-au quotidien.
+## Status
 
-## Démarrer depuis les sources
+Version 0.1.0 is the first usable version (Fedora). Work continues towards V1,
+see the [roadmap](docs/ROADMAP.md).
 
-Voir [docs/INSTALL.md](docs/INSTALL.md).
+## Running from the sources
+
+See [docs/INSTALL.md](docs/INSTALL.md).
 
 ## Documentation
 
-- [Cahier des charges](docs/SPECIFICATIONS.md)
+- [Specifications](docs/SPECIFICATIONS.md)
 - [Installation](docs/INSTALL.md)
 - [Configuration](docs/CONFIGURATION.md)
 - [Architecture](docs/ARCHITECTURE.md)
-- [Réseaux virtuels](docs/NETWORKING.md)
+- [Virtual networks](docs/NETWORKING.md)
 - [Interface](docs/INTERFACE.md)
-- [Feuille de route](docs/ROADMAP.md)
+- [Roadmap](docs/ROADMAP.md)
 
-## Licence
+## License
 
-GPL-3.0, voir [LICENSE](LICENSE).
+GPL-3.0, see [LICENSE](LICENSE).
 
-## Mention
+## Notice
 
-KVM Studio est un projet communautaire inspiré de l'interface et des
-fonctionnalités de VMware Workstation. Il n'est affilié ni à VMware ni à Broadcom
-et ne reprend aucun de leurs codes ou éléments graphiques.
+KVM Studio is a community project inspired by the interface and features of
+VMware Workstation. It is not affiliated with VMware or Broadcom and uses none
+of their code or artwork.

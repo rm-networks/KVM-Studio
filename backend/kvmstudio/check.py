@@ -10,6 +10,7 @@ from typing import Literal
 import libvirt
 
 from .config import Config
+from .i18n import t
 from .libvirt_conn import LibvirtConnection
 
 Level = Literal["ok", "warn", "fail"]
@@ -25,10 +26,10 @@ class Result:
 
 def _check_kvm() -> Result:
     if not os.path.exists("/dev/kvm"):
-        return Result("warn", "KVM", "/dev/kvm not found (virtualization disabled in firmware?)")
+        return Result("warn", "KVM", t("check.kvm_missing"))
     if not os.access("/dev/kvm", os.R_OK | os.W_OK):
-        return Result("warn", "KVM", "/dev/kvm exists but is not accessible to this user")
-    return Result("ok", "KVM", "/dev/kvm accessible")
+        return Result("warn", "KVM", t("check.kvm_denied"))
+    return Result("ok", "KVM", t("check.kvm_ok"))
 
 
 def _check_libvirt(uri: str) -> list[Result]:
@@ -45,32 +46,40 @@ def _check_libvirt(uri: str) -> list[Result]:
         Result(
             "ok",
             "libvirt",
-            f"{host.uri} ({host.driver} {host.hypervisor_version}, libvirt {host.libvirt_version})",
+            t(
+                "check.libvirt_ok",
+                uri=host.uri,
+                driver=host.driver,
+                hypervisor=host.hypervisor_version,
+                libvirt=host.libvirt_version,
+            ),
         ),
-        Result("ok", "Domains", f"{len(domains)} defined, {running} running"),
+        Result(
+            "ok", t("check.domains"), t("check.domains_ok", defined=len(domains), running=running)
+        ),
     ]
 
 
 def _check_vm_location(path: Path | None) -> Result:
-    item = "VM folder"
+    item = t("check.vm_folder")
     if path is None:
-        return Result("warn", item, "not set yet (chosen in the first-run assistant)")
+        return Result("warn", item, t("check.vm_folder_unset"))
     if not path.is_dir():
-        return Result("fail", item, f"{path} does not exist")
+        return Result("fail", item, t("check.missing", path=path))
     if not os.access(path, os.W_OK | os.X_OK):
         # Not fatal: with qemu:///system, libvirt creates the disks itself.
-        return Result("warn", item, f"{path} is not writable by this user")
+        return Result("warn", item, t("check.not_writable", path=path))
     return Result("ok", item, str(path))
 
 
 def _check_iso_libraries(config: Config) -> list[Result]:
     results = []
     for lib in config.iso_libraries:
-        item = f'ISO library "{lib.name}"'
+        item = t("check.iso_library", name=lib.name)
         if not lib.path.is_dir():
-            results.append(Result("warn", item, f"{lib.path} does not exist"))
+            results.append(Result("warn", item, t("check.missing", path=lib.path)))
         elif not os.access(lib.path, os.R_OK | os.X_OK):
-            results.append(Result("warn", item, f"{lib.path} is not readable"))
+            results.append(Result("warn", item, t("check.not_readable", path=lib.path)))
         else:
             results.append(Result("ok", item, str(lib.path)))
     return results
@@ -96,24 +105,23 @@ def _check_networkmanager(conf_dir: Path = NM_CONF_DIR) -> Result | None:
     except OSError:
         content = ""
     if "[device-kvm-studio]" in content and "interface-name:kvmnet*" in content:
-        return Result("ok", item, f"{installed} hides kvmnet* and ks-* interfaces")
+        return Result("ok", item, t("check.nm_ok", path=installed))
     source = _packaged_nm_conf()
     command = (
         f"sudo install -m 644 {source} {conf_dir}/ && sudo systemctl reload NetworkManager"
         if source
-        else f"reinstall the kvm-studio package to get {installed}"
+        else t("check.nm_reinstall", path=installed)
     )
     return Result(
         "warn",
         item,
-        f"{installed} is missing or outdated: KVM Studio networks show up in the network applet.\n"
-        f"       To fix it: {command}",
+        t("check.nm_missing", path=installed, command=command),
     )
 
 
 def run_checks(config: Config, config_path: Path) -> list[Result]:
-    state = "found" if config_path.exists() else "not found, using defaults"
-    results = [Result("ok", "Configuration", f"{config_path} ({state})")]
+    state = t("check.config_found" if config_path.exists() else "check.config_defaults")
+    results = [Result("ok", t("check.config"), f"{config_path} ({state})")]
     results.append(_check_kvm())
     results += _check_libvirt(config.libvirt.uri)
     results.append(_check_vm_location(config.storage.vm_default_location))

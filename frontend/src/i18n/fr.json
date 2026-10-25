@@ -43,7 +43,7 @@
     "previousTab": "Onglet précédent",
     "docs": "Documentation",
     "shortcuts": "Raccourcis clavier",
-    "about": "À propos de KVM Studio",
+    "about": "À propos de {{app}}",
     "bug": "Signaler un bug",
     "rename": "Renommer…",
     "removeFromLibrary": "Retirer de la bibliothèque…",
@@ -94,16 +94,16 @@
     "folderName": "Nom du dossier",
     "inFolder": "Dans : {{folder}}",
     "moveTo": "Déplacer vers…",
-    "importFiles": "Déplacer les fichiers dans KVM Studio…",
+    "importFiles": "Déplacer les fichiers dans {{app}}…",
     "moveTitle": "Déplacer la machine virtuelle",
-    "importTitle": "Déplacer les fichiers dans KVM Studio",
+    "importTitle": "Déplacer les fichiers dans {{app}}",
     "move": "Déplacer",
     "copying": "Copie en cours…",
     "destination": "Dossier de destination",
     "moveIntroFiles": "Le dossier de « {{name}} » et ses fichiers seront déplacés sur le disque. La machine virtuelle doit être éteinte.",
-    "moveIntroVirtual": "Les fichiers de « {{name}} » ne sont pas dans le dossier KVM Studio : seul son rangement dans la bibliothèque change.",
-    "importIntro": "Les disques de « {{name}} » seront copiés dans le dossier KVM Studio choisi, puis la machine virtuelle utilisera ces copies. Les fichiers d'origine ne sont pas effacés : vous pourrez les supprimer vous-même.",
-    "imported": "{{name}} utilise maintenant ses fichiers dans KVM Studio",
+    "moveIntroVirtual": "Les fichiers de « {{name}} » ne sont pas dans le dossier {{app}} : seul son rangement dans la bibliothèque change.",
+    "importIntro": "Les disques de « {{name}} » seront copiés dans le dossier {{app}} choisi, puis la machine virtuelle utilisera ces copies. Les fichiers d'origine ne sont pas effacés : vous pourrez les supprimer vous-même.",
+    "imported": "{{name}} utilise maintenant ses fichiers dans {{app}}",
     "originalsKept": "Fichiers d'origine conservés :\n{{files}}",
     "moveFailed": "Impossible de déplacer {{name}}",
     "deletePartial": "Dossier « {{folder}} » supprimé, mais certains fichiers sont restés",
@@ -146,7 +146,7 @@
   },
   "errors": {
     "auth": {
-      "invalid_token": "Session invalide. Relancez KVM Studio ou, en mode web, ouvrez le lien affiché dans le terminal."
+      "invalid_token": "Session invalide. Relancez {{app}} ou, en mode web, ouvrez le lien affiché dans le terminal."
     },
     "libvirt": {
       "unreachable": "Impossible de joindre libvirt. Vérifiez que le service tourne : systemctl status virtqemud.socket",
@@ -159,7 +159,7 @@
       "no_network": "Ce réseau n'existe plus."
     },
     "network": {
-      "unreachable": "Le serveur interne de KVM Studio ne répond pas."
+      "unreachable": "Le serveur interne de {{app}} ne répond pas."
     },
     "http": {
       "error": "Erreur inattendue du serveur."
@@ -214,7 +214,7 @@
       "move_failed": "Le déplacement a échoué.",
       "copy_failed": "La copie des disques a échoué.",
       "unreadable": "Un disque n'est pas lisible avec vos droits.",
-      "already_inside": "Les disques sont déjà dans le dossier KVM Studio."
+      "already_inside": "Les disques sont déjà dans le dossier {{app}}."
     },
     "prefs": {
       "share_later": "Le partage sur le réseau local arrive dans la prochaine version.",
@@ -227,7 +227,7 @@
       "no_vnc": "Cette machine virtuelle n'a pas d'affichage VNC."
     },
     "restart": {
-      "unavailable": "Redémarrez KVM Studio vous-même."
+      "unavailable": "Redémarrez {{app}} vous-même."
     },
     "helper": {
       "unavailable": "Le service kvmstudio-helper ne répond pas. Il est installé avec le paquet.",
@@ -241,7 +241,7 @@
     },
     "uninstall": {
       "plan_changed": "Quelque chose a changé depuis l'affichage (fichier ou machine virtuelle). Relancez l'assistant.",
-      "not_packaged": "KVM Studio n'est pas installé par le paquet."
+      "not_packaged": "{{app}} n'est pas installé par le paquet."
     },
     "guest": {
       "no_xorriso": "xorriso n'est pas installé : impossible de créer le CD des outils.",
@@ -251,11 +251,11 @@
     }
   },
   "about": {
-    "title": "À propos de KVM Studio",
+    "title": "À propos de {{app}}",
     "version": "Version {{version}}",
     "description": "Gestionnaire de machines virtuelles pour Linux, basé sur QEMU/KVM et libvirt.",
     "license": "Distribué sous licence GPL-3.0.",
-    "notice": "KVM Studio est un projet communautaire inspiré de l'interface et des fonctionnalités de VMware Workstation. Il n'est affilié ni à VMware ni à Broadcom et ne reprend aucun de leurs codes ou éléments graphiques.",
+    "notice": "{{app}} est un projet communautaire inspiré de l'interface et des fonctionnalités de VMware Workstation. Il n'est affilié ni à VMware ni à Broadcom et ne reprend aucun de leurs codes ou éléments graphiques.",
     "close": "Fermer"
   },
   "keys": {
@@ -277,7 +277,7 @@
     "spiceOnly": "Cette machine virtuelle n'a qu'un affichage SPICE (créé par virt-manager). La console intégrée utilise VNC.",
     "noDisplay": "Cette machine virtuelle n'a pas d'affichage graphique.",
     "addVnc": "Ajouter un affichage VNC",
-    "addVncConfirm": "Un affichage VNC sera ajouté à la configuration de la machine virtuelle, à côté de l'affichage SPICE, qui reste utilisable dans virt-manager. Le copier-coller passera par KVM Studio : virt-manager n'en disposera plus. Actif au prochain démarrage de la VM.",
+    "addVncConfirm": "Un affichage VNC sera ajouté à la configuration de la machine virtuelle, à côté de l'affichage SPICE, qui reste utilisable dans virt-manager. Le copier-coller passera par {{app}} : virt-manager n'en disposera plus. Actif au prochain démarrage de la VM.",
     "restartForVnc": "L'affichage VNC est configuré. Arrêtez puis redémarrez la machine virtuelle pour l'utiliser.",
     "clipboardOff": "Copier-coller inactif : le canal de l'agent est réservé à SPICE (virt-manager).",
     "enableClipboard": "Activer le copier-coller",
@@ -324,8 +324,8 @@
     "partial": "{{name}} a été retirée, mais certains fichiers n'ont pas pu être effacés",
     "failed": "Impossible de supprimer {{name}}",
     "reason": {
-      "no_library": "aucun emplacement KVM Studio configuré",
-      "outside_library": "hors du dossier KVM Studio",
+      "no_library": "aucun emplacement {{app}} configuré",
+      "outside_library": "hors du dossier {{app}}",
       "iso": "image ISO",
       "shared": "utilisé par une autre machine virtuelle",
       "backing": "disque de base d'un clone lié",
@@ -444,27 +444,28 @@
     "modeWeb": "Web : dans le navigateur, sur cet ordinateur",
     "port": "Port HTTP (accès sur cet ordinateur)",
     "shareLan": "Partager sur le réseau local (prochaine version)",
-    "appliedOnRestart": "Le changement de mode et de port s'applique au prochain lancement de KVM Studio.",
+    "appliedOnRestart": "Le changement de mode et de port s'applique au prochain lancement de {{app}}.",
     "appearance": "Apparence",
     "theme": "Thème",
     "themeSystem": "Celui du système",
     "themeLight": "Clair",
     "themeDark": "Sombre",
     "language": "Langue",
+    "languageSystem": "Celle du système",
     "libvirt": "Connexion libvirt",
     "libvirtUri": "URI",
     "libvirtHint": "qemu:///system par défaut. qemu:///session fonctionne sans les réseaux kvmnet. Appliqué au redémarrage.",
     "saved": "Préférences enregistrées",
-    "restartRequired": "KVM Studio doit redémarrer pour appliquer le nouveau port ou la nouvelle URI.",
+    "restartRequired": "{{app}} doit redémarrer pour appliquer le nouveau port ou la nouvelle URI.",
     "saveFailed": "Préférences non enregistrées",
     "httpsPort": "Port HTTPS (partage sur le réseau local)",
-    "restartTitle": "Redémarrer KVM Studio",
+    "restartTitle": "Redémarrer {{app}}",
     "restartNow": "Redémarrer maintenant",
     "restartLater": "Plus tard",
-    "restartToWeb": "KVM Studio va redémarrer en mode web.\nAccès sur cet ordinateur : http://127.0.0.1:{{http}} (HTTP)\nPartage sur le réseau local : port {{https}} en HTTPS (prochaine version)\nLa page s'ouvrira dans votre navigateur par défaut, et une icône dans la zone de notification indiquera que KVM Studio tourne.",
-    "restartToDesktop": "KVM Studio va redémarrer en mode fenêtre. Cet onglet du navigateur ne servira plus.",
-    "restarting": "KVM Studio redémarre…",
-    "restartingToDesktop": "KVM Studio redémarre en mode fenêtre. Vous pouvez fermer cet onglet."
+    "restartToWeb": "{{app}} va redémarrer en mode web.\nAccès sur cet ordinateur : http://127.0.0.1:{{http}} (HTTP)\nPartage sur le réseau local : port {{https}} en HTTPS (prochaine version)\nLa page s'ouvrira dans votre navigateur par défaut, et une icône dans la zone de notification indiquera que {{app}} tourne.",
+    "restartToDesktop": "{{app}} va redémarrer en mode fenêtre. Cet onglet du navigateur ne servira plus.",
+    "restarting": "{{app}} redémarre…",
+    "restartingToDesktop": "{{app}} redémarre en mode fenêtre. Vous pouvez fermer cet onglet."
   },
   "iso": {
     "title": "Choisir une image ISO",
@@ -511,7 +512,7 @@
     "chooseIso": "Choisir…",
     "sourceLater": "J'installerai le système plus tard (disque vierge, lecteur CD vide)",
     "sourceExisting": "Utiliser un disque existant (appliance, disque copié)",
-    "existingHint": "Le disque doit se trouver dans le dossier KVM Studio ; il est utilisé tel quel, sans copie.",
+    "existingHint": "Le disque doit se trouver dans le dossier {{app}} ; il est utilisé tel quel, sans copie.",
     "osIntro": "Quel système va tourner dans cette machine virtuelle ? Le matériel proposé en dépend.",
     "profile": {
       "windows11": "Windows 11",
@@ -597,7 +598,7 @@
     "family": "Système invité",
     "insert": "Insérer le CD des outils",
     "eject": "Éjecter le CD",
-    "intro": "KVM Studio insère un petit CD dans la machine virtuelle. Vous lancez l'installation depuis la VM : rien n'est tapé à votre place.",
+    "intro": "{{app}} insère un petit CD dans la machine virtuelle. Vous lancez l'installation depuis la VM : rien n'est tapé à votre place.",
     "step": {
       "inserted": "Le CD est inséré.",
       "run": "Dans la VM, lancez l'installation.",
@@ -618,7 +619,7 @@
     "ejectFailed": "Impossible d'éjecter le CD des outils invités"
   },
   "firstRun": {
-    "title": "Bienvenue dans KVM Studio",
+    "title": "Bienvenue dans {{app}}",
     "step": {
       "welcome": "Bienvenue",
       "checks": "Vérification",
@@ -629,8 +630,8 @@
       "done": "Terminé"
     },
     "welcome": {
-      "intro": "Cet assistant prépare KVM Studio : il vérifie la machine, choisit où ranger les machines virtuelles et crée les réseaux virtuels de base.",
-      "license": "KVM Studio est un logiciel libre distribué sous licence GPL-3.0, sans aucune garantie."
+      "intro": "Cet assistant prépare {{app}} : il vérifie la machine, choisit où ranger les machines virtuelles et crée les réseaux virtuels de base.",
+      "license": "{{app}} est un logiciel libre distribué sous licence GPL-3.0, sans aucune garantie."
     },
     "check": {
       "cpu": {
@@ -669,7 +670,7 @@
     },
     "locations": {
       "vm": "Dossier des machines virtuelles",
-      "vmHint": "KVM Studio y crée un dossier KVM-Studio/VM qui contient une sous-arborescence par machine virtuelle.",
+      "vmHint": "{{app}} y crée un dossier KVM-Studio/VM qui contient une sous-arborescence par machine virtuelle.",
       "iso": "Bibliothèque ISO (facultatif)",
       "isoHint": "Dossier où se trouvent vos images ISO. Il est lu sans jamais être modifié. D'autres bibliothèques s'ajoutent dans les Préférences.",
       "isoName": "ISO",
@@ -677,9 +678,9 @@
     },
     "mode": {
       "desktop": "Fenêtre (recommandé)",
-      "desktopHint": "KVM Studio s'ouvre dans sa propre fenêtre.",
+      "desktopHint": "{{app}} s'ouvre dans sa propre fenêtre.",
       "web": "Navigateur web",
-      "webHint": "KVM Studio s'ouvre dans le navigateur, sur cette machine uniquement. Une icône dans la zone de notification permet de le rouvrir."
+      "webHint": "{{app}} s'ouvre dans le navigateur, sur cette machine uniquement. Une icône dans la zone de notification permet de le rouvrir."
     },
     "networks": {
       "intro": "Réseaux virtuels de base, sur des plages qui ne chevauchent pas votre réseau local :",
@@ -687,7 +688,7 @@
       "create": "Créer les réseaux manquants"
     },
     "done": {
-      "saved": "KVM Studio est prêt.",
+      "saved": "{{app}} est prêt.",
       "networks": "Réseaux créés : {{names}}.",
       "again": "Cet assistant se relance depuis le menu Aide."
     },
@@ -696,7 +697,7 @@
     "close": "Fermer"
   },
   "uninstall": {
-    "title": "Désinstaller KVM Studio",
+    "title": "Désinstaller {{app}}",
     "step": {
       "welcome": "Bienvenue",
       "vms": "Machines virtuelles",
@@ -707,20 +708,20 @@
       "done": "Terminé"
     },
     "welcome": {
-      "intro": "Cet assistant retire KVM Studio de cet ordinateur.",
+      "intro": "Cet assistant retire {{app}} de cet ordinateur.",
       "choices": "Vous allez choisir ce que deviennent les machines virtuelles, les réseaux kvmnet et vos réglages. Rien n'est supprimé avant le récapitulatif."
     },
     "vms": {
-      "none": "Aucune machine virtuelle créée par KVM Studio.",
+      "none": "Aucune machine virtuelle créée par {{app}}.",
       "keep": "Garder les machines virtuelles et leurs fichiers",
-      "delete_one": "Supprimer la machine virtuelle créée par KVM Studio et ses fichiers",
-      "delete_other": "Supprimer les {{count}} machines virtuelles créées par KVM Studio et leurs fichiers",
-      "extra": "Autres fichiers du dossier KVM Studio",
+      "delete_one": "Supprimer la machine virtuelle créée par {{app}} et ses fichiers",
+      "delete_other": "Supprimer les {{count}} machines virtuelles créées par {{app}} et leurs fichiers",
+      "extra": "Autres fichiers du dossier {{app}}",
       "kept": "Conservés dans tous les cas",
       "running": "Éteignez d'abord : {{names}}",
       "confirm_one": "Je confirme la suppression définitive de ce fichier",
       "confirm_other": "Je confirme la suppression définitive de ces {{count}} fichiers",
-      "foreign": "Machines virtuelles créées hors de KVM Studio, toujours conservées : {{names}}"
+      "foreign": "Machines virtuelles créées hors de {{app}}, toujours conservées : {{names}}"
     },
     "networks": {
       "none": "Aucun réseau kvmnet.",
@@ -751,12 +752,12 @@
       "skipped": "conservé",
       "failed": "échec"
     },
-    "packageWait": "Le gestionnaire de paquets retire KVM Studio. Cela peut prendre une minute.",
+    "packageWait": "Le gestionnaire de paquets retire {{app}}. Cela peut prendre une minute.",
     "failedFiles": "Ces fichiers n'ont pas pu être supprimés :",
     "keptNetworks": "Réseaux conservés car encore utilisés : {{names}}",
     "finished": "Désinstallation terminée."
   },
   "loading": {
-    "brand": "KVM Studio"
+    "brand": "{{app}}"
   }
 }

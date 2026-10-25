@@ -15,28 +15,10 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal
 
+from .. import APP_NAME
+from ..i18n import resolve, t
+
 Outcome = Literal["quit", "desktop", "backend_exited"]
-
-LABELS: dict[str, dict[str, str]] = {
-    "fr": {
-        "open": "Ouvrir dans le navigateur",
-        "copy": "Copier l'adresse",
-        "desktop": "Passer en mode fenêtre",
-        "quit": "Quitter",
-        "tooltip": "KVM Studio (mode web) : {url}",
-    },
-    "en": {
-        "open": "Open in the Browser",
-        "copy": "Copy the Address",
-        "desktop": "Switch to Window Mode",
-        "quit": "Quit",
-        "tooltip": "KVM Studio (web mode): {url}",
-    },
-}
-
-
-def labels(language: str) -> dict[str, str]:
-    return LABELS.get(language, LABELS["en"])
 
 
 def _has_display() -> bool:
@@ -64,11 +46,11 @@ def run_tray(
     app = widgets.QApplication.instance() or widgets.QApplication([])
     # The StatusNotifierItem title the desktop shows next to the icon.
     app.setApplicationName("kvm-studio")
-    app.setApplicationDisplayName("KVM Studio")
+    app.setApplicationDisplayName(APP_NAME)
     if not widgets.QSystemTrayIcon.isSystemTrayAvailable():
         return None
     app.setQuitOnLastWindowClosed(False)
-    text = labels(language)
+    lang = resolve(language)
     outcome: list[Outcome] = []
 
     def finish(result: Outcome) -> None:
@@ -78,15 +60,15 @@ def run_tray(
     tray = widgets.QSystemTrayIcon()
     if icon is not None and icon.is_file():
         tray.setIcon(gui.QIcon(str(icon)))
-    tray.setToolTip(text["tooltip"].format(url=url.split("#", 1)[0]))
+    tray.setToolTip(t("tray.tooltip", lang, url=url.split("#", 1)[0]))
     menu = widgets.QMenu()
-    menu.addAction(text["open"]).triggered.connect(lambda: webbrowser.open(url))
-    menu.addAction(text["copy"]).triggered.connect(
+    menu.addAction(t("tray.open", lang)).triggered.connect(lambda: webbrowser.open(url))
+    menu.addAction(t("tray.copy", lang)).triggered.connect(
         lambda: widgets.QApplication.clipboard().setText(url)
     )
     menu.addSeparator()
-    menu.addAction(text["desktop"]).triggered.connect(lambda: finish("desktop"))
-    menu.addAction(text["quit"]).triggered.connect(lambda: finish("quit"))
+    menu.addAction(t("tray.desktop", lang)).triggered.connect(lambda: finish("desktop"))
+    menu.addAction(t("tray.quit", lang)).triggered.connect(lambda: finish("quit"))
     tray.setContextMenu(menu)
     # A left click opens the page, like most tray icons.
     tray.activated.connect(

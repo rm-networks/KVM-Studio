@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from kvmstudio import i18n
 from kvmstudio.app import create_app
 from kvmstudio.config import Config, load_config
 from kvmstudio.libvirt_conn import LibvirtConnection
@@ -93,5 +94,5 @@ def test_tray_falls_back_without_a_notification_area(monkeypatch: pytest.MonkeyP
 
 
 def test_tray_labels() -> None:
-    assert tray.labels("fr")["desktop"] == "Passer en mode fenêtre"
-    assert tray.labels("de") == tray.labels("en")
+    assert i18n.t("tray.desktop", i18n.resolve("fr")) == "Passer en mode fenêtre"
+    assert i18n.t("tray.desktop", i18n.resolve("en")) == "Switch to Window Mode"

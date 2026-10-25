@@ -22,6 +22,7 @@ import time
 from pathlib import Path
 from typing import Literal
 
+from ..i18n import set_language, t
 from .restart import RESTART_EXIT
 
 READY_PREFIX = "READY "
@@ -78,7 +79,7 @@ class BackendProcess:
             if self._proc.poll() is not None:
                 break
         self.stop()
-        raise BackendError("the KVM Studio backend did not start; see the messages above")
+        raise BackendError(t("cli.backend_failed"))
 
     def alive(self) -> bool:
         return self._proc is not None and self._proc.poll() is None
@@ -126,10 +127,11 @@ def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int
     except ConfigError as exc:
         print(exc, file=sys.stderr)
         return 2
+    set_language(config.ui.language)
     try:
         sock = bind_loopback(port)
     except PortInUseError as exc:
-        print(f"{exc}. Change the port in Preferences > Interface.", file=sys.stderr)
+        print(t("cli.port_in_use", error=exc), file=sys.stderr)
         return 1
     conn = LibvirtConnection(config.libvirt.uri)
 

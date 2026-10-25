@@ -43,7 +43,7 @@
     "previousTab": "Previous Tab",
     "docs": "Documentation",
     "shortcuts": "Keyboard Shortcuts",
-    "about": "About KVM Studio",
+    "about": "About {{app}}",
     "bug": "Report a Bug",
     "rename": "Rename…",
     "removeFromLibrary": "Remove from Library…",
@@ -94,16 +94,16 @@
     "folderName": "Folder name",
     "inFolder": "In: {{folder}}",
     "moveTo": "Move to…",
-    "importFiles": "Move Files into KVM Studio…",
+    "importFiles": "Move Files into {{app}}…",
     "moveTitle": "Move Virtual Machine",
-    "importTitle": "Move Files into KVM Studio",
+    "importTitle": "Move Files into {{app}}",
     "move": "Move",
     "copying": "Copying…",
     "destination": "Destination folder",
     "moveIntroFiles": "The folder of \"{{name}}\" and its files will be moved on disk. The virtual machine must be powered off.",
-    "moveIntroVirtual": "The files of \"{{name}}\" are not in the KVM Studio folder: only its place in the library changes.",
-    "importIntro": "The disks of \"{{name}}\" will be copied into the chosen KVM Studio folder, then the virtual machine will use the copies. The original files are not erased: you can remove them yourself.",
-    "imported": "{{name}} now uses its files inside KVM Studio",
+    "moveIntroVirtual": "The files of \"{{name}}\" are not in the {{app}} folder: only its place in the library changes.",
+    "importIntro": "The disks of \"{{name}}\" will be copied into the chosen {{app}} folder, then the virtual machine will use the copies. The original files are not erased: you can remove them yourself.",
+    "imported": "{{name}} now uses its files inside {{app}}",
     "originalsKept": "Original files kept:\n{{files}}",
     "moveFailed": "Could not move {{name}}",
     "deletePartial": "Folder \"{{folder}}\" deleted, but some files remain",
@@ -146,7 +146,7 @@
   },
   "errors": {
     "auth": {
-      "invalid_token": "Invalid session. Restart KVM Studio or, in web mode, open the link printed in the terminal."
+      "invalid_token": "Invalid session. Restart {{app}} or, in web mode, open the link printed in the terminal."
     },
     "libvirt": {
       "unreachable": "Cannot reach libvirt. Check that the service is running: systemctl status virtqemud.socket",
@@ -159,7 +159,7 @@
       "no_network": "This network no longer exists."
     },
     "network": {
-      "unreachable": "The KVM Studio internal server is not responding."
+      "unreachable": "The {{app}} internal server is not responding."
     },
     "http": {
       "error": "Unexpected server error."
@@ -214,7 +214,7 @@
       "move_failed": "The move failed.",
       "copy_failed": "Copying the disks failed.",
       "unreadable": "A disk cannot be read with your permissions.",
-      "already_inside": "The disks are already in the KVM Studio folder."
+      "already_inside": "The disks are already in the {{app}} folder."
     },
     "prefs": {
       "share_later": "Sharing on the local network arrives in the next version.",
@@ -227,7 +227,7 @@
       "no_vnc": "This virtual machine has no VNC display."
     },
     "restart": {
-      "unavailable": "Restart KVM Studio yourself."
+      "unavailable": "Restart {{app}} yourself."
     },
     "helper": {
       "unavailable": "The kvmstudio-helper service does not answer. It comes with the package.",
@@ -241,7 +241,7 @@
     },
     "uninstall": {
       "plan_changed": "Something changed since it was shown (a file or a virtual machine). Start the assistant again.",
-      "not_packaged": "KVM Studio was not installed from the package."
+      "not_packaged": "{{app}} was not installed from the package."
     },
     "guest": {
       "no_xorriso": "xorriso is not installed: the tools CD cannot be made.",
@@ -251,14 +251,16 @@
     }
   },
   "about": {
-    "title": "About KVM Studio",
+    "title": "About {{app}}",
     "version": "Version {{version}}",
     "description": "Virtual machine manager for Linux, built on QEMU/KVM and libvirt.",
     "license": "Released under the GPL-3.0 license.",
-    "notice": "KVM Studio is a community project inspired by the interface and features of VMware Workstation. It is not affiliated with VMware or Broadcom and does not reuse any of their code or graphical elements.",
+    "notice": "{{app}} is a community project inspired by the interface and features of VMware Workstation. It is not affiliated with VMware or Broadcom and does not reuse any of their code or graphical elements.",
     "close": "Close"
   },
   "keys": {
+    "Shift": "Shift",
+    "Enter": "Enter",
     "PrintScreen": "PrtScn",
     "combo": {
       "ctrl-alt-backspace": "Ctrl+Alt+Backspace",
@@ -275,7 +277,7 @@
     "spiceOnly": "This virtual machine only has a SPICE display (made by virt-manager). The built-in console uses VNC.",
     "noDisplay": "This virtual machine has no graphical display.",
     "addVnc": "Add a VNC Display",
-    "addVncConfirm": "A VNC display will be added to the virtual machine configuration, next to the SPICE display, which still works in virt-manager. Copy and paste will go through KVM Studio: virt-manager will no longer have it. Active at the next start of the VM.",
+    "addVncConfirm": "A VNC display will be added to the virtual machine configuration, next to the SPICE display, which still works in virt-manager. Copy and paste will go through {{app}}: virt-manager will no longer have it. Active at the next start of the VM.",
     "restartForVnc": "The VNC display is configured. Shut the virtual machine down and start it again to use it.",
     "clipboardOff": "Copy and paste is off: the agent channel belongs to SPICE (virt-manager).",
     "enableClipboard": "Turn copy and paste on",
@@ -322,8 +324,8 @@
     "partial": "{{name}} was removed, but some files could not be erased",
     "failed": "Could not delete {{name}}",
     "reason": {
-      "no_library": "no KVM Studio location configured",
-      "outside_library": "outside the KVM Studio folder",
+      "no_library": "no {{app}} location configured",
+      "outside_library": "outside the {{app}} folder",
       "iso": "ISO image",
       "shared": "used by another virtual machine",
       "backing": "base disk of a linked clone",
@@ -442,27 +444,28 @@
     "modeWeb": "Web: in the browser, on this computer",
     "port": "HTTP port (access on this computer)",
     "shareLan": "Share on the local network (next version)",
-    "appliedOnRestart": "Mode and port changes apply the next time KVM Studio starts.",
+    "appliedOnRestart": "Mode and port changes apply the next time {{app}} starts.",
     "appearance": "Appearance",
     "theme": "Theme",
     "themeSystem": "Follow the system",
     "themeLight": "Light",
     "themeDark": "Dark",
     "language": "Language",
+    "languageSystem": "Same as the system",
     "libvirt": "libvirt connection",
     "libvirtUri": "URI",
     "libvirtHint": "qemu:///system by default. qemu:///session works without kvmnet networks. Applied on restart.",
     "saved": "Preferences saved",
-    "restartRequired": "KVM Studio must restart to apply the new port or URI.",
+    "restartRequired": "{{app}} must restart to apply the new port or URI.",
     "saveFailed": "Preferences not saved",
     "httpsPort": "HTTPS port (sharing on the local network)",
-    "restartTitle": "Restart KVM Studio",
+    "restartTitle": "Restart {{app}}",
     "restartNow": "Restart Now",
     "restartLater": "Later",
-    "restartToWeb": "KVM Studio will restart in web mode.\nAccess on this computer: http://127.0.0.1:{{http}} (HTTP)\nSharing on the local network: port {{https}} over HTTPS (next version)\nThe page will open in your default browser, and an icon in the notification area will show that KVM Studio is running.",
-    "restartToDesktop": "KVM Studio will restart in window mode. This browser tab will no longer be used.",
-    "restarting": "KVM Studio is restarting…",
-    "restartingToDesktop": "KVM Studio is restarting in window mode. You can close this tab."
+    "restartToWeb": "{{app}} will restart in web mode.\nAccess on this computer: http://127.0.0.1:{{http}} (HTTP)\nSharing on the local network: port {{https}} over HTTPS (next version)\nThe page will open in your default browser, and an icon in the notification area will show that {{app}} is running.",
+    "restartToDesktop": "{{app}} will restart in window mode. This browser tab will no longer be used.",
+    "restarting": "{{app}} is restarting…",
+    "restartingToDesktop": "{{app}} is restarting in window mode. You can close this tab."
   },
   "iso": {
     "title": "Choose an ISO Image",
@@ -509,7 +512,7 @@
     "chooseIso": "Choose…",
     "sourceLater": "I will install the system later (blank disk, empty CD drive)",
     "sourceExisting": "Use an existing disk (appliance, copied disk)",
-    "existingHint": "The disk must be in the KVM Studio folder; it is used as is, not copied.",
+    "existingHint": "The disk must be in the {{app}} folder; it is used as is, not copied.",
     "osIntro": "Which system will run in this virtual machine? The suggested hardware depends on it.",
     "profile": {
       "windows11": "Windows 11",
@@ -595,7 +598,7 @@
     "family": "Guest system",
     "insert": "Insert the tools CD",
     "eject": "Eject the CD",
-    "intro": "KVM Studio inserts a small CD in the virtual machine. You start the installation from the VM: nothing is typed for you.",
+    "intro": "{{app}} inserts a small CD in the virtual machine. You start the installation from the VM: nothing is typed for you.",
     "step": {
       "inserted": "The CD is inserted.",
       "run": "In the VM, start the installation.",
@@ -616,7 +619,7 @@
     "ejectFailed": "Could not eject the guest tools CD"
   },
   "firstRun": {
-    "title": "Welcome to KVM Studio",
+    "title": "Welcome to {{app}}",
     "step": {
       "welcome": "Welcome",
       "checks": "Checks",
@@ -627,8 +630,8 @@
       "done": "Done"
     },
     "welcome": {
-      "intro": "This assistant sets KVM Studio up: it checks the machine, chooses where virtual machines go and creates the basic virtual networks.",
-      "license": "KVM Studio is free software released under the GPL-3.0 license, without any warranty."
+      "intro": "This assistant sets {{app}} up: it checks the machine, chooses where virtual machines go and creates the basic virtual networks.",
+      "license": "{{app}} is free software released under the GPL-3.0 license, without any warranty."
     },
     "check": {
       "cpu": {
@@ -667,7 +670,7 @@
     },
     "locations": {
       "vm": "Virtual machine folder",
-      "vmHint": "KVM Studio creates a KVM-Studio/VM folder in it, with one subtree per virtual machine.",
+      "vmHint": "{{app}} creates a KVM-Studio/VM folder in it, with one subtree per virtual machine.",
       "iso": "ISO library (optional)",
       "isoHint": "Folder holding your ISO images. It is read, never changed. More libraries can be added in Preferences.",
       "isoName": "ISO",
@@ -675,9 +678,9 @@
     },
     "mode": {
       "desktop": "Window (recommended)",
-      "desktopHint": "KVM Studio opens in its own window.",
+      "desktopHint": "{{app}} opens in its own window.",
       "web": "Web browser",
-      "webHint": "KVM Studio opens in the browser, on this machine only. A notification area icon reopens it."
+      "webHint": "{{app}} opens in the browser, on this machine only. A notification area icon reopens it."
     },
     "networks": {
       "intro": "Basic virtual networks, on ranges that do not overlap your local network:",
@@ -685,7 +688,7 @@
       "create": "Create the missing networks"
     },
     "done": {
-      "saved": "KVM Studio is ready.",
+      "saved": "{{app}} is ready.",
       "networks": "Networks created: {{names}}.",
       "again": "This assistant can be run again from the Help menu."
     },
@@ -694,7 +697,7 @@
     "close": "Close"
   },
   "uninstall": {
-    "title": "Uninstall KVM Studio",
+    "title": "Uninstall {{app}}",
     "step": {
       "welcome": "Welcome",
       "vms": "Virtual machines",
@@ -705,20 +708,20 @@
       "done": "Done"
     },
     "welcome": {
-      "intro": "This assistant removes KVM Studio from this computer.",
+      "intro": "This assistant removes {{app}} from this computer.",
       "choices": "You will choose what happens to the virtual machines, the kvmnet networks and your settings. Nothing is deleted before the summary."
     },
     "vms": {
-      "none": "No virtual machine created by KVM Studio.",
+      "none": "No virtual machine created by {{app}}.",
       "keep": "Keep the virtual machines and their files",
-      "delete_one": "Delete the virtual machine created by KVM Studio and its files",
-      "delete_other": "Delete the {{count}} virtual machines created by KVM Studio and their files",
-      "extra": "Other files in the KVM Studio folder",
+      "delete_one": "Delete the virtual machine created by {{app}} and its files",
+      "delete_other": "Delete the {{count}} virtual machines created by {{app}} and their files",
+      "extra": "Other files in the {{app}} folder",
       "kept": "Kept in any case",
       "running": "Power off first: {{names}}",
       "confirm_one": "I confirm this file is deleted for good",
       "confirm_other": "I confirm these {{count}} files are deleted for good",
-      "foreign": "Virtual machines created outside KVM Studio, always kept: {{names}}"
+      "foreign": "Virtual machines created outside {{app}}, always kept: {{names}}"
     },
     "networks": {
       "none": "No kvmnet network.",
@@ -749,12 +752,12 @@
       "skipped": "kept",
       "failed": "failed"
     },
-    "packageWait": "The package manager is removing KVM Studio. This can take a minute.",
+    "packageWait": "The package manager is removing {{app}}. This can take a minute.",
     "failedFiles": "These files could not be deleted:",
     "keptNetworks": "Networks kept because still in use: {{names}}",
     "finished": "Uninstall finished."
   },
   "loading": {
-    "brand": "KVM Studio"
+    "brand": "{{app}}"
   }
 }

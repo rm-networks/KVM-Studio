@@ -3,7 +3,7 @@
  "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
 <policyconfig>
-  <vendor>KVM Studio</vendor>
+  <vendor>@APP_NAME@</vendor>
   <vendor_url>https://github.com/rm-networks/kvm-studio</vendor_url>
 
   <action id="org.kvmstudio.helper.iso-acl">
@@ -31,10 +31,10 @@
   </action>
 
   <action id="org.kvmstudio.helper.remove-package">
-    <description>Uninstall KVM Studio</description>
-    <description xml:lang="fr">Désinstaller KVM Studio</description>
-    <message>Authentication is required to uninstall KVM Studio.</message>
-    <message xml:lang="fr">Une authentification est nécessaire pour désinstaller KVM Studio.</message>
+    <description>Uninstall @APP_NAME@</description>
+    <description xml:lang="fr">Désinstaller @APP_NAME@</description>
+    <message>Authentication is required to uninstall @APP_NAME@.</message>
+    <message xml:lang="fr">Une authentification est nécessaire pour désinstaller @APP_NAME@.</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>

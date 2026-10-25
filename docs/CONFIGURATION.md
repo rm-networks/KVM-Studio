@@ -1,121 +1,118 @@
 # Configuration
 
-KVM Studio lit `$XDG_CONFIG_HOME/kvm-studio/config.toml`, soit en général
-`~/.config/kvm-studio/config.toml`. Le fichier est facultatif et chaque clé
-aussi : une clé absente prend sa valeur par défaut. Un modèle commenté se trouve
-dans [config.example.toml](../config.example.toml).
+KVM Studio reads `$XDG_CONFIG_HOME/kvm-studio/config.toml`, usually
+`~/.config/kvm-studio/config.toml`. The file is optional and so is every key:
+a missing key takes its default value. A commented template is in
+[config.example.toml](../config.example.toml).
 
-L'écran Édition > Préférences modifie ce fichier. Il le réécrit sans les
-commentaires et n'y garde que les valeurs différentes des défauts : un défaut
-modifié dans une version suivante s'applique donc à qui ne l'a pas changé.
-`port = 8765`, l'ancien défaut, est ignoré à la lecture. Le mode d'interface, le port et l'URI libvirt s'appliquent au
-prochain lancement ; le reste s'applique tout de suite.
+The Edit > Preferences screen changes this file. It rewrites it without the
+comments and only keeps the values that differ from the defaults: a default
+changed in a later version therefore applies to whoever did not change it.
+`port = 8765`, the former default, is ignored when reading. The interface mode,
+the port and the libvirt URI apply at the next start; the rest applies at once.
 
-Une clé inconnue ou une valeur invalide empêche le démarrage, avec un message qui
-indique la clé fautive. `kvm-studio --check` valide le fichier sans rien lancer.
-`--config CHEMIN` permet d'utiliser un autre fichier.
+An unknown key or an invalid value prevents starting, with a message naming the
+faulty key. `kvm-studio --check` validates the file without starting anything.
+`--config PATH` uses another file.
 
 ## [interface]
 
-| Clé | Défaut | Description |
+| Key | Default | Description |
 | --- | --- | --- |
-| `mode` | `"desktop"` | `"desktop"` : fenêtre native. `"web"` : navigateur. Appliqué au redémarrage. L'option `--mode` de la ligne de commande a priorité. |
+| `mode` | `"desktop"` | `"desktop"`: native window. `"web"`: browser. Applied on restart. The `--mode` command line option takes precedence. |
 
 ## [web]
 
-| Clé | Défaut | Description |
+| Key | Default | Description |
 | --- | --- | --- |
-| `port` | `60080` | Port HTTP du mode web (accès local, 127.0.0.1), entre 1024 et 65535. Le mode fenêtre utilise un port aléatoire. |
-| `https_port` | `60443` | Port HTTPS du partage sur le réseau local (V1). |
-| `share_on_lan` | `false` | Partage sur le réseau local (V1). Doit rester à `false` : KVM Studio refuse de démarrer sinon. |
-| `tls` | `"auto"` | Certificat auto-signé pour le partage LAN (V1). |
-| `guest_enabled` | `true` | Compte invité du partage LAN (V1). |
-| `login_max_attempts` | `5` | Échecs de connexion avant blocage temporaire (V1). |
+| `port` | `60080` | HTTP port of web mode (local access, 127.0.0.1), between 1024 and 65535. Window mode uses a random port. |
+| `https_port` | `60443` | HTTPS port for sharing on the local network (V1). |
+| `share_on_lan` | `false` | Sharing on the local network (V1). Must stay `false`: KVM Studio refuses to start otherwise. |
+| `tls` | `"auto"` | Self-signed certificate for LAN sharing (V1). |
+| `guest_enabled` | `true` | Guest account for LAN sharing (V1). |
+| `login_max_attempts` | `5` | Failed logins before a temporary lockout (V1). |
 
 ## [libvirt]
 
-| Clé | Défaut | Description |
+| Key | Default | Description |
 | --- | --- | --- |
-| `uri` | `"qemu:///system"` | URI de connexion libvirt. `qemu:///session` fonctionne mais sans réseaux virtuels kvmnet. |
+| `uri` | `"qemu:///system"` | libvirt connection URI. `qemu:///session` works but without kvmnet virtual networks. |
 
 ## [storage]
 
-| Clé | Défaut | Description |
+| Key | Default | Description |
 | --- | --- | --- |
-| `vm_default_location` | aucun | Emplacement choisi pour les VMs. KVM Studio y range tout sous `KVM-Studio/VM/` : `<emplacement>/KVM-Studio/VM/<dossiers>/<nom de la VM>/<disques>`. À choisir au premier lancement. `~` est accepté. |
+| `vm_default_location` | none | Location chosen for the VMs. KVM Studio keeps everything under `KVM-Studio/VM/`: `<location>/KVM-Studio/VM/<folders>/<VM name>/<disks>`. Chosen at first run. `~` is accepted. |
 
 ## [[iso_libraries]]
 
-Bibliothèques d'ISO, parcourues en lecture seule. Répéter le bloc pour chaque
-dossier.
+ISO libraries, browsed read-only. Repeat the block for each folder.
 
-| Clé | Défaut | Description |
+| Key | Default | Description |
 | --- | --- | --- |
-| `name` | requis | Nom affiché. |
-| `path` | requis | Dossier racine. |
-| `recursive` | `true` | Parcourir les sous-dossiers. |
-| `extensions` | `[".iso", ".img"]` | Extensions reconnues. |
+| `name` | required | Displayed name. |
+| `path` | required | Root folder. |
+| `recursive` | `true` | Browse subfolders. |
+| `extensions` | `[".iso", ".img"]` | Recognized extensions. |
 
 ## [defaults]
 
-Valeurs proposées par l'assistant de création de VM.
+Values offered by the new VM assistant.
 
-| Clé | Défaut | Valeurs |
+| Key | Default | Values |
 | --- | --- | --- |
 | `firmware` | `"uefi"` | `"uefi"`, `"bios"` |
 | `disk_bus` | `"virtio"` | `"virtio"`, `"scsi"`, `"sata"`, `"nvme"`, `"ide"` |
 | `nic_model` | `"virtio"` | `"virtio"`, `"e1000e"`, `"rtl8139"`, `"vmxnet3"` |
-| `virtio_win_iso` | aucun | ISO des pilotes virtio pour Windows, montée en second lecteur. |
+| `virtio_win_iso` | none | ISO of the virtio drivers for Windows, inserted as a second drive. |
 
 ## [ui]
 
-| Clé | Défaut | Valeurs |
+| Key | Default | Values |
 | --- | --- | --- |
 | `theme` | `"system"` | `"system"`, `"light"`, `"dark"` |
-| `language` | `"fr"` | `"fr"`, `"en"` |
+| `language` | `"system"` | `"system"` (French when the desktop is in French, English otherwise), `"en"`, `"fr"` |
 
-## Variables d'environnement
+## Environment variables
 
-| Variable | Rôle |
+| Variable | Purpose |
 | --- | --- |
-| `XDG_CONFIG_HOME` | Emplacement du dossier de configuration. |
-| `KVMSTUDIO_FRONTEND_DIR` | Dossier de l'interface compilée, si elle n'est pas à l'emplacement habituel. |
-| `KVMSTUDIO_BACKEND` | Développement : adresse de l'API pour le serveur Vite (défaut `http://127.0.0.1:60080`). |
-| `KVMSTUDIO_HELPER_SOCKET` | Socket du helper (défaut `/run/kvmstudio-helper.sock`). |
+| `XDG_CONFIG_HOME` | Location of the configuration folder. |
+| `LC_ALL`, `LC_MESSAGES`, `LANG` | Desktop language, used when `language = "system"`. |
+| `KVMSTUDIO_FRONTEND_DIR` | Folder of the built interface, when it is not at its usual place. |
+| `KVMSTUDIO_BACKEND` | Development: API address for the Vite server (default `http://127.0.0.1:60080`). |
+| `KVMSTUDIO_HELPER_SOCKET` | Helper socket (default `/run/kvmstudio-helper.sock`). |
 
-## Helper : /etc/kvm-studio/helper.toml
+## Helper: /etc/kvm-studio/helper.toml
 
-Ce fichier appartient à root et se modifie avec `sudo`. Le helper ne touche
-qu'aux bibliothèques ISO qui y sont déclarées, même si `config.toml` en liste
-d'autres : le bouton « Corriger » du sélecteur d'ISO ne fonctionne que pour
-elles.
+This file belongs to root and is edited with `sudo`. The helper only touches
+the ISO libraries declared there, even when `config.toml` lists others: the
+"Fix" button of the ISO picker only works for them.
 
 ```toml
 # socket = "/run/kvmstudio-helper.sock"
-# qemu_user = "qemu"          # détecté : qemu, puis libvirt-qemu
+# qemu_user = "qemu"          # detected: qemu, then libvirt-qemu
 
 [[iso_libraries]]
 path = "/srv/iso"
-extensions = [".iso", ".img"]  # défaut
+extensions = [".iso", ".img"]  # default
 ```
 
-Une clé inconnue empêche le helper de démarrer. Le modèle complet est dans
+An unknown key prevents the helper from starting. The full template is in
 `packaging/helper/helper.toml`.
 
-## Dossiers de la bibliothèque
+## Library folders
 
-Les dossiers de la bibliothèque sont de vrais dossiers sous
-`<emplacement>/KVM-Studio/VM/`. Créer, renommer ou supprimer un dossier dans
-KVM Studio fait la même chose sur le disque ; déplacer une VM éteinte déplace
-son dossier et met à jour les chemins dans libvirt.
+The library folders are real folders under `<location>/KVM-Studio/VM/`.
+Creating, renaming or deleting a folder in KVM Studio does the same on disk;
+moving a powered off VM moves its folder and updates the paths in libvirt.
 
-KVM Studio n'efface ni ne déplace jamais un fichier situé hors de
-`KVM-Studio/`, une image ISO, un disque utilisé par une autre VM ou le disque de
-base d'un clone lié. Les VMs créées ailleurs (virt-manager) sont seulement
-rangées dans la bibliothèque, sans toucher à leurs fichiers.
+KVM Studio never deletes or moves a file outside `KVM-Studio/`, an ISO image, a
+disk used by another VM or the base disk of a linked clone. VMs created
+elsewhere (virt-manager) are only filed in the library, without touching their
+files.
 
-Le dossier de chaque VM est aussi noté dans son XML libvirt
-(`<metadata>`, espace de noms `https://github.com/rm-networks/kvm-studio/ns/1.0`).
-Si des fichiers ont été déplacés à la main, la VM reste affichée à sa place
-notée, avec un triangle d'avertissement : KVM Studio signale l'écart sans le
-corriger.
+The folder of each VM is also written in its libvirt XML (`<metadata>`,
+namespace `https://github.com/rm-networks/kvm-studio/ns/1.0`). When files were
+moved by hand, the VM stays shown at its recorded place, with a warning
+triangle: KVM Studio reports the gap without fixing it.

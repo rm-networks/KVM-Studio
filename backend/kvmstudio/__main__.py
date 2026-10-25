@@ -4,32 +4,25 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import __version__
+from . import APP_NAME, __version__
 from .config import ConfigError, default_config_path, load_config
+from .i18n import set_language, t
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="kvm-studio", description="KVM Studio")
+    parser = argparse.ArgumentParser(prog="kvm-studio", description=APP_NAME)
     parser.add_argument(
         "--mode",
         choices=["desktop", "web"],
-        help="interface mode (default: [interface] mode from the configuration)",
+        help=t("cli.help_mode"),
     )
-    parser.add_argument("--config", type=Path, help="configuration file to use")
+    parser.add_argument("--config", type=Path, help=t("cli.help_config"))
+    parser.add_argument("--check", action="store_true", help=t("cli.help_check"))
+    parser.add_argument("--reload", action="store_true", help=t("cli.help_reload"))
+    parser.add_argument("--no-browser", action="store_true", help=t("cli.help_no_browser"))
+    parser.add_argument("--uninstall", action="store_true", help=t("cli.help_uninstall"))
     parser.add_argument(
-        "--check", action="store_true", help="check the configuration and the host, then exit"
-    )
-    parser.add_argument(
-        "--reload", action="store_true", help="web mode: restart on code changes (development)"
-    )
-    parser.add_argument(
-        "--no-browser", action="store_true", help="web mode: do not open the browser"
-    )
-    parser.add_argument(
-        "--uninstall", action="store_true", help="uninstall KVM Studio (asks what to remove)"
-    )
-    parser.add_argument(
-        "--uninstall-wizard", action="store_true", help="open the uninstall assistant window"
+        "--uninstall-wizard", action="store_true", help=t("cli.help_uninstall_wizard")
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return parser
@@ -43,6 +36,7 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigError as exc:
         print(exc, file=sys.stderr)
         return 2
+    set_language(config.ui.language)
 
     if args.check:
         from . import check
@@ -71,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.reload:
-        print("--reload is only available with --mode web", file=sys.stderr)
+        print(t("cli.reload_web_only"), file=sys.stderr)
         return 2
     from .shell import desktop
 
