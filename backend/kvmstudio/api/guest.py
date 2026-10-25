@@ -7,7 +7,6 @@ from starlette.concurrency import run_in_threadpool
 
 from ..context import Context
 from ..guesttools import tools
-from ..paths import in_iso_library
 from ..services.library import metadata_values
 
 router = APIRouter(prefix="/vms", tags=["guest"])
@@ -19,7 +18,9 @@ class GuestToolsInfo(BaseModel):
     agent: bool
     # The tools CD is in a drive (put back the previous media with eject).
     inserted: bool
+    # The virtio-win ISO of the Preferences, as configured, and what is wrong with it.
     virtio_win: str | None
+    virtio_state: tools.VirtioState
     linux_command: str
 
 
@@ -28,9 +29,12 @@ class InsertRequest(BaseModel):
 
 
 class InsertResult(BaseModel):
-    drives: list[str]
-    # A drive or the agent channel was added to the config: restart the VM.
+    drive: str
+    # The drive or the agent channel is only in the config yet: power the VM
+    # off and start it again (a reboot inside the guest is not enough).
     restart_required: bool
+    # Windows: virtio-win-guest-tools.exe is on the CD.
+    installer: str | None
 
 
 class EjectResult(BaseModel):
@@ -48,13 +52,14 @@ async def info(ctx: Context, uuid: str) -> GuestToolsInfo:
         active = bool(dom.isActive())
         xml = dom.XMLDesc(0)
         family = metadata_values(xml).get("family") or tools.guess_family(xml)
-        iso = ctx.config.defaults.virtio_win_iso
+        state, iso = tools.virtio_iso(ctx.config)
         return GuestToolsInfo(
             active=active,
             family=family if family in ("windows", "linux", "bsd", "other") else None,  # type: ignore[arg-type]
             agent=active and tools.agent_responds(dom),
             inserted=tools.inserted(xml),
-            virtio_win=str(iso) if iso and in_iso_library(iso, ctx.config) else None,
+            virtio_win=str(iso) if iso else None,
+            virtio_state=state,
             linux_command=tools.LINUX_COMMAND,
         )
 
@@ -63,8 +68,9 @@ async def info(ctx: Context, uuid: str) -> GuestToolsInfo:
 
 @router.post("/{uuid}/guest-tools")
 async def insert(ctx: Context, uuid: str, body: InsertRequest) -> InsertResult:
-    drives, restart = await run_in_threadpool(tools.insert, ctx.conn, ctx.config, uuid, body.family)
-    return InsertResult(drives=drives, restart_required=restart)
+    drive, restart = await run_in_threadpool(tools.insert, ctx.conn, ctx.config, uuid, body.family)
+    installer = tools.WINDOWS_INSTALLER if body.family == "windows" else None
+    return InsertResult(drive=drive, restart_required=restart, installer=installer)
 
 
 @router.post("/{uuid}/guest-tools/eject")

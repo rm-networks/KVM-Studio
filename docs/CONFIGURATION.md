@@ -64,7 +64,7 @@ Values offered by the new VM assistant.
 | `firmware` | `"uefi"` | `"uefi"`, `"bios"` |
 | `disk_bus` | `"virtio"` | `"virtio"`, `"scsi"`, `"sata"`, `"nvme"`, `"ide"` |
 | `nic_model` | `"virtio"` | `"virtio"`, `"e1000e"`, `"rtl8139"`, `"vmxnet3"` |
-| `virtio_win_iso` | none | ISO of the virtio drivers for Windows, inserted as a second drive. |
+| `virtio_win_iso` | none | virtio-win ISO, in an ISO library. Only read: its `virtio-win-guest-tools.exe` is copied onto the Windows guest tools CD. |
 
 ## [ui]
 

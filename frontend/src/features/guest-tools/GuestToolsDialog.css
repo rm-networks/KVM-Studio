@@ -66,3 +66,11 @@
   overflow-wrap: anywhere;
   user-select: text;
 }
+
+.guest-tools-step.warn {
+  color: var(--text);
+}
+
+.guest-tools-step.warn svg {
+  color: var(--state-paused);
+}

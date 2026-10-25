@@ -131,8 +131,9 @@ connected.
   pywebview API in window mode and by `navigator.clipboard` in web mode (secure
   context: 127.0.0.1 or HTTPS).
 - **Guest tools installation.** KVM Studio builds with `xorriso` a small
-  `KS_TOOLS` CD in `<location>/KVM-Studio/Tools` and inserts it in a drive of
-  the VM (virtio-win as well, in a second drive, for Windows). The user starts
+  `KS_TOOLS` CD in `<location>/KVM-Studio/Tools` and inserts it in one drive of
+  the VM. For Windows the CD also carries `virtio-win-guest-tools.exe`, copied
+  from the virtio-win ISO of the Preferences, which is only read. The user starts
   the installation inside the VM: `Install-Tools.bat` on Windows, `install.sh`
   on Linux. Nothing is typed for them, so the keyboard layout does not matter.
   qemu-guest-agent then confirms that the agent answers, and ejecting puts back

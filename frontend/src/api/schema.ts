@@ -1198,6 +1198,11 @@ export interface components {
       inserted: boolean;
       /** Virtio Win */
       virtio_win: string | null;
+      /**
+       * Virtio State
+       * @enum {string}
+       */
+      virtio_state: "ok" | "unset" | "missing" | "outside";
       /** Linux Command */
       linux_command: string;
     };
@@ -1286,10 +1291,12 @@ export interface components {
     };
     /** InsertResult */
     InsertResult: {
-      /** Drives */
-      drives: string[];
+      /** Drive */
+      drive: string;
       /** Restart Required */
       restart_required: boolean;
+      /** Installer */
+      installer: string | null;
     };
     /** InterfaceSettings */
     InterfaceSettings: {

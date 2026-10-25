@@ -1,11 +1,18 @@
-import { CircleCheck, Copy, LoaderCircle } from "lucide-react";
+import { CircleCheck, Copy, LoaderCircle, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { api, type GuestFamily, type GuestToolsInfo, type VmSummary } from "../../api/client";
+import {
+  api,
+  type GuestFamily,
+  type GuestToolsInfo,
+  type InsertResult,
+  type VmSummary,
+} from "../../api/client";
 import { Dialog } from "../../components/Dialog";
 import { useNotifier } from "../../components/notifier";
 import { hostClipboard } from "../../platform/hostClipboard";
+import { AddIsoLibraryDialog } from "../preferences/PreferencesDialog";
 import "./GuestToolsDialog.css";
 
 type Phase = "form" | "waiting" | "done" | "timeout";
@@ -19,9 +26,11 @@ export function GuestToolsDialog({ vm, onClose }: { vm: VmSummary; onClose: () =
   const [info, setInfo] = useState<GuestToolsInfo | null>(null);
   const [family, setFamily] = useState<GuestFamily>("linux");
   const [phase, setPhase] = useState<Phase>("form");
-  const [restart, setRestart] = useState(false);
+  const [result, setResult] = useState<InsertResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [addingLibrary, setAddingLibrary] = useState(false);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let live = true;
@@ -30,6 +39,8 @@ export function GuestToolsDialog({ vm, onClose }: { vm: VmSummary; onClose: () =
       .then((value) => {
         if (!live) return;
         setInfo(value);
+        // A reload (library added) keeps what the user chose.
+        if (reload) return;
         if (value.family) setFamily(value.family);
         if (value.inserted) setPhase("waiting");
       })
@@ -37,7 +48,7 @@ export function GuestToolsDialog({ vm, onClose }: { vm: VmSummary; onClose: () =
     return () => {
       live = false;
     };
-  }, [vm.uuid, notifyError, t]);
+  }, [vm.uuid, notifyError, t, reload]);
 
   const running = vm.state === "running";
 
@@ -57,15 +68,18 @@ export function GuestToolsDialog({ vm, onClose }: { vm: VmSummary; onClose: () =
   }, [phase, running, vm.uuid]);
 
   const supported = family === "windows" || family === "linux";
-  const missingIso = family === "windows" && !info?.virtio_win;
+  const virtioState = info?.virtio_state ?? "unset";
+  const missingIso = family === "windows" && virtioState !== "ok";
   const canInsert = info !== null && supported && !missingIso && !busy;
+  const restart = result?.restart_required ?? false;
+  const virtioFolder = info?.virtio_win?.replace(/\/[^/]*$/, "") || "/";
 
   const insert = () => {
     setBusy(true);
     api
       .insertGuestTools(vm.uuid, family)
-      .then((result) => {
-        setRestart(result.restart_required);
+      .then((value) => {
+        setResult(value);
         setPhase("waiting");
       })
       .catch((err: unknown) => notifyError(t("guestTools.failed"), err))
@@ -86,17 +100,43 @@ export function GuestToolsDialog({ vm, onClose }: { vm: VmSummary; onClose: () =
     void hostClipboard.write(info.linux_command).then(() => setCopied(true));
   };
 
-  const step = (done: boolean, text: string, pending = false) => (
-    <li className={done ? "guest-tools-step done" : "guest-tools-step"}>
-      {done ? (
+  type StepState = "done" | "pending" | "warn" | "todo";
+  const step = (state: StepState, text: string) => (
+    <li key={text} className={`guest-tools-step ${state}`}>
+      {state === "done" ? (
         <CircleCheck aria-hidden />
-      ) : pending ? (
+      ) : state === "pending" ? (
         <LoaderCircle className="spin" aria-hidden />
+      ) : state === "warn" ? (
+        <TriangleAlert aria-hidden />
       ) : (
         <span className="guest-tools-dot" />
       )}
       <span>{text}</span>
     </li>
+  );
+
+  const done = phase === "done";
+  // Reopened while the CD is in: the drive and installer are not known any more.
+  const steps: [StepState, string][] = [];
+  if (result?.installer) {
+    steps.push(["done", t("guestTools.step.installer", { name: result.installer })]);
+  }
+  steps.push(
+    result
+      ? restart
+        ? ["warn", t("guestTools.step.insertedRestart", { drive: result.drive })]
+        : ["done", t("guestTools.step.insertedIn", { drive: result.drive })]
+      : ["done", t("guestTools.step.inserted")],
+  );
+  steps.push([done ? "done" : "todo", t("guestTools.step.run")]);
+  steps.push(
+    done
+      ? ["done", t("guestTools.step.done")]
+      : [
+          phase === "waiting" && running && !restart ? "pending" : "todo",
+          t("guestTools.step.wait"),
+        ],
   );
 
   return (
@@ -150,25 +190,29 @@ export function GuestToolsDialog({ vm, onClose }: { vm: VmSummary; onClose: () =
               </select>
             </label>
             {!supported && <p className="field-error">{t("guestTools.unsupported")}</p>}
-            {family === "windows" &&
-              (info?.virtio_win ? (
-                <p className="guest-tools-path">{info.virtio_win}</p>
-              ) : (
-                <p className="field-error">{t("guestTools.noVirtio")}</p>
-              ))}
+            {family === "windows" && info && (
+              <>
+                <p className="guest-tools-help">{t("guestTools.windowsIntro")}</p>
+                {info.virtio_win && <p className="guest-tools-path">{info.virtio_win}</p>}
+                {virtioState !== "ok" && (
+                  <p className="field-error">{t(`guestTools.virtio.${virtioState}`)}</p>
+                )}
+                {virtioState === "outside" && (
+                  <p>
+                    <button type="button" className="button" onClick={() => setAddingLibrary(true)}>
+                      {t("guestTools.addLibrary")}
+                    </button>
+                  </p>
+                )}
+              </>
+            )}
           </>
         )}
 
         {phase !== "form" && (
           <>
             <ol className="guest-tools-steps">
-              {step(true, `1. ${t("guestTools.step.inserted")}`)}
-              {step(phase === "done", `2. ${t("guestTools.step.run")}`)}
-              {step(
-                phase === "done",
-                `3. ${t(phase === "done" ? "guestTools.step.done" : "guestTools.step.wait")}`,
-                phase === "waiting" && running,
-              )}
+              {steps.map(([state, text], i) => step(state, `${i + 1}. ${text}`))}
             </ol>
             {phase !== "done" &&
               (family === "linux" && info ? (
@@ -184,7 +228,7 @@ export function GuestToolsDialog({ vm, onClose }: { vm: VmSummary; onClose: () =
               ) : (
                 <p className="guest-tools-help">{t("guestTools.windowsHow")}</p>
               ))}
-            {restart && <p className="field-error">{t("guestTools.restart")}</p>}
+            {restart && !done && <p className="field-error">{t("guestTools.restart")}</p>}
             {!running && phase === "waiting" && (
               <p className="guest-tools-path">{t("guestTools.notRunning")}</p>
             )}
@@ -192,6 +236,16 @@ export function GuestToolsDialog({ vm, onClose }: { vm: VmSummary; onClose: () =
           </>
         )}
       </div>
+      {addingLibrary && (
+        <AddIsoLibraryDialog
+          initialPath={virtioFolder}
+          onClose={() => setAddingLibrary(false)}
+          onAdded={() => {
+            setAddingLibrary(false);
+            setReload((n) => n + 1);
+          }}
+        />
+      )}
     </Dialog>
   );
 }

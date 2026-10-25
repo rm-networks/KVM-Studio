@@ -8,7 +8,7 @@ import { GuestToolsDialog } from "./GuestToolsDialog";
 const COMMAND =
   'sudo sh -c \'m=$(mktemp -d) && mount -o ro -L KS_TOOLS "$m" && sh "$m/install.sh"\'';
 
-function mockApi(info: object, responding: boolean) {
+function mockApi(info: object, responding: boolean, insertResult: object = {}) {
   const posts: { path: string; body: unknown }[] = [];
   vi.stubGlobal(
     "fetch",
@@ -17,7 +17,7 @@ function mockApi(info: object, responding: boolean) {
         posts.push({ path, body: init.body ? JSON.parse(init.body as string) : null });
         const answer = path.endsWith("/eject")
           ? { drives: ["sda"] }
-          : { drives: ["sda"], restart_required: false };
+          : { drive: "sda", restart_required: false, installer: null, ...insertResult };
         return Promise.resolve(new Response(JSON.stringify(answer)));
       }
       const body = path.endsWith("/agent") ? { responding } : info;
@@ -33,6 +33,7 @@ const info = (extra: object = {}) => ({
   agent: false,
   inserted: false,
   virtio_win: null,
+  virtio_state: "unset",
   linux_command: COMMAND,
   ...extra,
 });
@@ -63,7 +64,7 @@ describe("GuestToolsDialog", () => {
     await vi.waitFor(() => expect((insert as HTMLButtonElement).disabled).toBe(false));
     vi.useFakeTimers({ shouldAdvanceTime: true });
     fireEvent.click(insert);
-    expect(await screen.findByText("1. Le CD est inséré.")).toBeTruthy();
+    expect(await screen.findByText("1. Le CD KS_TOOLS est dans le lecteur sda.")).toBeTruthy();
     expect(screen.getByText(COMMAND)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Copier" }));
     await vi.waitFor(() => expect(write).toHaveBeenCalledWith(COMMAND));
@@ -82,14 +83,53 @@ describe("GuestToolsDialog", () => {
     expect(posts[0]?.body).toEqual({ family: "linux" });
   });
 
-  it("needs the virtio-win ISO for Windows", async () => {
-    mockApi(info({ family: "windows" }), false);
+  it.each([
+    ["unset", null, /Aucune ISO virtio-win n'est configurée/],
+    ["missing", "/iso/virtio-win.iso", /Cette ISO virtio-win n'existe plus/],
+    ["outside", "/home/me/virtio-win.iso", /n'est pas dans une bibliothèque ISO/],
+  ])("explains a %s virtio-win ISO and blocks the insertion", async (state, path, message) => {
+    mockApi(info({ family: "windows", virtio_state: state, virtio_win: path }), false);
     show();
-    expect(await screen.findByText(/Aucune ISO virtio-win/)).toBeTruthy();
+    expect(await screen.findByText(message)).toBeTruthy();
     expect(
       (screen.getByRole("button", { name: "Insérer le CD des outils" }) as HTMLButtonElement)
         .disabled,
     ).toBe(true);
+    const add = screen.queryByRole("button", {
+      name: "Ajouter son dossier comme bibliothèque ISO…",
+    });
+    expect(add !== null).toBe(state === "outside");
+    if (add) {
+      fireEvent.click(add);
+      expect(((await screen.findByDisplayValue("/home/me")) as HTMLInputElement).value).toBe(
+        "/home/me",
+      );
+    }
+  });
+
+  it("shows each Windows step, and the power cycle a new drive needs", async () => {
+    mockApi(
+      info({ family: "windows", virtio_state: "ok", virtio_win: "/iso/virtio-win.iso" }),
+      false,
+      {
+        drive: "sdb",
+        restart_required: true,
+        installer: "virtio-win-guest-tools.exe",
+      },
+    );
+    show();
+    const insert = await screen.findByRole("button", { name: "Insérer le CD des outils" });
+    await vi.waitFor(() => expect((insert as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(insert);
+    expect(
+      await screen.findByText(
+        "1. virtio-win-guest-tools.exe est copié de l'ISO virtio-win sur le CD.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/2\. Le CD KS_TOOLS est dans le lecteur sdb, que la VM allumée/),
+    ).toBeTruthy();
+    expect(screen.getByText(/Un redémarrage depuis l'invité ne suffit pas/)).toBeTruthy();
   });
 
   it("goes straight to the steps when the CD is already in", async () => {

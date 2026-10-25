@@ -468,17 +468,19 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
 }
 
 /** Name and folder of a new library; the helper checks the folder (password asked). */
-function AddIsoLibraryDialog({
+export function AddIsoLibraryDialog({
+  initialPath = "",
   onClose,
   onAdded,
 }: {
+  initialPath?: string;
   onClose: () => void;
   onAdded: (change: IsoLibraryChange) => void;
 }) {
   const { t } = useTranslation();
   const { notifyError } = useNotifier();
   const [name, setName] = useState(t("prefs.newLibrary"));
-  const [path, setPath] = useState("");
+  const [path, setPath] = useState(initialPath);
   const [recursive, setRecursive] = useState(true);
   const [busy, setBusy] = useState(false);
   const valid = name.trim() !== "" && path.startsWith("/");

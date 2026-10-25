@@ -230,7 +230,10 @@
       "no_xorriso": "xorriso n'est pas installé : impossible de créer le CD des outils.",
       "iso_failed": "La création du CD des outils a échoué.",
       "no_virtio_iso": "Indiquez l'ISO virtio-win dans Préférences > Machines virtuelles.",
-      "unsupported": "Pas d'outils invités automatiques pour ce système."
+      "unsupported": "Pas d'outils invités automatiques pour ce système.",
+      "virtio_missing": "L'ISO virtio-win configurée dans les Préférences n'existe pas.",
+      "virtio_outside": "L'ISO virtio-win configurée dans les Préférences n'est pas dans une bibliothèque ISO.",
+      "no_installer": "Cette ISO n'a pas de virtio-win-guest-tools.exe à sa racine : ce n'est pas une ISO virtio-win, ou une version très ancienne."
     },
     "clone": {
       "unreadable_disk": "Un disque de la source n'est pas lisible par votre compte.",
@@ -595,20 +598,29 @@
       "inserted": "Le CD est inséré.",
       "run": "Dans la VM, lancez l'installation.",
       "wait": "En attente de l'agent invité…",
-      "done": "L'agent invité répond : les outils sont installés."
+      "done": "L'agent invité répond : les outils sont installés.",
+      "installer": "{{name}} est copié de l'ISO virtio-win sur le CD.",
+      "insertedIn": "Le CD KS_TOOLS est dans le lecteur {{drive}}.",
+      "insertedRestart": "Le CD KS_TOOLS est dans le lecteur {{drive}}, que la VM allumée n'a pas encore : arrêtez-la, puis démarrez-la de nouveau."
     },
     "linuxHow": "Double-cliquez sur install.sh dans le CD KS_TOOLS, ou collez cette commande dans un terminal de la VM :",
     "windowsHow": "Acceptez l'exécution automatique du CD KS_TOOLS, ou ouvrez-le et lancez Install-Tools.bat. Validez ensuite le contrôle de compte d'utilisateur.",
     "copy": "Copier",
     "copied": "Copié",
-    "restart": "Un lecteur CD/DVD ou le canal de l'agent a été ajouté : redémarrez la machine virtuelle pour qu'il soit pris en compte.",
+    "restart": "Un redémarrage depuis l'invité ne suffit pas : arrêtez la machine virtuelle, démarrez-la de nouveau, puis lancez l'installation.",
     "notRunning": "La machine virtuelle est éteinte : l'attente de l'agent commencera au démarrage.",
     "alreadyOk": "L'agent invité répond déjà. Vous pouvez réinstaller pour réparer ou mettre à jour.",
-    "noVirtio": "Aucune ISO virtio-win n'est configurée dans une bibliothèque. Indiquez-la dans Préférences > Machines virtuelles.",
     "unsupported": "Pas d'outils invités automatiques pour ce système.",
     "timeout": "L'agent ne répond toujours pas après 10 minutes. Vérifiez l'installation dans l'invité (service qemu-guest-agent).",
     "failed": "Impossible d'insérer le CD des outils invités",
-    "ejectFailed": "Impossible d'éjecter le CD des outils invités"
+    "ejectFailed": "Impossible d'éjecter le CD des outils invités",
+    "windowsIntro": "Le CD contient aussi l'installeur des outils invités virtio-win (pilotes, agent invité, copier-coller), copié depuis cette ISO, qui n'est pas modifiée :",
+    "virtio": {
+      "unset": "Aucune ISO virtio-win n'est configurée. Indiquez-la dans Préférences > Machines virtuelles.",
+      "missing": "Cette ISO virtio-win n'existe plus. Indiquez-la de nouveau dans Préférences > Machines virtuelles.",
+      "outside": "Cette ISO virtio-win n'est pas dans une bibliothèque ISO : les machines virtuelles ne peuvent pas la lire."
+    },
+    "addLibrary": "Ajouter son dossier comme bibliothèque ISO…"
   },
   "firstRun": {
     "title": "Bienvenue dans {{app}}",

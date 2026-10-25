@@ -5,9 +5,10 @@ the guest. Nothing depends on the guest keyboard layout.
 
 - Linux: install.sh installs qemu-guest-agent and spice-vdagent with the
   package manager it finds.
-- Windows: autorun.inf and Install-Tools.bat, which runs the virtio-win guest
-  tools installer (drivers, qemu-guest-agent, spice-vdagent) from the
-  virtio-win ISO of the Preferences, in a second drive.
+- Windows: autorun.inf, Install-Tools.bat and virtio-win-guest-tools.exe
+  (drivers, qemu-guest-agent, spice-vdagent), copied from the virtio-win ISO
+  of the Preferences, which is only read. One drive is enough: a running VM
+  cannot get a new SATA drive before it is powered off.
 
 The CD lives in <location>/KVM-Studio/Tools, KVM Studio's own folder that QEMU
 can already reach, never in a user ISO library. What the drives held before is
@@ -29,15 +30,17 @@ from lxml import etree
 from ..config import Config
 from ..errors import ApiException
 from ..libvirt_conn import LibvirtConnection
-from ..paths import LIBRARY_DIRNAME, confine, in_iso_library
+from ..paths import LIBRARY_DIRNAME, in_iso_library, resolve
 from ..services import hardware
 from ..services.library import metadata_values, set_metadata
 
 Family = Literal["windows", "linux", "bsd", "other"]
+VirtioState = Literal["ok", "unset", "missing", "outside"]
 
 LIBOSINFO_NS = "http://libosinfo.org/xmlns/libvirt/domain/1.0"
 TOOLS_DIRNAME = "Tools"
 VOLUME_ID = "KS_TOOLS"
+WINDOWS_INSTALLER = "virtio-win-guest-tools.exe"
 FILES = Path(__file__).parent / "files"
 AGENT_CHANNEL = "org.qemu.guest_agent.0"
 # Shown in the dialog with a Copy button. No root needed here: the CD is
@@ -98,30 +101,78 @@ def tools_dir(config: Config) -> Path:
     return location / LIBRARY_DIRNAME / TOOLS_DIRNAME
 
 
-def build_iso(family: Literal["windows", "linux"], dest: Path) -> Path:
-    """Write the guest tools CD for this family (rebuilt each time, a few KiB)."""
+def virtio_iso(config: Config) -> tuple[VirtioState, Path | None]:
+    """State of the virtio-win ISO of the Preferences, and its path (resolved when ok)."""
+    configured = config.defaults.virtio_win_iso
+    if configured is None:
+        return "unset", None
+    path = resolve(str(configured))
+    if not path.is_file():
+        return "missing", configured
+    if not in_iso_library(path, config):
+        return "outside", configured
+    return "ok", path
+
+
+def _checked_virtio_iso(config: Config) -> Path:
+    state, path = virtio_iso(config)
+    if state == "unset":
+        raise ApiException(409, "guest.no_virtio_iso", "Set the virtio-win ISO in Preferences")
+    if state == "missing":
+        raise ApiException(404, "guest.virtio_missing", f"{path} does not exist")
+    if state == "outside" or path is None:
+        raise ApiException(403, "guest.virtio_outside", f"{path} is not in an ISO library")
+    return path
+
+
+def _xorriso(args: list[str]) -> None:
+    try:
+        subprocess.run(  # noqa: S603
+            ["xorriso", *args],  # noqa: S607
+            check=True,
+            capture_output=True,
+            timeout=300,
+        )
+    except FileNotFoundError:
+        raise ApiException(500, "guest.no_xorriso", "xorriso is not installed") from None
+    except subprocess.CalledProcessError as exc:
+        detail = exc.stderr.decode(errors="replace").strip()
+        raise ApiException(500, "guest.iso_failed", detail) from None
+
+
+def extract_installer(virtio: Path, dest: Path) -> None:
+    """Copy the guest tools installer out of the virtio-win ISO, which is only read."""
+    try:
+        _xorriso(["-osirrox", "on", "-indev", str(virtio), "-extract", f"/{WINDOWS_INSTALLER}",
+                  str(dest)])  # fmt: skip
+    except ApiException as exc:
+        if exc.code != "guest.iso_failed":
+            raise
+        raise ApiException(
+            422, "guest.no_installer", f"{WINDOWS_INSTALLER} is not in {virtio}: {exc.detail}"
+        ) from None
+    dest.chmod(0o644)
+
+
+def build_iso(family: Literal["windows", "linux"], dest: Path, virtio: Path | None = None) -> Path:
+    """Write the guest tools CD for this family (rebuilt each time)."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="kvmstudio-tools-") as tmp:
         content = Path(tmp) / "cd"
         shutil.copytree(FILES / family, content)
         if family == "linux":
             (content / "install.sh").chmod(0o755)
+        if virtio is not None:
+            extract_installer(virtio, content / WINDOWS_INSTALLER)
         partial = dest.with_suffix(".iso.part")
         # Rock Ridge (-r: owned by root, readable by all) keeps install.sh executable;
         # Joliet gives Windows its long names.
-        command = ["xorriso", "-as", "mkisofs", "-quiet", "-V", VOLUME_ID, "-J", "-r"]
         try:
-            subprocess.run(  # noqa: S603
-                [*command, "-o", str(partial), str(content)],
-                check=True,
-                capture_output=True,
-                timeout=60,
-            )
-        except FileNotFoundError:
-            raise ApiException(500, "guest.no_xorriso", "xorriso is not installed") from None
-        except subprocess.CalledProcessError as exc:
-            detail = exc.stderr.decode(errors="replace").strip()
-            raise ApiException(500, "guest.iso_failed", detail) from None
+            _xorriso(["-as", "mkisofs", "-quiet", "-V", VOLUME_ID, "-J", "-r",
+                      "-o", str(partial), str(content)])  # fmt: skip
+        except ApiException:
+            partial.unlink(missing_ok=True)
+            raise
         partial.chmod(0o644)
         partial.replace(dest)
     return dest
@@ -176,52 +227,49 @@ def inserted(xml: str) -> bool:
     return bool(_saved(xml))
 
 
-def insert(
-    conn: LibvirtConnection, config: Config, uuid: str, family: Family
-) -> tuple[list[str], bool]:
-    """Put the tools CD (and virtio-win for Windows) in drives; returns drives, restart flag."""
+def insert(conn: LibvirtConnection, config: Config, uuid: str, family: Family) -> tuple[str, bool]:
+    """Put the tools CD in one drive; returns the drive and whether a power cycle is due.
+
+    The drive is one that already holds the CD, else an empty one, else one
+    holding something else (put back at eject). On a running VM a drive that
+    is only in the config comes last, and a drive is added only when there is
+    none: SATA drives appear after the VM is powered off and started again.
+    """
     if family not in ("windows", "linux"):
         raise ApiException(422, "guest.unsupported", f"no guest tools for {family} guests")
-    images: list[str] = []
-    if family == "windows":
-        configured = config.defaults.virtio_win_iso
-        if configured is None:
-            raise ApiException(409, "guest.no_virtio_iso", "Set the virtio-win ISO in Preferences")
-        virtio = str(confine(str(configured), config))
-        if not in_iso_library(virtio, config):
-            raise ApiException(403, "path.not_allowed", f"{virtio} is not in an ISO library")
-        images.append(virtio)
-    cd = build_iso(family, tools_dir(config) / f"kvmstudio-tools-{family}.iso")
-    images.insert(0, str(cd))
+    virtio = _checked_virtio_iso(config) if family == "windows" else None
+    cd = build_iso(family, tools_dir(config) / f"kvmstudio-tools-{family}.iso", virtio)
 
     xml, active = _xml(conn, uuid)
+    live = None
+    if active:
+        live_xml = conn.run(lambda c: c.lookupByUUIDString(uuid).XMLDesc(0))
+        live = {target for target, _path in _cdroms(live_xml)}
     restart = False
     if not has_agent_channel(xml):
         _add_agent_channel(conn, uuid)
-        restart = restart or active
+        restart = active
     saved = _saved(xml)
     drives = _cdroms(xml)
-    # Already ours first, then empty drives, then drives holding something.
-    drives.sort(key=lambda d: (d[0] not in saved, d[1] is not None))
-    chosen = [target for target, _path in drives[: len(images)]]
-    previous = {target: path for target, path in drives}
-    while len(chosen) < len(images):
-        target, needs_restart = hardware.add_cdrom_drive(conn, uuid, None)
-        restart = restart or needs_restart
-        previous[target] = None
-        chosen.append(target)
-
-    for target in chosen:
-        if target not in saved:
-            saved[target] = previous[target] or ""
-    for target, image in zip(chosen, images, strict=True):
-        hardware.set_media(conn, uuid, target, image)
+    drives.sort(
+        key=lambda d: (live is not None and d[0] not in live, d[0] not in saved, d[1] is not None)
+    )
+    if drives:
+        target, previous = drives[0]
+        restart = restart or (live is not None and target not in live)
+    else:
+        target, added_live = hardware.add_cdrom_drive(conn, uuid, None)
+        previous = None
+        restart = restart or added_live
+    if target not in saved:
+        saved[target] = previous or ""
+    hardware.set_media(conn, uuid, target, str(cd))
     conn.run(
         lambda c: set_metadata(
             c.lookupByUUIDString(uuid), tools_media=json.dumps(saved), family=family
         )
     )
-    return chosen, restart
+    return target, restart
 
 
 def eject(conn: LibvirtConnection, uuid: str) -> list[str]:

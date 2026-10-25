@@ -230,7 +230,10 @@
       "no_xorriso": "xorriso is not installed: the tools CD cannot be made.",
       "iso_failed": "Making the tools CD failed.",
       "no_virtio_iso": "Choose the virtio-win ISO in Preferences > Virtual machines.",
-      "unsupported": "No automatic guest tools for this system."
+      "unsupported": "No automatic guest tools for this system.",
+      "virtio_missing": "The virtio-win ISO set in Preferences does not exist.",
+      "virtio_outside": "The virtio-win ISO set in Preferences is not in an ISO library.",
+      "no_installer": "This ISO has no virtio-win-guest-tools.exe at its root: it is not a virtio-win ISO, or a very old one."
     },
     "clone": {
       "unreadable_disk": "A disk of the source cannot be read by your account.",
@@ -595,20 +598,29 @@
       "inserted": "The CD is inserted.",
       "run": "In the VM, start the installation.",
       "wait": "Waiting for the guest agent…",
-      "done": "The guest agent answers: the tools are installed."
+      "done": "The guest agent answers: the tools are installed.",
+      "installer": "{{name}} is copied from the virtio-win ISO onto the CD.",
+      "insertedIn": "The KS_TOOLS CD is in drive {{drive}}.",
+      "insertedRestart": "The KS_TOOLS CD is in drive {{drive}}, which the running VM does not have yet: shut it down, then start it again."
     },
     "linuxHow": "Double-click install.sh on the KS_TOOLS CD, or paste this command in a terminal of the VM:",
     "windowsHow": "Accept the autorun prompt of the KS_TOOLS CD, or open it and run Install-Tools.bat. Then accept the User Account Control prompt.",
     "copy": "Copy",
     "copied": "Copied",
-    "restart": "A CD/DVD drive or the agent channel was added: restart the virtual machine for it to take effect.",
+    "restart": "A restart from inside the guest is not enough: shut the virtual machine down, start it again, then run the installation.",
     "notRunning": "The virtual machine is off: waiting for the agent starts when it runs.",
     "alreadyOk": "The guest agent already answers. You can install again to repair or update.",
-    "noVirtio": "No virtio-win ISO is set in a library. Choose it in Preferences > Virtual machines.",
     "unsupported": "No automatic guest tools for this system.",
     "timeout": "The agent still does not answer after 10 minutes. Check the installation in the guest (qemu-guest-agent service).",
     "failed": "Could not insert the guest tools CD",
-    "ejectFailed": "Could not eject the guest tools CD"
+    "ejectFailed": "Could not eject the guest tools CD",
+    "windowsIntro": "The CD also carries the virtio-win guest tools installer (drivers, guest agent, copy and paste), copied from this ISO, which is not changed:",
+    "virtio": {
+      "unset": "No virtio-win ISO is set. Choose it in Preferences > Virtual machines.",
+      "missing": "This virtio-win ISO does not exist any more. Choose it again in Preferences > Virtual machines.",
+      "outside": "This virtio-win ISO is not in an ISO library, so the virtual machines cannot read it."
+    },
+    "addLibrary": "Add its folder as an ISO library…"
   },
   "firstRun": {
     "title": "Welcome to {{app}}",
