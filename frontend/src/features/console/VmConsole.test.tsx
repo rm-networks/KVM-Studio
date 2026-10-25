@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { noteStart } from "./bootSplash";
 import { type ConsoleHandle, useConsole } from "./consoleRegistry";
 import { COMBOS } from "./keys";
 import { VmConsole } from "./VmConsole";
@@ -245,5 +246,82 @@ describe("VmConsole", () => {
     fireEvent.keyDown(input, { key: "Alt", ctrlKey: true, altKey: true });
     fireEvent.keyUp(input, { key: "Alt", ctrlKey: true });
     expect(document.activeElement).not.toBe(input);
+  });
+
+  describe("boot splash", () => {
+    const STARTING = "Démarrage de la machine virtuelle…";
+    const advance = (ms: number) =>
+      act(async () => {
+        await vi.advanceTimersByTimeAsync(ms);
+      });
+
+    it("stays 1.5 s over a console that connects at once", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      noteStart("abc");
+      render(<VmConsole uuid="abc" />);
+      const rfb = await connected();
+      act(() => void rfb.dispatchEvent(new Event("connect")));
+      expect(screen.getByText(STARTING)).toBeTruthy();
+      await advance(1200);
+      expect(screen.getByText(STARTING)).toBeTruthy();
+      await advance(400);
+      expect(screen.queryByText(STARTING)).toBeNull();
+      vi.useRealTimers();
+    });
+
+    it("goes after 3 s even when the console is still connecting", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      noteStart("abc");
+      render(<VmConsole uuid="abc" />);
+      await connected();
+      await advance(2500);
+      expect(screen.getByText(STARTING)).toBeTruthy();
+      await advance(600);
+      expect(screen.queryByText(STARTING)).toBeNull();
+      expect(screen.getByText("Connexion à la console…")).toBeTruthy();
+      vi.useRealTimers();
+    });
+
+    it("goes at the first key, which still reaches the guest", async () => {
+      noteStart("abc");
+      const { container } = render(<VmConsole uuid="abc" />);
+      const rfb = await connected();
+      act(() => void rfb.dispatchEvent(new Event("connect")));
+      const screenEl = container.querySelector(".console-screen");
+      if (!screenEl) throw new Error("no console screen");
+      const key = new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true });
+      act(() => void screenEl.dispatchEvent(key));
+      expect(key.defaultPrevented).toBe(false);
+      expect(screen.queryByText(STARTING)).toBeNull();
+    });
+
+    it("goes at the first click, and lets it through", async () => {
+      noteStart("abc");
+      const { container } = render(<VmConsole uuid="abc" />);
+      await connected();
+      // The still picture when animations are reduced.
+      const still = '.console-splash source[media="(prefers-reduced-motion: reduce)"]';
+      expect(container.querySelector(still)).toBeTruthy();
+      fireEvent.pointerDown(container.querySelector(".console-screen") as Element);
+      expect(screen.queryByText(STARTING)).toBeNull();
+    });
+
+    it("is not shown for a VM that was already running", async () => {
+      render(<VmConsole uuid="abc" />);
+      await connected();
+      expect(screen.queryByText(STARTING)).toBeNull();
+      expect(screen.getByText("Connexion à la console…")).toBeTruthy();
+    });
+
+    it("is shown once per start", async () => {
+      noteStart("abc");
+      const first = render(<VmConsole uuid="abc" />);
+      await connected();
+      expect(screen.getByText(STARTING)).toBeTruthy();
+      first.unmount();
+      render(<VmConsole uuid="abc" />);
+      await waitFor(() => expect(instances.length).toBeGreaterThan(1));
+      expect(screen.queryByText(STARTING)).toBeNull();
+    });
   });
 });

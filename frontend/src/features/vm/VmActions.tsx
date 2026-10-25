@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { api, ApiError, type PowerAction, type VmSummary } from "../../api/client";
 import { useNotifier } from "../../components/notifier";
 import { CloneWizard } from "../clone/CloneWizard";
+import { cancelStart, noteStart } from "../console/bootSplash";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { DeleteDialog } from "./DeleteDialog";
 import { RenameDialog } from "./RenameDialog";
@@ -28,7 +29,9 @@ export function VmActionsProvider({ children }: { children: ReactNode }) {
 
   const runPower = useCallback(
     (vm: VmSummary, action: PowerAction, force = false) => {
+      if (action === "start") noteStart(vm.uuid);
       api.power(vm.uuid, action, force).catch((err: unknown) => {
+        if (action === "start") cancelStart(vm.uuid);
         if (err instanceof ApiError && err.code === "vm.has_linked_clones") {
           const clones = err.detail.slice(err.detail.indexOf(":") + 1).trim();
           setPending({ kind: "linked", vm, clones });

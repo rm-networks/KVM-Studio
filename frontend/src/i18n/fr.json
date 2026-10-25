@@ -275,7 +275,8 @@
     "clipboardOff": "Le copier-coller entre cet ordinateur et la machine virtuelle est désactivé.",
     "enableClipboard": "Activer le copier-coller",
     "enableClipboardConfirm": "Le canal de l'agent de QEMU remplacera celui de SPICE, et la console recevra l'affichage qu'elle utilise. L'affichage SPICE reste disponible dans virt-manager, sans copier-coller. Actif au prochain démarrage de la VM.",
-    "restartForClipboard": "Copier-coller configuré : arrêtez puis redémarrez la machine virtuelle pour l'utiliser."
+    "restartForClipboard": "Copier-coller configuré : arrêtez puis redémarrez la machine virtuelle pour l'utiliser.",
+    "starting": "Démarrage de la machine virtuelle…"
   },
   "tabs": {
     "close": "Fermer l'onglet",

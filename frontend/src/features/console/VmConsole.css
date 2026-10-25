@@ -48,3 +48,8 @@
   color: var(--text);
   font-size: var(--font-size-small);
 }
+
+/* Covers the firmware logo but lets the first click reach the screen. */
+.console-splash {
+  pointer-events: none;
+}

@@ -8,6 +8,7 @@ import { LoadingCubes } from "../../components/LoadingCubes";
 import { useNotifier } from "../../components/notifier";
 import { hostClipboard } from "../../platform/hostClipboard";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
+import { useBootSplash } from "./bootSplash";
 import { ClipboardBridge } from "./clipboardBridge";
 import { registerConsole, unregisterConsole, updateConsole } from "./consoleRegistry";
 import { pressCombo } from "./keys";
@@ -43,6 +44,8 @@ export function VmConsole({ uuid }: { uuid: string }) {
   const [display, setDisplay] = useState<DisplayInfo | null>(null);
   const [check, setCheck] = useState(0);
   const [confirming, setConfirming] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const splash = useBootSplash(uuid, connected);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,15 +61,19 @@ export function VmConsole({ uuid }: { uuid: string }) {
   if (display === null) {
     return (
       <div className="console">
-        <div className="console-overlay console-loading">
-          <LoadingCubes message={t("console.connecting")} />
-        </div>
+        {splash ? (
+          <BootSplash />
+        ) : (
+          <div className="console-overlay console-loading">
+            <LoadingCubes message={t("console.connecting")} />
+          </div>
+        )}
       </div>
     );
   }
   if (display.live.includes("vnc")) {
     return (
-      <VncScreen uuid={uuid}>
+      <VncScreen uuid={uuid} splash={splash} onConnected={setConnected}>
         {!display.clipboard && (
           <ClipboardNotice
             uuid={uuid}
@@ -171,7 +178,27 @@ function ClipboardNotice({
   );
 }
 
-function VncScreen({ uuid, children }: { uuid: string; children?: ReactNode }) {
+/** Over the firmware logo at start; clicks and keys go through to the guest. */
+function BootSplash() {
+  const { t } = useTranslation();
+  return (
+    <div className="console-overlay console-loading console-splash">
+      <LoadingCubes message={t("console.starting")} />
+    </div>
+  );
+}
+
+function VncScreen({
+  uuid,
+  splash = false,
+  onConnected,
+  children,
+}: {
+  uuid: string;
+  splash?: boolean;
+  onConnected?: (connected: boolean) => void;
+  children?: ReactNode;
+}) {
   const { t } = useTranslation();
   const screenRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<Status>("connecting");
@@ -265,11 +292,16 @@ function VncScreen({ uuid, children }: { uuid: string; children?: ReactNode }) {
     };
   }, [uuid, attempt]);
 
+  useEffect(() => {
+    onConnected?.(status === "connected");
+  }, [status, onConnected]);
+
   return (
     <div className="console">
       <div className="console-screen" ref={screenRef} />
       {children}
-      {status !== "connected" && (
+      {splash && <BootSplash />}
+      {!splash && status !== "connected" && (
         <div
           className={
             status === "connecting" ? "console-overlay console-loading" : "console-overlay"
