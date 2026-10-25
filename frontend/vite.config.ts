@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 import react from "@vitejs/plugin-react";
 import { loadEnv } from "vite";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 // The product name lives in one place, next to the backend version.
 const appName = /^APP_NAME = "(.+)"$/m.exec(
@@ -34,6 +34,8 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: "jsdom",
       setupFiles: ["src/test/setup.ts"],
+      // Interface tests in a real browser: npm run e2e (Playwright).
+      exclude: [...configDefaults.exclude, "e2e/**"],
     },
   };
 });

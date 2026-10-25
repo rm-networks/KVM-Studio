@@ -10,6 +10,8 @@
 
 .wizard-dialog {
   position: fixed;
+  /* Above its backdrop (Dialog.css), or the backdrop catches every click. */
+  z-index: 45;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- New Virtual Machine assistant: its backdrop covered it, so the page was
+  dimmed and any click closed it. Interface tests in a real browser
+  (Playwright) now go through it to the last page.
+
 ## 0.4.0 (2026-10-25)
 
 - Virtual network editor: the host address can be anywhere in the subnet (the

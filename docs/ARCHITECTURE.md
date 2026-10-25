@@ -190,8 +190,9 @@ kvm-studio/
 │   ├── components/
 │   ├── api/                 # typed client generated from the OpenAPI
 │   └── i18n/
+├── frontend/e2e/            # interface tests (Playwright, test:///default)
 ├── packaging/               # nfpm, scripts, systemd, polkit, NetworkManager, firewalld, .desktop
-└── tests/                   # backend, helper, e2e
+└── tests/                   # backend, helper
 ```
 
 ## Stack

@@ -54,8 +54,36 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  e2e:
+    # Interface tests in Chromium, against the backend on test:///default.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install system packages
+        run: sudo apt-get update && sudo apt-get install -y python3-libvirt python3-venv
+
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install the backend
+        run: |
+          /usr/bin/python3 -m venv --system-site-packages .venv
+          .venv/bin/pip install -e backend
+
+      - name: Build the frontend
+        working-directory: frontend
+        run: npm ci && npm run build && npx playwright install --with-deps chromium
+
+      - name: Interface tests
+        working-directory: frontend
+        run: npm run e2e
+
   package:
-    needs: [backend, frontend]
+    needs: [backend, frontend, e2e]
     runs-on: ubuntu-latest
     container: fedora:44
     env:
