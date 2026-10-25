@@ -95,7 +95,7 @@ export function SharingPrefs({ web, webMode, onChange }: Props) {
           <ul className="prefs-muted">
             {state.addresses.map((address) => (
               <li key={address} className="mono">
-                https://{address}:{state.https_port}/
+                {`https://${address}:${state.https_port}/`}
               </li>
             ))}
           </ul>

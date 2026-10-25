@@ -105,7 +105,7 @@ def _forbidden_routes(app: FastAPI) -> list[tuple[str, str]]:
     for route in app.routes:
         if isinstance(route, APIRoute):
             path = re.sub(r"\{[^}]+\}", "x", route.path)
-            found += [(m, path) for m in sorted(route.methods) if guest_forbidden(m, path)]
+            found += [(m, path) for m in sorted(route.methods or ()) if guest_forbidden(m, path)]
     return found
 
 
