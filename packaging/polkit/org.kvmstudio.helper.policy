@@ -18,6 +18,18 @@
     </defaults>
   </action>
 
+  <action id="org.kvmstudio.helper.iso-library">
+    <description>Declare or remove an ISO library</description>
+    <description xml:lang="fr">Déclarer ou retirer une bibliothèque ISO</description>
+    <message>Authentication is required to change the ISO libraries virtual machines can read.</message>
+    <message xml:lang="fr">Une authentification est nécessaire pour modifier les bibliothèques ISO lisibles par les machines virtuelles.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.kvmstudio.helper.join-libvirt">
     <description>Add your account to the libvirt group</description>
     <description xml:lang="fr">Ajouter votre compte au groupe libvirt</description>

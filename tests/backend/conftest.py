@@ -25,6 +25,12 @@ def english_desktop(monkeypatch: pytest.MonkeyPatch) -> None:
     i18n._current.clear()
 
 
+@pytest.fixture(autouse=True)
+def no_system_helper(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Never reach the helper of an installed package; tests start their own."""
+    monkeypatch.setenv("KVMSTUDIO_HELPER_SOCKET", str(tmp_path / "no-helper.sock"))
+
+
 @pytest.fixture
 def config() -> Config:
     return Config(libvirt=LibvirtSettings(uri=TEST_URI))

@@ -101,6 +101,7 @@ jobs:
           dnf remove -y kvm-studio
           test ! -e /opt/kvm-studio
           test ! -e /etc/kvm-studio
+          test ! -e /var/lib/kvm-studio
 
       - uses: actions/upload-artifact@v4
         with:

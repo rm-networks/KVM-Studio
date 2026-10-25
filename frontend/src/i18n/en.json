@@ -221,7 +221,8 @@
       "location_relative": "Enter a full path (starting with /).",
       "location_missing": "This folder does not exist.",
       "iso_missing": "The folder of an ISO library does not exist.",
-      "location_not_writable": "Cannot create the KVM-Studio folder there: your account must be able to write to it."
+      "location_not_writable": "Cannot create the KVM-Studio folder there: your account must be able to write to it.",
+      "iso_through_helper": "ISO libraries are added and removed with the buttons of the list."
     },
     "console": {
       "no_vnc": "This virtual machine has no VNC display."
@@ -232,12 +233,18 @@
     "helper": {
       "unavailable": "The kvmstudio-helper service does not answer. It comes with the package.",
       "not_authorized": "Authentication refused or cancelled.",
-      "path_not_allowed": "This library is not declared in /etc/kvm-studio/helper.toml.",
+      "path_not_allowed": "This folder is not a declared ISO library.",
       "not_found": "This file no longer exists.",
       "path_changed": "The folder changed during the operation. Try again.",
-      "failed": "The fix failed.",
+      "failed": "The operation failed.",
       "bad_answer": "Unexpected answer from the kvmstudio-helper service.",
-      "not_allowed": "This account cannot be added to the libvirt group (system account or root)."
+      "not_allowed": "This account cannot be added to the libvirt group (system account or root).",
+      "not_owner": "This folder does not belong to you.",
+      "system_folder": "A system folder cannot be an ISO library.",
+      "not_a_folder": "This is not a folder.",
+      "not_declared": "This library is not declared to the helper.",
+      "admin_library": "This library is declared by the administrator in /etc/kvm-studio/helper.toml.",
+      "unknown_operation": "The kvmstudio-helper service is older than the application: update the package."
     },
     "uninstall": {
       "plan_changed": "Something changed since it was shown (a file or a virtual machine). Start the assistant again.",
@@ -464,7 +471,10 @@
     "restartToWeb": "{{app}} will restart in web mode.\nAccess on this computer: http://127.0.0.1:{{http}} (HTTP)\nSharing on the local network: port {{https}} over HTTPS (next version)\nThe page will open in your default browser, and an icon in the notification area will show that {{app}} is running.",
     "restartToDesktop": "{{app}} will restart in window mode. This browser tab will no longer be used.",
     "restarting": "{{app}} is restarting…",
-    "restartingToDesktop": "{{app}} is restarting in window mode. You can close this tab."
+    "restartingToDesktop": "{{app}} is restarting in window mode. You can close this tab.",
+    "removeLibraryConfirm": "\"{{name}}\" ({{path}}) will no longer be offered. The access rights {{app}} gave virtual machines in this folder are taken back; the files stay where they are. An administrator password is asked.",
+    "addLibraryHint": "The folder must be yours, outside the system folders. It is only read, never changed. An administrator password is asked.",
+    "isoNotDeclared": "Declared before this version: remove it and add it again so that the Fix button can correct its access rights."
   },
   "iso": {
     "title": "Choose an ISO Image",
@@ -701,6 +711,7 @@
       "welcome": "Welcome",
       "vms": "Virtual machines",
       "networks": "Networks",
+      "rights": "Access rights",
       "settings": "Settings",
       "summary": "Summary",
       "progress": "Uninstalling",
@@ -742,7 +753,8 @@
       "vms": "Virtual machines",
       "networks": "kvmnet networks",
       "settings": "Settings",
-      "package": "kvm-studio package"
+      "package": "kvm-studio package",
+      "rights": "Access rights on the ISO libraries"
     },
     "state": {
       "pending": "waiting",
@@ -754,7 +766,14 @@
     "packageWait": "The package manager is removing {{app}}. This can take a minute.",
     "failedFiles": "These files could not be deleted:",
     "keptNetworks": "Networks kept because still in use: {{names}}",
-    "finished": "Uninstall finished."
+    "finished": "Uninstall finished.",
+    "rights": {
+      "none": "No access rights were given on ISO libraries.",
+      "intro_one": "{{app}} gave virtual machines {{count}} access right on your ISO libraries, listed below. Rights that were there before are never touched.",
+      "intro_other": "{{app}} gave virtual machines {{count}} access rights on your ISO libraries, listed below. Rights that were there before are never touched.",
+      "keep": "Keep these access rights",
+      "delete": "Take back the access rights {{app}} added"
+    }
   },
   "loading": {
     "brand": "{{app}}"

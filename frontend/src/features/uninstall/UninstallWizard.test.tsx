@@ -24,6 +24,8 @@ const plan: UninstallPlan = {
     { name: "LAN-1", bridge: "kvmnet3", used_by_kept: ["outside"], used_by_deleted: ["web"] },
     { name: "kvmnet8", bridge: "kvmnet8", used_by_kept: [], used_by_deleted: [] },
   ],
+  iso_libraries: [],
+  iso_acl_entries: 0,
   settings: ["/home/alice/.config/kvm-studio/config.toml"],
   packaged: false,
 };
@@ -91,13 +93,21 @@ describe("UninstallWizard", () => {
     // With the VMs deleted, only the VMs that stay still hold a network.
     expect(screen.getByText("conservé, utilisé par outside")).toBeTruthy();
     click("Suivant >");
+    expect(screen.getByText(/Aucun droit d'accès/)).toBeTruthy();
+    click("Suivant >");
     click("Suivant >");
     expect(screen.getByText("rien à retirer (lancé depuis les sources)")).toBeTruthy();
     click("Désinstaller");
     expect(await screen.findByText("Désinstallation terminée.")).toBeTruthy();
     expect(screen.getByText("Réseaux conservés car encore utilisés : LAN-1")).toBeTruthy();
     expect(posts).toEqual([
-      { plan_id: "abc123", delete_vms: true, delete_networks: true, delete_settings: false },
+      {
+        plan_id: "abc123",
+        delete_vms: true,
+        delete_networks: true,
+        delete_settings: false,
+        remove_iso_acls: false,
+      },
     ]);
   });
 

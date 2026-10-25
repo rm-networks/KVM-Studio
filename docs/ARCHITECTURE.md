@@ -41,7 +41,8 @@ validated parameters, each one authorized by polkit:
 
 - opening and closing the web port (firewalld or ufw);
 - NAT port forwarding (nftables table `inet kvmstudio`);
-- access fixes on ISO images (SELinux context `virt_content_t` or ACL);
+- declaring and removing ISO libraries, and access fixes on ISO images
+  (SELinux context `virt_content_t` or ACL);
 - adding the caller's account to the `libvirt` group;
 - removing the package at the end of an uninstall.
 
@@ -59,7 +60,9 @@ How it works:
   for the action of the operation, showing the desktop authentication window
   when needed;
 - paths are resolved (symbolic links and `..` included), and must then be
-  strictly under a library declared in `/etc/kvm-studio/helper.toml`;
+  strictly under a declared library: those of `/etc/kvm-studio/helper.toml`
+  and those users declared from Preferences, which the helper keeps in its
+  state file `/var/lib/kvm-studio/helper-state.json` (root only);
 - the file is then reopened component by component with `O_NOFOLLOW` from the
   library root, and the tool receives `/proc/self/fd/N`: replacing a folder
   with a symbolic link between the check and the change therefore has no
@@ -67,14 +70,25 @@ How it works:
 
 | Operation | polkit action | Effect |
 | --- | --- | --- |
-| `iso_acl` | `org.kvmstudio.helper.iso-acl` | ACL `u:<qemu>:x` on the library folders down to the image, `u:<qemu>:r` on the image |
+| `iso_acl` | `org.kvmstudio.helper.iso-acl` | ACL `u:<qemu>:x` on the library folders down to the image, `u:<qemu>:r` on the image; for a library a user declared, `u:<qemu>:x` also on the folders right above it that belong to that user |
+| `add_iso_library` | `org.kvmstudio.helper.iso-library` | declares a folder: resolved, existing, a folder, owned by the caller, neither a system folder (`/`, `/etc`, `/usr`, `/var`, `/boot`, `/root`, `/proc`, `/sys`, `/dev`, `/run`, `/bin`, `/sbin`, `/lib`), inside one, nor above one; administrator password on every call |
+| `remove_iso_library` | `org.kvmstudio.helper.iso-library` | forgets a library of the caller's and takes back the ACL entries the helper added for it; administrator password on every call |
+| `clear_iso_libraries` | `org.kvmstudio.helper.iso-library` | at uninstall: forgets every declared library, taking back every entry the helper added when asked to |
+| `list_iso_libraries` | none | the libraries of helper.toml and the caller's; changes nothing |
 | `join_libvirt` | `org.kvmstudio.helper.join-libvirt` | adds the caller to the `libvirt` group; no parameter, refused for root and UIDs below 1000, administrator password on every call |
 | `remove_package` | `org.kvmstudio.helper.remove-package` | removes the `kvm-studio` package in a transient systemd unit; no parameter, administrator password on every call |
 
-Folders above the root of a library are never changed: the ISO picker shows the
-command to run. The NetworkManager rule is only carried by a package file. The
-`u:qemu:x` ACL on VM folders under the home folder is set by the user, without
-the helper.
+Every ACL bit the helper adds is written to its state with the inode it was
+added on. Removing a library takes back only those bits, never an entry that was
+there before (an entry the helper only completed gets its former value back),
+and the search permission on a folder above several libraries stays while one
+of them needs it. A file replaced since keeps whatever it has. Folders of other
+accounts above a library are never changed: the ISO picker shows the command to
+run. The NetworkManager rule is only carried by a package file. The `u:qemu:x`
+ACL on VM folders under the home folder is set by the user, without the helper.
+
+A plain package removal runs `kvmstudio-helper --clear-state`, which takes back
+the entries still recorded, then deletes `/var/lib/kvm-studio`.
 
 ## Interface modes
 
@@ -164,7 +178,8 @@ kvm-studio/
 │   ├── server.py            # Unix socket, named operations
 │   ├── paths.py             # resolution, confinement, race-free opening
 │   ├── polkit.py            # caller identity, pkcheck
-│   └── ops/                 # iso_acl, join_libvirt, remove_package (then firewall_port, nat_portfwd)
+│   ├── state.py, acl.py     # declared libraries, record of the ACL entries added
+│   └── ops/                 # iso_acl, iso_library, join_libvirt, remove_package (then firewall_port, nat_portfwd)
 ├── frontend/src/
 │   ├── app/                 # menus, toolbar, library, tabs, status bar
 │   ├── features/            # one folder per screen or dialog
@@ -210,7 +225,8 @@ questions in a terminal.
 
 1. The backend computes a plan (`GET /api/uninstall/plan`): VMs whose files are
    in `KVM-Studio/VM`, exact files to delete and files kept with their reason,
-   `kvmnet` networks and the VMs using them, settings files.
+   `kvmnet` networks and the VMs using them, ISO libraries declared through
+   the helper with the number of access rights it added, settings files.
 2. The execution (`POST /api/uninstall`) receives the fingerprint of the plan
    shown and refuses it when anything changed in between. The rules are those
    of deleting a VM; a network still used by a kept VM stays.

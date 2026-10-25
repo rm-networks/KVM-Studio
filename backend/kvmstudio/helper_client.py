@@ -18,7 +18,19 @@ DEFAULT_SOCKET = "/run/kvmstudio-helper.sock"
 # A little more than the helper gives polkit (300 s).
 TIMEOUT = 330
 
-_STATUS = {"not_authorized": 403, "path_not_allowed": 403, "not_found": 404, "failed": 500}
+_STATUS = {
+    "not_authorized": 403,
+    "path_not_allowed": 403,
+    "not_allowed": 403,
+    "not_owner": 403,
+    "system_folder": 403,
+    "not_a_folder": 422,
+    "not_found": 404,
+    "not_declared": 404,
+    "admin_library": 409,
+    "path_changed": 409,
+    "failed": 500,
+}
 
 
 def socket_path() -> str:

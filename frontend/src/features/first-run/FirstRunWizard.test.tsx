@@ -50,6 +50,7 @@ function mockApi() {
         "GET /api/preferences": { config, config_path: null, library_root: null },
         "POST /api/setup/libvirt-group": { libvirt_group: "relogin" },
         "PUT /api/preferences": { restart_required: false, library_root: "/srv/vm/KVM-Studio/VM" },
+        "POST /api/preferences/iso-libraries": { config, declared: true, removed_acls: [] },
         "POST /api/setup/networks": ["kvmnet1"],
       };
       return Promise.resolve(new Response(JSON.stringify(answers[`${method} ${path}`])));
@@ -93,7 +94,9 @@ describe("FirstRunWizard", () => {
     expect(onSaved).toHaveBeenCalled();
     const saved = calls.find((c) => c.method === "PUT")?.body as Config;
     expect(saved.storage.vm_default_location).toBe("/srv/vm");
-    expect(saved.iso_libraries).toEqual([{ name: "ISO", path: "/srv/iso", recursive: true }]);
+    expect(saved.iso_libraries).toEqual([]);
+    const added = calls.find((c) => c.path === "/api/preferences/iso-libraries")?.body;
+    expect(added).toEqual({ name: "ISO", path: "/srv/iso", recursive: true });
     expect(calls.some((c) => c.path === "/api/setup/networks")).toBe(true);
   });
 });

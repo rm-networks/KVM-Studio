@@ -2,10 +2,11 @@ import { Disc3, FolderTree, HardDrive, Monitor, Settings2, SquareTerminal } from
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { api, type Config, type IsoLibrary } from "../../api/client";
+import { api, type Config, type IsoLibrary, type IsoLibraryChange } from "../../api/client";
 import { Dialog } from "../../components/Dialog";
 import { useNotifier } from "../../components/notifier";
 import { folderPicker } from "../../platform/folders";
+import { ConfirmDialog } from "../vm/ConfirmDialog";
 import "./PreferencesDialog.css";
 
 type Section = "workspace" | "iso" | "vm" | "interface" | "display" | "advanced";
@@ -81,6 +82,9 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
   const [selectedIso, setSelectedIso] = useState(0);
   const [busy, setBusy] = useState(false);
   const [restartPrompt, setRestartPrompt] = useState<Config | null>(null);
+  const [declared, setDeclared] = useState<string[] | null>(null);
+  const [addingIso, setAddingIso] = useState(false);
+  const [removingIso, setRemovingIso] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +95,7 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
         setConfig(prefs.config);
         setSaved(JSON.stringify(prefs.config));
         setLibraryRoot(prefs.library_root);
+        setDeclared(prefs.iso_declared ?? null);
       })
       .catch((err: unknown) => !cancelled && notifyError(t("prefs.title"), err));
     return () => {
@@ -129,6 +134,16 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
   };
 
   const iso = config?.iso_libraries[selectedIso];
+
+  /** The server saved the library list: take it, keep the other unsaved edits. */
+  const applyIsoChange = (change: IsoLibraryChange) => {
+    setConfig((c) => (c ? { ...c, iso_libraries: change.config.iso_libraries } : c));
+    setSaved((s) => {
+      const previous = JSON.parse(s) as Config;
+      return JSON.stringify({ ...previous, iso_libraries: change.config.iso_libraries });
+    });
+    onSaved();
+  };
 
   if (restartPrompt) {
     return <RestartPrompt next={restartPrompt} onClose={onClose} />;
@@ -225,30 +240,14 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                 )}
               </ul>
               <div className="prefs-list-buttons">
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() => {
-                    update("iso_libraries", [
-                      ...config.iso_libraries,
-                      { name: t("prefs.newLibrary"), path: "", recursive: true },
-                    ]);
-                    setSelectedIso(config.iso_libraries.length);
-                  }}
-                >
+                <button type="button" className="button" onClick={() => setAddingIso(true)}>
                   {t("prefs.addLibrary")}
                 </button>
                 <button
                   type="button"
                   className="button"
                   disabled={!iso}
-                  onClick={() => {
-                    update(
-                      "iso_libraries",
-                      config.iso_libraries.filter((_l, i) => i !== selectedIso),
-                    );
-                    setSelectedIso(0);
-                  }}
+                  onClick={() => setRemovingIso(true)}
                 >
                   {t("prefs.removeLibrary")}
                 </button>
@@ -263,11 +262,10 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                       onChange={(e) => updateIso(selectedIso, { name: e.target.value })}
                     />
                   </label>
-                  <PathField
-                    label={t("prefs.libraryPath")}
-                    value={iso.path}
-                    onChange={(v) => updateIso(selectedIso, { path: v })}
-                  />
+                  <div className="prefs-field">
+                    <span>{t("prefs.libraryPath")}</span>
+                    <span className="prefs-readonly">{iso.path}</span>
+                  </div>
                   <label className="prefs-check">
                     <input
                       type="checkbox"
@@ -276,6 +274,9 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                     />
                     {t("prefs.recursive")}
                   </label>
+                  {declared && !declared.includes(iso.path) && (
+                    <p className="prefs-muted">{t("prefs.isoNotDeclared")}</p>
+                  )}
                 </div>
               )}
             </Group>
@@ -447,6 +448,103 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
             </Group>
           )}
         </div>
+      </div>
+      {addingIso && (
+        <AddIsoLibraryDialog
+          onClose={() => setAddingIso(false)}
+          onAdded={(change) => {
+            applyIsoChange(change);
+            setSelectedIso(change.config.iso_libraries.length - 1);
+            const added = change.config.iso_libraries.at(-1)?.path;
+            if (change.declared && added) setDeclared((d) => [...(d ?? []), added]);
+            setAddingIso(false);
+          }}
+        />
+      )}
+      {removingIso && iso && (
+        <ConfirmDialog
+          title={t("prefs.removeLibrary")}
+          message={t("prefs.removeLibraryConfirm", { name: iso.name, path: iso.path })}
+          confirmLabel={t("prefs.removeLibrary")}
+          onCancel={() => setRemovingIso(false)}
+          onConfirm={() => {
+            setRemovingIso(false);
+            api
+              .removeIsoLibrary(iso.path)
+              .then((change) => {
+                applyIsoChange(change);
+                setSelectedIso(0);
+              })
+              .catch((err: unknown) => notifyError(t("prefs.removeLibrary"), err));
+          }}
+        />
+      )}
+    </Dialog>
+  );
+}
+
+/** Name and folder of a new library; the helper checks the folder (password asked). */
+function AddIsoLibraryDialog({
+  onClose,
+  onAdded,
+}: {
+  onClose: () => void;
+  onAdded: (change: IsoLibraryChange) => void;
+}) {
+  const { t } = useTranslation();
+  const { notifyError } = useNotifier();
+  const [name, setName] = useState(t("prefs.newLibrary"));
+  const [path, setPath] = useState("");
+  const [recursive, setRecursive] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const valid = name.trim() !== "" && path.startsWith("/");
+  const add = () => {
+    setBusy(true);
+    api
+      .addIsoLibrary({ name: name.trim(), path, recursive })
+      .then(onAdded)
+      .catch((err: unknown) => {
+        notifyError(t("prefs.addLibrary"), err);
+        setBusy(false);
+      });
+  };
+  return (
+    <Dialog
+      open
+      width={480}
+      onOpenChange={(open) => !open && onClose()}
+      title={t("prefs.addLibrary")}
+      buttons={
+        <>
+          <button
+            type="button"
+            className="button button-primary"
+            disabled={!valid || busy}
+            onClick={add}
+          >
+            {t("prefs.addLibrary")}
+          </button>
+          <button type="button" className="button" onClick={onClose}>
+            {t("common.cancel")}
+          </button>
+        </>
+      }
+    >
+      <div className="prefs-subform">
+        <label className="prefs-field">
+          <span>{t("prefs.libraryName")}</span>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <PathField label={t("prefs.libraryPath")} value={path} onChange={setPath} />
+        <label className="prefs-check">
+          <input
+            type="checkbox"
+            checked={recursive}
+            onChange={(e) => setRecursive(e.target.checked)}
+          />
+          {t("prefs.recursive")}
+        </label>
+        <p className="prefs-muted">{t("prefs.addLibraryHint")}</p>
       </div>
     </Dialog>
   );

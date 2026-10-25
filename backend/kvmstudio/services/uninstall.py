@@ -15,6 +15,7 @@ import shutil
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from .. import helper_client
 from ..config import Config, config_dir
 from ..errors import ApiException
 from ..libvirt_conn import LibvirtConnection
@@ -46,6 +47,9 @@ class UninstallPlan:
     extra_files: list[str] = field(default_factory=list)
     keep: list[KeptFile] = field(default_factory=list)
     networks: list[NetworkRemoval] = field(default_factory=list)
+    # ISO libraries declared through the helper, and the ACL entries it added.
+    iso_libraries: list[str] = field(default_factory=list)
+    iso_acl_entries: int = 0
     settings: list[str] = field(default_factory=list)
 
     @property
@@ -60,6 +64,7 @@ class Choices:
     delete_vms: bool
     delete_networks: bool
     delete_settings: bool
+    remove_iso_acls: bool = False
 
 
 @dataclass(slots=True)
@@ -68,6 +73,9 @@ class UninstallReport:
     failed_files: list[str] = field(default_factory=list)
     deleted_networks: list[str] = field(default_factory=list)
     kept_networks: list[str] = field(default_factory=list)
+    removed_acls: list[str] = field(default_factory=list)
+    # The helper could not forget the libraries or take its rights back.
+    iso_failed: bool = False
     deleted_settings: bool = False
 
 
@@ -128,8 +136,18 @@ def plan(
                 [u for u in users if u in deleted_names],
             )
         )
+    result.iso_libraries, result.iso_acl_entries = _helper_libraries()
     result.settings = _settings_files(settings_dir or config_dir())
     return result
+
+
+def _helper_libraries() -> tuple[list[str], int]:
+    try:
+        known = helper_client.call("list_iso_libraries", {})
+    except ApiException:
+        return [], 0
+    paths = [str(lib["path"]) for lib in known["libraries"] if lib["source"] == "user"]
+    return paths, int(known["acl_entries"])
 
 
 def execute(
@@ -172,6 +190,15 @@ def execute(
                 report.deleted_networks.append(removal.name)
             except ApiException:
                 report.kept_networks.append(removal.name)
+
+    if current.iso_libraries or current.iso_acl_entries:
+        try:
+            done = helper_client.call(
+                "clear_iso_libraries", {"remove_acls": choices.remove_iso_acls}
+            )
+            report.removed_acls = list(done["removed"])
+        except ApiException:
+            report.iso_failed = True
 
     # Only the KVM Studio settings folder itself, never a link to elsewhere.
     if choices.delete_settings and current.settings and settings_dir.name == "kvm-studio":

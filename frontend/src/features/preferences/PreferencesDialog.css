@@ -164,3 +164,8 @@
 .prefs-restart {
   white-space: pre-line;
 }
+
+.prefs-readonly {
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+}

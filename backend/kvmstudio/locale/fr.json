@@ -71,5 +71,10 @@
   "uninstall.kept_networks": "Réseaux conservés : {names}",
   "uninstall.package_failed": "Le paquet n'a pas pu être retiré ({error}). Lancez : sudo dnf remove kvm-studio",
   "uninstall.package_removing": "Retrait du paquet (suivi avec : journalctl -u kvm-studio-removal).",
-  "uninstall.done": "Terminé."
+  "uninstall.done": "Terminé.",
+  "uninstall.iso_rights": "Droits d'accès donnés aux machines virtuelles sur vos bibliothèques ISO :",
+  "uninstall.ask_iso_rights": "Retirer les droits ajoutés par le helper (ceux posés avant restent) ?",
+  "uninstall.summary_iso_rights": "droits d'accès ISO : {action}",
+  "uninstall.removed_acls": "Droits d'accès retirés : {count}",
+  "uninstall.iso_failed": "Le helper n'a pas répondu : les droits d'accès des bibliothèques ISO sont restés tels quels."
 }

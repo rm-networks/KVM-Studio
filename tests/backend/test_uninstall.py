@@ -10,6 +10,7 @@ import libvirt
 import pytest
 from fastapi.testclient import TestClient
 
+from kvmstudio import helper_client
 from kvmstudio.config import Config
 from kvmstudio.errors import ApiException
 from kvmstudio.libvirt_conn import LibvirtConnection
@@ -139,6 +140,37 @@ def test_keep_everything_changes_nothing(
     assert report == uninstall.UninstallReport()
     assert all(path.exists() for path in lab.values())
     assert settings.exists()
+
+
+@pytest.mark.parametrize("remove", [True, False])
+def test_iso_rights_are_taken_back_on_request(
+    conn: LibvirtConnection,
+    lib_config: Config,
+    settings: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    remove: bool,
+) -> None:
+    calls: list[tuple[str, dict[str, object]]] = []
+
+    def helper(op: str, params: dict[str, object]) -> dict[str, object]:
+        calls.append((op, params))
+        if op == "list_iso_libraries":
+            libraries = [{"path": "/srv/admin", "source": "admin"}]
+            return {
+                "libraries": [*libraries, {"path": "/home/u/ISO", "source": "user"}],
+                "acl_entries": 3,
+            }
+        return {"removed": ["/home/u/ISO/a.iso u:107:r"] if params["remove_acls"] else []}
+
+    monkeypatch.setattr(helper_client, "call", helper)
+    plan = uninstall.plan(conn, lib_config, settings)
+    assert (plan.iso_libraries, plan.iso_acl_entries) == (["/home/u/ISO"], 3)
+    choices = uninstall.Choices(False, False, False, remove_iso_acls=remove)
+    report = uninstall.execute(conn, lib_config, choices, plan.plan_id, settings)
+    # The libraries are forgotten either way: the package goes.
+    assert calls[-1] == ("clear_iso_libraries", {"remove_acls": remove})
+    assert len(report.removed_acls) == (1 if remove else 0)
+    assert report.iso_failed is False
 
 
 def test_networks_used_by_kept_vms_stay(

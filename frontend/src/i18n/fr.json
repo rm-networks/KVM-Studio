@@ -221,7 +221,8 @@
       "location_relative": "Indiquez un chemin complet (qui commence par /).",
       "location_missing": "Ce dossier n'existe pas.",
       "iso_missing": "Le dossier d'une bibliothèque ISO n'existe pas.",
-      "location_not_writable": "Impossible de créer le dossier KVM-Studio à cet emplacement : votre compte doit pouvoir y écrire."
+      "location_not_writable": "Impossible de créer le dossier KVM-Studio à cet emplacement : votre compte doit pouvoir y écrire.",
+      "iso_through_helper": "Les bibliothèques ISO s'ajoutent et se retirent avec les boutons de la liste."
     },
     "console": {
       "no_vnc": "Cette machine virtuelle n'a pas d'affichage VNC."
@@ -232,12 +233,18 @@
     "helper": {
       "unavailable": "Le service kvmstudio-helper ne répond pas. Il est installé avec le paquet.",
       "not_authorized": "Authentification refusée ou annulée.",
-      "path_not_allowed": "Cette bibliothèque n'est pas déclarée dans /etc/kvm-studio/helper.toml.",
+      "path_not_allowed": "Ce dossier n'est pas une bibliothèque ISO déclarée.",
       "not_found": "Ce fichier n'existe plus.",
       "path_changed": "Le dossier a changé pendant l'opération. Réessayez.",
-      "failed": "La correction a échoué.",
+      "failed": "L'opération a échoué.",
       "bad_answer": "Réponse inattendue du service kvmstudio-helper.",
-      "not_allowed": "Ce compte ne peut pas être ajouté au groupe libvirt (compte système ou root)."
+      "not_allowed": "Ce compte ne peut pas être ajouté au groupe libvirt (compte système ou root).",
+      "not_owner": "Ce dossier ne vous appartient pas.",
+      "system_folder": "Un dossier système ne peut pas être une bibliothèque ISO.",
+      "not_a_folder": "Ce n'est pas un dossier.",
+      "not_declared": "Cette bibliothèque n'est pas déclarée au helper.",
+      "admin_library": "Cette bibliothèque est déclarée par l'administrateur dans /etc/kvm-studio/helper.toml.",
+      "unknown_operation": "Le service kvmstudio-helper est plus ancien que l'application : mettez le paquet à jour."
     },
     "uninstall": {
       "plan_changed": "Quelque chose a changé depuis l'affichage (fichier ou machine virtuelle). Relancez l'assistant.",
@@ -464,7 +471,10 @@
     "restartToWeb": "{{app}} va redémarrer en mode web.\nAccès sur cet ordinateur : http://127.0.0.1:{{http}} (HTTP)\nPartage sur le réseau local : port {{https}} en HTTPS (prochaine version)\nLa page s'ouvrira dans votre navigateur par défaut, et une icône dans la zone de notification indiquera que {{app}} tourne.",
     "restartToDesktop": "{{app}} va redémarrer en mode fenêtre. Cet onglet du navigateur ne servira plus.",
     "restarting": "{{app}} redémarre…",
-    "restartingToDesktop": "{{app}} redémarre en mode fenêtre. Vous pouvez fermer cet onglet."
+    "restartingToDesktop": "{{app}} redémarre en mode fenêtre. Vous pouvez fermer cet onglet.",
+    "removeLibraryConfirm": "« {{name}} » ({{path}}) ne sera plus proposée. Les droits d'accès que {{app}} avait donnés aux machines virtuelles dans ce dossier sont retirés ; les fichiers restent en place. Le mot de passe administrateur est demandé.",
+    "addLibraryHint": "Le dossier doit vous appartenir et se trouver hors des dossiers système. Il est seulement lu, jamais modifié. Le mot de passe administrateur est demandé.",
+    "isoNotDeclared": "Déclarée avant cette version : retirez-la puis ajoutez-la de nouveau pour que le bouton Corriger puisse régler ses droits d'accès."
   },
   "iso": {
     "title": "Choisir une image ISO",
@@ -701,6 +711,7 @@
       "welcome": "Bienvenue",
       "vms": "Machines virtuelles",
       "networks": "Réseaux",
+      "rights": "Droits d'accès",
       "settings": "Réglages",
       "summary": "Récapitulatif",
       "progress": "Désinstallation",
@@ -742,7 +753,8 @@
       "vms": "Machines virtuelles",
       "networks": "Réseaux kvmnet",
       "settings": "Réglages",
-      "package": "Paquet kvm-studio"
+      "package": "Paquet kvm-studio",
+      "rights": "Droits d'accès des bibliothèques ISO"
     },
     "state": {
       "pending": "en attente",
@@ -754,7 +766,14 @@
     "packageWait": "Le gestionnaire de paquets retire {{app}}. Cela peut prendre une minute.",
     "failedFiles": "Ces fichiers n'ont pas pu être supprimés :",
     "keptNetworks": "Réseaux conservés car encore utilisés : {{names}}",
-    "finished": "Désinstallation terminée."
+    "finished": "Désinstallation terminée.",
+    "rights": {
+      "none": "Aucun droit d'accès n'a été donné sur des bibliothèques ISO.",
+      "intro_one": "{{app}} a donné aux machines virtuelles {{count}} droit d'accès sur vos bibliothèques ISO, listées ci-dessous. Les droits qui existaient avant ne sont jamais touchés.",
+      "intro_other": "{{app}} a donné aux machines virtuelles {{count}} droits d'accès sur vos bibliothèques ISO, listées ci-dessous. Les droits qui existaient avant ne sont jamais touchés.",
+      "keep": "Conserver ces droits d'accès",
+      "delete": "Retirer les droits d'accès ajoutés par {{app}}"
+    }
   },
   "loading": {
     "brand": "{{app}}"

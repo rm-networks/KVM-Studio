@@ -83,14 +83,26 @@ Values offered by the new VM assistant.
 | `KVMSTUDIO_BACKEND` | Development: API address for the Vite server (default `http://127.0.0.1:60080`). |
 | `KVMSTUDIO_HELPER_SOCKET` | Helper socket (default `/run/kvmstudio-helper.sock`). |
 
+## ISO libraries and the helper
+
+Preferences > ISO Libraries adds and removes libraries one at a time, asking for
+the administrator password: the helper checks the folder (yours, outside the
+system folders) and keeps its own list in `/var/lib/kvm-studio/helper-state.json`,
+next to the record of the access rights it gave QEMU there. Removing a library
+takes those rights back. The "Fix" button of the ISO picker works for the
+libraries the helper knows; one written to `config.toml` by an earlier version
+is shown as not declared, and removing it then adding it again declares it.
+
 ## Helper: /etc/kvm-studio/helper.toml
 
-This file belongs to root and is edited with `sudo`. The helper only touches
-the ISO libraries declared there, even when `config.toml` lists others: the
-"Fix" button of the ISO picker only works for them.
+This file belongs to root and is edited with `sudo` by the administrator, who
+can declare libraries there too (shared folders such as `/srv/iso`). The helper
+reads it with its own list, the same folder counting once; it never trusts
+`config.toml` for that.
 
 ```toml
 # socket = "/run/kvmstudio-helper.sock"
+# state = "/var/lib/kvm-studio/helper-state.json"
 # qemu_user = "qemu"          # detected: qemu, then libvirt-qemu
 
 [[iso_libraries]]

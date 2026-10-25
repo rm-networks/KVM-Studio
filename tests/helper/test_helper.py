@@ -45,7 +45,9 @@ def lib(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def config(lib: Path, tmp_path: Path) -> HelperConfig:
-    return HelperConfig(tmp_path / "h.sock", QEMU_UID, (IsoLibrary(lib, (".iso", ".img")),))
+    return HelperConfig(
+        tmp_path / "h.sock", QEMU_UID, (IsoLibrary(lib, (".iso", ".img")),), tmp_path / "state.json"
+    )
 
 
 def call(
@@ -77,9 +79,9 @@ def test_iso_acl_grants_qemu_search_and_read(config: HelperConfig, lib: Path) ->
     assert answer["ok"] is True
     assert answer["_asked"] == [("org.kvmstudio.helper.iso-acl", PEER)]
     assert [(argv[:4], target) for argv, target in runner.calls] == [
-        (["setfacl", "-m", "u:107:x", "--"], str(lib)),
-        (["setfacl", "-m", "u:107:x", "--"], str(lib / "linux")),
-        (["setfacl", "-m", "u:107:r", "--"], str(lib / "linux" / "fedora.iso")),
+        (["setfacl", "-m", "u:107:--x", "--"], str(lib)),
+        (["setfacl", "-m", "u:107:--x", "--"], str(lib / "linux")),
+        (["setfacl", "-m", "u:107:r--", "--"], str(lib / "linux" / "fedora.iso")),
     ]
     assert answer["result"]["changed"][-1] == str(lib / "linux" / "fedora.iso")
 
@@ -195,7 +197,7 @@ def test_malformed_requests(config: HelperConfig, request_: object, error: str) 
 
 
 def test_missing_qemu_account(config: HelperConfig, lib: Path) -> None:
-    no_qemu = HelperConfig(config.socket, None, config.iso_libraries)
+    no_qemu = HelperConfig(config.socket, None, config.iso_libraries, config.state)
     assert call(no_qemu, iso_acl(str(lib / "linux" / "fedora.iso")))["error"] == "failed"
 
 

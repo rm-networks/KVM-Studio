@@ -238,7 +238,9 @@ def helper_socket(
             raw, peer, cfg, authorizer=lambda a, p: True, runner=lambda argv, fds: ran.append(argv)
         ),
     )
-    config = HelperConfig(tmp_path / "helper.sock", 107, (HelperLibrary(isos, (".iso",)),))
+    config = HelperConfig(
+        tmp_path / "helper.sock", 107, (HelperLibrary(isos, (".iso",)),), tmp_path / "state.json"
+    )
     monkeypatch.setenv("KVMSTUDIO_HELPER_SOCKET", str(config.socket))
     srv = server.HelperServer(config)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
@@ -256,8 +258,8 @@ def test_fix_access_goes_through_the_helper(
     assert r.status_code == 200
     assert r.json()["path"] == str(isos / "debian-13.iso")
     assert [argv[:3] for argv in helper_socket] == [
-        ["setfacl", "-m", "u:107:x"],
-        ["setfacl", "-m", "u:107:r"],
+        ["setfacl", "-m", "u:107:--x"],
+        ["setfacl", "-m", "u:107:r--"],
     ]
 
 
@@ -297,3 +299,37 @@ def test_own_parent_folders_get_search_access(tmp_path: Path) -> None:
     done = access.grant_search_on_own_folders(report, who)
     assert str(home) in done
     assert access.allowed(home, who, access.X)
+
+
+@pytest.mark.skipif(os.geteuid() < 1000, reason="the helper only takes regular accounts")
+def test_libraries_are_declared_and_removed_through_the_helper(
+    conn: LibvirtConnection,
+    frontend_dir: Path,
+    tmp_path: Path,
+    helper_socket: list[list[str]],
+) -> None:
+    config_file = tmp_path / "config.toml"
+    app = create_app(
+        Config(libvirt=LibvirtSettings(uri=TEST_URI)),
+        conn,
+        TOKEN,
+        mode="web",
+        frontend_dir=frontend_dir,
+        config_path=config_file,
+    )
+    client = TestClient(app, base_url="http://127.0.0.1")
+    mine = tmp_path / "mine"
+    mine.mkdir()
+    body = {"name": "Mine", "path": str(mine)}
+    result = client.post("/api/preferences/iso-libraries", headers=AUTH, json=body).json()
+    assert result["declared"] is True
+    assert str(mine) in client.get("/api/preferences", headers=AUTH).json()["iso_declared"]
+    refused = client.post(
+        "/api/preferences/iso-libraries", headers=AUTH, json={**body, "path": "/etc"}
+    )
+    assert (refused.status_code, refused.json()["error"]["code"]) == (403, "helper.system_folder")
+    gone = client.post(
+        "/api/preferences/iso-libraries/remove", headers=AUTH, json={"path": str(mine)}
+    ).json()
+    assert gone["config"]["iso_libraries"] == []
+    assert str(mine) not in client.get("/api/preferences", headers=AUTH).json()["iso_declared"]

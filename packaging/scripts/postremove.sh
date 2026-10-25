@@ -7,6 +7,7 @@ case "$1" in
     0 | purge)
         rm -f /etc/kvm-studio/helper.toml.rpmsave /etc/kvm-studio/helper.toml
         rmdir /etc/kvm-studio 2>/dev/null || :
+        rm -rf /var/lib/kvm-studio
         ;;
 esac
 

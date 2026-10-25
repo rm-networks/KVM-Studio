@@ -16,6 +16,9 @@ if [ -d /run/systemd/system ]; then
     systemctl disable --now kvmstudio-helper.socket kvmstudio-helper.service || :
 fi
 
+# Access rights the helper gave QEMU on ISO libraries: only those it added.
+/opt/kvm-studio/bin/kvmstudio-helper --clear-state || :
+
 # Close the LAN sharing port in every zone where it was opened.
 if command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1; then
     for zone in $(firewall-cmd --get-zones); do

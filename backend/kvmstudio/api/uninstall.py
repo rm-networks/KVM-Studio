@@ -30,6 +30,8 @@ class UninstallPlan(BaseModel):
     extra_files: list[str]
     keep: list[KeptFile]
     networks: list[NetworkRemoval]
+    iso_libraries: list[str]
+    iso_acl_entries: int
     settings: list[str]
     # False when running from the sources: no package to remove.
     packaged: bool
@@ -40,6 +42,7 @@ class UninstallRequest(BaseModel):
     delete_vms: bool
     delete_networks: bool
     delete_settings: bool
+    remove_iso_acls: bool = False
 
 
 class UninstallReport(BaseModel):
@@ -47,6 +50,8 @@ class UninstallReport(BaseModel):
     failed_files: list[str]
     deleted_networks: list[str]
     kept_networks: list[str]
+    removed_acls: list[str]
+    iso_failed: bool
     deleted_settings: bool
 
 
@@ -81,6 +86,8 @@ def _model(p: uninstall.UninstallPlan) -> UninstallPlan:
             )
             for n in p.networks
         ],
+        iso_libraries=p.iso_libraries,
+        iso_acl_entries=p.iso_acl_entries,
         settings=p.settings,
         packaged=uninstall.installed_from_package(),
     )
@@ -94,13 +101,17 @@ async def get_plan(ctx: Context) -> UninstallPlan:
 @router.post("")
 async def run(ctx: Context, body: UninstallRequest) -> UninstallReport:
     """Delete what the user chose, provided the plan is still the one shown."""
-    choices = uninstall.Choices(body.delete_vms, body.delete_networks, body.delete_settings)
+    choices = uninstall.Choices(
+        body.delete_vms, body.delete_networks, body.delete_settings, body.remove_iso_acls
+    )
     report = await run_in_threadpool(uninstall.execute, ctx.conn, ctx.config, choices, body.plan_id)
     return UninstallReport(
         deleted_vms=report.deleted_vms,
         failed_files=report.failed_files,
         deleted_networks=report.deleted_networks,
         kept_networks=report.kept_networks,
+        removed_acls=report.removed_acls,
+        iso_failed=report.iso_failed,
         deleted_settings=report.deleted_settings,
     )
 

@@ -101,22 +101,21 @@ export function FirstRunWizard({ onClose, onSaved }: Props) {
   const apply = async () => {
     if (!config) return;
     setBusy(true);
-    const libraries = config.iso_libraries.some((lib) => lib.path === isoPath)
-      ? config.iso_libraries
-      : [
-          ...config.iso_libraries,
-          ...(isoPath
-            ? [{ name: t("firstRun.locations.isoName"), path: isoPath, recursive: true }]
-            : []),
-        ];
     const next: Config = {
       ...config,
       storage: { ...config.storage, vm_default_location: vmLocation },
-      iso_libraries: libraries,
       interface: { ...config.interface, mode },
     };
     try {
       const result = await api.savePreferences(next);
+      // Declared to the helper, which asks for the administrator password.
+      if (isoPath && !config.iso_libraries.some((lib) => lib.path === isoPath)) {
+        await api.addIsoLibrary({
+          name: t("firstRun.locations.isoName"),
+          path: isoPath,
+          recursive: true,
+        });
+      }
       onSaved();
       if (createNetworks) setCreated(await api.createDefaultNetworks());
       if (result.restart_required) setRestart(next);

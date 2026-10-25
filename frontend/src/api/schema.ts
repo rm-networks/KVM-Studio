@@ -428,6 +428,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/preferences/iso-libraries": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add Iso Library
+     * @description Declare a folder to the helper (administrator password), then keep it.
+     */
+    post: operations["add_iso_library_api_preferences_iso_libraries_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/preferences/iso-libraries/remove": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Remove Iso Library
+     * @description Forget a library; the helper takes back the rights it gave QEMU there.
+     */
+    post: operations["remove_iso_library_api_preferences_iso_libraries_remove_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/vms/{uuid}/display": {
     parameters: {
       query?: never;
@@ -476,7 +516,9 @@ export interface paths {
     put?: never;
     /**
      * Enable Clipboard
-     * @description Copy and paste over VNC for a VM whose agent port belongs to SPICE.
+     * @description Copy and paste for a VM whose agent port belongs to SPICE, or that has none.
+     *
+     *     The console needs a VNC display too: a SPICE-only VM gets one, SPICE stays.
      */
     post: operations["enable_clipboard_api_vms__uuid__display_clipboard_post"];
     delete?: never;
@@ -1199,6 +1241,19 @@ export interface components {
       /** Extensions */
       extensions?: string[];
     };
+    /** IsoLibraryChange */
+    IsoLibraryChange: {
+      config: components["schemas"]["Config"];
+      /** Declared */
+      declared: boolean;
+      /** Removed Acls */
+      removed_acls: string[];
+    };
+    /** IsoLibraryRef */
+    IsoLibraryRef: {
+      /** Path */
+      path: string;
+    };
     /** IsoLibraryStatus */
     IsoLibraryStatus: {
       /** Name */
@@ -1390,6 +1445,18 @@ export interface components {
       /** Autostart */
       autostart?: boolean | null;
     };
+    /** NewIsoLibrary */
+    NewIsoLibrary: {
+      /** Name */
+      name: string;
+      /** Path */
+      path: string;
+      /**
+       * Recursive
+       * @default true
+       */
+      recursive: boolean;
+    };
     /** NewVmRequest */
     NewVmRequest: {
       /** Name */
@@ -1509,6 +1576,8 @@ export interface components {
       config_path: string | null;
       /** Library Root */
       library_root: string | null;
+      /** Iso Declared */
+      iso_declared: string[] | null;
     };
     /** ProfileInfo */
     ProfileInfo: {
@@ -1641,6 +1710,10 @@ export interface components {
       keep: components["schemas"]["KeptFile"][];
       /** Networks */
       networks: components["schemas"]["NetworkRemoval"][];
+      /** Iso Libraries */
+      iso_libraries: string[];
+      /** Iso Acl Entries */
+      iso_acl_entries: number;
       /** Settings */
       settings: string[];
       /** Packaged */
@@ -1656,6 +1729,10 @@ export interface components {
       deleted_networks: string[];
       /** Kept Networks */
       kept_networks: string[];
+      /** Removed Acls */
+      removed_acls: string[];
+      /** Iso Failed */
+      iso_failed: boolean;
       /** Deleted Settings */
       deleted_settings: boolean;
     };
@@ -1669,6 +1746,11 @@ export interface components {
       delete_networks: boolean;
       /** Delete Settings */
       delete_settings: boolean;
+      /**
+       * Remove Iso Acls
+       * @default false
+       */
+      remove_iso_acls: boolean;
     };
     /** ValidationError */
     ValidationError: {
@@ -4174,6 +4256,180 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SaveResult"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  add_iso_library_api_preferences_iso_libraries_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["NewIsoLibrary"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IsoLibraryChange"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  remove_iso_library_api_preferences_iso_libraries_remove_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["IsoLibraryRef"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IsoLibraryChange"];
         };
       };
       /** @description Unauthorized */

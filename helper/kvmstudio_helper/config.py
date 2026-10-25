@@ -1,7 +1,8 @@
-"""/etc/kvm-studio/helper.toml, owned by root and edited by the administrator.
+"""/etc/kvm-studio/helper.toml, owned by root and readable by the administrator.
 
-Only the ISO libraries listed here can be touched by the helper: the user's own
-config.toml is never trusted for that.
+The helper only touches the ISO libraries listed here and those users declared
+through it (kept in its state file): the user's own config.toml is never
+trusted for that.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from typing import Any
 
 DEFAULT_PATH = Path("/etc/kvm-studio/helper.toml")
 DEFAULT_SOCKET = Path("/run/kvmstudio-helper.sock")
+DEFAULT_STATE = Path("/var/lib/kvm-studio/helper-state.json")
 DEFAULT_EXTENSIONS = (".iso", ".img")
 # Account QEMU runs as with qemu:///system (Fedora, then Debian/Ubuntu).
 QEMU_USERS = ("qemu", "libvirt-qemu")
@@ -24,6 +26,8 @@ QEMU_USERS = ("qemu", "libvirt-qemu")
 class IsoLibrary:
     path: Path
     extensions: tuple[str, ...]
+    # The user who declared it from Preferences; None for helper.toml ones.
+    owner: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +35,7 @@ class HelperConfig:
     socket: Path
     qemu_uid: int | None
     iso_libraries: tuple[IsoLibrary, ...]
+    state: Path
 
 
 class ConfigError(ValueError):
@@ -76,21 +81,25 @@ def _library(table: object, index: int) -> IsoLibrary:
 
 
 def parse(data: dict[str, Any]) -> HelperConfig:
-    _check_keys(data, {"socket", "qemu_user", "iso_libraries"}, "helper.toml")
+    _check_keys(data, {"socket", "state", "qemu_user", "iso_libraries"}, "helper.toml")
     socket = data.get("socket", str(DEFAULT_SOCKET))
     if not isinstance(socket, str) or not Path(socket).is_absolute():
         raise ConfigError("socket must be an absolute path")
+    state = data.get("state", str(DEFAULT_STATE))
+    if not isinstance(state, str) or not Path(state).is_absolute():
+        raise ConfigError("state must be an absolute path")
     libraries = data.get("iso_libraries", [])
     if not isinstance(libraries, list):
         raise ConfigError("iso_libraries must be an array of tables")
     return HelperConfig(
         socket=Path(socket),
         qemu_uid=_qemu_uid(data.get("qemu_user")),
-        iso_libraries=_unique([_library(t, i) for i, t in enumerate(libraries)]),
+        iso_libraries=merge_libraries([_library(t, i) for i, t in enumerate(libraries)]),
+        state=Path(state),
     )
 
 
-def _unique(libraries: list[IsoLibrary]) -> tuple[IsoLibrary, ...]:
+def merge_libraries(libraries: list[IsoLibrary]) -> tuple[IsoLibrary, ...]:
     """The same folder declared twice counts once (extensions merged)."""
     merged: dict[str, IsoLibrary] = {}
     for lib in libraries:
@@ -98,9 +107,11 @@ def _unique(libraries: list[IsoLibrary]) -> tuple[IsoLibrary, ...]:
         if key in merged:
             known = merged[key]
             extra = tuple(e for e in lib.extensions if e not in known.extensions)
-            merged[key] = IsoLibrary(known.path, known.extensions + extra)
+            # Declared by the administrator too: helper.toml rules.
+            owner = None if known.owner is None or lib.owner is None else known.owner
+            merged[key] = IsoLibrary(known.path, known.extensions + extra, owner)
         else:
-            merged[key] = IsoLibrary(Path(key), lib.extensions)
+            merged[key] = IsoLibrary(Path(key), lib.extensions, lib.owner)
     return tuple(merged.values())
 
 

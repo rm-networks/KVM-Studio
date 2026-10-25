@@ -9,9 +9,18 @@ import "../wizard/NewVmWizard.css";
 import "../first-run/FirstRunWizard.css";
 import "./UninstallWizard.css";
 
-const STEPS = ["welcome", "vms", "networks", "settings", "summary", "progress", "done"] as const;
+const STEPS = [
+  "welcome",
+  "vms",
+  "networks",
+  "rights",
+  "settings",
+  "summary",
+  "progress",
+  "done",
+] as const;
 type Step = (typeof STEPS)[number];
-type Task = "vms" | "networks" | "settings" | "package";
+type Task = "vms" | "networks" | "rights" | "settings" | "package";
 type TaskState = "pending" | "running" | "done" | "skipped" | "failed";
 
 // Time left to the package manager before the assistant stops waiting.
@@ -62,9 +71,11 @@ export function UninstallWizard() {
   const [confirmed, setConfirmed] = useState(false);
   const [deleteNetworks, setDeleteNetworks] = useState(false);
   const [deleteSettings, setDeleteSettings] = useState(false);
+  const [removeRights, setRemoveRights] = useState(false);
   const [tasks, setTasks] = useState<Record<Task, TaskState>>({
     vms: "pending",
     networks: "pending",
+    rights: "pending",
     settings: "pending",
     package: "pending",
   });
@@ -82,6 +93,7 @@ export function UninstallWizard() {
     };
   }, [t]);
 
+  const rights = plan ? plan.iso_libraries.length + plan.iso_acl_entries > 0 : false;
   const files = plan ? [...plan.vms.flatMap((vm) => vm.delete), ...plan.extra_files] : [];
   const kept = plan ? [...plan.vms.flatMap((vm) => vm.keep), ...plan.keep] : [];
   const blocked = deleteVms && (plan?.running.length ?? 0) > 0;
@@ -115,6 +127,7 @@ export function UninstallWizard() {
     setTasks({
       vms: deleteVms ? "running" : "skipped",
       networks: deleteNetworks ? "running" : "skipped",
+      rights: rights && removeRights ? "running" : "skipped",
       settings: deleteSettings ? "running" : "skipped",
       package: plan.packaged ? "pending" : "skipped",
     });
@@ -124,16 +137,19 @@ export function UninstallWizard() {
         delete_vms: deleteVms,
         delete_networks: deleteNetworks,
         delete_settings: deleteSettings,
+        remove_iso_acls: removeRights,
       });
       setReport(result);
       if (deleteVms) mark("vms", result.failed_files.length ? "failed" : "done");
       if (deleteNetworks) mark("networks", "done");
+      if (rights && removeRights) mark("rights", result.iso_failed ? "failed" : "done");
       if (deleteSettings) mark("settings", result.deleted_settings ? "done" : "failed");
     } catch (err) {
       setError(err);
       setTasks((s) => ({
         vms: s.vms === "running" ? "failed" : s.vms,
         networks: s.networks === "running" ? "failed" : s.networks,
+        rights: s.rights === "running" ? "failed" : s.rights,
         settings: s.settings === "running" ? "failed" : s.settings,
         package: "skipped",
       }));
@@ -336,6 +352,30 @@ export function UninstallWizard() {
           </>
         )}
 
+        {step === "rights" && plan && (
+          <>
+            {!rights ? (
+              <p>{t("uninstall.rights.none")}</p>
+            ) : (
+              <>
+                <p>{t("uninstall.rights.intro", { count: plan.iso_acl_entries })}</p>
+                <Choice
+                  name="rights"
+                  value={removeRights}
+                  onChange={setRemoveRights}
+                  keepLabel={t("uninstall.rights.keep")}
+                  deleteLabel={t("uninstall.rights.delete")}
+                />
+                <ul className="uninstall-files">
+                  {plan.iso_libraries.map((path) => (
+                    <li key={path}>{path}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </>
+        )}
+
         {step === "settings" && plan && (
           <>
             {plan.settings.length === 0 ? (
@@ -371,6 +411,10 @@ export function UninstallWizard() {
                 <td>{plan.networks.length ? choice(deleteNetworks) : "-"}</td>
               </tr>
               <tr>
+                <td>{t("uninstall.step.rights")}</td>
+                <td>{rights ? choice(removeRights) : "-"}</td>
+              </tr>
+              <tr>
                 <td>{t("uninstall.step.settings")}</td>
                 <td>{plan.settings.length ? choice(deleteSettings) : "-"}</td>
               </tr>
@@ -384,7 +428,7 @@ export function UninstallWizard() {
 
         {(step === "progress" || step === "done") && (
           <ul className="firstrun-checks">
-            {(["vms", "networks", "settings", "package"] as const).map((task) => (
+            {(["vms", "networks", "rights", "settings", "package"] as const).map((task) => (
               <li key={task} className={`uninstall-${tasks[task]}`}>
                 {TASK_ICON[tasks[task]] ?? <span className="uninstall-blank" />}
                 <span>

@@ -22,6 +22,25 @@ from .errors import HelperError
 
 MAX_PATH = 4096
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
+# A library is never one of these, inside one, or above one.
+SYSTEM_DIRS = tuple(
+    Path(p)
+    for p in (
+        "/etc",
+        "/usr",
+        "/var",
+        "/boot",
+        "/root",
+        "/proc",
+        "/sys",
+        "/dev",
+        "/run",
+        "/bin",
+        "/sbin",
+        "/lib",
+        "/lib64",
+    )
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +67,46 @@ def client_path(value: object) -> Path:
     return path
 
 
+def system_folder(path: Path) -> bool:
+    """path is "/", a system folder, inside one, or holds one."""
+    if path == Path("/"):
+        return True
+    for system in SYSTEM_DIRS:
+        for candidate in {system, system.resolve()}:
+            if path.is_relative_to(candidate) or candidate.is_relative_to(path):
+                return True
+    return False
+
+
+def declarable_folder(value: object, uid: int) -> Path:
+    """A folder a user may declare as an ISO library, resolved."""
+    path = client_path(value)
+    try:
+        resolved = path.resolve(strict=True)
+    except (OSError, RuntimeError):
+        raise HelperError("not_found", f"{path} does not exist") from None
+    try:
+        st = resolved.stat()
+    except OSError:
+        raise HelperError("not_found", f"{path} does not exist") from None
+    if not stat.S_ISDIR(st.st_mode):
+        raise HelperError("not_a_folder", f"{resolved} is not a folder")
+    if system_folder(resolved):
+        raise HelperError("system_folder", f"{resolved} is a system folder or holds one")
+    if st.st_uid != uid:
+        raise HelperError("not_owner", f"{resolved} does not belong to you")
+    return resolved
+
+
+def _root_of(library: IsoLibrary) -> Path | None:
+    """The library folder as it is now; a user's must still be theirs, link-free."""
+    if library.owner is None:
+        return library.path.resolve()
+    if library.path.resolve() != library.path or system_folder(library.path):
+        return None
+    return library.path
+
+
 def confine(path: Path, libraries: tuple[IsoLibrary, ...]) -> Confined:
     """Resolve path and return it if it lies strictly inside a declared library."""
     try:
@@ -55,18 +114,37 @@ def confine(path: Path, libraries: tuple[IsoLibrary, ...]) -> Confined:
     except (OSError, RuntimeError):
         raise HelperError("not_found", f"{path} does not exist") from None
     for library in libraries:
-        root = library.path.resolve()
-        if resolved != root and resolved.is_relative_to(root):
+        root = _root_of(library)
+        if root is not None and resolved != root and resolved.is_relative_to(root):
             return Confined(root, PurePosixPath(resolved.relative_to(root)), library)
-    raise HelperError(
-        "path_not_allowed", f"{resolved} is not inside an ISO library declared in helper.toml"
-    )
+    raise HelperError("path_not_allowed", f"{resolved} is not inside a declared ISO library")
+
+
+def open_nofollow(path: Path) -> list[int]:
+    """O_PATH descriptors from "/" down to path, refusing any symbolic link on the way."""
+    fds = [os.open("/", os.O_PATH | os.O_DIRECTORY | os.O_CLOEXEC)]
+    try:
+        for name in PurePosixPath(path).parts[1:]:
+            fds.append(os.open(name, os.O_PATH | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=fds[-1]))
+            if stat.S_ISLNK(os.fstat(fds[-1]).st_mode):
+                raise OSError(f"{path} holds a symbolic link")
+    except OSError:
+        _close(fds)
+        raise
+    return fds
 
 
 def _open_chain(target: Confined) -> list[int]:
     fds: list[int] = []
     try:
-        fds.append(os.open(target.root, os.O_PATH | os.O_DIRECTORY | os.O_CLOEXEC))
+        above = open_nofollow(target.root)
+        fds.append(above.pop())
+        _close(above)
+        if not stat.S_ISDIR(os.fstat(fds[0]).st_mode):
+            raise HelperError("path_changed", f"{target.root} changed during the request")
+        owner = target.library.owner
+        if owner is not None and os.fstat(fds[0]).st_uid != owner:
+            raise HelperError("path_changed", f"{target.root} changed during the request")
         parts = target.relative.parts
         for i, name in enumerate(parts):
             fd = os.open(name, os.O_PATH | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=fds[-1])

@@ -10,6 +10,9 @@ NoNewPrivileges=yes
 # usermod writes /etc/group and /etc/gshadow.
 ProtectSystem=true
 PrivateTmp=yes
+# Its own record of declared ISO libraries and of the ACL entries it added.
+StateDirectory=kvm-studio
+StateDirectoryMode=0700
 PrivateNetwork=yes
 RestrictAddressFamilies=AF_UNIX AF_NETLINK
 CapabilityBoundingSet=CAP_FOWNER CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_CHOWN CAP_AUDIT_WRITE

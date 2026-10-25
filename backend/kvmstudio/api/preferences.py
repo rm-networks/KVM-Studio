@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 from ..config import Config, save_config
 from ..context import Context
 from ..errors import ApiException
 from ..paths import library_root
+from ..services import iso_libraries
 
 router = APIRouter(prefix="/preferences", tags=["preferences"])
 
@@ -16,6 +19,25 @@ class Preferences(BaseModel):
     config: Config
     config_path: str | None
     library_root: str | None
+    # Folders the helper can fix the rights of; None when it does not answer.
+    iso_declared: list[str] | None
+
+
+class NewIsoLibrary(BaseModel):
+    name: str = Field(min_length=1)
+    path: str
+    recursive: bool = True
+
+
+class IsoLibraryRef(BaseModel):
+    path: str
+
+
+class IsoLibraryChange(BaseModel):
+    config: Config
+    # False when the helper did not answer: browsing works, fixing rights does not.
+    declared: bool
+    removed_acls: list[str]
 
 
 class SaveResult(BaseModel):
@@ -53,18 +75,53 @@ def _prepare_library(new: Config) -> None:
 
 
 @router.get("")
-def get(ctx: Context) -> Preferences:
+async def get(ctx: Context) -> Preferences:
     root = library_root(ctx.config)
     return Preferences(
         config=ctx.config,
         config_path=str(ctx.config_path) if ctx.config_path else None,
         library_root=str(root) if root else None,
+        iso_declared=await run_in_threadpool(iso_libraries.declared_paths),
     )
+
+
+def _change(ctx: Context, change: iso_libraries.Change) -> IsoLibraryChange:
+    ctx.config = change.config
+    return IsoLibraryChange(
+        config=change.config, declared=change.declared, removed_acls=change.removed_acls
+    )
+
+
+@router.post("/iso-libraries")
+async def add_iso_library(ctx: Context, body: NewIsoLibrary) -> IsoLibraryChange:
+    """Declare a folder to the helper (administrator password), then keep it."""
+
+    def run() -> IsoLibraryChange:
+        change = iso_libraries.add(
+            ctx.config, ctx.config_path, body.name, Path(body.path), body.recursive
+        )
+        return _change(ctx, change)
+
+    return await run_in_threadpool(run)
+
+
+@router.post("/iso-libraries/remove")
+async def remove_iso_library(ctx: Context, body: IsoLibraryRef) -> IsoLibraryChange:
+    """Forget a library; the helper takes back the rights it gave QEMU there."""
+
+    def run() -> IsoLibraryChange:
+        return _change(ctx, iso_libraries.remove(ctx.config, ctx.config_path, Path(body.path)))
+
+    return await run_in_threadpool(run)
 
 
 @router.put("")
 async def save(ctx: Context, body: Config) -> SaveResult:
     def run() -> SaveResult:
+        if not iso_libraries.same_folders(ctx.config, body):
+            raise ApiException(
+                409, "prefs.iso_through_helper", "ISO libraries are added and removed one by one"
+            )
         _check(body)
         _prepare_library(body)
         old = ctx.config

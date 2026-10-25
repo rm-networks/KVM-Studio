@@ -86,7 +86,7 @@ A single Python backend drives libvirt; the same frontend shows either in a nati
 
 Everything is set in Preferences and in the first-run assistant; the settings are stored as readable TOML, and installation goes through a .rpm or .deb package.
 
-**Files.** User settings in `$XDG_CONFIG_HOME/kvm-studio/config.toml`; helper settings in `/etc/kvm-studio/helper.toml`; guest password stored hashed (argon2) in `$XDG_CONFIG_HOME/kvm-studio/guest.hash`. `kvm-studio --check` validates the configuration and tests libvirt, pools and ISO rights.
+**Files.** User settings in `$XDG_CONFIG_HOME/kvm-studio/config.toml`; helper settings in `/etc/kvm-studio/helper.toml`, its own state (declared ISO libraries, access rights it added) in `/var/lib/kvm-studio`; guest password stored hashed (argon2) in `$XDG_CONFIG_HOME/kvm-studio/guest.hash`. `kvm-studio --check` validates the configuration and tests libvirt, pools and ISO rights.
 
 ```toml
 [interface]

@@ -71,5 +71,10 @@
   "uninstall.kept_networks": "Kept networks: {names}",
   "uninstall.package_failed": "The package could not be removed ({error}). Run: sudo dnf remove kvm-studio",
   "uninstall.package_removing": "Removing the package (follow it with: journalctl -u kvm-studio-removal).",
-  "uninstall.done": "Done."
+  "uninstall.done": "Done.",
+  "uninstall.iso_rights": "Access rights given to virtual machines on your ISO libraries:",
+  "uninstall.ask_iso_rights": "Take back the rights the helper added (those set before stay)?",
+  "uninstall.summary_iso_rights": "ISO access rights: {action}",
+  "uninstall.removed_acls": "Access rights taken back: {count}",
+  "uninstall.iso_failed": "The helper did not answer: the access rights on the ISO libraries were left as they are."
 }

@@ -20,16 +20,14 @@ Contents:
 | `/usr/share/applications/kvm-studio-uninstall.desktop` | "Uninstall KVM Studio" entry |
 | `kvmstudio-helper.socket` / `.service` | root helper, started on demand |
 | `/usr/share/polkit-1/actions/org.kvmstudio.helper.policy` | helper authorizations |
-| `/etc/kvm-studio/helper.toml` | ISO libraries the helper may fix |
+| `/etc/kvm-studio/helper.toml` | helper settings, libraries declared by the administrator |
+| `/var/lib/kvm-studio` | helper state: ISO libraries declared from Preferences, access rights it added |
 | `/etc/NetworkManager/conf.d/90-kvm-studio.conf` | hides `kvmnet*` and `ks-*` from the network applet |
 | `/usr/lib/firewalld/services/kvm-studio.xml` | firewall service for sharing on the LAN |
 
-For the "Fix" button of the ISO picker to work, declare the ISO libraries in
-`/etc/kvm-studio/helper.toml` (see [Configuration](CONFIGURATION.md)):
-
-```bash
-sudoedit /etc/kvm-studio/helper.toml
-```
+ISO libraries are added in Edit > Preferences > ISO Libraries; the
+administrator password is asked once per library (see
+[Configuration](CONFIGURATION.md)).
 
 Check that the helper socket is listening:
 
@@ -38,15 +36,16 @@ systemctl status kvmstudio-helper.socket
 ```
 
 To uninstall, use the "Uninstall KVM Studio" entry of the applications menu:
-it asks what to do with the VMs, the `kvmnet` networks and the settings, then
-removes the package. The same in a terminal:
+it asks what to do with the VMs, the `kvmnet` networks, the access rights given
+on the ISO libraries and the settings, then removes the package. The same in a terminal:
 
 ```bash
 kvm-studio --uninstall
 ```
 
 A plain `dnf remove` only removes the package files (helper stopped, firewall
-service removed from every zone); VMs, networks and settings stay.
+service removed from every zone, access rights the helper added taken back);
+VMs, networks and settings stay.
 
 ### Building the package
 

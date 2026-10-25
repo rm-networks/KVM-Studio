@@ -34,6 +34,8 @@ export type NicChange = components["schemas"]["NicChange"];
 export type IsoLibrary = components["schemas"]["IsoLibrary"];
 export type Preferences = components["schemas"]["Preferences"] & { config: Config };
 export type SaveResult = components["schemas"]["SaveResult"];
+export type NewIsoLibrary = components["schemas"]["NewIsoLibrary"];
+export type IsoLibraryChange = components["schemas"]["IsoLibraryChange"] & { config: Config };
 export type GuestToolsInfo = components["schemas"]["GuestToolsInfo"];
 export type GuestFamily = components["schemas"]["InsertRequest"]["family"];
 export type InsertResult = components["schemas"]["InsertResult"];
@@ -169,6 +171,10 @@ export const api = {
   restart: () => request<{ restarting: boolean }>("POST", "/api/restart"),
   preferences: () => request<Preferences>("GET", "/api/preferences"),
   savePreferences: (config: Config) => request<SaveResult>("PUT", "/api/preferences", config),
+  addIsoLibrary: (library: NewIsoLibrary) =>
+    request<IsoLibraryChange>("POST", "/api/preferences/iso-libraries", library),
+  removeIsoLibrary: (path: string) =>
+    request<IsoLibraryChange>("POST", "/api/preferences/iso-libraries/remove", { path }),
   networks: () => request<Network[]>("GET", "/api/networks"),
   networkSuggestion: () => request<NetworkSuggestion>("GET", "/api/networks/suggestion"),
   createNetwork: (body: NetworkCreate) => request<Network>("POST", "/api/networks", body),

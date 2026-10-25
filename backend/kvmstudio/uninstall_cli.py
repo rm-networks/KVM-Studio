@@ -83,6 +83,13 @@ def _run(
             out(f"  {n.name} ({n.bridge}){note}")
         delete_networks = _yes(ask, t("uninstall.ask_networks"))
 
+    remove_iso_acls = False
+    if plan.iso_libraries or plan.iso_acl_entries:
+        out("\n" + t("uninstall.iso_rights"))
+        for path in plan.iso_libraries:
+            out(f"  {path}")
+        remove_iso_acls = _yes(ask, t("uninstall.ask_iso_rights"))
+
     delete_settings = False
     if plan.settings:
         out("\n" + t("uninstall.settings"))
@@ -93,6 +100,8 @@ def _run(
     out("\n" + t("uninstall.summary"))
     out("  " + t("uninstall.summary_vms", action=_action(delete_vms)))
     out("  " + t("uninstall.summary_networks", action=_action(delete_networks)))
+    if plan.iso_libraries or plan.iso_acl_entries:
+        out("  " + t("uninstall.summary_iso_rights", action=_action(remove_iso_acls)))
     out("  " + t("uninstall.summary_settings", action=_action(delete_settings)))
     packaged = uninstall.installed_from_package()
     package = t(
@@ -103,7 +112,7 @@ def _run(
         out(t("cli.cancelled"))
         return 1
 
-    choices = uninstall.Choices(delete_vms, delete_networks, delete_settings)
+    choices = uninstall.Choices(delete_vms, delete_networks, delete_settings, remove_iso_acls)
     report = uninstall.execute(conn, config, choices, plan.plan_id)
     if report.deleted_vms:
         out(t("uninstall.deleted_vms", names=", ".join(report.deleted_vms)))
@@ -113,6 +122,10 @@ def _run(
         out(t("uninstall.deleted_networks", names=", ".join(report.deleted_networks)))
     if report.kept_networks:
         out(t("uninstall.kept_networks", names=", ".join(report.kept_networks)))
+    if report.removed_acls:
+        out(t("uninstall.removed_acls", count=len(report.removed_acls)))
+    if report.iso_failed:
+        out(t("uninstall.iso_failed"))
     if packaged:
         try:
             helper_client.call("remove_package", {})

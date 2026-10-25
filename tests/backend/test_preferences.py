@@ -46,11 +46,8 @@ def test_read_preferences(prefs_client: TestClient, config_file: Path) -> None:
 def test_save_preferences(prefs_client: TestClient, config_file: Path, tmp_path: Path) -> None:
     location = tmp_path / "Data" / "VM"
     location.mkdir(parents=True)
-    iso = tmp_path / "iso"
-    iso.mkdir()
     config = current(prefs_client)["config"]
     config["storage"]["vm_default_location"] = str(location)
-    config["iso_libraries"] = [{"name": "ISO principales", "path": str(iso), "recursive": True}]
     config["ui"]["theme"] = "dark"
 
     result = prefs_client.put("/api/preferences", headers=AUTH, json=config).json()
@@ -61,7 +58,6 @@ def test_save_preferences(prefs_client: TestClient, config_file: Path, tmp_path:
     assert (location / "KVM-Studio" / "VM").is_dir()
     saved = load_config(config_file)
     assert saved.ui.theme == "dark"
-    assert saved.iso_libraries[0].path == iso
     assert config_file.stat().st_mode & 0o777 == 0o600
     # The running app uses the new settings right away.
     assert current(prefs_client)["config"]["ui"]["theme"] == "dark"
@@ -82,10 +78,6 @@ def _relative_location(c: dict[str, Any], _t: Path) -> None:
     c["storage"]["vm_default_location"] = "relative/dir"
 
 
-def _missing_iso(c: dict[str, Any], t: Path) -> None:
-    c["iso_libraries"] = [{"name": "x", "path": str(t / "none")}]
-
-
 def _share(c: dict[str, Any], _t: Path) -> None:
     c["web"]["share_on_lan"] = True
 
@@ -95,7 +87,6 @@ def _share(c: dict[str, Any], _t: Path) -> None:
     [
         (_missing_location, "prefs.location_missing"),
         (_relative_location, "prefs.location_relative"),
-        (_missing_iso, "prefs.iso_missing"),
         (_share, "prefs.share_later"),
     ],
 )
@@ -135,3 +126,43 @@ def test_saved_file_round_trips(tmp_path: Path) -> None:
     assert text.startswith("# KVM Studio configuration")
     assert tomllib.loads(text)["ui"]["language"] == "en"
     assert load_config(path) == config
+
+
+def test_iso_libraries_are_added_one_by_one(
+    prefs_client: TestClient, config_file: Path, tmp_path: Path
+) -> None:
+    config = current(prefs_client)["config"]
+    config["iso_libraries"] = [{"name": "x", "path": str(tmp_path)}]
+    response = prefs_client.put("/api/preferences", headers=AUTH, json=config)
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "prefs.iso_through_helper"
+
+
+def test_iso_library_without_helper_is_kept_for_browsing(
+    prefs_client: TestClient, config_file: Path, tmp_path: Path
+) -> None:
+    iso = tmp_path / "iso"
+    iso.mkdir()
+    assert current(prefs_client)["iso_declared"] is None
+    body = {"name": "Main ISO", "path": str(iso), "recursive": True}
+    result = prefs_client.post("/api/preferences/iso-libraries", headers=AUTH, json=body).json()
+    assert result["declared"] is False
+    assert load_config(config_file).iso_libraries[0].path == iso
+    # Renaming goes through Preferences as before.
+    config = current(prefs_client)["config"]
+    config["iso_libraries"][0]["name"] = "ISO"
+    assert prefs_client.put("/api/preferences", headers=AUTH, json=config).status_code == 200
+    assert load_config(config_file).iso_libraries[0].name == "ISO"
+    removed = prefs_client.post(
+        "/api/preferences/iso-libraries/remove", headers=AUTH, json={"path": str(iso)}
+    ).json()
+    assert removed["config"]["iso_libraries"] == []
+    assert load_config(config_file).iso_libraries == []
+
+
+def test_missing_iso_folder(prefs_client: TestClient, tmp_path: Path, config_file: Path) -> None:
+    body = {"name": "x", "path": str(tmp_path / "none")}
+    response = prefs_client.post("/api/preferences/iso-libraries", headers=AUTH, json=body)
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "prefs.iso_missing"
+    assert not config_file.exists()

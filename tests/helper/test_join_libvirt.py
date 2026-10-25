@@ -57,7 +57,7 @@ def call(
         return allow
 
     raw = request if isinstance(request, bytes) else json.dumps(request).encode()
-    config = HelperConfig(Path("/nonexistent.sock"), None, ())
+    config = HelperConfig(Path("/nonexistent.sock"), None, (), Path("/nonexistent/state.json"))
     answer = server.handle(
         raw, peer, config, authorizer=authorizer, runner=lambda argv, fds: ran.append(argv)
     )

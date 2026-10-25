@@ -1,7 +1,9 @@
 # /etc/kvm-studio/helper.toml: settings of the privileged helper.
-# Owned by root. The helper only touches the ISO libraries listed here.
+# Owned by root. Users declare their ISO libraries in Preferences; the helper
+# keeps those in its state file. Libraries listed here count as well.
 
 # socket = "/run/kvmstudio-helper.sock"
+# state = "/var/lib/kvm-studio/helper-state.json"
 
 # Account QEMU runs as. Detected when absent ("qemu", then "libvirt-qemu").
 # qemu_user = "qemu"
