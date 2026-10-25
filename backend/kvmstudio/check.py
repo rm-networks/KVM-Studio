@@ -104,7 +104,9 @@ def _check_networkmanager(conf_dir: Path = NM_CONF_DIR) -> Result | None:
         content = installed.read_text()
     except OSError:
         content = ""
-    if "[device-kvm-studio]" in content and "interface-name:kvmnet*" in content:
+    if "[device-kvm-studio]" in content and all(
+        f"interface-name:{name}*" in content for name in ("kvmnet", "ks-", "vnet")
+    ):
         return Result("ok", item, t("check.nm_ok", path=installed))
     source = _packaged_nm_conf()
     command = (

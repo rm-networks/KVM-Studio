@@ -14,7 +14,7 @@
   "check.not_writable": "{path} n'est pas accessible en écriture pour cet utilisateur",
   "check.not_readable": "{path} n'est pas lisible",
   "check.iso_library": "Bibliothèque ISO « {name} »",
-  "check.nm_ok": "{path} masque les interfaces kvmnet* et ks-*",
+  "check.nm_ok": "{path} masque les interfaces kvmnet*, ks-* et vnet*",
   "check.nm_reinstall": "réinstallez le paquet kvm-studio pour obtenir {path}",
   "check.nm_missing": "{path} est absent ou périmé : les réseaux de {app} apparaissent dans l'applet réseau.\n       Pour corriger : {command}",
   "cli.yes_no": "[o/N]",

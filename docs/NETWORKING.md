@@ -41,8 +41,9 @@ the network: it is refused while a running VM uses it.
 ## Hidden from the network applet
 
 The package installs `/etc/NetworkManager/conf.d/90-kvm-studio.conf`, which
-keeps the `kvmnet*` bridges and the `ks-*` VM cards out of the desktop network
-applet. It declares a `[device-kvm-studio]` section (`managed=0`) rather than
+keeps the `kvmnet*` bridges, the `ks-*` VM cards and the `vnet*` cards libvirt
+names itself (VMs created elsewhere) out of the desktop network applet.
+`virbr*` and every other interface are left alone. It declares a `[device-kvm-studio]` section (`managed=0`) rather than
 the `[keyfile] unmanaged-devices` key: another `conf.d` file setting that key
 (for `virbr*`, for instance) would replace it, while `[device-*]` sections add
 up. At installation, the package also releases the bridges and cards
@@ -59,7 +60,7 @@ sudo cp packaging/networkmanager/90-kvm-studio.conf /etc/NetworkManager/conf.d/
 sudo systemctl reload NetworkManager
 ```
 
-Check: the `kvmnet*` interfaces must show as "unmanaged".
+Check: the `kvmnet*`, `ks-*` and `vnet*` interfaces must show as "unmanaged".
 
 ```bash
 nmcli device status
@@ -91,7 +92,7 @@ virsh -c qemu:///system net-list --all
 ```
 
 ```bash
-ip -br link | grep -E 'kvmnet|ks-'
+ip -br link | grep -E 'kvmnet|ks-|vnet'
 ```
 
 ```bash

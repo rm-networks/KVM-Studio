@@ -91,8 +91,20 @@ def test_networkmanager_rule_is_checked(tmp_path: Path) -> None:
     outdated = _check_networkmanager(conf_dir)
     assert outdated is not None
     assert outdated.level == "warn"
+    # The 0.1.0 rule, without vnet*: outdated too.
+    (conf_dir / NM_CONF_NAME).write_text(
+        "[device-kvm-studio]\nmatch-device=interface-name:kvmnet*;interface-name:ks-*\nmanaged=0\n"
+    )
+    assert getattr(_check_networkmanager(conf_dir), "level", None) == "warn"
     shutil.copy(PACKAGED_NM_CONF, conf_dir / NM_CONF_NAME)
     found = _check_networkmanager(conf_dir)
     assert found is not None
     assert found.level == "ok"
     assert _check_networkmanager(tmp_path / "absent" / "conf.d") is None
+
+
+def test_the_packaged_rule_hides_our_interfaces_only() -> None:
+    text = PACKAGED_NM_CONF.read_text()
+    match = next(line for line in text.splitlines() if line.startswith("match-device="))
+    assert match == "match-device=interface-name:kvmnet*;interface-name:ks-*;interface-name:vnet*"
+    assert "unmanaged-devices" not in text.split("[device-kvm-studio]")[1]

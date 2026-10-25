@@ -8,13 +8,13 @@ hide_kvm_studio_interfaces() {
     command -v nmcli >/dev/null 2>&1 || return 0
     for device in $(nmcli -g DEVICE device status 2>/dev/null); do
         case "$device" in
-            kvmnet* | ks-*) nmcli device set "$device" managed no >/dev/null 2>&1 || : ;;
+            kvmnet* | ks-* | vnet*) nmcli device set "$device" managed no >/dev/null 2>&1 || : ;;
         esac
     done
     for uuid in $(nmcli -g UUID connection show 2>/dev/null); do
         name=$(nmcli -g connection.interface-name connection show "$uuid" 2>/dev/null)
         case "$name" in
-            kvmnet* | ks-*) nmcli connection delete "$uuid" >/dev/null 2>&1 || : ;;
+            kvmnet* | ks-* | vnet*) nmcli connection delete "$uuid" >/dev/null 2>&1 || : ;;
         esac
     done
 }
