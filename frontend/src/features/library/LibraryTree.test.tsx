@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { VmSummary } from "../../api/client";
 import { NotificationProvider } from "../../components/Notifications";
@@ -27,7 +27,7 @@ function Harness({
   return (
     <NotificationProvider>
       <VmActionsProvider>
-        <LibraryActionsProvider library={{ root: "/data/KVM-Studio/VM", folders }}>
+        <LibraryActionsProvider library={{ root: "/data/KVM-Studio/VM", folders, order: {} }}>
           <LibraryTree
             root={buildTree(folders, vms, "", "all", "name")}
             selected={selected}
@@ -128,4 +128,45 @@ describe("LibraryTree", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: /Paramètres/ }));
     expect(settings).toEqual(["a"]);
   });
+
+  it("moves a folder into another after showing what moves with it", async () => {
+    const calls: { method: string; path: string; body: unknown }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((path: string, init?: RequestInit) => {
+        const method = init?.method ?? "GET";
+        calls.push({ method, path, body: init?.body ? JSON.parse(init.body as string) : null });
+        const body = path.includes("move-plan")
+          ? { folder: "Labs", target: "Archive/Labs", vms: ["R1"], running: [], blockers: [] }
+          : { path: "Archive/Labs" };
+        return Promise.resolve(new Response(JSON.stringify(body)));
+      }),
+    );
+    render(
+      <Harness vms={[makeVm({ name: "R1", folder: "Labs" })]} folders={["Labs", "Archive"]} />,
+    );
+    const types: string[] = [];
+    const dataTransfer = {
+      types,
+      setData: (type: string) => types.push(type),
+      getData: () => "",
+      effectAllowed: "",
+      dropEffect: "",
+    };
+    const row = (name: string) => screen.getByText(name).closest(".tree-row") as HTMLElement;
+    fireEvent.dragStart(row("Labs"), { dataTransfer });
+    fireEvent.dragOver(row("Archive"), { dataTransfer, clientY: 0.5 });
+    fireEvent.drop(row("Archive"), { dataTransfer, clientY: 0.5 });
+
+    expect(await screen.findByText("1 machine virtuelle le suit")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Déplacer" }));
+    await vi.waitFor(() => expect(calls.at(-1)?.method).toBe("POST"));
+    expect(calls.at(-1)).toEqual({
+      method: "POST",
+      path: "/api/library/folders/move",
+      body: { path: "Labs", parent: "Archive", before: null },
+    });
+  });
 });
+
+afterEach(() => vi.unstubAllGlobals());

@@ -10,6 +10,7 @@ export type KeepReason = components["schemas"]["KeptFile"]["reason"];
 export type PowerAction = "start" | "shutdown" | "reboot" | "reset" | "poweroff";
 export type LibraryInfo = components["schemas"]["LibraryInfo"];
 export type FolderDeletionPlan = components["schemas"]["FolderDeletionPlan"];
+export type FolderMovePlan = components["schemas"]["FolderMovePlan"];
 export type ImportResult = components["schemas"]["ImportResult"];
 export type Drift = VmSummary["drift"][number];
 export type Network = components["schemas"]["Network"];
@@ -130,6 +131,15 @@ export const api = {
     request<{ path: string }>("POST", "/api/library/folders", { path }),
   renameFolder: (path: string, name: string) =>
     request<{ path: string }>("POST", "/api/library/folders/rename", { path, name }),
+  folderMovePlan: (path: string, parent: string) =>
+    request<FolderMovePlan>(
+      "GET",
+      `/api/library/folders/move-plan?path=${encodeURIComponent(path)}&parent=${encodeURIComponent(parent)}`,
+    ),
+  moveFolder: (path: string, parent: string, before: string | null) =>
+    request<{ path: string }>("POST", "/api/library/folders/move", { path, parent, before }),
+  setFolderOrder: (parent: string, names: string[]) =>
+    request<undefined>("PUT", "/api/library/order", { parent, names }),
   folderDeletionPlan: (path: string) =>
     request<FolderDeletionPlan>(
       "GET",

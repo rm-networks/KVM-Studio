@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import Annotated
 
 import libvirt
-from fastapi import APIRouter, Query, Request
-from pydantic import BaseModel
+from fastapi import APIRouter, Query, Request, Response
+from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 from ..context import Context
 from ..events import EventHub
 from ..paths import library_root
-from ..services import library
+from ..services import folder_order, library
 from .vms import KeptFile
 
 router = APIRouter(prefix="/library", tags=["library"])
@@ -19,6 +19,8 @@ router = APIRouter(prefix="/library", tags=["library"])
 class LibraryInfo(BaseModel):
     root: str | None
     folders: list[str]
+    # Display order chosen by drag and drop: parent folder -> names.
+    order: dict[str, list[str]] = {}
 
 
 class FolderCreate(BaseModel):
@@ -32,6 +34,26 @@ class FolderRename(BaseModel):
 
 class FolderRef(BaseModel):
     path: str
+
+
+class FolderMove(BaseModel):
+    path: str
+    parent: str
+    # Name of the folder to come before in the new parent (None: last).
+    before: str | None = None
+
+
+class FolderMovePlan(BaseModel):
+    folder: str
+    target: str
+    vms: list[str]
+    running: list[str]
+    blockers: list[str]
+
+
+class FolderOrder(BaseModel):
+    parent: str
+    names: list[str] = Field(max_length=1000)
 
 
 class VmDeletion(BaseModel):
@@ -69,6 +91,7 @@ async def info(ctx: Context) -> LibraryInfo:
         return LibraryInfo(
             root=str(root) if root else None,
             folders=library.list_folders(ctx.config, places),
+            order=folder_order.load(),
         )
 
     return await run_in_threadpool(run)
@@ -79,6 +102,32 @@ async def create(ctx: Context, request: Request, body: FolderCreate) -> FolderRe
     path = await run_in_threadpool(library.create_folder, ctx.config, body.path)
     _changed(request)
     return FolderRef(path=path)
+
+
+@router.get("/folders/move-plan")
+async def move_plan(
+    ctx: Context, path: Annotated[str, Query()], parent: Annotated[str, Query()]
+) -> FolderMovePlan:
+    plan = await run_in_threadpool(library.plan_folder_move, ctx.conn, ctx.config, path, parent)
+    return FolderMovePlan.model_validate(plan, from_attributes=True)
+
+
+@router.post("/folders/move")
+async def move(ctx: Context, request: Request, body: FolderMove) -> FolderRef:
+    path = await run_in_threadpool(
+        library.move_folder, ctx.conn, ctx.config, body.path, body.parent, body.before
+    )
+    _changed(request)
+    return FolderRef(path=path)
+
+
+@router.put("/order", status_code=204)
+async def set_order(ctx: Context, request: Request, body: FolderOrder) -> Response:
+    parent = library.check_folder(body.parent)
+    names = [n for n in body.names if library.check_folder(n) == n and "/" not in n]
+    await run_in_threadpool(folder_order.set_order, parent, names)
+    _changed(request)
+    return Response(status_code=204)
 
 
 @router.post("/folders/rename")

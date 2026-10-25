@@ -8,7 +8,7 @@ import {
   MonitorSmartphone,
   TriangleAlert,
 } from "lucide-react";
-import { type DragEvent, type KeyboardEvent, type ReactNode, useState } from "react";
+import { type DragEvent, type KeyboardEvent, type ReactNode, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { VmSummary } from "../../api/client";
@@ -18,6 +18,19 @@ import { type FolderNode, folderId, parentOf, ROOT_ID, visibleRows, vmId } from 
 import { VmContextMenu } from "./VmContextMenu";
 
 const DRAG_TYPE = "application/x-kvmstudio-vm";
+const FOLDER_TYPE = "application/x-kvmstudio-folder";
+
+type DropWhere = "into" | "before" | "after";
+
+function findFolder(node: FolderNode, path: string): FolderNode | null {
+  if (node.path === path) return node;
+  for (const child of node.folders) {
+    if (path === child.path || path.startsWith(`${child.path}/`)) return findFolder(child, path);
+  }
+  return null;
+}
+
+const inside = (path: string, top: string) => path === top || path.startsWith(`${top}/`);
 
 interface Props {
   root: FolderNode;
@@ -90,7 +103,9 @@ export function LibraryTree({
   const { t } = useTranslation();
   const actions = useLibraryActions();
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([""]));
-  const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ path: string; where: DropWhere } | null>(null);
+  // The folder being dragged: its path cannot be read from the event before the drop.
+  const draggedFolder = useRef<string | null>(null);
 
   const rows = visibleRows(root, expanded, forceOpen);
   const ids = rows.map((r) => r.id);
@@ -152,17 +167,56 @@ export function LibraryTree({
     e.preventDefault();
   };
 
+  // A folder dropped on the top or bottom edge of another goes next to it,
+  // anywhere else into it.
+  const whereFor = (e: DragEvent, path: string, dragged: string | null): DropWhere | null => {
+    if (dragged === null) return null;
+    let where: DropWhere = "into";
+    if (path !== "") {
+      const box = e.currentTarget.getBoundingClientRect();
+      const y = (e.clientY - box.top) / Math.max(box.height, 1);
+      if (y < 0.25) where = "before";
+      else if (y > 0.75) where = "after";
+    }
+    const parent = where === "into" ? path : parentOf(path);
+    if (inside(parent, dragged) || (where !== "into" && path === dragged)) return null;
+    return where;
+  };
+
+  const dropFolder = (dragged: string, path: string, where: DropWhere) => {
+    if (where === "into") {
+      actions.moveFolder(dragged, path, null);
+      return;
+    }
+    const parent = parentOf(path);
+    const siblings = (findFolder(root, parent)?.folders ?? []).filter((f) => f.path !== dragged);
+    const index = siblings.findIndex((f) => f.path === path);
+    const next = where === "before" ? siblings[index] : siblings[index + 1];
+    actions.moveFolder(dragged, parent, next?.name ?? null);
+  };
+
   const dropProps = (path: string) => ({
     onDragOver: (e: DragEvent) => {
-      if (!e.dataTransfer.types.includes(DRAG_TYPE)) return;
+      let where: DropWhere | null = null;
+      if (e.dataTransfer.types.includes(DRAG_TYPE)) where = "into";
+      else if (e.dataTransfer.types.includes(FOLDER_TYPE))
+        where = whereFor(e, path, draggedFolder.current);
+      if (!where) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
-      setDropTarget(path);
+      setDropTarget({ path, where });
     },
-    onDragLeave: () => setDropTarget((p) => (p === path ? null : p)),
+    onDragLeave: () => setDropTarget((d) => (d?.path === path ? null : d)),
     onDrop: (e: DragEvent) => {
       e.preventDefault();
       setDropTarget(null);
+      const dragged = draggedFolder.current;
+      draggedFolder.current = null;
+      if (e.dataTransfer.types.includes(FOLDER_TYPE) && dragged !== null) {
+        const where = whereFor(e, path, dragged);
+        if (where) dropFolder(dragged, path, where);
+        return;
+      }
       const vm = vmsByUuid.get(e.dataTransfer.getData(DRAG_TYPE));
       if (vm) actions.moveVm(vm, path);
     },
@@ -185,7 +239,9 @@ export function LibraryTree({
           const isRoot = folder.path === "";
           const classes = ["tree-row"];
           if (isSelected) classes.push("selected");
-          if (dropTarget === folder.path) classes.push("drop-target");
+          if (dropTarget?.path === folder.path) {
+            classes.push(dropTarget.where === "into" ? "drop-target" : `drop-${dropTarget.where}`);
+          }
           return (
             <li
               key={row.id}
@@ -202,6 +258,16 @@ export function LibraryTree({
                   onClick={() => onSelect(row.id)}
                   onContextMenu={() => onSelect(row.id)}
                   onDoubleClick={() => toggle(folder.path)}
+                  draggable={actions.available && !isRoot && !forceOpen}
+                  onDragStart={(e) => {
+                    draggedFolder.current = folder.path;
+                    e.dataTransfer.setData(FOLDER_TYPE, folder.path);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragEnd={() => {
+                    draggedFolder.current = null;
+                    setDropTarget(null);
+                  }}
                   {...(actions.available ? dropProps(folder.path) : {})}
                 >
                   <span

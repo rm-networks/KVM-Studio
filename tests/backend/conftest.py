@@ -29,6 +29,8 @@ def english_desktop(monkeypatch: pytest.MonkeyPatch) -> None:
 def no_system_helper(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Never reach the helper of an installed package; tests start their own."""
     monkeypatch.setenv("KVMSTUDIO_HELPER_SOCKET", str(tmp_path / "no-helper.sock"))
+    # The library folder order is a state file: never the user's own.
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
 
 
 @pytest.fixture

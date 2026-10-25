@@ -11,6 +11,11 @@ export interface LibraryActions {
   /** With a folder: move right away (drag and drop). Without: ask where. */
   moveVm: (vm: VmSummary, folder?: string) => void;
   importVm: (vm: VmSummary) => void;
+  /**
+   * Drag and drop of a folder: under another parent, its VMs move with it
+   * (after a confirmation); in the same parent, only the display order changes.
+   */
+  moveFolder: (path: string, parent: string, before: string | null) => void;
 }
 
 export const LibraryActionsContext = createContext<LibraryActions | null>(null);

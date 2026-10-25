@@ -45,6 +45,17 @@ describe("buildTree", () => {
   });
 });
 
+describe("folder order", () => {
+  it("follows the chosen order, then the names", () => {
+    const root = buildTree(["A", "B", "C", "D", "C/x", "C/y"], [], "", "all", "name", {
+      "": ["C", "A"],
+      C: ["y"],
+    });
+    expect(root.folders.map((f) => f.name)).toEqual(["C", "A", "B", "D"]);
+    expect(root.folders[0]?.folders.map((f) => f.name)).toEqual(["y", "x"]);
+  });
+});
+
 describe("visibleRows", () => {
   it("follows the expanded folders", () => {
     const root = buildTree(folders, vms, "", "all", "name");

@@ -31,7 +31,7 @@ from ..config import Config
 from ..errors import ApiException
 from ..libvirt_conn import LibvirtConnection
 from ..paths import in_iso_library, in_library, is_strictly_within, library_root, resolve
-from . import domain_xml, qemu_img
+from . import domain_xml, folder_order, qemu_img
 from .deletion import KeptFile, plan_files, used_elsewhere
 
 NAMESPACE = "https://github.com/rm-networks/kvm-studio/ns/1.0"
@@ -345,10 +345,75 @@ def rename_folder(conn: LibvirtConnection, config: Config, folder: str, new_name
     folder = check_folder(folder)
     if not folder or "/" in new_name or not _SEGMENT_RE.match(new_name):
         raise ApiException(422, "library.invalid_name", f"invalid folder name: {new_name}")
-    root = _require_root(config)
     parent = folder.rpartition("/")[0]
-    target = f"{parent}/{new_name}" if parent else new_name
+    target = _relocate(conn, config, folder, f"{parent}/{new_name}" if parent else new_name)
+    folder_order.moved(folder, target)
+    return target
 
+
+@dataclass(slots=True)
+class FolderMovePlan:
+    folder: str
+    target: str
+    vms: list[str]
+    running: list[str]
+    blockers: list[str]
+
+
+def _move_target(config: Config, folder: str, parent: str) -> str:
+    folder, parent = check_folder(folder), check_folder(parent)
+    if not folder:
+        raise ApiException(422, "library.invalid_name", "the top level cannot move")
+    if _in_subtree(parent, folder):
+        raise ApiException(409, "library.into_itself", f"{folder} cannot go inside itself")
+    target = f"{parent}/{folder.rpartition('/')[2]}" if parent else folder.rpartition("/")[2]
+    if len(target.split("/")) > MAX_DEPTH:
+        raise ApiException(422, "library.too_deep", f"{target} is nested too deep")
+    return target
+
+
+def plan_folder_move(
+    conn: LibvirtConnection, config: Config, folder: str, parent: str
+) -> FolderMovePlan:
+    """What moving a folder under another one takes, for the confirmation."""
+    target = _move_target(config, folder, parent)
+    folder = check_folder(folder)
+    root = _require_root(config)
+    domains = _snapshot(conn)
+    places = placements([x for _u, _n, _a, x in domains], config)
+    inside = [
+        (u, n, a, p)
+        for (u, n, a, _x), p in zip(domains, places, strict=True)
+        if _in_subtree(p.folder, folder)
+    ]
+    others = [x for (u, _n, _a, x) in domains if u not in {d[0] for d in inside}]
+    old_dir = _folder_dir(root, folder)
+    blockers = _dependents([resolve(old_dir)], others, config) if old_dir.is_dir() else []
+    return FolderMovePlan(
+        folder=folder,
+        target=target,
+        vms=sorted((n for _u, n, _a, _p in inside), key=str.casefold),
+        running=sorted((n for _u, n, a, _p in inside if a), key=str.casefold),
+        blockers=blockers,
+    )
+
+
+def move_folder(
+    conn: LibvirtConnection, config: Config, folder: str, parent: str, before: str | None = None
+) -> str:
+    """Move a folder (with its VMs and subfolders) under another folder."""
+    target = _move_target(config, folder, parent)
+    folder = check_folder(folder)
+    if target != folder:
+        _relocate(conn, config, folder, target)
+        folder_order.moved(folder, target)
+    folder_order.place(check_folder(parent), target.rpartition("/")[2], before)
+    return target
+
+
+def _relocate(conn: LibvirtConnection, config: Config, folder: str, target: str) -> str:
+    """Rename or move a folder on disk and in libvirt: VMs off, no linked clone outside."""
+    root = _require_root(config)
     with _lock:
         domains = _snapshot(conn)
         places = placements([x for _u, _n, _a, x in domains], config)
@@ -362,6 +427,8 @@ def rename_folder(conn: LibvirtConnection, config: Config, folder: str, new_name
         old_dir, new_dir = _folder_dir(root, folder), _folder_dir(root, target)
         if new_dir.exists():
             raise ApiException(409, "library.exists", f"{target} already exists")
+        if not new_dir.parent.is_dir() and old_dir.is_dir():
+            new_dir.parent.mkdir(parents=True)
         others = [x for u, _n, _a, x in domains if u not in {d[0] for d in inside}]
         old_resolved, new_resolved = resolve(old_dir), resolve(new_dir)
         renamed = False

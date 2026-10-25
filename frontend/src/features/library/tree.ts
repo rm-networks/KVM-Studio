@@ -29,6 +29,7 @@ export function buildTree(
   query: string,
   filter: VmFilter,
   sort: VmSort,
+  order: Readonly<Record<string, string[]>> = {},
 ): FolderNode {
   const nodes = new Map<string, FolderNode>();
   const node = (path: string): FolderNode => {
@@ -46,7 +47,15 @@ export function buildTree(
 
   const narrowed = query.trim() !== "" || filter !== "all";
   const finish = (n: FolderNode): boolean => {
-    n.folders = n.folders.filter(finish).sort((a, b) => collator.compare(a.name, b.name));
+    // The order chosen by drag and drop first, then the others by name.
+    const chosen = order[n.path] ?? [];
+    const rank = (name: string) => {
+      const i = chosen.indexOf(name);
+      return i === -1 ? chosen.length : i;
+    };
+    n.folders = n.folders
+      .filter(finish)
+      .sort((a, b) => rank(a.name) - rank(b.name) || collator.compare(a.name, b.name));
     return !narrowed || n.path === "" || n.vms.length > 0 || n.folders.length > 0;
   };
   const root = node("");

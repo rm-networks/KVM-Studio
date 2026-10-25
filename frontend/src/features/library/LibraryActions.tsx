@@ -6,13 +6,16 @@ import { useNotifier } from "../../components/notifier";
 import { DeleteFolderDialog } from "./DeleteFolderDialog";
 import { FolderNameDialog } from "./FolderNameDialog";
 import { type LibraryActions, LibraryActionsContext } from "./libraryActionsContext";
+import { MoveFolderDialog } from "./MoveFolderDialog";
 import { MoveVmDialog } from "./MoveVmDialog";
+import { parentOf } from "./tree";
 
 type Pending =
   | { kind: "new"; parent: string }
   | { kind: "rename"; path: string }
   | { kind: "delete"; path: string }
   | { kind: "move"; vm: VmSummary; importFiles: boolean }
+  | { kind: "moveFolder"; path: string; parent: string; before: string | null }
   | null;
 
 interface Props {
@@ -46,8 +49,29 @@ export function LibraryActionsProvider({ library, children }: Props) {
         else if (folder !== vm.folder) move(vm, folder);
       },
       importVm: (vm) => setPending({ kind: "move", vm, importFiles: true }),
+      moveFolder: (path, parent, before) => {
+        if (parent !== parentOf(path)) {
+          setPending({ kind: "moveFolder", path, parent, before });
+          return;
+        }
+        // Same parent: only the order of the names changes, no file moves.
+        const name = path.slice(path.lastIndexOf("/") + 1);
+        const siblings = (library?.folders ?? [])
+          .filter((f) => parentOf(f) === parent && f !== path)
+          .map((f) => f.slice(f.lastIndexOf("/") + 1));
+        const chosen = library?.order[parent] ?? [];
+        const known = (n: string) => (chosen.includes(n) ? chosen.indexOf(n) : chosen.length);
+        siblings.sort((a, b) => known(a) - known(b) || a.localeCompare(b));
+        const at = before === null ? siblings.length : Math.max(0, siblings.indexOf(before));
+        siblings.splice(at, 0, name);
+        api
+          .setFolderOrder(parent, siblings)
+          .catch((err: unknown) =>
+            notifyError(t("library.moveFolderFailed", { folder: path }), err),
+          );
+      },
     }),
-    [available, move],
+    [available, move, library, notifyError, t],
   );
 
   const close = () => setPending(null);
@@ -81,6 +105,14 @@ export function LibraryActionsProvider({ library, children }: Props) {
         />
       )}
       {pending?.kind === "delete" && <DeleteFolderDialog path={pending.path} onClose={close} />}
+      {pending?.kind === "moveFolder" && (
+        <MoveFolderDialog
+          path={pending.path}
+          parent={pending.parent}
+          before={pending.before}
+          onClose={close}
+        />
+      )}
       {pending?.kind === "move" && (
         <MoveVmDialog
           vm={pending.vm}

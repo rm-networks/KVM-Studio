@@ -93,7 +93,15 @@
     "drift": {
       "missing_files": "Des fichiers de cette machine virtuelle sont introuvables (déplacés à la main ?).",
       "folder_mismatch": "Le dossier noté ne correspond pas à l'emplacement réel des fichiers."
-    }
+    },
+    "moveFolderTitle": "Déplacer un dossier",
+    "moveFolderIntro": "Déplacer le dossier {{folder}} dans {{target}} ? Ses sous-dossiers et les fichiers de ses machines virtuelles le suivent, et libvirt est mis à jour.",
+    "moveFolderConfirm": "Déplacer",
+    "moveFolderFailed": "Impossible de déplacer le dossier {{folder}}",
+    "moveFolderLinked": "Des clones liés hors de ce dossier dépendent de ses disques : {{files}}. Déplacez-les ou supprimez-les d'abord.",
+    "moveFolderWhere": "Nouvel emplacement : {{target}}",
+    "vmsMoved_one": "{{count}} machine virtuelle le suit",
+    "vmsMoved_other": "{{count}} machines virtuelles le suivent"
   },
   "state": {
     "running": "Allumée",

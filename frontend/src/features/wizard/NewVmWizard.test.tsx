@@ -109,7 +109,7 @@ describe("NewVmWizard", () => {
     render(
       <NotificationProvider>
         <NewVmWizard
-          library={{ root: "/data/KVM-Studio/VM", folders: ["Labs"] }}
+          library={{ root: "/data/KVM-Studio/VM", folders: ["Labs"], order: {} }}
           vms={[makeVm({ name: "Firewall - BSD" })]}
           onCreated={onCreated}
           onClose={() => undefined}
@@ -159,7 +159,7 @@ describe("NewVmWizard", () => {
     render(
       <NotificationProvider>
         <NewVmWizard
-          library={{ root: null, folders: [] }}
+          library={{ root: null, folders: [], order: {} }}
           vms={[]}
           onCreated={() => undefined}
           onClose={() => undefined}

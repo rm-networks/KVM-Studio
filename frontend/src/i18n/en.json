@@ -93,7 +93,15 @@
     "drift": {
       "missing_files": "Some files of this virtual machine cannot be found (moved by hand?).",
       "folder_mismatch": "The recorded folder does not match where the files really are."
-    }
+    },
+    "moveFolderTitle": "Move a Folder",
+    "moveFolderIntro": "Move the folder {{folder}} into {{target}}? Its subfolders and the files of its virtual machines move with it, and libvirt is updated.",
+    "moveFolderConfirm": "Move",
+    "moveFolderFailed": "Could not move the folder {{folder}}",
+    "moveFolderLinked": "Linked clones outside this folder depend on its disks: {{files}}. Move or delete them first.",
+    "moveFolderWhere": "New place: {{target}}",
+    "vmsMoved_one": "{{count}} virtual machine moves with it",
+    "vmsMoved_other": "{{count}} virtual machines move with it"
   },
   "state": {
     "running": "Running",

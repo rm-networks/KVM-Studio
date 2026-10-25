@@ -180,3 +180,12 @@
   margin-left: auto;
   color: var(--state-paused);
 }
+
+/* A folder dropped on the edge of another goes before or after it. */
+.tree-row.drop-before {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.tree-row.drop-after {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}

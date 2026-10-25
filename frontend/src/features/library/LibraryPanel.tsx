@@ -54,7 +54,8 @@ export function LibraryPanel({
   const [sort, setSort] = useState<VmSort>("name");
   const narrowed = query.trim() !== "" || filter !== "all";
   const tree = useMemo(
-    () => (vms ? buildTree(library?.folders ?? [], vms, query, filter, sort) : null),
+    () =>
+      vms ? buildTree(library?.folders ?? [], vms, query, filter, sort, library?.order) : null,
     [vms, library, query, filter, sort],
   );
   const vmsByUuid = useMemo(() => new Map((vms ?? []).map((vm) => [vm.uuid, vm])), [vms]);
