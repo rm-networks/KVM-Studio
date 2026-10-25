@@ -19,7 +19,6 @@ function net(name: string, kind: Network["kind"]): Network {
     used_by: [],
     gateway: "host",
     gateway_ip: null,
-    reservations: [],
   };
 }
 

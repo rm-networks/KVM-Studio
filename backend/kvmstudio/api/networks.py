@@ -19,11 +19,6 @@ class Dhcp(BaseModel):
     end: str
 
 
-class Reservation(BaseModel):
-    mac: str
-    ip: str
-
-
 class Network(BaseModel):
     name: str
     kind: net.Kind
@@ -39,7 +34,6 @@ class Network(BaseModel):
     used_by: list[str]
     gateway: net.GatewayMode = "host"
     gateway_ip: str | None = None
-    reservations: list[Reservation] = []
 
 
 class NetworkSettings(BaseModel):
@@ -51,7 +45,6 @@ class NetworkSettings(BaseModel):
     # None: libvirt's default (the host on NAT, no gateway on host-only).
     gateway: net.GatewayMode | None = None
     gateway_ip: str | None = None
-    reservations: list[Reservation] = Field(default=[], max_length=net.MAX_RESERVATIONS)
 
     def to_spec(self) -> net.NetworkSpec:
         try:
@@ -67,7 +60,6 @@ class NetworkSettings(BaseModel):
             self.host_ip or None,
             self.gateway,
             self.gateway_ip if self.gateway == "custom" else None,
-            tuple(net.Reservation(r.mac.lower(), r.ip) for r in self.reservations),
         )
 
 
@@ -130,7 +122,6 @@ def _model(info: net.NetworkInfo) -> Network:
         used_by=list(info.used_by),
         gateway=info.gateway,
         gateway_ip=info.gateway_ip,
-        reservations=[Reservation(mac=r.mac, ip=r.ip) for r in info.reservations],
     )
 
 

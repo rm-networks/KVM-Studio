@@ -136,7 +136,6 @@ def test_number_and_subnet_are_suggested(client: TestClient) -> None:
         (host_only(host_ip="192.168.9.1"), "net.address_outside"),
         (host_only(gateway="custom"), "net.gateway_required"),
         (host_only(dhcp=None, gateway="host"), "net.needs_dhcp"),
-        (host_only(reservations=[{"mac": "nope", "ip": "192.168.150.20"}]), "net.bad_mac"),
         (host_only(dhcp={"start": "192.168.151.2", "end": "192.168.151.9"}), "net.bad_dhcp"),
         (host_only(subnet="nonsense"), "net.bad_subnet"),
         ({**host_only(), "name": "bad name"}, "net.bad_name"),
@@ -315,7 +314,7 @@ def test_gateway_announced_on_host_only(client: TestClient, conn: LibvirtConnect
     option = root.find(f"{{{net.DNSMASQ_NS}}}options/{{{net.DNSMASQ_NS}}}option")
     assert option is not None
     assert option.get("value") == "dhcp-option=option:router,192.168.150.254"
-    assert net.parse_dhcp_extras(xml)[:2] == ("custom", "192.168.150.254")
+    assert net.parse_gateway(xml) == ("custom", "192.168.150.254")
     # libvirt wants the dnsmasq options last.
     assert [etree.QName(c).localname for c in root][-2:] == ["ip", "options"]
 
@@ -326,7 +325,7 @@ def test_gateway_announced_on_host_only(client: TestClient, conn: LibvirtConnect
     kept = etree.tostring(root).decode()
     none = net.NetworkSpec("host_only", subnet, True, dhcp, None, "none")
     xml = net.apply_spec(kept, "lab", "kvmnet5", none)
-    assert net.parse_dhcp_extras(xml)[0] == "none"
+    assert net.parse_gateway(xml)[0] == "none"
     # libvirt already announces no gateway on a host-only network.
     assert "dhcp-option=3" not in xml
     assert "log-dhcp" in xml
@@ -334,7 +333,7 @@ def test_gateway_announced_on_host_only(client: TestClient, conn: LibvirtConnect
     host = net.NetworkSpec("host_only", subnet, True, dhcp, "192.168.150.254", "host")
     xml = net.apply_spec(xml, "lab", "kvmnet5", host)
     assert "dhcp-option=option:router,192.168.150.254" in xml
-    assert net.parse_dhcp_extras(xml)[:2] == ("host", None)
+    assert net.parse_gateway(xml) == ("host", None)
     back = net.apply_spec(xml, "lab", "kvmnet5", net.NetworkSpec("host_only", subnet, True, dhcp))
     assert "router" not in back
     assert "dhcp-option=3" not in back
@@ -349,42 +348,6 @@ def test_gateway_announced_on_host_only(client: TestClient, conn: LibvirtConnect
     nat = {**host_only(), "kind": "nat", "gateway": "custom", "gateway_ip": "192.168.150.9"}
     r = client.put("/api/networks/kvmnet5", headers=AUTH, json=nat)
     assert r.json()["error"]["code"] == "net.gateway_nat"
-
-
-def test_reservations_change_live(client: TestClient, conn: LibvirtConnection) -> None:
-    client.post("/api/networks", headers=AUTH, json={**host_only(), **NEW}).raise_for_status()
-    body = host_only(reservations=[{"mac": "52:54:00:AA:BB:CC", "ip": "192.168.150.20"}])
-    plan = client.post("/api/networks/kvmnet5/plan", headers=AUTH, json=body).json()
-    assert plan == {"restart": False, "running": []}
-    assert client.put("/api/networks/kvmnet5", headers=AUTH, json=body).status_code == 204
-    host = network_xml(conn, "kvmnet5").find("ip/dhcp/host")
-    assert host is not None
-    assert (host.get("mac"), host.get("ip")) == ("52:54:00:aa:bb:cc", "192.168.150.20")
-    assert networks(client)["kvmnet5"]["reservations"] == [
-        {"mac": "52:54:00:aa:bb:cc", "ip": "192.168.150.20"}
-    ]
-    twice = host_only(
-        reservations=[
-            {"mac": "52:54:00:aa:bb:cc", "ip": "192.168.150.20"},
-            {"mac": "52:54:00:aa:bb:cd", "ip": "192.168.150.20"},
-        ]
-    )
-    r = client.put("/api/networks/kvmnet5", headers=AUTH, json=twice)
-    assert r.json()["error"]["code"] == "net.reservation_twice"
-
-
-def test_add_reservation_picks_a_free_address_below_the_range(conn: LibvirtConnection) -> None:
-    spec = net.NetworkSpec(
-        "nat",
-        ipaddress.IPv4Network("192.168.150.0/24"),
-        True,
-        net.DhcpRange("192.168.150.128", "192.168.150.254"),
-    )
-    net.create_network(conn, "kvmnet5", 5, spec, host=[])
-    assert net.add_reservation(conn, "kvmnet5", "52:54:00:00:00:01") == "192.168.150.127"
-    assert net.add_reservation(conn, "kvmnet5", "52:54:00:00:00:02") == "192.168.150.126"
-    # Asked again for the same card: the same address.
-    assert net.add_reservation(conn, "kvmnet5", "52:54:00:00:00:01") == "192.168.150.127"
 
 
 def test_restart_with_running_vms_needs_a_confirmation(
@@ -409,3 +372,18 @@ def test_restart_with_running_vms_needs_a_confirmation(
     assert r.status_code == 204
     # Started again once the network is back.
     assert conn.run(lambda c: c.lookupByName("net-test-vm").isActive())
+
+
+def test_static_hosts_set_with_virsh_are_kept() -> None:
+    subnet = ipaddress.IPv4Network("192.168.150.0/24")
+    dhcp = net.DhcpRange("192.168.150.128", "192.168.150.254")
+    xml = net.apply_spec(None, "lab", "kvmnet5", net.NetworkSpec("host_only", subnet, True, dhcp))
+    root = etree.fromstring(xml.encode())
+    dhcp_el = root.find("ip/dhcp")
+    assert dhcp_el is not None
+    etree.SubElement(dhcp_el, "host", mac="52:54:00:aa:bb:cc", ip="192.168.150.20")
+    moved = net.NetworkSpec("host_only", subnet, True, dhcp, "192.168.150.254")
+    again = net.apply_spec(etree.tostring(root).decode(), "lab", "kvmnet5", moved)
+    assert "192.168.150.20" in again
+    # Nothing of the kind is ever added by KVM Studio itself.
+    assert "<host" not in xml

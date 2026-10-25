@@ -21,7 +21,6 @@ const kvmnet8: Network = {
   used_by: ["FW-OPN"],
   gateway: "host",
   gateway_ip: null,
-  reservations: [],
 };
 const bridged: Network = {
   ...kvmnet8,
@@ -86,7 +85,6 @@ describe("NetworkEditor", () => {
       dhcp: { start: "192.168.108.200", end: "192.168.108.254" },
       gateway: "host",
       gateway_ip: null,
-      reservations: [],
       stop_vms: null,
     });
   });
@@ -151,7 +149,6 @@ describe("settingsFrom", () => {
     dhcpEnd: "",
     gateway: "host" as const,
     gatewayIp: "",
-    reservations: [],
   };
 
   it("drops the address for a lab segment", () => {

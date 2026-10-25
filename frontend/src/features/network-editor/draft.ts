@@ -1,11 +1,6 @@
 import type { Network, NetworkSettings } from "../../api/client";
 import { intToIp, ipToInt, joinCidr, splitCidr } from "./subnet";
 
-export interface Reservation {
-  mac: string;
-  ip: string;
-}
-
 /** What the editor panel edits before "Apply" sends it. */
 export interface Draft {
   kind: "host_only" | "nat";
@@ -19,7 +14,6 @@ export interface Draft {
   dhcpEnd: string;
   gateway: "host" | "custom" | "none";
   gatewayIp: string;
-  reservations: Reservation[];
 }
 
 export function draftFrom(network: Network): Draft | null {
@@ -36,7 +30,6 @@ export function draftFrom(network: Network): Draft | null {
     dhcpEnd: network.dhcp?.end ?? "",
     gateway: network.gateway ?? (network.kind === "nat" ? "host" : "none"),
     gatewayIp: network.gateway_ip ?? "",
-    reservations: network.reservations ?? [],
   };
 }
 
@@ -96,10 +89,6 @@ export function settingsFrom(draft: Draft): DraftResult {
       dhcp: fittedRange(draft, subnet),
       gateway,
       gateway_ip: gateway === "custom" ? draft.gatewayIp.trim() : null,
-      reservations: draft.reservations.map((r) => ({
-        mac: r.mac.trim().toLowerCase(),
-        ip: r.ip.trim(),
-      })),
     },
   };
 }

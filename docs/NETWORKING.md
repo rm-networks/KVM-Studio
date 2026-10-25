@@ -46,13 +46,12 @@ libvirt networks (192.168.101.0/24 and 192.168.108.0/24 when free).
   It is written as a libvirt dnsmasq option
   (`<dnsmasq:option value='dhcp-option=option:router,X'/>`), which virt-manager
   and virsh keep. A NAT network always announces the host address.
-- **Reserved addresses** (DHCP Settings). A MAC address always gets the same IP
-  address (`<host mac=... ip=.../>` in `<dhcp>`).
+- KVM Studio reserves no DHCP address. Static hosts an administrator sets with
+  `virsh net-update` (`<host mac=... ip=.../>`) are kept as they are.
 
 ## Changes
 
-What libvirt 12 changes on a running network (`net-update`): the DHCP range
-and the reservations. The type, the subnet, the host address and the announced
+What libvirt 12 changes on a running network (`net-update`): the DHCP range. The type, the subnet, the host address and the announced
 gateway need the network to restart, and libvirt does not plug the cards of
 running VMs back into the bridge afterwards. When running VMs use the network,
 the editor lists them and asks first: they are shut down (powered off after

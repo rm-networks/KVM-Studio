@@ -37,8 +37,6 @@ def default_gateway(kind: str) -> GatewayMode:
 
 
 DNSMASQ_NS = "http://libvirt.org/schemas/network/dnsmasq/1.0"
-MAC_RE = re.compile(r"^([0-9a-f]{2}:){5}[0-9a-f]{2}$")
-MAX_RESERVATIONS = 512
 # Clean shutdown of the VMs of a network about to restart.
 SHUTDOWN_WAIT_S = 60
 
@@ -61,14 +59,6 @@ class DhcpRange:
 
 
 @dataclass(frozen=True, slots=True)
-class Reservation:
-    """A DHCP reservation: this MAC address always gets this IP address."""
-
-    mac: str
-    ip: str
-
-
-@dataclass(frozen=True, slots=True)
 class NetworkSpec:
     """What the editor lets the user choose for host-only and NAT networks."""
 
@@ -82,7 +72,6 @@ class NetworkSpec:
     # None: libvirt's default for the kind (see default_gateway).
     gateway: GatewayMode | None = None
     gateway_ip: str | None = None
-    reservations: tuple[Reservation, ...] = ()
 
     @property
     def gateway_mode(self) -> GatewayMode:
@@ -112,7 +101,6 @@ class NetworkInfo:
     used_by: tuple[str, ...] = field(default=())
     gateway: GatewayMode = "host"
     gateway_ip: str | None = None
-    reservations: tuple[Reservation, ...] = ()
 
     @property
     def managed(self) -> bool:
@@ -177,8 +165,8 @@ def _router_option(value: str | None) -> tuple[GatewayMode, str | None] | None:
     return None
 
 
-def parse_dhcp_extras(xml: str) -> tuple[GatewayMode, str | None, tuple[Reservation, ...]]:
-    """Announced gateway (dnsmasq options) and DHCP reservations."""
+def parse_gateway(xml: str) -> tuple[GatewayMode, str | None]:
+    """Gateway announced by DHCP (from the dnsmasq options)."""
     root = etree.fromstring(xml.encode(), parser=_PARSER)
     kind = "nat" if root.find("forward") is not None else "host_only"
     gateway: tuple[GatewayMode, str | None] = (default_gateway(kind), None)
@@ -188,12 +176,7 @@ def parse_dhcp_extras(xml: str) -> tuple[GatewayMode, str | None, tuple[Reservat
     ip = _ipv4_element(root)
     if gateway[0] == "custom" and ip is not None and ip.get("address") == gateway[1]:
         gateway = ("host", None)
-    reservations: list[Reservation] = []
-    if ip is not None:
-        for host in ip.iterfind("dhcp/host"):
-            if (mac := host.get("mac")) and (address := host.get("ip")):
-                reservations.append(Reservation(mac.lower(), address))
-    return gateway[0], gateway[1], tuple(reservations)
+    return gateway
 
 
 def _set_router_option(root: etree._Element, spec: NetworkSpec) -> None:
@@ -231,7 +214,10 @@ def apply_spec(xml: str | None, name: str, bridge: str, spec: NetworkSpec) -> st
         root.find("name").text = name  # type: ignore[union-attr]
     for old in root.findall("forward"):
         root.remove(old)
+    # Static hosts set with virsh are the administrator's: they stay.
+    kept_hosts: list[etree._Element] = []
     for old in [ip for ip in root.findall("ip") if ip.get("family", "ipv4") == "ipv4"]:
+        kept_hosts += old.findall("dhcp/host")
         root.remove(old)
     if spec.kind == "nat":
         bridge_el = root.find("bridge")
@@ -249,8 +235,10 @@ def apply_spec(xml: str | None, name: str, bridge: str, spec: NetworkSpec) -> st
         if spec.dhcp is not None:
             dhcp = etree.SubElement(ip, "dhcp")
             etree.SubElement(dhcp, "range", start=spec.dhcp.start, end=spec.dhcp.end)
-            for r in spec.reservations:
-                etree.SubElement(dhcp, "host", mac=r.mac, ip=r.ip)
+            for host_el in kept_hosts:
+                address = host_el.get("ip")
+                if address and ipaddress.IPv4Address(address) in spec.subnet:
+                    dhcp.append(host_el)
     _set_router_option(root, spec)
     return etree.tostring(root, pretty_print=True).decode()
 
@@ -287,7 +275,7 @@ def fit_range(spec: NetworkSpec) -> NetworkSpec:
         dhcp = DhcpRange(str(start), str(host - 1))
     return NetworkSpec(
         spec.kind, spec.subnet, spec.host_adapter, dhcp,
-        spec.host_ip, spec.gateway, spec.gateway_ip, spec.reservations,
+        spec.host_ip, spec.gateway, spec.gateway_ip,
     )  # fmt: skip
 
 
@@ -342,22 +330,8 @@ def check_spec(spec: NetworkSpec) -> None:
             if not spec.gateway_ip:
                 raise bad("gateway_required", "Give the gateway address")
             usable(spec.gateway_ip, "Gateway")
-        if len(spec.reservations) > MAX_RESERVATIONS:
-            raise bad("too_many", "Too many reservations")
-        macs: set[str] = set()
-        ips: set[ipaddress.IPv4Address] = set()
-        for r in spec.reservations:
-            if not MAC_RE.match(r.mac):
-                raise bad("bad_mac", f"Invalid MAC address: {r.mac}")
-            address = usable(r.ip, "Reserved address")
-            if address == host:
-                raise bad("reserved_host", f"{address} is the host address")
-            if r.mac in macs or address in ips:
-                raise bad("reservation_twice", f"{r.mac} or {address} is reserved twice")
-            macs.add(r.mac)
-            ips.add(address)
-    elif spec.gateway not in (None, default_gateway(spec.kind)) or spec.reservations:
-        raise bad("needs_dhcp", "The gateway and the reservations need DHCP")
+    elif spec.gateway not in (None, default_gateway(spec.kind)):
+        raise bad("needs_dhcp", "The announced gateway needs DHCP")
 
 
 # Host side
@@ -428,7 +402,7 @@ def list_networks(conn: LibvirtConnection) -> list[NetworkInfo]:
         for net in c.listAllNetworks():
             xml = net.XMLDesc(0)
             uuid, kind, mode, bridge, iface, dhcp = parse(xml)
-            gateway, gateway_ip, reservations = parse_dhcp_extras(xml)
+            gateway, gateway_ip = parse_gateway(xml)
             result.append(
                 NetworkInfo(
                     name=net.name(),
@@ -445,7 +419,6 @@ def list_networks(conn: LibvirtConnection) -> list[NetworkInfo]:
                     used_by=tuple(sorted(usage.get(net.name(), ()))),
                     gateway=gateway,
                     gateway_ip=gateway_ip,
-                    reservations=reservations,
                 )
             )
         return sorted(result, key=lambda n: n.name.casefold())
@@ -538,9 +511,9 @@ class UpdatePlan:
 
 
 def _needs_restart(xml: str, spec: NetworkSpec) -> bool:
-    """Only the DHCP range and the reservations change on a running network."""
+    """Only the DHCP range changes on a running network."""
     _uuid, kind, _mode, _bridge, iface, dhcp = parse(xml)
-    gateway, gateway_ip, _reservations = parse_dhcp_extras(xml)
+    gateway, gateway_ip = parse_gateway(xml)
     host = spec.host_address() if spec.host_adapter else None
     same_address = (iface is None and host is None) or (
         iface is not None and host is not None and iface.network == spec.subnet and iface.ip == host
@@ -613,24 +586,6 @@ def _stop(conn: LibvirtConnection, names: list[str], how: str) -> None:
     )
 
 
-def _live_dhcp_hosts(
-    net: libvirt.virNetwork, old: Iterable[Reservation], new: Iterable[Reservation]
-) -> None:
-    old_set, new_set = set(old), set(new)
-    for command, items in (
-        (libvirt.VIR_NETWORK_UPDATE_COMMAND_DELETE, old_set - new_set),
-        (libvirt.VIR_NETWORK_UPDATE_COMMAND_ADD_LAST, new_set - old_set),
-    ):
-        for r in sorted(items, key=lambda r: r.mac):
-            net.update(
-                command,
-                libvirt.VIR_NETWORK_SECTION_IP_DHCP_HOST,
-                -1,
-                etree.tostring(etree.Element("host", mac=r.mac, ip=r.ip)).decode(),
-                libvirt.VIR_NETWORK_UPDATE_AFFECT_LIVE,
-            )
-
-
 def update_network(
     conn: LibvirtConnection,
     name: str,
@@ -643,7 +598,6 @@ def update_network(
     first (only when asked: stop_vms), then started again."""
     spec, xml, new_xml, active, restart = _prepare(conn, name, spec, host)
     _uuid, _kind, _mode, _bridge, _iface, dhcp = parse(xml)
-    _gateway, _gateway_ip, reservations = parse_dhcp_extras(xml)
     running = conn.run(lambda c: _running_users(c, name)) if active and restart else []
     if running and stop_vms is None:
         raise ApiException(
@@ -678,7 +632,6 @@ def update_network(
                 etree.tostring(section).decode(),
                 libvirt.VIR_NETWORK_UPDATE_AFFECT_LIVE,
             )
-        _live_dhcp_hosts(net, reservations, spec.reservations)
 
     conn.run(op)
 
@@ -690,40 +643,6 @@ def update_network(
 
     if running:
         conn.run(restart_vms)
-
-
-def add_reservation(conn: LibvirtConnection, name: str, mac: str, ip: str | None = None) -> str:
-    """Reserve an address for this MAC (kept when one exists); returns the address."""
-    mac = mac.lower()
-    info = next((n for n in list_networks(conn) if n.name == name), None)
-    if info is None or info.kind == "other" or info.subnet is None or info.dhcp is None:
-        raise ApiException(409, "net.no_dhcp", f"{name} has no DHCP server")
-    for r in info.reservations:
-        if r.mac == mac:
-            return r.ip
-    subnet = ipaddress.IPv4Network(info.subnet)
-    taken = {ipaddress.IPv4Address(r.ip) for r in info.reservations}
-    if info.host_ip:
-        taken.add(ipaddress.IPv4Address(info.host_ip))
-    if ip is None:
-        # Below the DHCP range, from the top down, so leases never collide.
-        start = ipaddress.IPv4Address(info.dhcp.start)
-        free = [a for a in subnet.hosts() if a < start and a not in taken]
-        if not free:
-            raise ApiException(409, "net.no_free_address", f"No free address in {subnet}")
-        ip = str(free[-1])
-    spec = NetworkSpec(
-        info.kind,
-        subnet,
-        True,
-        info.dhcp,
-        info.host_ip,
-        info.gateway,
-        info.gateway_ip,
-        (*info.reservations, Reservation(mac, ip)),
-    )
-    update_network(conn, name, spec)
-    return ip
 
 
 def rename_network(conn: LibvirtConnection, name: str, new_name: str) -> None:

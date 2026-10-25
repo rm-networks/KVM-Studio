@@ -15,8 +15,7 @@ export type ImportResult = components["schemas"]["ImportResult"];
 export type Drift = VmSummary["drift"][number];
 export type Network = components["schemas"]["Network"];
 // Fields with a default on the server stay optional here.
-type Defaulted<T> = Omit<T, "gateway" | "reservations"> &
-  Partial<Pick<T & { gateway: unknown; reservations: unknown }, "gateway" | "reservations">>;
+type Defaulted<T> = Omit<T, "gateway"> & Partial<Pick<T & { gateway: unknown }, "gateway">>;
 export type NetworkSettings = Defaulted<components["schemas"]["NetworkSettings"]>;
 export type NetworkCreate = Defaulted<components["schemas"]["NetworkCreate"]>;
 export type NetworkSuggestion = components["schemas"]["Suggestion"];

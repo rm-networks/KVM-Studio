@@ -1665,11 +1665,6 @@ export interface components {
       gateway: "host" | "custom" | "none";
       /** Gateway Ip */
       gateway_ip?: string | null;
-      /**
-       * Reservations
-       * @default []
-       */
-      reservations: components["schemas"]["Reservation"][];
     };
     /** NetworkCreate */
     NetworkCreate: {
@@ -1688,19 +1683,10 @@ export interface components {
       dhcp?: components["schemas"]["Dhcp"] | null;
       /** Host Ip */
       host_ip?: string | null;
-      /**
-       * Gateway
-       * @default host
-       * @enum {string}
-       */
-      gateway: "host" | "custom" | "none";
+      /** Gateway */
+      gateway?: ("host" | "custom" | "none") | null;
       /** Gateway Ip */
       gateway_ip?: string | null;
-      /**
-       * Reservations
-       * @default []
-       */
-      reservations: components["schemas"]["Reservation"][];
       /** Name */
       name?: string | null;
       /** Number */
@@ -1778,19 +1764,10 @@ export interface components {
       dhcp?: components["schemas"]["Dhcp"] | null;
       /** Host Ip */
       host_ip?: string | null;
-      /**
-       * Gateway
-       * @default host
-       * @enum {string}
-       */
-      gateway: "host" | "custom" | "none";
+      /** Gateway */
+      gateway?: ("host" | "custom" | "none") | null;
       /** Gateway Ip */
       gateway_ip?: string | null;
-      /**
-       * Reservations
-       * @default []
-       */
-      reservations: components["schemas"]["Reservation"][];
     };
     /** NetworkState */
     NetworkState: {
@@ -1816,19 +1793,10 @@ export interface components {
       dhcp?: components["schemas"]["Dhcp"] | null;
       /** Host Ip */
       host_ip?: string | null;
-      /**
-       * Gateway
-       * @default host
-       * @enum {string}
-       */
-      gateway: "host" | "custom" | "none";
+      /** Gateway */
+      gateway?: ("host" | "custom" | "none") | null;
       /** Gateway Ip */
       gateway_ip?: string | null;
-      /**
-       * Reservations
-       * @default []
-       */
-      reservations: components["schemas"]["Reservation"][];
       /** Stop Vms */
       stop_vms?: ("shutdown" | "poweroff") | null;
     };
@@ -2065,13 +2033,6 @@ export interface components {
       serial: boolean;
       /** Nested */
       nested: boolean;
-    };
-    /** Reservation */
-    Reservation: {
-      /** Mac */
-      mac: string;
-      /** Ip */
-      ip: string;
     };
     /** Restarting */
     Restarting: {
