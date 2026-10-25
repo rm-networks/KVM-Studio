@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, type VmSummary } from "../api/client";
@@ -16,9 +16,15 @@ import { IsoPicker } from "../features/iso-picker/IsoPicker";
 import { GuestToolsDialog } from "../features/guest-tools/GuestToolsDialog";
 import { VmSettings } from "../features/vm-settings/VmSettings";
 import { NewVmWizard } from "../features/wizard/NewVmWizard";
+import { FullscreenBar } from "../features/console/FullscreenBar";
 import { useConsole } from "../features/console/consoleRegistry";
 import { useCdroms } from "../features/vm/useCdroms";
-import { toggleFullscreen } from "../platform/fullscreen";
+import {
+  browserFullscreen,
+  keyboardLockAvailable,
+  setFullscreen,
+  toggleFullscreen,
+} from "../platform/fullscreen";
 import { VmTab } from "../features/vm/VmTab";
 import { AboutDialog } from "./AboutDialog";
 import { MenuBar } from "./MenuBar";
@@ -53,7 +59,7 @@ export function App() {
 
 function MainWindow() {
   const { t, i18n } = useTranslation();
-  const { notifyError } = useNotifier();
+  const { notify, notifyError } = useNotifier();
   const { info, vms, knownNames, library, error, loading, libvirtLost, refresh } = useAppData();
   const [layout, setLayout] = useState<Layout>({ library: true, toolbar: true, statusBar: true });
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
@@ -69,6 +75,10 @@ function MainWindow() {
   // Names given when a tab opens on a VM the list does not have yet (just created).
   const [tabNames, setTabNames] = useState<ReadonlyMap<string, string>>(new Map());
   const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
+  // VM whose console fills the screen, and the window state to put back after.
+  const [fullscreenVm, setFullscreenVm] = useState<string | null>(null);
+  const windowWasFullscreen = useRef(false);
+  const browserNoticeShown = useRef(false);
 
   useEffect(() => {
     if (!info) return;
@@ -128,6 +138,53 @@ function MainWindow() {
     const at = allTabs.indexOf(activeTab);
     setActiveTab(allTabs[(at + delta + allTabs.length) % allTabs.length] ?? HOME_TAB);
   };
+  // Leaving the VM tab, or the VM stopping, ends the console full screen.
+  const consoleFullscreen =
+    fullscreenVm !== null &&
+    activeTab === fullscreenVm &&
+    ["running", "paused"].includes(vmByUuid.get(fullscreenVm)?.state ?? "")
+      ? fullscreenVm
+      : null;
+  const exitConsoleFullscreen = useCallback(() => setFullscreenVm(null), []);
+  // The window goes back to how it was once the console full screen ends.
+  const wasConsoleFullscreen = useRef(false);
+  useEffect(() => {
+    if (wasConsoleFullscreen.current && !consoleFullscreen) {
+      void setFullscreen(windowWasFullscreen.current);
+    }
+    wasConsoleFullscreen.current = consoleFullscreen !== null;
+  }, [consoleFullscreen]);
+  const consoleFullscreenFor = vmConsole && activeTab !== HOME_TAB ? activeTab : null;
+  const toggleConsoleFullscreen = () => {
+    if (consoleFullscreen) {
+      exitConsoleFullscreen();
+      return;
+    }
+    if (!consoleFullscreenFor) return;
+    setFullscreenVm(consoleFullscreenFor);
+    void setFullscreen(true).then((before) => {
+      windowWasFullscreen.current = before;
+    });
+    if (browserFullscreen() && !browserNoticeShown.current) {
+      browserNoticeShown.current = true;
+      notify(
+        t("console.fullscreenBrowserTitle"),
+        t(
+          keyboardLockAvailable() ? "console.fullscreenBrowserLocked" : "console.fullscreenBrowser",
+        ),
+      );
+    }
+  };
+  // In a browser, Escape (imposed) leaves full screen: follow it.
+  useEffect(() => {
+    if (!consoleFullscreen || !browserFullscreen()) return;
+    const onChange = () => {
+      if (!document.fullscreenElement) setFullscreenVm(null);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, [consoleFullscreen]);
+
   useShortcuts({
     newVm: () => setWizardOpen(true),
     closeTab: () => activeTab !== HOME_TAB && closeTab(activeTab),
@@ -136,7 +193,8 @@ function MainWindow() {
     preferences: () => setPreferencesOpen(true),
     settings: () => currentVm && setSettingsFor(currentVm.uuid),
     grab: () => vmConsole?.grab(),
-    fullscreen: toggleFullscreen,
+    consoleFullscreen: toggleConsoleFullscreen,
+    appFullscreen: toggleFullscreen,
   });
   const setMedia = (target: string, path: string | null) => {
     if (!currentVm) return;
@@ -168,7 +226,8 @@ function MainWindow() {
           onSettings={() => currentVm && setSettingsFor(currentVm.uuid)}
           onGuestTools={() => currentVm && setGuestToolsFor(currentVm.uuid)}
           vmConsole={vmConsole}
-          onFullscreen={toggleFullscreen}
+          onFullscreen={consoleFullscreenFor ? toggleConsoleFullscreen : undefined}
+          onAppFullscreen={toggleFullscreen}
           onGoHome={() => setActiveTab(HOME_TAB)}
           onCloseTab={activeTab !== HOME_TAB ? () => closeTab(activeTab) : undefined}
           onNextTab={allTabs.length > 1 ? () => cycleTab(1) : undefined}
@@ -188,7 +247,7 @@ function MainWindow() {
             onToggleLibrary={() => toggle("library")}
             vm={currentVm}
             vmConsole={vmConsole}
-            onFullscreen={toggleFullscreen}
+            onFullscreen={consoleFullscreenFor ? toggleConsoleFullscreen : undefined}
           />
         )}
         <div className="app-body">
@@ -213,7 +272,15 @@ function MainWindow() {
             </div>
             {/* VM tabs stay mounted so their console keeps its connection. */}
             {openVms.map((uuid) => (
-              <div key={uuid} className="workspace-content" hidden={activeTab !== uuid}>
+              <div
+                key={uuid}
+                className={
+                  uuid === consoleFullscreen
+                    ? "workspace-content workspace-fullscreen"
+                    : "workspace-content"
+                }
+                hidden={activeTab !== uuid}
+              >
                 <VmTab vm={vmByUuid.get(uuid)} onSettings={() => setSettingsFor(uuid)} />
               </div>
             ))}
@@ -225,6 +292,13 @@ function MainWindow() {
             vms={vms}
             libvirtLost={libvirtLost}
             vmConsole={activeTab !== HOME_TAB ? vmConsole : null}
+          />
+        )}
+        {consoleFullscreen && (
+          <FullscreenBar
+            vm={vmByUuid.get(consoleFullscreen) as VmSummary}
+            vmConsole={vmConsole}
+            onExit={exitConsoleFullscreen}
           />
         )}
         <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} version={info?.version} />

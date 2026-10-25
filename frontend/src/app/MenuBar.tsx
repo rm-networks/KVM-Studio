@@ -36,7 +36,8 @@ interface Props {
   onSettings: () => void;
   onGuestTools: () => void;
   vmConsole: ConsoleHandle | null;
-  onFullscreen: () => void;
+  onFullscreen?: () => void;
+  onAppFullscreen: () => void;
   onGoHome: () => void;
   onCloseTab?: () => void;
   onNextTab?: () => void;
@@ -65,6 +66,7 @@ export function MenuBar({
   onGuestTools,
   vmConsole,
   onFullscreen,
+  onAppFullscreen,
   onGoHome,
   onCloseTab,
   onNextTab,
@@ -137,6 +139,7 @@ export function MenuBar({
       "view",
       [
         item(m("fullscreen"), ["Ctrl", "Alt", "Enter"], onFullscreen),
+        item(m("appFullscreen"), ["F11"], onAppFullscreen),
         sep,
         sub(m("customize"), [check("library"), check("toolbar"), check("statusBar")]),
       ],

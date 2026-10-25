@@ -1,0 +1,70 @@
+.fullscreen-bar {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--font-size-small);
+  transform: translate(-50%, -100%);
+  transition: transform 120ms ease-out;
+}
+
+.fullscreen-bar[data-visible="true"] {
+  transform: translate(-50%, 0);
+}
+
+.fullscreen-bar-name {
+  padding: 0 var(--space-2);
+  font-weight: 600;
+}
+
+.fullscreen-bar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 24px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.fullscreen-bar-button:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.fullscreen-bar-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.fullscreen-bar-button .fullscreen-bar-chevron {
+  width: 10px;
+  height: 10px;
+}
+
+.fullscreen-bar-button kbd {
+  color: var(--text-muted);
+  font: inherit;
+}
+
+.fullscreen-bar-menu {
+  z-index: 61;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fullscreen-bar {
+    transition: none;
+  }
+}

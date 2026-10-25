@@ -24,6 +24,14 @@
   background: var(--surface);
 }
 
+/* The VM console alone on the screen, without frame or bars. */
+.workspace-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+}
+
 .session-error {
   display: grid;
   place-items: center;

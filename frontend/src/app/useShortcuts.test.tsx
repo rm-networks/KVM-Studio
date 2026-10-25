@@ -24,7 +24,8 @@ function actions(): ShortcutActions {
     preferences: vi.fn(),
     settings: vi.fn(),
     grab: vi.fn(),
-    fullscreen: vi.fn(),
+    consoleFullscreen: vi.fn(),
+    appFullscreen: vi.fn(),
   };
 }
 
@@ -40,6 +41,7 @@ describe("useShortcuts", () => {
     fireEvent.keyDown(window, { key: "g", ctrlKey: true });
     fireEvent.keyDown(window, { key: "d", ctrlKey: true });
     fireEvent.keyDown(window, { key: "Enter", ctrlKey: true, altKey: true });
+    fireEvent.keyDown(window, { key: "F11" });
     for (const fn of Object.values(a)) expect(fn).toHaveBeenCalledTimes(1);
   });
 
@@ -51,6 +53,9 @@ describe("useShortcuts", () => {
     expect(a.closeTab).not.toHaveBeenCalled();
     expect(a.newVm).not.toHaveBeenCalled();
     fireEvent.keyDown(getByLabelText("guest"), { key: "Enter", ctrlKey: true, altKey: true });
-    expect(a.fullscreen).toHaveBeenCalledTimes(1);
+    expect(a.consoleFullscreen).toHaveBeenCalledTimes(1);
+    // F11 belongs to the guest while the console holds the keyboard.
+    fireEvent.keyDown(getByLabelText("guest"), { key: "F11" });
+    expect(a.appFullscreen).not.toHaveBeenCalled();
   });
 });

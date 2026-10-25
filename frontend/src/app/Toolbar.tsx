@@ -14,7 +14,7 @@ interface Props {
   onToggleLibrary: () => void;
   vm: VmSummary | null;
   vmConsole: ConsoleHandle | null;
-  onFullscreen: () => void;
+  onFullscreen?: () => void;
 }
 
 interface ToolProps {

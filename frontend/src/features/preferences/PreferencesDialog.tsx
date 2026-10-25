@@ -20,7 +20,7 @@ import { ConfirmDialog } from "../vm/ConfirmDialog";
 import "./PreferencesDialog.css";
 
 // Stable documentation pages, never a direct link to the ISO itself.
-export const VIRTIO_WIN_LINKS = [
+const VIRTIO_WIN_LINKS = [
   {
     key: "fedora",
     url: "https://docs.fedoraproject.org/en-US/quick-docs/creating-windows-virtual-machines-using-virtio-drivers/",

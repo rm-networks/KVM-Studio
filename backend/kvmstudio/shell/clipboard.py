@@ -28,6 +28,8 @@ class DesktopApi:
     def __init__(self, clipboard: HostClipboard) -> None:
         self._clipboard = clipboard
         self._window: Any = None
+        # pywebview only toggles: remember the state to set it.
+        self._fullscreen = False
 
     def _attach(self, window: Any) -> None:
         self._window = window
@@ -36,6 +38,14 @@ class DesktopApi:
         """The page's own Fullscreen API is not honoured by the embedded engine."""
         if self._window is not None:
             self._window.toggle_fullscreen()
+            self._fullscreen = not self._fullscreen
+
+    def set_fullscreen(self, on: bool) -> bool:
+        """Full screen on or off for the console; returns the state before."""
+        before = self._fullscreen
+        if isinstance(on, bool) and on != before:
+            self.toggle_fullscreen()
+        return before
 
     def close_window(self) -> None:
         """Lets the uninstall assistant close its own window."""

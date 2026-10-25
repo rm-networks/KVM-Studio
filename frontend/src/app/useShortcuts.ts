@@ -8,7 +8,8 @@ export interface ShortcutActions {
   preferences: () => void;
   settings: () => void;
   grab: () => void;
-  fullscreen: () => void;
+  consoleFullscreen: () => void;
+  appFullscreen: () => void;
 }
 
 /** Workstation shortcuts. Keys typed in a console or a text field are left alone. */
@@ -19,14 +20,27 @@ export function useShortcuts(actions: ShortcutActions): void {
   });
 
   useEffect(() => {
+    // Capture phase: Ctrl+Alt+Enter also works while the console holds the
+    // keyboard (the console itself keeps it from the guest).
+    const onFullscreenKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.altKey && e.key === "Enter") {
+        e.preventDefault();
+        latest.current.consoleFullscreen();
+      } else if (
+        e.key === "F11" &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.shiftKey &&
+        // A console holding the keyboard gives F11 to the guest.
+        !(e.target instanceof Element && e.target.closest(".console-screen"))
+      ) {
+        e.preventDefault();
+        latest.current.appFullscreen();
+      }
+    };
     const onKeyDown = (e: KeyboardEvent) => {
       const a = latest.current;
       const target = e.target instanceof Element ? e.target : null;
-      if (e.ctrlKey && e.altKey && e.key === "Enter") {
-        e.preventDefault();
-        a.fullscreen();
-        return;
-      }
       if (target?.closest(".console-screen, input, textarea, select, [contenteditable='true']")) {
         return;
       }
@@ -45,7 +59,11 @@ export function useShortcuts(actions: ShortcutActions): void {
         handler();
       }
     };
+    window.addEventListener("keydown", onFullscreenKey, true);
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onFullscreenKey, true);
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
 }

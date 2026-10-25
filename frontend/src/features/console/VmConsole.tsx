@@ -258,6 +258,11 @@ function VncScreen({
     // Capture phase: runs before noVNC forwards the keystroke to the guest.
     const onKeyDown = (e: KeyboardEvent) => {
       releasePending = (e.key === "Alt" && e.ctrlKey) || (e.key === "Control" && e.altKey);
+      if (e.ctrlKey && e.altKey && e.key === "Enter") {
+        // Full screen key for the host (handled at the window level), not the guest.
+        e.stopImmediatePropagation();
+        return;
+      }
       const key = pasteKey(e);
       if (!key) return;
       e.preventDefault();

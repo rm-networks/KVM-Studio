@@ -37,7 +37,8 @@
     "eject": "Eject",
     "sendKeys": "Send Key Combination",
     "firstRun": "First-run assistant…",
-    "clone": "Clone…"
+    "clone": "Clone…",
+    "appFullscreen": "Toggle Application Full Screen"
   },
   "toolbar": {
     "start": "Start",
@@ -276,7 +277,12 @@
     "enableClipboard": "Turn Copy and Paste On",
     "enableClipboardConfirm": "QEMU's agent channel will take the place of the SPICE one, and the console gets the display it uses. The SPICE display stays available in virt-manager, without copy and paste. Active at the next start of the VM.",
     "restartForClipboard": "Copy and paste is set up: shut the virtual machine down and start it again to use it.",
-    "starting": "Starting the virtual machine…"
+    "starting": "Starting the virtual machine…",
+    "exitFullscreen": "Exit full screen",
+    "fullscreenBrowserTitle": "Console full screen in the browser",
+    "fullscreenBrowser": "The browser keeps Escape for itself: pressing it leaves full screen and does not reach the VM. Ctrl+Alt+Enter also leaves full screen. Chromium-based browsers can give Escape to the VM.",
+    "fullscreenBrowserLocked": "The keyboard is locked for the VM: Escape reaches it, and holding Escape down leaves full screen (imposed by the browser). Ctrl+Alt+Enter also leaves full screen.",
+    "fullscreenKeys": "Ctrl+Alt+Enter"
   },
   "tabs": {
     "close": "Close tab",

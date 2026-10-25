@@ -38,6 +38,7 @@ def test_only_intended_methods_are_public() -> None:
         "close_window",
         "open_link",
         "read_clipboard",
+        "set_fullscreen",
         "toggle_fullscreen",
         "write_clipboard",
     ]
@@ -54,3 +55,21 @@ def test_desktop_api_opens_only_https_links(monkeypatch: pytest.MonkeyPatch) -> 
     for url in ("https://example.org/a.iso", "file:///etc/passwd", "javascript:alert(1)", 3):
         api.open_link(url)  # type: ignore[arg-type]
     assert opened == ["https://example.org/a.iso"]
+
+
+def test_set_fullscreen_remembers_the_state() -> None:
+    class Window:
+        toggles = 0
+
+        def toggle_fullscreen(self) -> None:
+            self.toggles += 1
+
+    api = DesktopApi(FakeClipboard())
+    window = Window()
+    api._attach(window)
+    assert api.set_fullscreen(True) is False
+    assert api.set_fullscreen(True) is True
+    assert window.toggles == 1
+    api.toggle_fullscreen()
+    assert api.set_fullscreen(False) is False
+    assert window.toggles == 2

@@ -37,7 +37,8 @@
     "eject": "Éjecter",
     "sendKeys": "Envoyer une combinaison",
     "firstRun": "Assistant de premier lancement…",
-    "clone": "Cloner…"
+    "clone": "Cloner…",
+    "appFullscreen": "Basculer l'application en plein écran"
   },
   "toolbar": {
     "start": "Démarrer",
@@ -276,7 +277,12 @@
     "enableClipboard": "Activer le copier-coller",
     "enableClipboardConfirm": "Le canal de l'agent de QEMU remplacera celui de SPICE, et la console recevra l'affichage qu'elle utilise. L'affichage SPICE reste disponible dans virt-manager, sans copier-coller. Actif au prochain démarrage de la VM.",
     "restartForClipboard": "Copier-coller configuré : arrêtez puis redémarrez la machine virtuelle pour l'utiliser.",
-    "starting": "Démarrage de la machine virtuelle…"
+    "starting": "Démarrage de la machine virtuelle…",
+    "exitFullscreen": "Quitter le plein écran",
+    "fullscreenBrowserTitle": "Console en plein écran dans le navigateur",
+    "fullscreenBrowser": "Le navigateur garde Échap pour lui : cette touche quitte le plein écran et n'atteint pas la VM. Ctrl+Alt+Entrée quitte aussi le plein écran. Les navigateurs basés sur Chromium peuvent donner Échap à la VM.",
+    "fullscreenBrowserLocked": "Le clavier est verrouillé pour la VM : Échap lui parvient, et la maintenir enfoncée quitte le plein écran (imposé par le navigateur). Ctrl+Alt+Entrée quitte aussi le plein écran.",
+    "fullscreenKeys": "Ctrl+Alt+Entrée"
   },
   "tabs": {
     "close": "Fermer l'onglet",
