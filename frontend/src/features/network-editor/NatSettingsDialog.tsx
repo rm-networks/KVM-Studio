@@ -89,8 +89,11 @@ function RuleDialog({
             value={rule.proto}
             onChange={(e) => set({ proto: e.target.value as PortForward["proto"] })}
           >
-            <option value="tcp">TCP</option>
-            <option value="udp">UDP</option>
+            {(["tcp", "udp"] as const).map((proto) => (
+              <option key={proto} value={proto}>
+                {proto.toUpperCase()}
+              </option>
+            ))}
           </select>
         </label>
         <label>
