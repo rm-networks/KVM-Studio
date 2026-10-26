@@ -61,6 +61,12 @@ def test_password_is_stored_as_a_hash_readable_by_the_user_only() -> None:
     assert not guest.check_password("wrong")
 
 
+def test_a_damaged_hash_refuses_the_login() -> None:
+    guest.hash_path().parent.mkdir(parents=True, exist_ok=True)
+    guest.hash_path().write_text("$argon2id$damaged\n")
+    assert not guest.check_password(PASSWORD)
+
+
 def test_sessions_expire_after_inactivity() -> None:
     sessions = GuestSessions(idle=0.0)
     sid = sessions.open("10.0.0.2")

@@ -18,6 +18,7 @@ from ..i18n import t
 from ..services.networks import host_addresses
 from .backend_process import BackendError, BackendProcess
 from .restart import exec_restart
+from .server import WS_PROTOCOL
 from .tray import run_tray
 
 
@@ -45,7 +46,7 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
             host="127.0.0.1",
             port=port,
             reload=True,
-            ws="websockets-sansio",
+            ws=WS_PROTOCOL,
             reload_dirs=[str(Path(__file__).resolve().parents[1])],
         )
         return 0

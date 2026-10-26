@@ -1,4 +1,6 @@
 {
+  "startup.failed": "{app} did not start. The messages below say why.",
+  "startup.failed_title": "{app} did not start",
   "check.config": "Configuration",
   "check.config_found": "found",
   "check.config_defaults": "not found, using defaults",

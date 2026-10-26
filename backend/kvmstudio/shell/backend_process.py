@@ -20,7 +20,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TextIO
 
 from ..i18n import set_language, t
 from .restart import RESTART_EXIT
@@ -32,6 +32,12 @@ TOKEN_ENV = "KVMSTUDIO_TOKEN"  # noqa: S105 (a variable name, not a secret)
 
 class BackendError(Exception):
     pass
+
+
+def _relay(stream: TextIO) -> None:
+    for line in stream:
+        sys.stderr.write(line)
+        sys.stderr.flush()
 
 
 class BackendProcess:
@@ -51,6 +57,7 @@ class BackendProcess:
         ]
         self._token = token
         self._proc: subprocess.Popen[str] | None = None
+        self._relay: threading.Thread | None = None
         self._last_code: int | None = None
         self.port = 0
 
@@ -60,11 +67,15 @@ class BackendProcess:
             self._args,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
+            # Relayed to sys.stderr, where the startup error window reads it.
+            stderr=subprocess.PIPE,
             text=True,
             env=env,
         )
-        if self._proc.stdout is None:
+        if self._proc.stdout is None or self._proc.stderr is None:
             raise BackendError("no pipe to the backend process")
+        self._relay = threading.Thread(target=_relay, args=(self._proc.stderr,), daemon=True)
+        self._relay.start()
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             ready, _, _ = select.select([self._proc.stdout], [], [], 0.2)
@@ -79,6 +90,8 @@ class BackendProcess:
             if self._proc.poll() is not None:
                 break
         self.stop()
+        if self._relay is not None:
+            self._relay.join(timeout=2)  # its last messages, before ours
         raise BackendError(t("cli.backend_failed"))
 
     def alive(self) -> bool:

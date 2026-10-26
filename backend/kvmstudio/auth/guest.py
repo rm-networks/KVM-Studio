@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from argon2 import PasswordHasher
-from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
+from argon2.exceptions import Argon2Error
 
 from ..config import config_dir
 
@@ -56,7 +56,9 @@ def check_password(password: str, path: Path | None = None) -> bool:
     try:
         stored = (path or hash_path()).read_text(encoding="ascii").strip()
         return bool(_hasher.verify(stored, password))
-    except (OSError, VerifyMismatchError, VerificationError, InvalidHashError):
+    # A malformed hash raises InvalidHash in argon2-cffi 21 (Debian 13) and
+    # InvalidHashError later, both ValueError: only Argon2Error exists everywhere.
+    except (OSError, ValueError, Argon2Error):
         return False
 
 

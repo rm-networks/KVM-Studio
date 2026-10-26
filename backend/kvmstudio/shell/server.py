@@ -10,7 +10,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import uvicorn
+import uvicorn.config
 from fastapi import FastAPI
+
+# Uvicorn 0.35 and later: the sans-I/O websockets implementation, the one that
+# does not warn with websockets 14. Debian 13 ships uvicorn 0.32, which lacks it.
+WS_PROTOCOL = (
+    "websockets-sansio" if "websockets-sansio" in uvicorn.config.WS_PROTOCOLS else "websockets"
+)
 
 
 class PortInUseError(Exception):
@@ -56,9 +63,7 @@ class BackgroundServer:
     def __init__(self, app: FastAPI, sock: socket.socket, lan: LanListener | None = None) -> None:
         self.port: int = sock.getsockname()[1]
         self._socks = [sock]
-        self._servers = [
-            uvicorn.Server(uvicorn.Config(app, log_level="warning", ws="websockets-sansio"))
-        ]
+        self._servers = [uvicorn.Server(uvicorn.Config(app, log_level="warning", ws=WS_PROTOCOL))]
         if lan is not None:
             self._socks.append(lan.sock)
             self._servers.append(
@@ -66,7 +71,7 @@ class BackgroundServer:
                     uvicorn.Config(
                         app,
                         log_level="warning",
-                        ws="websockets-sansio",
+                        ws=WS_PROTOCOL,
                         # The app starts and stops once, with the first listener.
                         lifespan="off",
                         ssl_certfile=str(lan.cert),

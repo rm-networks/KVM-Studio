@@ -36,7 +36,7 @@ dev = [
 ]
 
 [project.scripts]
-kvm-studio = "kvmstudio.__main__:main"
+kvm-studio = "kvmstudio.startup:run"
 
 [tool.setuptools.packages.find]
 include = ["kvmstudio*"]

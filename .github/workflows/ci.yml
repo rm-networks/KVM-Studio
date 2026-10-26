@@ -35,6 +35,26 @@ jobs:
       - name: Tests (libvirt test:///default driver)
         run: .venv/bin/pytest --cov --cov-report=term-missing --cov-fail-under=70
 
+  backend-debian:
+    # The oldest Python packages among the supported distributions (Debian 13):
+    # the tests run against them, nothing from PyPI but pywebview.
+    runs-on: ubuntu-latest
+    container: debian:13
+    steps:
+      - name: Install system packages
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git ca-certificates python3 python3-pip python3-fastapi python3-uvicorn python3-pydantic python3-websockets python3-lxml python3-tomli-w python3-argon2 python3-gi python3-libvirt python3-pytest python3-httpx python3-bottle python3-typing-extensions qemu-utils xorriso gir1.2-libosinfo-1.0 libvirt-clients
+
+      - uses: actions/checkout@v5
+
+      - name: Tests with the distribution packages
+        run: |
+          pip install --break-system-packages --no-deps --target /tmp/vendor pywebview==6.2.1 proxy_tools==0.1.0
+          PYTHONPATH=backend:helper:/tmp/vendor python3 -m pytest -p no:cacheprovider
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -83,7 +103,7 @@ jobs:
         run: npm run e2e
 
   package:
-    needs: [backend, frontend, e2e]
+    needs: [backend, backend-debian, frontend, e2e]
     runs-on: ubuntu-latest
     container: fedora:44
     env:
@@ -124,7 +144,7 @@ jobs:
       - name: Install and run the package
         run: |
           dnf install -y --setopt=install_weak_deps=False ./dist/kvm-studio-*.rpm
-          kvm-studio --version
+          .github/scripts/package-smoke.sh
           printf 'socket = "/tmp/h.sock"\n' > /tmp/h.toml
           /opt/kvm-studio/bin/kvmstudio-helper --config /tmp/h.toml &
           sleep 2
@@ -158,6 +178,8 @@ jobs:
         image: ["debian:13", "ubuntu:26.04"]
     container: ${{ matrix.image }}
     steps:
+      - uses: actions/checkout@v5
+
       - uses: actions/download-artifact@v4
         with:
           name: kvm-studio-deb
@@ -192,6 +214,9 @@ jobs:
           sha256sum -c /tmp/before
           kvm-studio --version
           /opt/kvm-studio/bin/kvmstudio-helper --help > /dev/null
+
+      - name: Start the backend
+        run: .github/scripts/package-smoke.sh
 
       - name: Purge
         run: |

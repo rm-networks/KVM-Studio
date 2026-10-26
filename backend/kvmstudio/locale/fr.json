@@ -1,4 +1,6 @@
 {
+  "startup.failed": "{app} n'a pas démarré. Les messages ci-dessous en donnent la raison.",
+  "startup.failed_title": "{app} n'a pas démarré",
   "check.config": "Configuration",
   "check.config_found": "trouvée",
   "check.config_defaults": "absente, valeurs par défaut",

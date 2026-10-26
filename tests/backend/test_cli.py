@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from kvmstudio.__main__ import main
+from kvmstudio.cli import main
 
 PACKAGED_NM_CONF = (
     Path(__file__).resolve().parents[2] / "packaging" / "networkmanager" / "90-kvm-studio.conf"

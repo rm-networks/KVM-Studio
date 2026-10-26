@@ -19,8 +19,21 @@ hide_kvm_studio_interfaces() {
     done
 }
 
+# Installed as a dependency, the libvirt daemons of Fedora have their sockets
+# enabled but not started until the next boot. Started here, only if enabled
+# and not running yet: a running daemon is never restarted.
+start_libvirt_sockets() {
+    for daemon in virtqemud virtnetworkd virtstoraged virtnodedevd virtsecretd virtinterfaced virtnwfilterd virtlogd virtlockd; do
+        if systemctl is-enabled --quiet "$daemon.socket" 2>/dev/null &&
+            ! systemctl is-active --quiet "$daemon.socket"; then
+            systemctl start "$daemon.socket" || :
+        fi
+    done
+}
+
 if [ -d /run/systemd/system ]; then
     systemctl daemon-reload || :
+    start_libvirt_sockets
     udevadm control --reload 2>/dev/null || :
     systemctl enable --now kvmstudio-helper.socket || :
     # Writes the port forwarding table at boot and after nftables, firewalld

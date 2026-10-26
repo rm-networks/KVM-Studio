@@ -13,7 +13,7 @@ from kvmstudio.app import create_app
 from kvmstudio.config import Config, load_config
 from kvmstudio.libvirt_conn import LibvirtConnection
 from kvmstudio.shell import tray
-from kvmstudio.shell.backend_process import BackendProcess
+from kvmstudio.shell.backend_process import BackendError, BackendProcess
 from kvmstudio.shell.restart import RESTART_EXIT, restart_argv
 from kvmstudio.shell.web import switch_to_desktop
 
@@ -67,6 +67,16 @@ def test_backend_child_exits_with_the_restart_status(tmp_path: Path) -> None:
     assert backend.returncode == RESTART_EXIT
     assert backend.wants_restart()
     backend.stop()
+
+
+def test_a_backend_that_fails_relays_its_messages(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = tmp_path / "config.toml"
+    config.write_text('[libvirt]\nuri = "test:///default"\n[web]\nport = "x"\n')
+    with pytest.raises(BackendError):
+        BackendProcess(config, "web", "tok").start()
+    assert "port" in capsys.readouterr().err
 
 
 def test_switch_to_desktop_saves_the_mode(tmp_path: Path) -> None:
