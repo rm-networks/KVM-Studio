@@ -45,4 +45,4 @@ close_reminder = true    # remind that VMs keep running (with "keep")
 
 [ui]
 theme = "system"         # "system" | "light" | "dark"
-language = "system"      # "system" (the desktop language) | "en" | "fr"
+language = "en"          # "en" | "fr"

@@ -70,6 +70,7 @@ limit.
 
 ## Languages
 
-English (source language) and French, with i18next. With the "Same as the
-system" setting, French is used when the desktop is in French, English
-otherwise.
+English and French, with i18next. English is the default; French is picked
+in Preferences, or on the first page of the first-run assistant, and applies
+at once. The language of the desktop is not looked at. A guest of LAN
+sharing picks theirs in Edit > Language, kept by their own browser.

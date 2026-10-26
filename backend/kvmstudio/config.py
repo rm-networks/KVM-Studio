@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 import tomli_w
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 ExpandedPath = Annotated[Path, AfterValidator(lambda p: p.expanduser())]
 
@@ -64,7 +64,14 @@ class WorkspaceSettings(_Section):
 
 class UiSettings(_Section):
     theme: Literal["system", "light", "dark"] = "system"
-    language: Literal["system", "en", "fr"] = "system"
+    # English unless French is chosen; the desktop language is not looked at.
+    language: Literal["en", "fr"] = "en"
+
+    @field_validator("language", mode="before")
+    @classmethod
+    def _former_system(cls, value: object) -> object:
+        # "system" (versions before 1.0.0) followed the desktop: now English.
+        return "en" if value == "system" else value
 
 
 class Config(_Section):

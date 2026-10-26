@@ -558,7 +558,6 @@
     "themeLight": "Clair",
     "themeDark": "Sombre",
     "language": "Langue",
-    "languageSystem": "Celle du système",
     "libvirt": "Connexion libvirt",
     "libvirtUri": "URI",
     "libvirtHint": "qemu:///system par défaut. qemu:///session fonctionne sans les réseaux kvmnet. Appliqué au redémarrage.",
@@ -788,7 +787,8 @@
     },
     "welcome": {
       "intro": "Cet assistant prépare {{app}} : il vérifie la machine, choisit où ranger les machines virtuelles et crée les réseaux virtuels de base.",
-      "license": "{{app}} est un logiciel libre distribué sous licence GPL-3.0, sans aucune garantie."
+      "license": "{{app}} est un logiciel libre distribué sous licence GPL-3.0, sans aucune garantie.",
+      "language": "Langue"
     },
     "check": {
       "cpu": {

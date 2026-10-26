@@ -558,7 +558,6 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "language": "Language",
-    "languageSystem": "Same as the system",
     "libvirt": "libvirt connection",
     "libvirtUri": "URI",
     "libvirtHint": "qemu:///system by default. qemu:///session works without kvmnet networks. Applied on restart.",
@@ -788,7 +787,8 @@
     },
     "welcome": {
       "intro": "This assistant sets {{app}} up: it checks the machine, chooses where virtual machines go and creates the basic virtual networks.",
-      "license": "{{app}} is free software released under the GPL-3.0 license, without any warranty."
+      "license": "{{app}} is free software released under the GPL-3.0 license, without any warranty.",
+      "language": "Language"
     },
     "check": {
       "cpu": {

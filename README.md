@@ -7,8 +7,8 @@ browser.
 The VMs it creates stay standard libvirt domains: they also open in
 virt-manager and `virsh`.
 
-The interface is in English, or in French when the desktop is in French
-(Edit > Preferences > Interface changes it).
+The interface is in English; French is chosen on the first page of the
+first-run assistant or in Edit > Preferences > Interface.
 
 Virtual machines keep running when KVM Studio closes: libvirt and QEMU run them,
 not KVM Studio. You find them again the next time it starts (Edit > Preferences >

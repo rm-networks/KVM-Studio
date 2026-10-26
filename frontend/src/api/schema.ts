@@ -2715,10 +2715,10 @@ export interface components {
       theme: "system" | "light" | "dark";
       /**
        * Language
-       * @default system
+       * @default en
        * @enum {string}
        */
-      language: "system" | "en" | "fr";
+      language: "en" | "fr";
     };
     /** UninstallPlan */
     UninstallPlan: {

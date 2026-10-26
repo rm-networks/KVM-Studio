@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { api, type Config, type GroupState, type SetupStatus } from "../../api/client";
 import { Wizard } from "../../components/Wizard";
 import { useNotifier } from "../../components/notifier";
+import { LANGUAGE_NAMES, type Language, languages } from "../../i18n";
 import { folderPicker } from "../../platform/folders";
 import { RestartPrompt } from "../preferences/PreferencesDialog";
 import "./FirstRunWizard.css";
@@ -40,7 +41,7 @@ function FolderInput({ value, onChange }: { value: string; onChange: (v: string)
 }
 
 export function FirstRunWizard({ onClose, onSaved }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { notifyError } = useNotifier();
   const [step, setStep] = useState<Step>("welcome");
   const [status, setStatus] = useState<SetupStatus | null>(null);
@@ -53,6 +54,7 @@ export function FirstRunWizard({ onClose, onSaved }: Props) {
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<string[]>([]);
   const [restart, setRestart] = useState<Config | null>(null);
+  const [language, setLanguage] = useState<Language>("en");
   const [showRestart, setShowRestart] = useState(false);
 
   useEffect(() => {
@@ -63,6 +65,7 @@ export function FirstRunWizard({ onClose, onSaved }: Props) {
         setStatus(s);
         setGroup(s.libvirt_group);
         setConfig(prefs.config);
+        setLanguage(prefs.config.ui.language);
         setVmLocation(prefs.config.storage.vm_default_location ?? "");
         setMode(prefs.config.interface.mode);
         setCreateNetworks(s.networks.some((n) => !n.exists));
@@ -95,6 +98,19 @@ export function FirstRunWizard({ onClose, onSaved }: Props) {
     } finally {
       setBusy(false);
     }
+  };
+
+  // Applied at once, and saved, so that the rest of the assistant speaks it.
+  const chooseLanguage = (next: Language) => {
+    setLanguage(next);
+    void i18n.changeLanguage(next);
+    if (!config) return;
+    const updated: Config = { ...config, ui: { ...config.ui, language: next } };
+    setConfig(updated);
+    api
+      .savePreferences(updated)
+      .then(onSaved)
+      .catch((err: unknown) => notifyError(t("firstRun.failed"), err));
   };
 
   const apply = async () => {
@@ -180,6 +196,20 @@ export function FirstRunWizard({ onClose, onSaved }: Props) {
     >
       {step === "welcome" && (
         <>
+          <fieldset className="first-run-language">
+            <legend>{t("firstRun.welcome.language")}</legend>
+            {languages.map((code) => (
+              <label key={code} className="check">
+                <input
+                  type="radio"
+                  name="language"
+                  checked={language === code}
+                  onChange={() => chooseLanguage(code)}
+                />
+                {LANGUAGE_NAMES[code]}
+              </label>
+            ))}
+          </fieldset>
           <p>{t("firstRun.welcome.intro")}</p>
           <p>{t("firstRun.welcome.license")}</p>
           <p className="muted">{t("about.notice")}</p>

@@ -25,8 +25,8 @@ working copy and paste, host network applet free of stray interfaces.
 
 ## Before V1
 
-Feedback from the 0.1.0 acceptance test: English as the source language (French
-picked up from the desktop), ISO libraries declared from Preferences through the
+Feedback from the 0.1.0 acceptance test: an English interface with French as
+a choice, ISO libraries declared from Preferences through the
 helper, removal of the access rights the helper granted, vnet* interfaces kept
 out of NetworkManager, a redesign of the interface, and VM cloning (F-84,
 brought forward from V2).

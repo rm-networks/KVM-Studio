@@ -119,12 +119,12 @@ def test_unwritable_location_is_explained(prefs_client: TestClient, tmp_path: Pa
 def test_saved_file_round_trips(tmp_path: Path) -> None:
     path = tmp_path / "c.toml"
     config = Config.model_validate(
-        {"storage": {"vm_default_location": str(tmp_path)}, "ui": {"language": "en"}}
+        {"storage": {"vm_default_location": str(tmp_path)}, "ui": {"language": "fr"}}
     )
     save_config(config, path)
     text = path.read_text()
     assert text.startswith("# KVM Studio configuration")
-    assert tomllib.loads(text)["ui"]["language"] == "en"
+    assert tomllib.loads(text)["ui"]["language"] == "fr"
     assert load_config(path) == config
 
 

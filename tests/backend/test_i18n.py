@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from kvmstudio import APP_NAME, i18n
+from kvmstudio.config import UiSettings
 
 LOCALE = Path(i18n.__file__).parent / "locale"
 ROOT = Path(__file__).resolve().parents[2]
@@ -31,27 +32,16 @@ def test_the_product_name_is_never_translated() -> None:
         assert APP_NAME not in path.read_text(), path
 
 
-@pytest.mark.parametrize(
-    ("env", "expected"),
-    [
-        ({"LANG": "fr_FR.UTF-8"}, "fr"),
-        ({"LANG": "en_US.UTF-8"}, "en"),
-        ({"LANG": "de_DE.UTF-8"}, "en"),
-        ({"LC_ALL": "fr_CA.UTF-8", "LANG": "en_US.UTF-8"}, "fr"),
-        ({"LANG": "C.UTF-8"}, "en"),
-        ({}, "en"),
-    ],
-)
-def test_system_language(
-    monkeypatch: pytest.MonkeyPatch, env: dict[str, str], expected: str
-) -> None:
-    for var in ("LC_ALL", "LC_MESSAGES", "LANG", "LANGUAGE"):
-        monkeypatch.delenv(var, raising=False)
-    for var, value in env.items():
-        monkeypatch.setenv(var, value)
-    assert i18n.resolve("system") == expected
-    assert i18n.resolve("fr") == "fr"
+def test_english_unless_french_is_chosen(monkeypatch: pytest.MonkeyPatch) -> None:
+    # The desktop language is not looked at.
+    monkeypatch.setenv("LANG", "fr_FR.UTF-8")
+    monkeypatch.setenv("LC_ALL", "fr_FR.UTF-8")
     assert i18n.resolve("en") == "en"
+    assert i18n.resolve("fr") == "fr"
+    assert i18n.resolve("system") == "en"
+    assert UiSettings().language == "en"
+    # A configuration written before 1.0.0 still loads.
+    assert UiSettings.model_validate({"language": "system"}).language == "en"
 
 
 def test_messages_carry_the_product_name() -> None:

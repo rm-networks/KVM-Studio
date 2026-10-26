@@ -87,7 +87,7 @@ not KVM Studio. You find them again the next time it starts.
 | Key | Default | Values |
 | --- | --- | --- |
 | `theme` | `"system"` | `"system"`, `"light"`, `"dark"` |
-| `language` | `"system"` | `"system"` (French when the desktop is in French, English otherwise), `"en"`, `"fr"` |
+| `language` | `"en"` | `"en"` or `"fr"`. The desktop language is not looked at. `"system"`, from versions before 1.0.0, reads as `"en"`. |
 
 ## Environment variables
 
@@ -95,7 +95,6 @@ not KVM Studio. You find them again the next time it starts.
 | --- | --- |
 | `XDG_CONFIG_HOME` | Location of the configuration folder. |
 | `XDG_STATE_HOME` | Location of the state folder (`kvm-studio/library-order.json`: display order of the library folders). |
-| `LC_ALL`, `LC_MESSAGES`, `LANG` | Desktop language, used when `language = "system"`. |
 | `KVMSTUDIO_FRONTEND_DIR` | Folder of the built interface, when it is not at its usual place. |
 | `KVMSTUDIO_BACKEND` | Development: API address for the Vite server (default `http://127.0.0.1:60080`). |
 | `KVMSTUDIO_HELPER_SOCKET` | Helper socket (default `/run/kvmstudio-helper.sock`). |

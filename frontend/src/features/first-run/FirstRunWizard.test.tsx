@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Config, SetupStatus } from "../../api/client";
 import { NotificationProvider } from "../../components/Notifications";
+import i18n from "../../i18n";
 import { FirstRunWizard } from "./FirstRunWizard";
 
 const config: Config = {
@@ -99,5 +100,23 @@ describe("FirstRunWizard", () => {
     const added = calls.find((c) => c.path === "/api/preferences/iso-libraries")?.body;
     expect(added).toEqual({ name: "ISO", path: "/srv/iso", recursive: true });
     expect(calls.some((c) => c.path === "/api/setup/networks")).toBe(true);
+  });
+
+  it("offers the language first and applies it at once", async () => {
+    const calls = mockApi();
+    const onSaved = vi.fn();
+    render(
+      <NotificationProvider>
+        <FirstRunWizard onClose={() => undefined} onSaved={onSaved} />
+      </NotificationProvider>,
+    );
+    const french = await screen.findByRole("radio", { name: "Français" });
+    await waitFor(() => expect(french).toHaveProperty("checked", true));
+    fireEvent.click(screen.getByRole("radio", { name: "English" }));
+    expect(await screen.findByRole("button", { name: "Next >" })).toBeTruthy();
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    const saved = calls.find((c) => c.method === "PUT")?.body as Config;
+    expect(saved.ui.language).toBe("en");
+    await act(() => i18n.changeLanguage("fr"));
   });
 });

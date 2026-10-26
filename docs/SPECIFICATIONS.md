@@ -120,7 +120,7 @@ nic_model = "virtio"
 
 [ui]
 theme = "system"
-language = "system"       # "system" | "en" | "fr"
+language = "en"           # "en" | "fr"
 ```
 
 **Installation.**
@@ -325,7 +325,7 @@ The library folders are real folders on disk: what the user sees in the tree mat
 
 ### 6.10 Cross-cutting
 
-- **F-90** English and French interface; English is the source language, French is picked when the desktop is in French.
+- **F-90** English and French interface. English is the default; French is chosen in Preferences or on the first page of the first-run assistant (applied at once). The desktop language is not looked at.
 - **F-91** Light/dark/system theme.
 - **F-92** Log of long tasks with progress.
 - **F-93** libvirt errors translated into plain words, raw message available on demand.

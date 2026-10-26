@@ -34,7 +34,6 @@ class KvmInfo(BaseModel):
 
 class UiPreferences(BaseModel):
     theme: Literal["system", "light", "dark"]
-    # The language to show: the setting, or the desktop's when it is "system".
     language: Literal["en", "fr"]
 
 

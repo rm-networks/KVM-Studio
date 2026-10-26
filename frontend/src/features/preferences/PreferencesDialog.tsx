@@ -14,6 +14,7 @@ import { api, type Config, type IsoLibrary, type IsoLibraryChange } from "../../
 import { Dialog } from "../../components/Dialog";
 import { useNotifier } from "../../components/notifier";
 import { folderPicker } from "../../platform/folders";
+import { LANGUAGE_NAMES, languages } from "../../i18n";
 import { openLink } from "../../platform/links";
 import { CloseDialog } from "../session/CloseDialog";
 import { SharingPrefs } from "../sharing/SharingPrefs";
@@ -525,10 +526,11 @@ export function PreferencesDialog({ onClose, onSaved, onScan }: Props) {
                     })
                   }
                 >
-                  <option value="system">{t("prefs.languageSystem")}</option>
-                  {/* Each language under its own name, whatever the current one. */}
-                  <option value="en">English</option>
-                  <option value="fr">Français</option>
+                  {languages.map((language) => (
+                    <option key={language} value={language}>
+                      {LANGUAGE_NAMES[language]}
+                    </option>
+                  ))}
                 </select>
               </label>
             </Group>

@@ -8,10 +8,8 @@ import fr from "./fr.json";
 export const languages = ["en", "fr"] as const;
 export type Language = (typeof languages)[number];
 
-/** Until the backend tells the configured language, follow the browser. */
-export function browserLanguage(): Language {
-  return navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en";
-}
+/** Each language under its own name, whatever the current one. */
+export const LANGUAGE_NAMES: Record<Language, string> = { en: "English", fr: "Français" };
 
 const GUEST_LANGUAGE_KEY = "kvmstudio.guestLanguage";
 
@@ -38,7 +36,8 @@ export function storeGuestLanguage(language: Language): void {
 
 void i18n.use(initReactI18next).init({
   resources: { en: { translation: en }, fr: { translation: fr } },
-  lng: storedGuestLanguage() ?? browserLanguage(),
+  // English until the configuration says otherwise; never the desktop's language.
+  lng: storedGuestLanguage() ?? "en",
   fallbackLng: "en",
   interpolation: { escapeValue: false, defaultVariables: { app: APP_NAME } },
 });

@@ -7,7 +7,6 @@ use str.format fields; {app} is always the product name.
 from __future__ import annotations
 
 import json
-import os
 from functools import cache
 from importlib.resources import files
 from typing import Any, Literal
@@ -18,22 +17,9 @@ Language = Literal["en", "fr"]
 LANGUAGES: tuple[Language, ...] = ("en", "fr")
 
 
-def system_language() -> Language:
-    """The desktop language, from the usual locale variables."""
-    for var in ("LC_ALL", "LC_MESSAGES", "LANG", "LANGUAGE"):
-        value = os.environ.get(var, "")
-        if value and value not in ("C", "POSIX") and not value.startswith("C."):
-            return "fr" if value.startswith("fr") else "en"
-    return "en"
-
-
 def resolve(setting: str) -> Language:
-    """A language setting ("system", "en", "fr") as an actual language."""
-    if setting == "fr":
-        return "fr"
-    if setting == "en":
-        return "en"
-    return system_language()
+    """A language setting as an actual language: English unless French is chosen."""
+    return "fr" if setting == "fr" else "en"
 
 
 @cache
@@ -51,7 +37,7 @@ def set_language(setting: str) -> None:
 
 
 def current() -> Language:
-    return _current[0] if _current else system_language()
+    return _current[0] if _current else "en"
 
 
 def t(key: str, language: Language | None = None, **fields: Any) -> str:

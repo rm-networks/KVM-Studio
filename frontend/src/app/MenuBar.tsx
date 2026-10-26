@@ -3,7 +3,7 @@ import { Check, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { CdromDevice, VmSummary } from "../api/client";
-import { languages, type Language } from "../i18n";
+import { LANGUAGE_NAMES, languages, type Language } from "../i18n";
 import type { ConsoleHandle } from "../features/console/consoleRegistry";
 import { COMBOS } from "../features/console/keys";
 import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
@@ -26,7 +26,6 @@ const item = (label: string, keys?: string[], onSelect?: () => void): Entry => (
 });
 const sub = (label: string, entries?: Entry[]): Entry => ({ kind: "sub", label, entries });
 const sep: Entry = { kind: "sep" };
-const LANGUAGE_NAMES: Record<Language, string> = { en: "English", fr: "Français" };
 
 interface Props {
   layout: Layout;
