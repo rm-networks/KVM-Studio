@@ -63,3 +63,52 @@
 .vm-summary-device > svg {
   color: var(--text-muted);
 }
+
+.vm-live {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.vm-live-views {
+  display: flex;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.vm-live-view {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+}
+
+.vm-live-view svg {
+  width: 14px;
+  height: 14px;
+}
+
+.vm-live-view.active {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+.vm-live-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.vm-live-body > .console {
+  flex: 1;
+  height: auto;
+}

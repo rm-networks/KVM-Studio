@@ -26,6 +26,8 @@
   minutes idle), the rights of the guest checked on every route, the firewall
   port opened and closed by the helper (firewalld or ufw), and a shared
   console showing how many people are on it.
+- .deb package for Debian 13 and Ubuntu 26.04 LTS.
+- Serial console (xterm.js) next to the screen of VMs that have one.
 
 ## 0.4.0 (2026-10-25)
 

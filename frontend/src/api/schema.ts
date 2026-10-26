@@ -1484,6 +1484,11 @@ export interface components {
       clipboard_isolated: boolean;
       /** Active */
       active: boolean;
+      /**
+       * Serial
+       * @default false
+       */
+      serial: boolean;
     };
     /** Drive */
     Drive: {

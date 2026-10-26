@@ -281,6 +281,10 @@
     },
     "sharing": {
       "bad_password": "No spaces at the start or the end of the password."
+    },
+    "serial": {
+      "none": "This virtual machine has no serial console.",
+      "stalled": "The serial console does not read what is typed."
     }
   },
   "about": {
@@ -1052,5 +1056,12 @@
     "fingerprint": "Certificate (self-signed), SHA-256 fingerprint to compare in the browser:",
     "firewallOpened": "Port opened in {{firewall}}, closed when {{app}} stops.",
     "firewallNone": "No firewall port was opened (no firewalld or ufw, or the helper did not answer)."
+  },
+  "serial": {
+    "views": "Console views",
+    "screen": "Screen",
+    "serial": "Serial Console",
+    "connecting": "Connecting to the serial console…",
+    "closed": "The serial console is closed."
   }
 }

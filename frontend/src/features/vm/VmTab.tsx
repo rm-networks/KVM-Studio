@@ -1,8 +1,9 @@
-import { Cpu, Link2, MemoryStick, Play, Settings2 } from "lucide-react";
+import { Cpu, Link2, MemoryStick, Monitor, Play, Settings2, Terminal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, type VmSummary } from "../../api/client";
+import { SerialConsole } from "../console/SerialConsole";
 import { VmConsole } from "../console/VmConsole";
 import { powerAllowed } from "./power";
 import { useVmActions } from "./vmActionsContext";
@@ -27,12 +28,59 @@ function useLinkedClones(uuid: string | undefined, state: string | undefined): s
   return names;
 }
 
+/** A running VM: its screen, and its serial console when it has one. */
+function LiveVm({ uuid }: { uuid: string }) {
+  const { t } = useTranslation();
+  const [serial, setSerial] = useState(false);
+  const [view, setView] = useState<"screen" | "serial">("screen");
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .display(uuid)
+      .then((d) => {
+        if (cancelled) return;
+        setSerial(d.serial ?? false);
+        // An appliance without a display: straight to its serial console.
+        if (d.serial && d.live.length === 0) setView("serial");
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [uuid]);
+
+  if (!serial) return <VmConsole uuid={uuid} />;
+  return (
+    <div className="vm-live">
+      <div className="vm-live-views" role="tablist" aria-label={t("serial.views")}>
+        {(["screen", "serial"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            role="tab"
+            aria-selected={view === v}
+            className={view === v ? "vm-live-view active" : "vm-live-view"}
+            onClick={() => setView(v)}
+          >
+            {v === "screen" ? <Monitor aria-hidden /> : <Terminal aria-hidden />}
+            {t(`serial.${v}`)}
+          </button>
+        ))}
+      </div>
+      <div className="vm-live-body">
+        {view === "screen" ? <VmConsole uuid={uuid} /> : <SerialConsole uuid={uuid} />}
+      </div>
+    </div>
+  );
+}
+
 export function VmTab({ vm, onSettings }: { vm: VmSummary | undefined; onSettings: () => void }) {
   const { t } = useTranslation();
   const actions = useVmActions();
   const clones = useLinkedClones(vm?.uuid, vm?.state);
   if (!vm) return <div className="vm-tab-note">{t("errors.libvirt.no_domain")}</div>;
-  if (LIVE_STATES.has(vm.state)) return <VmConsole uuid={vm.uuid} />;
+  if (LIVE_STATES.has(vm.state)) return <LiveVm uuid={vm.uuid} />;
 
   return (
     <div className="vm-summary">

@@ -6,6 +6,7 @@ from lxml import etree
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
+from ..console.serial import has_serial
 from ..console.vnc import graphics_types
 from ..context import Context
 from ..xml.devices import use_qemu_vdagent, vnc_graphics
@@ -23,6 +24,8 @@ class DisplayInfo(BaseModel):
     # Turned off on purpose in Options > Isolation: no offer to turn it on.
     clipboard_isolated: bool = False
     active: bool
+    # A serial console (firewalls, appliances), opened at /api/vms/{uuid}/serial.
+    serial: bool = False
 
 
 class DisplayChange(BaseModel):
@@ -59,6 +62,7 @@ async def display(ctx: Context, uuid: str) -> DisplayInfo:
             clipboard_config=_has_vdagent(config),
             clipboard_isolated=_isolated(config),
             active=active,
+            serial=has_serial(live if active else config),
         )
 
     return await run_in_threadpool(ctx.conn.run, op)

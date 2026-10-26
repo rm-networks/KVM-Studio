@@ -37,6 +37,7 @@ from .api import sharing as sharing_api
 from .auth.roles import HostCheck, require_access
 from .auth.roles import Sharing as LanSharing
 from .config import Config, default_config_path, load_config
+from .console.serial import SerialOpener, open_libvirt_serial, serial_console
 from .console.vnc import ConsoleOpener, open_vnc_socket, vnc_console
 from .context import AppContext, Mode
 from .errors import (
@@ -70,6 +71,7 @@ def create_app(
     mode: Mode,
     frontend_dir: Path | None = None,
     open_console: ConsoleOpener = open_vnc_socket,
+    open_serial: SerialOpener = open_libvirt_serial,
     config_path: Path | None = None,
     on_restart: Callable[[], None] | None = None,
     sharing: LanSharing | None = None,
@@ -102,6 +104,7 @@ def create_app(
         token=token,
         mode=mode,
         open_console=open_console,
+        open_serial=open_serial,
         config_path=config_path,
         sharing=sharing,
     )
@@ -142,6 +145,7 @@ def create_app(
     app.include_router(private)
     # WebSockets check the token themselves (see console.vnc).
     app.add_api_websocket_route("/api/vms/{uuid}/console", vnc_console)
+    app.add_api_websocket_route("/api/vms/{uuid}/serial", serial_console)
     app.add_api_websocket_route("/ws/events", events_socket)
 
     if frontend_dir is not None:

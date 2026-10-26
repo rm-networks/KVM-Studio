@@ -281,6 +281,10 @@
     },
     "sharing": {
       "bad_password": "Pas d'espace au début ni à la fin du mot de passe."
+    },
+    "serial": {
+      "none": "Cette machine virtuelle n'a pas de console série.",
+      "stalled": "La console série ne lit pas ce qui est tapé."
     }
   },
   "about": {
@@ -1052,5 +1056,12 @@
     "fingerprint": "Certificat (autosigné), empreinte SHA-256 à comparer dans le navigateur :",
     "firewallOpened": "Port ouvert dans {{firewall}}, refermé à l'arrêt de {{app}}.",
     "firewallNone": "Aucun port n'a été ouvert dans le pare-feu (ni firewalld ni ufw, ou le helper n'a pas répondu)."
+  },
+  "serial": {
+    "views": "Vues de la console",
+    "screen": "Écran",
+    "serial": "Console série",
+    "connecting": "Connexion à la console série…",
+    "closed": "La console série est fermée."
   }
 }

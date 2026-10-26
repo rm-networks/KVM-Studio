@@ -14,6 +14,7 @@ from .libvirt_conn import LibvirtConnection
 
 if TYPE_CHECKING:
     from .auth.roles import Sharing
+    from .console.serial import SerialOpener
 
 Mode = Literal["desktop", "web"]
 
@@ -25,6 +26,7 @@ class AppContext:
     token: str
     mode: Mode
     open_console: Callable[[LibvirtConnection, str], socket.socket]
+    open_serial: SerialOpener
     # Where Preferences are saved; None when the app runs without a file (tests).
     config_path: Path | None = None
     # LAN sharing (web mode with share_on_lan); None otherwise.
