@@ -214,7 +214,7 @@ Each feature has an identifier (F-xx) used in the prioritization.
 - **F-02** Library folders synced with the file system (details in 6.1.1).
 - **F-03** Search, filter (all / running), sort.
 - **F-04** Live state through libvirt events.
-- **F-05** Scan for virtual machines: scan a folder to find unregistered XML files or disks.
+- **F-05** Scan for virtual machines (File menu and Preferences > Workspace, owner only): a folder and its subfolders are searched for `.qcow2` disks, grouped by folder, and libvirt definitions (`.xml`); the VMs libvirt already knows are marked and cannot be picked. Each VM picked keeps its files where they are (default) or has them copied or moved into the `KVM-Studio` tree, never elsewhere, after a confirmation that lists every copy and move. Library folders are rebuilt from the tree found (what lies under `KVM-Studio/VM`, when there is one). A disk without a definition gets the "Other" profile, with UEFI when it holds a GPT table.
 
 #### 6.1.1 Library folders synced to disk (F-02)
 
@@ -265,7 +265,6 @@ The library folders are real folders on disk: what the user sees in the tree mat
 - **F-44** Utilities: Expand, Compact (get free space back), Convert, Information (real/virtual size, backing chain), Mount on the host (V2, libguestfs). Expand (V1): VM settings, disk, shows the virtual size and the space used on the host; grows only, running (libvirt block resize, the guest sees it at once) or powered off (libvirt resizes the volume, through a transient storage pool when the folder is in none); only disks under the `KVM-Studio` root, never a disk linked clones are built on. The partition is grown in the guest by the user.
 - **F-45** Advanced: cache, I/O mode, TRIM/discard, serial number, IOPS limits.
 - **F-46** Physical disk passthrough (advanced, with a warning, owner only).
-- **F-47** Scan for virtual machines (File menu and Preferences > Workspace, owner only): a folder and its subfolders are searched for `.qcow2` disks, grouped by folder, and libvirt definitions (`.xml`); the VMs libvirt already knows are marked and cannot be picked. Each VM picked keeps its files where they are (default) or has them copied or moved into the `KVM-Studio` tree, never elsewhere, after a confirmation that lists every copy and move. Library folders are rebuilt from the tree found (what lies under `KVM-Studio/VM`, when there is one). A disk without a definition gets the "Other" profile, with UEFI when it holds a GPT table.
 
 "Split into several files" has no useful counterpart with KVM and is not offered.
 
@@ -351,8 +350,8 @@ The MVP is Romain's personal tool on Fedora: installed from the .rpm, it builds 
 | Phase 0: foundation | Romain | Backend + frontend, TOML configuration, libvirt connection, pywebview window, GitHub Actions CI, tests on `test:///default` | The KVM Studio window lists the host domains |
 | MVP | Romain, Fedora | F-01, F-02, F-03, F-04, F-10, F-12, F-20, F-22, F-24, F-30, F-31, F-33, F-34, F-35, F-40, F-41, F-52, F-53, F-60, F-61, F-62, F-64, F-70, F-71, F-72, F-73 (without port forwarding), F-76, F-77, F-90, F-93, F-94 (window + local web), F-95 (.rpm + first run) | OPNsense 3 NIC lab + Windows 11 installed, guest tools in one click, copy and paste OK, clean network applet |
 | Before V1 | Romain, Fedora | F-36, F-84, English as the source language, redesign of the interface, vnet* hidden from NetworkManager | Acceptance feedback of 0.1.0 handled |
-| V1 | Friends, Fedora + Debian/Ubuntu | F-05, F-11, F-13, F-21, F-23, F-25, F-26 (Easy Install), F-42 to F-45, F-47, F-50, F-51, F-54, F-55, F-63, F-65, F-73 (port forwarding), F-78, F-80 to F-82, F-91, F-92, F-95 (.deb), F-100 to F-106 (LAN sharing + guest account) | A friend installs the .deb or the .rpm and builds their lab alone; working together on the LAN |
-| V2 | Public | F-44 (host mount), F-46, F-56, F-57 (USB), F-66, F-67, F-74 and F-75 (Bridged), F-79, F-83, F-85, F-86, COPR/APT repositories, connection to a remote server | A former Workstation user moves their VMs over for good |
+| V1 | Friends, Fedora + Debian/Ubuntu | F-05, F-11, F-13, F-21, F-23, F-25, F-42 to F-45, F-50, F-51, F-54, F-55, F-63, F-73 (port forwarding), F-80 to F-82, F-91, F-92, F-95 (.deb), F-100 to F-106 (LAN sharing + guest account) | A friend installs the .deb or the .rpm and builds their lab alone; working together on the LAN |
+| V2 | Public | F-26 (Easy Install), F-44 (host mount), F-46, F-56, F-57 (USB), F-65 (virtiofs), F-66, F-67, F-74 and F-75 (Bridged), F-78, F-79, F-83, F-85, F-86, COPR/APT repositories, connection to a remote server | A former Workstation user moves their VMs over for good |
 | Later | Public | Other distributions (Arch, openSUSE), PCI passthrough, shareable lab templates | - |
 
 Advised order in the MVP: foundation → UTF-8 copy and paste prototype → list and states → life cycle → library folders → kvmnet + hiding → ISO picker → assistant → console + copy and paste + guest tools → several NICs → .rpm package.

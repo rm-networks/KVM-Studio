@@ -31,13 +31,18 @@ helper, removal of the access rights the helper granted, vnet* interfaces kept
 out of NetworkManager, a redesign of the interface, and VM cloning (F-84,
 brought forward from V2).
 
-## V1 (Fedora, Debian 13, Ubuntu 26.04 LTS)
+## V1 (Fedora, Debian 13, Ubuntu 26.04 LTS): done, version 1.0.0
 
-Simpler installation, full disk management, serial console, virtiofs,
-snapshots, NAT port forwarding, network diagnostics, .deb package, sharing on
-the LAN with a guest account (F-100 to F-106).
+Released on 2026-10-26: .deb package next to the .rpm, serial console,
+snapshots, NAT port forwarding, disk expansion, existing disks used where
+they are or brought into the library, folder scan for virtual machines,
+sharing on the LAN with a guest account (F-100 to F-106).
+
+Moved to V2: Easy Install (F-26), shared folders through virtiofs (F-65) and
+network diagnostics (F-78).
 
 ## V2 (public release)
 
-Bridged, USB, thumbnails, topology, AutoProtect, import and export of OVF,
+Easy Install, virtiofs shared folders, network diagnostics, Bridged, USB,
+thumbnails, topology, AutoProtect, import and export of OVF,
 COPR and APT repositories, remote server.

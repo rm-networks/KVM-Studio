@@ -16,9 +16,9 @@ Workspace can suspend or shut them down instead).
 
 ## Status
 
-Version 1.0.0 is in preparation: a .rpm for Fedora and a .deb for Debian 13
-and Ubuntu 26.04 LTS, built by the CI on every change. Version 0.4.0 is the
-latest release. See the [roadmap](docs/ROADMAP.md).
+Version 1.0.0 is the current version: a .rpm for Fedora and a .deb for
+Debian 13 and Ubuntu 26.04 LTS, on the releases page. See the
+[roadmap](docs/ROADMAP.md).
 
 ## Features
 

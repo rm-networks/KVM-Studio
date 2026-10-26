@@ -1,34 +1,43 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 (2026-10-26)
 
-- Port forwarding no longer uses a libvirt network hook: SELinux keeps
-  virtnetworkd from running it on Fedora, and once libvirt loaded it every VM
-  start on a network failed. A udev rule and a systemd unit write the table
-  again when a kvmnet bridge is created; upgrading removes the hook.
-- New Virtual Machine assistant: its backdrop covered it, so the page was
-  dimmed and any click closed it. Interface tests in a real browser
-  (Playwright) now go through it to the last page.
-- Virtual network editor: Export no longer closes the window (it now opens a
-  save dialog); the list of VMs using each network is gone.
-- Snapshots: "Include RAM" choice, limits of libvirt (raw disks, raw UEFI
-  variables, TPM of a powered-off VM) shown before taking one; snapshots run
-  in the background, followed in the status bar with a Cancel button.
-- System updates: KVM checked at each start and by `kvm-studio --check`
-  (kernel updated but not restarted, module not loaded, nested
-  virtualization); new VMs get a versioned machine type; the port forwarding
-  table comes back after nftables or firewalld restart; the helper
-  service can now write it (host network, CAP_NET_ADMIN). The nested profile
-  asks for svm on AMD hosts instead of vmx.
-- Sharing on the local network (web mode): HTTPS on port 60443 with a
-  self-signed certificate, a guest account (argon2 password set in
-  Preferences > Interface, lockout after 5 failures, sessions ending after 30
-  minutes idle), the rights of the guest checked on every route, the firewall
-  port opened and closed by the helper (firewalld or ufw), and a shared
-  console showing how many people are on it.
-- .deb package for Debian 13 and Ubuntu 26.04 LTS.
-- Serial console (xterm.js) next to the screen of VMs that have one.
-- VM settings, disk: size, space used, and Expand, running or powered off.
+- Packages for Debian 13 and Ubuntu 26.04 LTS (.deb) next to the Fedora .rpm.
+  When the program cannot start from the applications menu, a window shows
+  why instead of nothing.
+- Sharing on the local network (web mode): HTTPS on port 60443, a guest
+  account with a password set in Preferences > Interface, the guest's rights
+  checked on every request, the firewall port opened and closed for you, and
+  a shared console that shows how many people are on it. A guest picks their
+  own language in Edit > Language.
+- Serial console next to the screen of VMs that have one.
+- Snapshots: "Include RAM" choice, what libvirt cannot do shown beforehand,
+  snapshots taken in the background with a Cancel button, and names checked
+  as they are typed (letters without accents, digits, "-", "_", ".").
+- Disks: size and space used in the VM settings, and Expand.
+- New Virtual Machine with an existing disk: Browse button, and the disk used
+  where it is, copied into KVM Studio or moved there after a confirmation.
+  File > Open... starts from a disk image.
+- File > Scan for Virtual Machines... (also in Preferences > Workspace) finds
+  VMs in a folder tree and brings in the ones picked, their files left in
+  place, copied or moved, with their library folders rebuilt.
+- VMs already under a new VM location show up in their folders. A VM whose
+  files lie loose in the library can have them put in its own folder; the
+  library menu only offers to move files when there is something to move.
+- After an installation from a CD placed first in the boot order, the VM
+  comes back up on its disk: the CD moves behind it at the first reboot.
+- Shut Down Guest on a VM that does not answer (firmware screen, system still
+  starting): after 20 seconds, a notice offers Power Off.
+- The library and the tabs follow each other: the active tab selects its VM.
+- The interface is in English unless French is chosen, in Preferences or on
+  the first page of the first-run assistant.
+- Port forwarding no longer relies on a libvirt network hook, which SELinux
+  blocked on Fedora and which could stop VMs from starting after virtnetworkd
+  restarted. Upgrading removes it.
+- Virtual network editor: Export opens a save dialog.
+- The New Virtual Machine assistant could be closed by any click on it.
+- After a kernel update, `kvm-studio --check` and the start screen say when
+  KVM needs a restart; new VMs get a versioned machine type.
 
 ## 0.4.0 (2026-10-25)
 
