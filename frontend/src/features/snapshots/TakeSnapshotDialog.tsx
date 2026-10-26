@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { api, type SnapshotLimits, type VmSummary } from "../../api/client";
 import { Dialog } from "../../components/Dialog";
 import "./SnapshotManager.css";
+import { SNAPSHOT_NAME_MAX, snapshotNameProblem } from "./snapshotName";
 
 interface Props {
   vm: VmSummary;
@@ -21,7 +22,8 @@ export function TakeSnapshotDialog({ vm, existing, onTake, onClose }: Props) {
   const [description, setDescription] = useState("");
   const [limits, setLimits] = useState<SnapshotLimits | null>(null);
   const [memory, setMemory] = useState(true);
-  const taken = existing.includes(name.trim());
+  const taken = existing.includes(name);
+  const problem = snapshotNameProblem(name);
   const running = limits?.running ?? (vm.state === "running" || vm.state === "paused");
 
   useEffect(() => {
@@ -49,9 +51,9 @@ export function TakeSnapshotDialog({ vm, existing, onTake, onClose }: Props) {
           <button
             type="button"
             className="button button-primary"
-            disabled={!name.trim() || taken || blocked}
+            disabled={problem !== null || taken || blocked}
             onClick={() => {
-              onTake(name.trim(), description, running && memory);
+              onTake(name, description, running && memory);
               onClose();
             }}
           >
@@ -66,8 +68,27 @@ export function TakeSnapshotDialog({ vm, existing, onTake, onClose }: Props) {
       <p>{t(running ? "snapshots.takeRunning" : "snapshots.takeOff")}</p>
       <label className="snap-field">
         <span>{t("snapshots.name")}</span>
-        <input type="text" value={name} autoFocus onChange={(e) => setName(e.target.value)} />
+        <input
+          type="text"
+          value={name}
+          maxLength={SNAPSHOT_NAME_MAX + 1}
+          autoFocus
+          aria-invalid={problem !== null && problem.kind !== "empty"}
+          onChange={(e) => setName(e.target.value)}
+        />
       </label>
+      {problem?.kind === "char" && (
+        <p className="field-error">
+          {t(problem.char === " " ? "snapshots.nameSpace" : "snapshots.nameChar", {
+            char: problem.char,
+          })}{" "}
+          {t("snapshots.nameAllowed")}
+        </p>
+      )}
+      {problem?.kind === "dot" && <p className="field-error">{t("snapshots.nameDot")}</p>}
+      {problem?.kind === "long" && (
+        <p className="field-error">{t("snapshots.nameLong", { max: SNAPSHOT_NAME_MAX })}</p>
+      )}
       {taken && <p className="field-error">{t("snapshots.nameTaken")}</p>}
       <label className="snap-field">
         <span>{t("snapshots.description")}</span>

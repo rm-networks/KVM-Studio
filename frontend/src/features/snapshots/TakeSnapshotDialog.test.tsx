@@ -31,7 +31,7 @@ describe("TakeSnapshotDialog", () => {
     const memory = screen.getByRole("checkbox", { name: /Inclure la RAM/ }) as HTMLInputElement;
     expect([memory.checked, memory.disabled]).toEqual([false, true]);
     fireEvent.click(screen.getByRole("button", { name: "Prendre l'instantané" }));
-    expect(onTake).toHaveBeenCalledWith("Instantané 1", "", false);
+    expect(onTake).toHaveBeenCalledWith("Snapshot-1", "", false);
   });
 
   it("keeps the memory of a running VM unless told otherwise", async () => {
@@ -54,7 +54,32 @@ describe("TakeSnapshotDialog", () => {
     expect(screen.getByText(/Éteignez la VM/)).toBeTruthy();
     fireEvent.click(memory);
     fireEvent.click(take);
-    expect(onTake).toHaveBeenCalledWith("Instantané 1", "", true);
+    expect(onTake).toHaveBeenCalledWith("Snapshot-1", "", true);
+  });
+
+  it("refuses a name QEMU would refuse, and says which character", async () => {
+    limits({ running: true });
+    const onTake = vi.fn();
+    render(
+      <TakeSnapshotDialog
+        vm={makeVm({ name: "FW", state: "running" })}
+        existing={[]}
+        onTake={onTake}
+        onClose={vi.fn()}
+      />,
+    );
+    const take = screen.getByRole("button", { name: "Prendre l'instantané" }) as HTMLButtonElement;
+    const field = screen.getByRole("textbox", { name: "Nom" });
+    fireEvent.change(field, { target: { value: "Avant mise à jour" } });
+    expect(screen.getByText(/Les espaces ne sont pas permis/)).toBeTruthy();
+    expect(screen.getByText(/lettres sans accent/)).toBeTruthy();
+    expect(take.disabled).toBe(true);
+    fireEvent.change(field, { target: { value: "Avant-mise-à-jour" } });
+    expect(screen.getByText(/« à » n'est pas permis/)).toBeTruthy();
+    fireEvent.change(field, { target: { value: "Avant-mise-a-jour" } });
+    expect(screen.queryByText(/n'est pas permis/)).toBeNull();
+    fireEvent.click(take);
+    expect(onTake).toHaveBeenCalledWith("Avant-mise-a-jour", "", true);
   });
 
   it("says beforehand what libvirt refuses", async () => {

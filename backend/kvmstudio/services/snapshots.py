@@ -31,7 +31,9 @@ from .clone import linked_clones
 from .tasks import Cancelled, Task
 
 _PARSER = etree.XMLParser(resolve_entities=False, remove_blank_text=True)
-NAME_RE = re.compile(r"^[^/\\\x00-\x1f\x7f]{1,100}$")
+# What QEMU takes in the job name of a running VM's snapshot
+# ("internal-snapshot-save-<name>"), and libvirt refuses a leading dot.
+NAME_RE = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,99}$")
 MAX_DESCRIPTION = 2000
 
 

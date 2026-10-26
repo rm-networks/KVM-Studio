@@ -48,7 +48,11 @@ def test_take_list_revert_delete(
     ]
     assert snaps[0]["description"] == "fresh"
     assert lib_client.post(url(dom), headers=AUTH, json={"name": "Clean"}).status_code == 409
-    assert lib_client.post(url(dom), headers=AUTH, json={"name": "a/b"}).status_code == 422
+    # QEMU's job name rule (a running VM's snapshot), and no leading dot (libvirt).
+    for bad in ("a/b", "Snapshot 1", "été", "a:b", ".x", "a" * 101):
+        r = lib_client.post(url(dom), headers=AUTH, json={"name": bad})
+        assert r.status_code == 422, bad
+        assert r.json()["error"]["code"] == "snapshot.bad_name"
 
     assert lib_client.post(url(dom, "/Clean/revert"), headers=AUTH).status_code == 204
     current = [s["name"] for s in lib_client.get(url(dom), headers=AUTH).json() if s["current"]]

@@ -268,6 +268,7 @@
       "not_found": "This operation is no longer known."
     },
     "snapshot": {
+      "bad_name": "Snapshot names only take letters without accents, digits, hyphens, underscores and dots.",
       "memory_required": "libvirt only takes a snapshot of a running VM together with its memory.",
       "linked_clones": "Linked clones use the disks of this VM: its snapshots cannot change.",
       "exists": "A snapshot already has this name."
@@ -1013,12 +1014,17 @@
     "hint": "Snapshots are stored inside the VM's qcow2 disk (internal snapshots). A VM whose disks back linked clones cannot take, restore or delete snapshots.",
     "confirmRevert": "Restore {{name}} to the snapshot {{snapshot}}? Everything that changed since, on its disks and in its memory, is lost.",
     "confirmDelete": "Delete the snapshot {{snapshot}}? The state it holds can no longer be restored; the other snapshots stay.",
-    "defaultName": "Snapshot {{n}}",
+    "defaultName": "Snapshot-{{n}}",
     "takeTitle": "Take a Snapshot of {{name}}",
     "takeButton": "Take Snapshot",
     "name": "Name",
     "description": "Description",
     "nameTaken": "A snapshot already has this name.",
+    "nameSpace": "Spaces are not allowed.",
+    "nameChar": "The character “{{char}}” is not allowed.",
+    "nameAllowed": "Use letters without accents (A to Z), digits, hyphens (-), underscores (_) and dots (.).",
+    "nameDot": "The name cannot start with a dot.",
+    "nameLong": "{{max}} characters at most.",
     "takeRunning": "The VM is running: it goes on running while its disks and its memory are saved.",
     "takeOff": "The VM is powered off: its disks are saved.",
     "taken": "Snapshot {{name}} taken",

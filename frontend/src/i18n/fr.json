@@ -268,6 +268,7 @@
       "not_found": "Cette opération n'est plus connue."
     },
     "snapshot": {
+      "bad_name": "Un nom d'instantané ne prend que des lettres sans accent, des chiffres, des tirets, des tirets bas et des points.",
       "memory_required": "libvirt ne prend l'instantané d'une VM allumée qu'avec sa mémoire.",
       "linked_clones": "Des clones liés utilisent les disques de cette VM : ses instantanés ne peuvent pas changer.",
       "exists": "Un instantané porte déjà ce nom."
@@ -1013,12 +1014,17 @@
     "hint": "Les instantanés sont rangés dans le disque qcow2 de la VM (instantanés internes). Une VM dont les disques servent de base à des clones liés ne peut ni prendre, ni restaurer, ni supprimer d'instantané.",
     "confirmRevert": "Restaurer {{name}} à l'instantané {{snapshot}} ? Tout ce qui a changé depuis, sur ses disques et dans sa mémoire, est perdu.",
     "confirmDelete": "Supprimer l'instantané {{snapshot}} ? L'état qu'il contient ne pourra plus être restauré ; les autres instantanés restent.",
-    "defaultName": "Instantané {{n}}",
+    "defaultName": "Snapshot-{{n}}",
     "takeTitle": "Prendre un instantané de {{name}}",
     "takeButton": "Prendre l'instantané",
     "name": "Nom",
     "description": "Description",
     "nameTaken": "Un instantané porte déjà ce nom.",
+    "nameSpace": "Les espaces ne sont pas permis.",
+    "nameChar": "Le caractère « {{char}} » n'est pas permis.",
+    "nameAllowed": "Utilisez des lettres sans accent (A à Z), des chiffres, des tirets (-), des tirets bas (_) et des points (.).",
+    "nameDot": "Le nom ne peut pas commencer par un point.",
+    "nameLong": "{{max}} caractères au plus.",
     "takeRunning": "La VM est allumée : elle continue de tourner pendant l'enregistrement de ses disques et de sa mémoire.",
     "takeOff": "La VM est éteinte : ses disques sont enregistrés.",
     "taken": "Instantané {{name}} pris",
