@@ -5,7 +5,7 @@ import type { VmSummary } from "../../api/client";
 import { NotificationProvider } from "../../components/Notifications";
 import { makeVm } from "../../test/fixtures";
 import { powerAllowed } from "./power";
-import { VmActionsProvider } from "./VmActions";
+import { SHUTDOWN_PATIENCE_MS, VmActionsProvider } from "./VmActions";
 import { useVmActions } from "./vmActionsContext";
 
 const off: VmSummary = makeVm({ uuid: "u1", name: "SRV-WS22" });
@@ -35,6 +35,7 @@ function Buttons({ vm }: { vm: VmSummary }) {
     <>
       <button onClick={() => actions.power(vm, "start")}>start</button>
       <button onClick={() => actions.power(vm, "poweroff")}>poweroff</button>
+      <button onClick={() => actions.power(vm, "shutdown")}>shutdown</button>
       <button onClick={() => actions.rename(vm)}>rename</button>
       <button onClick={() => actions.remove(vm, true)}>delete</button>
     </>
@@ -143,5 +144,38 @@ describe("VM actions", () => {
     expect(
       screen.getByRole("button", { name: "Supprimer définitivement" }).hasAttribute("disabled"),
     ).toBe(true);
+  });
+
+  it("offers to power off a guest that ignores the shutdown, never doing it alone", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const calls = mockFetch({ "GET /api/vms": [200, [on]] });
+      setup(on);
+      fireEvent.click(screen.getByText("shutdown"));
+      await waitFor(() => expect(calls.map((c) => c.path)).toContain("/api/vms/u1/power/shutdown"));
+      expect(screen.queryByText(/n'a pas répondu/)).toBeNull();
+      await vi.advanceTimersByTimeAsync(SHUTDOWN_PATIENCE_MS);
+      expect(
+        await screen.findByText("L'invité n'a pas répondu. Couper l'alimentation ?"),
+      ).toBeTruthy();
+      expect(calls.some((c) => c.path.endsWith("/poweroff"))).toBe(false);
+      fireEvent.click(screen.getByRole("button", { name: "Forcer l'arrêt" }));
+      await waitFor(() => expect(calls.at(-1)?.path).toBe("/api/vms/u1/power/poweroff"));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("says nothing when the guest shut down in time", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      mockFetch({ "GET /api/vms": [200, [off]] });
+      setup(on);
+      fireEvent.click(screen.getByText("shutdown"));
+      await vi.advanceTimersByTimeAsync(SHUTDOWN_PATIENCE_MS + 100);
+      expect(screen.queryByText(/n'a pas répondu/)).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

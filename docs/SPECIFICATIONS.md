@@ -231,7 +231,7 @@ The library folders are real folders on disk: what the user sees in the tree mat
 
 ### 6.2 Life cycle
 
-- **F-10** Start, shut down the guest (ACPI), power off, restart, reset.
+- **F-10** Start, shut down the guest (ACPI), power off, restart, reset. A guest still on 20 s after Shut Down Guest (firmware screen, system still starting) gets a notice offering Power Off; nothing is forced on its own.
 - **F-11** Pause (frozen in RAM) and Suspend (state saved to disk), like Workstation.
 - **F-12** Rename, delete (unregister only or delete the disks too, after a confirmation listing the files).
 - **F-13** Configure the automatic start of VMs with the host, with a delay between VMs.

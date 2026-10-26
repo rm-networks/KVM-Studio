@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, ApiError, type PowerAction, type VmSummary } from "../../api/client";
@@ -12,6 +12,8 @@ import { type VmActions, VmActionsContext } from "./vmActionsContext";
 
 // Actions that can lose unsaved work in the guest ask first (rule 11).
 const NEEDS_CONFIRMATION: ReadonlySet<PowerAction> = new Set(["poweroff", "reset"]);
+// A firmware screen or a system still starting ignores the ACPI shutdown request.
+export const SHUTDOWN_PATIENCE_MS = 20_000;
 
 type Pending =
   | { kind: "confirm"; vm: VmSummary; action: PowerAction }
@@ -24,13 +26,39 @@ type Pending =
 
 export function VmActionsProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
-  const { notifyError } = useNotifier();
+  const { notify, notifyError } = useNotifier();
   const [pending, setPending] = useState<Pending>(null);
+  const runPowerRef = useRef<(vm: VmSummary, action: PowerAction) => void>(() => {});
+
+  // Still on after a while: offer to power off, never done on its own.
+  const watchShutdown = useCallback(
+    (vm: VmSummary) =>
+      window.setTimeout(() => {
+        api
+          .listVms()
+          .then((vms) => {
+            const now = vms.find((v) => v.uuid === vm.uuid);
+            if (!now || now.state === "shutoff") return;
+            notify(t("power.noResponse"), t("power.noResponseHint", { name: vm.name }), {
+              label: t("power.poweroff"),
+              run: () => runPowerRef.current(vm, "poweroff"),
+            });
+          })
+          .catch(() => undefined);
+      }, SHUTDOWN_PATIENCE_MS),
+    [notify, t],
+  );
 
   const runPower = useCallback(
     (vm: VmSummary, action: PowerAction, force = false) => {
       if (action === "start") noteStart(vm.uuid);
-      api.power(vm.uuid, action, force).catch((err: unknown) => {
+      const request = api.power(vm.uuid, action, force);
+      if (action === "shutdown")
+        void request.then(
+          () => watchShutdown(vm),
+          () => undefined,
+        );
+      request.catch((err: unknown) => {
         if (action === "start") cancelStart(vm.uuid);
         if (err instanceof ApiError && err.code === "vm.has_linked_clones") {
           const clones = err.detail.slice(err.detail.indexOf(":") + 1).trim();
@@ -40,8 +68,11 @@ export function VmActionsProvider({ children }: { children: ReactNode }) {
         notifyError(t("actions.failed", { action: t(`power.${action}`), name: vm.name }), err);
       });
     },
-    [notifyError, t],
+    [notifyError, t, watchShutdown],
   );
+  useEffect(() => {
+    runPowerRef.current = runPower;
+  }, [runPower]);
 
   const actions = useMemo<VmActions>(
     () => ({

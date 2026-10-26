@@ -369,7 +369,9 @@
     "confirm": {
       "poweroff": "Couper l'alimentation de « {{name}} » ? Les données non enregistrées dans la machine virtuelle seront perdues.",
       "reset": "Réinitialiser « {{name}} » ? C'est l'équivalent d'un appui sur le bouton reset : les données non enregistrées seront perdues."
-    }
+    },
+    "noResponse": "L'invité n'a pas répondu. Couper l'alimentation ?",
+    "noResponseHint": "{{name}} tourne encore : un écran du firmware ou un système pas encore démarré ignore la demande d'arrêt."
   },
   "actions": {
     "failed": "« {{action}} » a échoué pour {{name}}"

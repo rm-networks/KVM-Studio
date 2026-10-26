@@ -62,3 +62,9 @@
 .notice-close:hover {
   background: var(--hover);
 }
+
+.notice-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}

@@ -3,7 +3,7 @@ import { type ReactNode, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ApiError } from "../api/client";
-import { NotifierContext } from "./notifier";
+import { type NoticeAction, NotifierContext } from "./notifier";
 import "./Notifications.css";
 
 interface Notice {
@@ -11,6 +11,7 @@ interface Notice {
   title: string;
   error?: ApiError;
   text?: string;
+  action?: NoticeAction;
 }
 
 let nextId = 1;
@@ -19,13 +20,21 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const [notices, setNotices] = useState<Notice[]>([]);
 
-  const dismiss = (id: number) => setNotices((list) => list.filter((n) => n.id !== id));
+  const dismiss = useCallback(
+    (id: number) => setNotices((list) => list.filter((n) => n.id !== id)),
+    [],
+  );
 
-  const push = useCallback((notice: Omit<Notice, "id">) => {
-    const id = nextId++;
-    setNotices((list) => [...list.slice(-3), { ...notice, id }]);
-    if (!notice.error) setTimeout(() => dismiss(id), 6000);
-  }, []);
+  const push = useCallback(
+    (notice: Omit<Notice, "id">) => {
+      const id = nextId++;
+      setNotices((list) => [...list.slice(-3), { ...notice, id }]);
+      // Errors and questions stay until closed.
+      if (!notice.error && !notice.action) setTimeout(() => dismiss(id), 6000);
+      return id;
+    },
+    [dismiss],
+  );
 
   const notifyError = useCallback(
     (title: string, err: unknown) =>
@@ -35,10 +44,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }),
     [push],
   );
-  const notify = useCallback((title: string, text?: string) => push({ title, text }), [push]);
+  const notify = useCallback(
+    (title: string, text?: string, action?: NoticeAction) => push({ title, text, action }),
+    [push],
+  );
 
   return (
-    <NotifierContext.Provider value={{ notifyError, notify }}>
+    <NotifierContext.Provider value={{ notifyError, notify, dismiss }}>
       {children}
       <div className="notices" aria-live="polite">
         {notices.map((n) => (
@@ -66,6 +78,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
               </>
             )}
             {n.text && <p>{n.text}</p>}
+            {n.action && (
+              <div className="notice-actions">
+                <button
+                  type="button"
+                  className="button"
+                  onClick={() => {
+                    dismiss(n.id);
+                    n.action?.run();
+                  }}
+                >
+                  {n.action.label}
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

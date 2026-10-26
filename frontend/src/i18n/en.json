@@ -369,7 +369,9 @@
     "confirm": {
       "poweroff": "Power off \"{{name}}\"? Unsaved data in the virtual machine will be lost.",
       "reset": "Reset \"{{name}}\"? This is like pressing the reset button: unsaved data will be lost."
-    }
+    },
+    "noResponse": "The guest did not respond. Power off?",
+    "noResponseHint": "{{name}} is still running: a firmware screen or a system that has not started yet ignores the shutdown request."
   },
   "actions": {
     "failed": "\"{{action}}\" failed for {{name}}"
