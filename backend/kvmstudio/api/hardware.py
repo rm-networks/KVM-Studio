@@ -6,7 +6,7 @@ from starlette.concurrency import run_in_threadpool
 
 from ..auth.roles import check_guest_networks
 from ..context import Context
-from ..services import hardware
+from ..services import disks, hardware
 from ..xml.profiles import NicModel
 
 router = APIRouter(prefix="/vms", tags=["hardware"])
@@ -125,3 +125,27 @@ async def add_cdrom(ctx: Context, uuid: str, body: CdromCreate) -> Changed:
 async def remove_cdrom(ctx: Context, uuid: str, target: str) -> Changed:
     restart = await run_in_threadpool(hardware.remove_cdrom, ctx.conn, uuid, target)
     return Changed(restart_required=restart)
+
+
+class DiskSize(BaseModel):
+    target: str
+    path: str
+    capacity: int
+    allocation: int
+    expandable: bool
+
+
+class DiskExpand(BaseModel):
+    gib: int = Field(gt=0)
+
+
+@router.get("/{uuid}/disks/{target}")
+async def disk_size(ctx: Context, uuid: str, target: str) -> DiskSize:
+    found = await run_in_threadpool(disks.size, ctx.conn, ctx.config, uuid, target)
+    return DiskSize.model_validate(found, from_attributes=True)
+
+
+@router.post("/{uuid}/disks/{target}/expand")
+async def expand_disk(ctx: Context, uuid: str, target: str, body: DiskExpand) -> DiskSize:
+    found = await run_in_threadpool(disks.expand, ctx.conn, ctx.config, uuid, target, body.gib)
+    return DiskSize.model_validate(found, from_attributes=True)

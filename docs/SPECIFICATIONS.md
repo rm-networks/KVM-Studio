@@ -262,7 +262,7 @@ The library folders are real folders on disk: what the user sees in the tree mat
 - **F-41** Create a disk: size, qcow2 or raw format, "Allocate all disk space now" box (preallocation), location (VM folder by default).
 - **F-42** Use an existing disk: qcow2, raw, VMDK, VDI, VHDX, with a conversion to qcow2 offered to enable snapshots.
 - **F-43** Modes: normal, independent persistent (left out of snapshots), independent non persistent (changes lost at power off).
-- **F-44** Utilities: Expand, Compact (get free space back), Convert, Information (real/virtual size, backing chain), Mount on the host (V2, libguestfs).
+- **F-44** Utilities: Expand, Compact (get free space back), Convert, Information (real/virtual size, backing chain), Mount on the host (V2, libguestfs). Expand (V1): VM settings, disk, shows the virtual size and the space used on the host; grows only, running (libvirt block resize, the guest sees it at once) or powered off (libvirt resizes the volume, through a transient storage pool when the folder is in none); only disks under the `KVM-Studio` root, never a disk linked clones are built on. The partition is grown in the guest by the user.
 - **F-45** Advanced: cache, I/O mode, TRIM/discard, serial number, IOPS limits.
 - **F-46** Physical disk passthrough (advanced, with a warning, owner only).
 

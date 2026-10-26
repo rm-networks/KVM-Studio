@@ -4,6 +4,7 @@ import { getToken } from "./token";
 export type AppInfo = components["schemas"]["AppInfo"];
 export type AuthMe = components["schemas"]["Me"];
 export type SharingState = components["schemas"]["SharingState"];
+export type DiskSize = components["schemas"]["DiskSize"];
 export type VmSummary = components["schemas"]["VmSummary"];
 export type VmState = VmSummary["state"];
 export type DeletionPlan = components["schemas"]["DeletionPlan"];
@@ -34,6 +35,7 @@ export type ProfileInfo = components["schemas"]["ProfileInfo"];
 export type HostCapabilities = components["schemas"]["HostInfo"];
 export type NewVmRequest = components["schemas"]["NewVmRequest"];
 export type Hardware = components["schemas"]["Hardware"];
+export type Drive = components["schemas"]["Drive"];
 export type HardwareNic = components["schemas"]["Nic"];
 export type NicChange = components["schemas"]["NicChange"];
 export type VmOptions = components["schemas"]["Options"];
@@ -207,6 +209,12 @@ export const api = {
   cdroms: (uuid: string) => request<CdromDevice[]>("GET", `${vmPath(uuid)}/cdroms`),
   changeMedia: (uuid: string, target: string, path: string | null) =>
     request<undefined>("PUT", `${vmPath(uuid)}/cdroms/${encodeURIComponent(target)}`, { path }),
+  diskSize: (uuid: string, target: string) =>
+    request<DiskSize>("GET", `${vmPath(uuid)}/disks/${encodeURIComponent(target)}`),
+  expandDisk: (uuid: string, target: string, gib: number) =>
+    request<DiskSize>("POST", `${vmPath(uuid)}/disks/${encodeURIComponent(target)}/expand`, {
+      gib,
+    }),
   display: (uuid: string) => request<DisplayInfo>("GET", `${vmPath(uuid)}/display`),
   guestTools: (uuid: string) => request<GuestToolsInfo>("GET", `${vmPath(uuid)}/guest-tools`),
   insertGuestTools: (uuid: string, family: GuestFamily) =>

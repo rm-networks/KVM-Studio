@@ -285,6 +285,12 @@
     "serial": {
       "none": "This virtual machine has no serial console.",
       "stalled": "The serial console does not read what is typed."
+    },
+    "disk": {
+      "not_larger": "The new size must be larger than the current one.",
+      "linked_clones": "Linked clones are built on this disk: it cannot change size.",
+      "resize_failed": "qemu-img could not resize the disk (internal snapshots, or the disk is in use).",
+      "not_found": "This disk no longer exists."
     }
   },
   "about": {
@@ -1063,5 +1069,16 @@
     "serial": "Serial Console",
     "connecting": "Connecting to the serial console…",
     "closed": "The serial console is closed."
+  },
+  "disk": {
+    "sizes": "Size: {{capacity}} GiB, {{allocation}} GiB used on the host",
+    "expand": "Expand…",
+    "outside": "Only disks in the {{app}} folder can be expanded.",
+    "expandTitle": "Expand Disk {{target}}",
+    "newSize": "New size (GiB)",
+    "expandButton": "Expand",
+    "larger": "Larger than {{current}} GiB",
+    "expanded": "Disk expanded to {{size}} GiB",
+    "guestHint": "Then grow the partition and the file system in the guest system."
   }
 }

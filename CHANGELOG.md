@@ -28,6 +28,7 @@
   console showing how many people are on it.
 - .deb package for Debian 13 and Ubuntu 26.04 LTS.
 - Serial console (xterm.js) next to the screen of VMs that have one.
+- VM settings, disk: size, space used, and Expand, running or powered off.
 
 ## 0.4.0 (2026-10-25)
 

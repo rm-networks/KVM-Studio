@@ -26,6 +26,7 @@ import { IsoPicker } from "../iso-picker/IsoPicker";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import { OptionsTab } from "./OptionsTab";
 import { type OptionsDraft, draftOf, optionsChange, risky } from "./optionsDraft";
+import { DiskPanel } from "./DiskPanel";
 import "./VmSettings.css";
 
 type Selection =
@@ -385,15 +386,7 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
                 {host && <p className="muted">{t("settings.hostCpus", { count: host.cpus })}</p>}
               </fieldset>
             )}
-            {disk && (
-              <fieldset className="group">
-                <legend>{t("settings.diskTitle")}</legend>
-                <p className="mono">{disk.path}</p>
-                <p className="muted">
-                  {disk.bus.toUpperCase()} {disk.target}, {disk.format}
-                </p>
-              </fieldset>
-            )}
+            {disk && <DiskPanel key={disk.target} uuid={vm.uuid} disk={disk} />}
             {cdrom && (
               <fieldset className="group">
                 <legend>{t("settings.cdrom", { target: cdrom.target })}</legend>

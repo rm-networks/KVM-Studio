@@ -285,6 +285,12 @@
     "serial": {
       "none": "Cette machine virtuelle n'a pas de console série.",
       "stalled": "La console série ne lit pas ce qui est tapé."
+    },
+    "disk": {
+      "not_larger": "La nouvelle taille doit être plus grande que l'actuelle.",
+      "linked_clones": "Des clones liés reposent sur ce disque : sa taille ne peut pas changer.",
+      "resize_failed": "qemu-img n'a pas pu redimensionner le disque (instantanés internes, ou disque utilisé).",
+      "not_found": "Ce disque n'existe plus."
     }
   },
   "about": {
@@ -1063,5 +1069,16 @@
     "serial": "Console série",
     "connecting": "Connexion à la console série…",
     "closed": "La console série est fermée."
+  },
+  "disk": {
+    "sizes": "Taille : {{capacity}} Gio, {{allocation}} Gio occupés sur l'hôte",
+    "expand": "Agrandir…",
+    "outside": "Seuls les disques du dossier {{app}} peuvent être agrandis.",
+    "expandTitle": "Agrandir le disque {{target}}",
+    "newSize": "Nouvelle taille (Gio)",
+    "expandButton": "Agrandir",
+    "larger": "Plus grande que {{current}} Gio",
+    "expanded": "Disque agrandi à {{size}} Gio",
+    "guestHint": "Agrandissez ensuite la partition et le système de fichiers dans le système invité."
   }
 }
