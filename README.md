@@ -16,8 +16,21 @@ Workspace can suspend or shut them down instead).
 
 ## Status
 
-Version 0.4.0 is the current version (Fedora). Work continues towards V1,
-see the [roadmap](docs/ROADMAP.md).
+Version 1.0.0 is in preparation: a .rpm for Fedora and a .deb for Debian 13
+and Ubuntu 26.04 LTS, built by the CI on every change. Version 0.4.0 is the
+latest release. See the [roadmap](docs/ROADMAP.md).
+
+## Features
+
+- VM library with folders, tabs, a New Virtual Machine assistant and an ISO
+  picker over read-only ISO libraries.
+- Console with copy and paste, full screen, and a serial console for
+  firewalls and appliances.
+- Virtual network editor (NAT, host-only, DHCP, NAT port forwarding), with
+  the host network applet kept free of KVM Studio's interfaces.
+- Snapshots (with or without the memory), clones, disk expansion.
+- Web mode, and sharing on the local network with a guest account (HTTPS).
+- Installation and removal that leave the host clean.
 
 ## Running from the sources
 

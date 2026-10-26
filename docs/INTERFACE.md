@@ -35,7 +35,14 @@ window.
 - Toolbar under the menus.
 - Library tree on the left (folders and VMs).
 - Tabs in the middle: Home, then one tab per open VM.
-- Status bar at the bottom.
+- Status bar at the bottom: connection, versions, number of VMs, and the
+  long tasks under way (a snapshot of a running VM) with a Cancel button.
+- A running VM with a serial console shows Screen and Serial Console views
+  above its console; the console shows how many people are on it when the
+  VMs are shared on the local network.
+
+A guest of LAN sharing has no Edit menu (Preferences, virtual network editor)
+and no first-run assistant; File > Log Out ends the session.
 
 The menu entries are detailed in section 5 of the
 [specifications](SPECIFICATIONS.md).
