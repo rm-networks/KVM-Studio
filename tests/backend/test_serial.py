@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -57,6 +58,11 @@ def test_serial_relays_both_ways(
         assert ws.receive_bytes() == b"login: "
         ws.send_bytes(b"root\r")
         assert ws.receive_bytes() == b"ROOT\r"
+    # The server closes the stream once it notices the browser left.
+    for _ in range(100):
+        if serial.closed:
+            break
+        time.sleep(0.02)
     assert serial.closed
 
 
