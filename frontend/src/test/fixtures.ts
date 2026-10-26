@@ -9,6 +9,7 @@ export function makeVm(overrides: Partial<VmSummary> & { name: string }): VmSumm
     persistent: true,
     folder: "",
     managed: true,
+    files: "own",
     drift: [],
     ...overrides,
   };

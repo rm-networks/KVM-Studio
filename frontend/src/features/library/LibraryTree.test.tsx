@@ -129,6 +129,46 @@ describe("LibraryTree", () => {
     expect(settings).toEqual(["a"]);
   });
 
+  it("offers to move files only when there is something to move", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              vm_dir: "/data/KVM-Studio/VM/loose",
+              moves: [["/data/KVM-Studio/VM/x.qcow2", "/data/KVM-Studio/VM/loose/x.qcow2"]],
+            }),
+          ),
+        ),
+      ),
+    );
+    render(
+      <Harness
+        vms={[
+          makeVm({ name: "own" }),
+          makeVm({ name: "outside", managed: false, files: "outside" }),
+          makeVm({ name: "loose", managed: false, files: "loose" }),
+        ]}
+      />,
+    );
+    const items = async (name: string) => {
+      fireEvent.contextMenu(screen.getByText(name));
+      const found = (await screen.findAllByRole("menuitem")).map((el) => el.textContent);
+      fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+      return found;
+    };
+    expect(await items("own")).not.toContain("Déplacer les fichiers dans KVM Studio…");
+    expect(await items("own")).not.toContain("Ranger les fichiers dans leur dossier…");
+    expect(await items("outside")).toContain("Déplacer les fichiers dans KVM Studio…");
+    expect(await items("outside")).not.toContain("Ranger les fichiers dans leur dossier…");
+    fireEvent.contextMenu(screen.getByText("loose"));
+    fireEvent.click(await screen.findByRole("menuitem", { name: /Ranger les fichiers/ }));
+    expect(
+      await screen.findByText("/data/KVM-Studio/VM/x.qcow2 → /data/KVM-Studio/VM/loose/x.qcow2"),
+    ).toBeTruthy();
+  });
+
   it("moves a folder into another after showing what moves with it", async () => {
     const calls: { method: string; path: string; body: unknown }[] = [];
     vi.stubGlobal(

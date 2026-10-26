@@ -110,7 +110,12 @@
     "moveFolderLinked": "Des clones liés hors de ce dossier dépendent de ses disques : {{files}}. Déplacez-les ou supprimez-les d'abord.",
     "moveFolderWhere": "Nouvel emplacement : {{target}}",
     "vmsMoved_one": "{{count}} machine virtuelle le suit",
-    "vmsMoved_other": "{{count}} machines virtuelles le suivent"
+    "vmsMoved_other": "{{count}} machines virtuelles le suivent",
+    "tidyFiles": "Ranger les fichiers dans leur dossier…",
+    "tidyTitle": "Ranger les fichiers dans leur dossier",
+    "tidyIntro": "Les disques de « {{name}} » sont dans le dossier {{app}} mais pas dans un dossier à eux. Ils seront déplacés ainsi :",
+    "tidyMove": "Déplacer",
+    "tidied": "{{name}} a maintenant son propre dossier"
   },
   "state": {
     "running": "Allumée",
@@ -177,7 +182,10 @@
       "exists": "Une machine virtuelle porte déjà ce nom.",
       "disk_failed": "La création du disque a échoué.",
       "no_nic": "Cette carte réseau n'existe plus.",
-      "has_linked_clones": "Des clones liés dépendent de cette machine virtuelle : elle ne peut être ni supprimée ni déplacée tant qu'ils existent."
+      "has_linked_clones": "Des clones liés dépendent de cette machine virtuelle : elle ne peut être ni supprimée ni déplacée tant qu'ils existent.",
+      "disk_in_iso_library": "Les bibliothèques ISO sont en lecture seule : copiez plutôt le disque.",
+      "no_disk": "Ce fichier de disque n'existe pas.",
+      "disk_not_absolute": "Donnez le chemin complet du disque, commençant par /."
     },
     "request": {
       "invalid": "Requête invalide."
@@ -214,7 +222,8 @@
       "move_failed": "Le déplacement a échoué.",
       "copy_failed": "La copie des disques a échoué.",
       "unreadable": "Un disque n'est pas lisible avec vos droits.",
-      "already_inside": "Les disques sont déjà dans le dossier {{app}}."
+      "already_inside": "Les disques sont déjà dans le dossier {{app}}.",
+      "nothing_to_tidy": "Les fichiers sont déjà dans un dossier à eux."
     },
     "prefs": {
       "location_relative": "Indiquez un chemin complet (qui commence par /).",
@@ -293,6 +302,11 @@
       "linked_clones": "Des clones liés reposent sur ce disque : sa taille ne peut pas changer.",
       "resize_failed": "qemu-img n'a pas pu redimensionner le disque (instantanés internes, ou disque utilisé).",
       "not_found": "Ce disque n'existe plus."
+    },
+    "files": {
+      "not_absolute": "Donnez un chemin complet, commençant par /.",
+      "no_folder": "Ce dossier n'existe pas.",
+      "unreadable": "Ce dossier ne peut pas être lu."
     }
   },
   "about": {
@@ -618,7 +632,6 @@
     "chooseIso": "Choisir…",
     "sourceLater": "J'installerai le système plus tard (disque vierge, lecteur CD vide)",
     "sourceExisting": "Utiliser un disque existant (appliance, disque copié)",
-    "existingHint": "Le disque doit se trouver dans le dossier {{app}} ; il est utilisé tel quel, sans copie.",
     "osIntro": "Quel système va tourner dans cette machine virtuelle ? Le matériel proposé en dépend.",
     "profile": {
       "windows11": "Windows 11",
@@ -665,7 +678,20 @@
     "removeNic": "Retirer la carte",
     "startAfter": "Démarrer la machine virtuelle après sa création",
     "stepOf": "Étape {{step}} sur {{count}}",
-    "hardware": "Matériel"
+    "hardware": "Matériel",
+    "existingDisk": "Fichier du disque",
+    "chooseDisk": "Choisir un disque",
+    "moveTitle": "Déplacer le disque",
+    "moveConfirm": "Déplacer et créer",
+    "moveIntro": "Le fichier du disque quitte son dossier pour celui de la nouvelle machine virtuelle :",
+    "existing": {
+      "in_place": "Utiliser le disque là où il est",
+      "in_placeHint": "Aucun dossier n'est créé : la machine virtuelle utilise ce fichier sur place.",
+      "copy": "Copier dans {{app}}",
+      "copyHint": "Une copie va dans le dossier de la machine virtuelle ; l'original reste.",
+      "move": "Déplacer dans {{app}}",
+      "moveHint": "Le fichier va dans le dossier de la machine virtuelle, après votre confirmation."
+    }
   },
   "settings": {
     "title": "Paramètres de {{name}}",
@@ -1087,5 +1113,19 @@
     "larger": "Plus grande que {{current}} Gio",
     "expanded": "Disque agrandi à {{size}} Gio",
     "guestHint": "Agrandissez ensuite la partition et le système de fichiers dans le système invité."
+  },
+  "files": {
+    "browse": "Parcourir…",
+    "choose": "Choisir",
+    "up": "Dossier parent",
+    "places": "Emplacements",
+    "noDisk": "Aucune image disque dans ce dossier.",
+    "noFolder": "Aucun dossier ici.",
+    "truncated": "Trop d'éléments : la liste s'arrête ici.",
+    "place": {
+      "home": "Dossier personnel",
+      "library": "{{app}}",
+      "iso": "Bibliothèque ISO"
+    }
   }
 }

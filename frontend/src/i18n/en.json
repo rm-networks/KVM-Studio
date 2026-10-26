@@ -110,7 +110,12 @@
     "moveFolderLinked": "Linked clones outside this folder depend on its disks: {{files}}. Move or delete them first.",
     "moveFolderWhere": "New place: {{target}}",
     "vmsMoved_one": "{{count}} virtual machine moves with it",
-    "vmsMoved_other": "{{count}} virtual machines move with it"
+    "vmsMoved_other": "{{count}} virtual machines move with it",
+    "tidyFiles": "Put Files in Their Own Folder…",
+    "tidyTitle": "Put Files in Their Own Folder",
+    "tidyIntro": "The disks of \"{{name}}\" are in the {{app}} folder but not in a folder of their own. They will move as follows:",
+    "tidyMove": "Move",
+    "tidied": "{{name}} now has its own folder"
   },
   "state": {
     "running": "Running",
@@ -177,7 +182,10 @@
       "exists": "A virtual machine already has this name.",
       "disk_failed": "Creating the disk failed.",
       "no_nic": "This network adapter no longer exists.",
-      "has_linked_clones": "Linked clones depend on this virtual machine: it cannot be deleted or moved while they exist."
+      "has_linked_clones": "Linked clones depend on this virtual machine: it cannot be deleted or moved while they exist.",
+      "disk_in_iso_library": "ISO libraries are read only: copy the disk instead.",
+      "no_disk": "This disk file does not exist.",
+      "disk_not_absolute": "Give the full path of the disk, starting with /."
     },
     "request": {
       "invalid": "Invalid request."
@@ -214,7 +222,8 @@
       "move_failed": "The move failed.",
       "copy_failed": "Copying the disks failed.",
       "unreadable": "A disk cannot be read with your permissions.",
-      "already_inside": "The disks are already in the {{app}} folder."
+      "already_inside": "The disks are already in the {{app}} folder.",
+      "nothing_to_tidy": "The files are already in a folder of their own."
     },
     "prefs": {
       "location_relative": "Enter a full path (starting with /).",
@@ -293,6 +302,11 @@
       "linked_clones": "Linked clones are built on this disk: it cannot change size.",
       "resize_failed": "qemu-img could not resize the disk (internal snapshots, or the disk is in use).",
       "not_found": "This disk no longer exists."
+    },
+    "files": {
+      "not_absolute": "Give a full path, starting with /.",
+      "no_folder": "This folder does not exist.",
+      "unreadable": "This folder cannot be read."
     }
   },
   "about": {
@@ -618,7 +632,6 @@
     "chooseIso": "Choose…",
     "sourceLater": "I will install the system later (blank disk, empty CD drive)",
     "sourceExisting": "Use an existing disk (appliance, copied disk)",
-    "existingHint": "The disk must be in the {{app}} folder; it is used as is, not copied.",
     "osIntro": "Which system will run in this virtual machine? The suggested hardware depends on it.",
     "profile": {
       "windows11": "Windows 11",
@@ -665,7 +678,20 @@
     "removeNic": "Remove the card",
     "startAfter": "Power on the virtual machine once created",
     "stepOf": "Step {{step}} of {{count}}",
-    "hardware": "Hardware"
+    "hardware": "Hardware",
+    "existingDisk": "Disk file",
+    "chooseDisk": "Choose a Disk",
+    "moveTitle": "Move the Disk",
+    "moveConfirm": "Move and Create",
+    "moveIntro": "The disk file leaves its folder for the folder of the new virtual machine:",
+    "existing": {
+      "in_place": "Use the disk where it is",
+      "in_placeHint": "No folder is created: the virtual machine uses this file in place.",
+      "copy": "Copy into {{app}}",
+      "copyHint": "A copy goes into the folder of the virtual machine; the original stays.",
+      "move": "Move into {{app}}",
+      "moveHint": "The file goes into the folder of the virtual machine, after you confirm."
+    }
   },
   "settings": {
     "title": "{{name}} Settings",
@@ -1087,5 +1113,19 @@
     "larger": "Larger than {{current}} GiB",
     "expanded": "Disk expanded to {{size}} GiB",
     "guestHint": "Then grow the partition and the file system in the guest system."
+  },
+  "files": {
+    "browse": "Browse…",
+    "choose": "Choose",
+    "up": "Up one folder",
+    "places": "Places",
+    "noDisk": "No disk image in this folder.",
+    "noFolder": "No folder here.",
+    "truncated": "Too many entries: the list stops here.",
+    "place": {
+      "home": "Home folder",
+      "library": "{{app}}",
+      "iso": "ISO library"
+    }
   }
 }

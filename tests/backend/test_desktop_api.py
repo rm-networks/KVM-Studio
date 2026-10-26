@@ -36,6 +36,7 @@ def test_only_intended_methods_are_public() -> None:
     # pywebview exposes every public method to the page.
     public = [name for name in dir(DesktopApi) if not name.startswith("_")]
     assert public == [
+        "choose_disk",
         "choose_folder",
         "close_answered",
         "close_window",
@@ -72,6 +73,24 @@ def test_save_file_writes_where_the_dialog_says(tmp_path: Path) -> None:
     assert api.save_file("../x.json", "{}") is False
     assert DesktopApi(FakeClipboard()).save_file("x.json", "{}") is False
     assert asked == ["networks.json"]
+
+
+def test_choose_disk_offers_disk_images(tmp_path: Path) -> None:
+    asked: list[tuple[str, tuple[str, ...]]] = []
+
+    class Window:
+        def create_file_dialog(
+            self, kind: object, directory: str, file_types: tuple[str, ...]
+        ) -> tuple[str]:
+            asked.append((directory, file_types))
+            return (str(tmp_path / "appliance.qcow2"),)
+
+    api = DesktopApi(FakeClipboard())
+    api._attach(Window())
+    assert api.choose_disk(str(tmp_path)) == str(tmp_path / "appliance.qcow2")
+    assert asked[0][0] == str(tmp_path)
+    assert "*.qcow2" in asked[0][1][0]
+    assert DesktopApi(FakeClipboard()).choose_disk() is None
 
 
 def test_desktop_api_opens_only_https_links(monkeypatch: pytest.MonkeyPatch) -> None:

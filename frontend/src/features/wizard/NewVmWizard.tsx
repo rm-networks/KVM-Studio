@@ -7,11 +7,14 @@ import {
   type HostCapabilities,
   type LibraryInfo,
   type Network,
+  type NewVmRequest,
   type ProfileInfo,
   type VmSummary,
 } from "../../api/client";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { Wizard } from "../../components/Wizard";
 import { useNotifier } from "../../components/notifier";
+import { BrowseButton } from "../files/BrowseButton";
 import { IsoPicker } from "../iso-picker/IsoPicker";
 import { isValidName } from "../library/names";
 import { defaultNics, type NicDraft, uniqueName } from "./defaults";
@@ -20,6 +23,8 @@ import "./NewVmWizard.css";
 type Step = "source" | "os" | "name" | "disk" | "summary";
 const STEPS: Step[] = ["source", "os", "name", "disk", "summary"];
 type Source = "iso" | "later" | "existing";
+type ExistingMode = NonNullable<NewVmRequest["existing_mode"]>;
+const EXISTING_MODES: ExistingMode[] = ["in_place", "copy", "move"];
 
 interface Props {
   library: LibraryInfo | null;
@@ -43,6 +48,8 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
   const [source, setSource] = useState<Source>("iso");
   const [iso, setIso] = useState<string | null>(null);
   const [existingDisk, setExistingDisk] = useState("");
+  const [existingMode, setExistingMode] = useState<ExistingMode>("in_place");
+  const [confirmMove, setConfirmMove] = useState(false);
   const [profileId, setProfileId] = useState("linux");
   const [name, setName] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
@@ -140,6 +147,7 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
         profile: profileId,
         iso: source === "iso" ? iso : null,
         existing_disk: source === "existing" ? existingDisk.trim() : null,
+        existing_mode: existingMode,
         disk_gib: source === "existing" ? 0 : diskGib,
         disk_bus: diskBus,
         disk_format: diskFormat,
@@ -200,7 +208,11 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                 type="button"
                 className="button button-primary"
                 disabled={busy || !nameValid || noLibrary}
-                onClick={() => void finish()}
+                onClick={() =>
+                  source === "existing" && existingMode === "move"
+                    ? setConfirmMove(true)
+                    : void finish()
+                }
               >
                 {busy ? t("wizard.creating") : t("wizard.finish")}
               </button>
@@ -242,14 +254,36 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
             </label>
             {source === "existing" && (
               <div className="wizard-indent">
-                <input
-                  type="text"
-                  className="wizard-wide"
-                  value={existingDisk}
-                  placeholder="/…/KVM-Studio/VM/appliance.qcow2"
-                  onChange={(e) => setExistingDisk(e.target.value)}
-                />
-                <p className="muted">{t("wizard.existingHint")}</p>
+                <div className="row wizard-path">
+                  <input
+                    type="text"
+                    className="wizard-wide"
+                    value={existingDisk}
+                    aria-label={t("wizard.existingDisk")}
+                    placeholder="/…/appliance.qcow2"
+                    onChange={(e) => setExistingDisk(e.target.value)}
+                  />
+                  <BrowseButton
+                    kind="disk"
+                    start={existingDisk.trim() || library?.root || null}
+                    title={t("wizard.chooseDisk")}
+                    onPick={setExistingDisk}
+                  />
+                </div>
+                {EXISTING_MODES.map((mode) => (
+                  <label key={mode} className="check wizard-mode">
+                    <input
+                      type="radio"
+                      name="existing-mode"
+                      checked={existingMode === mode}
+                      onChange={() => setExistingMode(mode)}
+                    />
+                    <span>
+                      {t(`wizard.existing.${mode}`)}
+                      <span className="muted">{t(`wizard.existing.${mode}Hint`)}</span>
+                    </span>
+                  </label>
+                ))}
               </div>
             )}
           </>
@@ -393,7 +427,7 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
                   <td>{t("wizard.disk")}</td>
                   <td>
                     {source === "existing"
-                      ? existingDisk
+                      ? `${existingDisk.trim()} (${t(`wizard.existing.${existingMode}`)})`
                       : `${diskGib} ${t("units.gb")}, ${t(`wizard.bus.${diskBus}`)}, ${diskFormat}${preallocate ? `, ${t("wizard.preallocated")}` : ""}`}
                   </td>
                 </tr>
@@ -551,6 +585,23 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
         )}
       </Wizard>
       {pickingIso && <IsoPicker onPick={chooseIso} onClose={() => setPickingIso(false)} />}
+      {confirmMove && (
+        <ConfirmDialog
+          title={t("wizard.moveTitle")}
+          confirmLabel={t("wizard.moveConfirm")}
+          onConfirm={finish}
+          onClose={() => setConfirmMove(false)}
+        >
+          <p>{t("wizard.moveIntro")}</p>
+          <ul className="move-list mono">
+            <li>
+              {existingDisk.trim()}
+              {" → "}
+              {libraryPath}/
+            </li>
+          </ul>
+        </ConfirmDialog>
+      )}
     </>
   );
 }

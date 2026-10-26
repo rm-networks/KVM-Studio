@@ -240,7 +240,7 @@ The library folders are real folders on disk: what the user sees in the tree mat
 
 - **F-20** Typical: installation source → guest OS → name and location (default folder from Preferences) → disk → summary with "Customize Hardware".
 - **F-21** Custom: firmware (BIOS/UEFI, Secure Boot), processors (sockets/cores/threads), memory, network, disk controller and type, disk (new / existing / none).
-- **F-22** Source: ISO through the picker (F-30), "install the OS later", or an existing disk.
+- **F-22** Source: ISO through the picker (F-30), "install the OS later", or an existing disk, picked with Browse. An existing disk is used where it is (default, no folder created), copied into the VM's folder (the original stays) or moved there after a confirmation that lists the move. A VM whose disks lie loose in the `KVM-Studio` root offers "Put Files in Their Own Folder…"; one whose disks are outside offers "Move Files into KVM Studio…"; neither entry shows when there is nothing to move.
 - **F-23** OS detection from the ISO (libosinfo), manual choice as a fallback.
 - **F-24** OS profiles: Windows 11 (UEFI + Secure Boot + TPM 2.0), Windows Server, Linux, firewall/BSD (pfSense, OPNsense, FortiGate VM, Stormshield EVA…: 3 NICs + serial console by default), nested hypervisor (host-passthrough CPU).
 - **F-25** Windows: a second CD drive with the virtio-win ISO when it is configured.

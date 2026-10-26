@@ -15,6 +15,8 @@ export type LibraryInfo = components["schemas"]["LibraryInfo"];
 export type FolderDeletionPlan = components["schemas"]["FolderDeletionPlan"];
 export type FolderMovePlan = components["schemas"]["FolderMovePlan"];
 export type ImportResult = components["schemas"]["ImportResult"];
+export type TidyPlan = components["schemas"]["TidyPlan"];
+export type FileListing = components["schemas"]["FileListing"];
 export type Drift = VmSummary["drift"][number];
 export type Network = components["schemas"]["Network"];
 // Fields with a default on the server stay optional here.
@@ -143,6 +145,13 @@ export const api = {
     request<undefined>("POST", `${vmPath(uuid)}/move`, { folder }),
   importVm: (uuid: string, folder: string) =>
     request<ImportResult>("POST", `${vmPath(uuid)}/import`, { folder }),
+  tidyPlan: (uuid: string) => request<TidyPlan>("GET", `${vmPath(uuid)}/tidy`),
+  tidyVm: (uuid: string) => request<TidyPlan>("POST", `${vmPath(uuid)}/tidy`),
+  listFiles: (path: string | null, kind: "disk" | "folder") =>
+    request<FileListing>(
+      "GET",
+      `/api/files?kind=${kind}${path ? `&path=${encodeURIComponent(path)}` : ""}`,
+    ),
   library: () => request<LibraryInfo>("GET", "/api/library"),
   createFolder: (path: string) =>
     request<{ path: string }>("POST", "/api/library/folders", { path }),

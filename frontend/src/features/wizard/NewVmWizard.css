@@ -47,3 +47,22 @@
 .wizard-nic select:first-child {
   flex: 1;
 }
+
+.wizard-path {
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.wizard-path input {
+  flex: 1;
+  min-width: 0;
+}
+
+.wizard-mode {
+  align-items: flex-start;
+}
+
+.wizard-mode .muted {
+  display: block;
+  font-size: var(--font-size-small);
+}

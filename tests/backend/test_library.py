@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from kvmstudio.config import Config
+from kvmstudio.errors import ApiException
 from kvmstudio.libvirt_conn import LibvirtConnection
 from kvmstudio.services import domain_xml
 from kvmstudio.services.library import metadata_folder, placement, set_metadata_folder
@@ -437,3 +438,77 @@ def test_a_new_location_shows_the_vms_already_there(
     saved = lib_client.get("/api/preferences", headers=AUTH).json()["config"]
     assert saved["storage"]["vm_default_location"] == str(other)
     assert not (other / "KVM-Studio" / "KVM-Studio").exists()
+
+
+# Loose files put in the VM's own folder
+
+
+def test_loose_files_are_put_in_their_own_folder(
+    library: Path, lib_client: TestClient, conn: LibvirtConnection, define: list[Any]
+) -> None:
+    disk = touch(library / "appliance.qcow2")
+    dom = add_domain(conn, define, make_xml("App", [("disk", str(disk))]))
+    url = f"/api/vms/{dom.UUIDString()}/tidy"
+    vm = next(v for v in lib_client.get("/api/vms", headers=AUTH).json() if v["name"] == "App")
+    assert vm["files"] == "loose"
+    plan = lib_client.get(url, headers=AUTH).json()
+    target = library / "App" / "appliance.qcow2"
+    assert plan == {"vm_dir": str(library / "App"), "moves": [[str(disk), str(target)]]}
+    assert lib_client.post(url, headers=AUTH).status_code == 200
+    assert target.is_file()
+    assert not disk.exists()
+    assert str(target) in dom.XMLDesc(0)
+    vm = next(v for v in lib_client.get("/api/vms", headers=AUTH).json() if v["name"] == "App")
+    assert (vm["files"], vm["managed"], vm["folder"]) == ("own", True, "")
+    # Nothing left to put away.
+    r = lib_client.get(url, headers=AUTH)
+    assert (r.status_code, r.json()["error"]["code"]) == (409, "library.nothing_to_tidy")
+
+
+def test_tidy_needs_the_vm_off(
+    library: Path, lib_client: TestClient, conn: LibvirtConnection, define: list[Any]
+) -> None:
+    disk = touch(library / "loose.qcow2")
+    dom = add_domain(conn, define, make_xml("Loose", [("disk", str(disk))]))
+    dom.create()
+    r = lib_client.post(f"/api/vms/{dom.UUIDString()}/tidy", headers=AUTH)
+    assert (r.status_code, r.json()["error"]["code"]) == (409, "vm.not_shut_off")
+    assert disk.is_file()
+
+
+# Browse buttons of a web browser
+
+
+def test_browse_lists_folders_and_disks(
+    tmp_path: Path, library: Path, lib_client: TestClient
+) -> None:
+    touch(tmp_path / "Downloads" / "appliance.qcow2")
+    touch(tmp_path / "Downloads" / "notes.txt")
+    touch(tmp_path / "Downloads" / ".hidden.qcow2")
+    (tmp_path / "Downloads" / "VMs").mkdir()
+    found = lib_client.get(
+        "/api/files", headers=AUTH, params={"path": str(tmp_path / "Downloads")}
+    ).json()
+    assert [(e["name"], e["folder"]) for e in found["entries"]] == [
+        ("appliance.qcow2", False),
+        ("VMs", True),
+    ]
+    assert found["parent"] == str(tmp_path)
+    assert {p["kind"] for p in found["places"]} == {"home", "library", "iso"}
+    folders = lib_client.get(
+        "/api/files", headers=AUTH, params={"path": str(tmp_path / "Downloads"), "kind": "folder"}
+    ).json()
+    assert [e["name"] for e in folders["entries"]] == ["VMs"]
+    r = lib_client.get("/api/files", headers=AUTH, params={"path": "relative"})
+    assert r.status_code == 422
+
+
+def test_browse_keeps_a_guest_in_the_library(lib_config: Config, tmp_path: Path) -> None:
+    from kvmstudio.services import browse
+
+    with pytest.raises(ApiException) as err:
+        browse.listing(lib_config, str(tmp_path), "disk", confined=True)
+    assert err.value.status == 403
+    inside = browse.listing(lib_config, None, "disk", confined=True)
+    assert inside.parent is None
+    assert [kind for kind, _p in inside.places] == ["library", "iso"]

@@ -57,12 +57,16 @@ export function VmContextMenu({ vm, onOpen, onSettings, children }: Props) {
           <Item label={t("menu.clone")} onSelect={() => actions.clone(vm)} />
           <Item label={t("menu.rename")} onSelect={() => actions.rename(vm)} />
           <Item label={t("library.moveTo")} onSelect={() => library.moveVm(vm)} />
-          {!vm.managed && (
+          {/* Only when there is something to move. */}
+          {vm.files === "outside" && (
             <Item
               label={t("library.importFiles")}
               disabled={!library.available}
               onSelect={() => library.importVm(vm)}
             />
+          )}
+          {vm.files === "loose" && (
+            <Item label={t("library.tidyFiles")} onSelect={() => library.tidyVm(vm)} />
           )}
           <Item label={t("menu.removeFromLibrary")} onSelect={() => actions.remove(vm, false)} />
           <Item label={t("menu.deleteFromDisk")} onSelect={() => actions.remove(vm, true)} />

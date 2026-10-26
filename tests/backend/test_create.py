@@ -11,13 +11,15 @@ import pytest
 from fastapi.testclient import TestClient
 from lxml import etree
 
+from kvmstudio.config import Config
+from kvmstudio.errors import ApiException
 from kvmstudio.services import create as create_module
 from kvmstudio.services.create import nic_target
 from kvmstudio.services.library import metadata_folder
 from kvmstudio.xml.domain import DiskSpec, DomainSpec, NicSpec, build_domain
 from kvmstudio.xml.profiles import PROFILES, guess_profile
 
-from .helpers import AUTH, needs_qemu_img, touch
+from .helpers import AUTH, needs_qemu_img, qcow2, touch
 
 VALIDATOR = shutil.which("virt-xml-validate")
 
@@ -298,3 +300,78 @@ def test_machine_type_is_the_versioned_name() -> None:
     caps = "<domainCapabilities><machine>pc-q35-10.2</machine></domainCapabilities>"
     assert create_module.machine_type(Conn(caps)) == "pc-q35-10.2"  # type: ignore[arg-type]
     assert create_module.machine_type(Conn("<domainCapabilities/>")) == "q35"  # type: ignore[arg-type]
+
+
+# An existing disk: used where it is, copied or moved into the VM's folder
+
+
+def existing(path: Path, mode: str) -> dict[str, Any]:
+    return new_vm(existing_disk=str(path), existing_mode=mode, disk_gib=0, uefi=False)
+
+
+def disk_of(conn: Any, uuid: str) -> str:
+    xml = conn.run(lambda c: c.lookupByUUIDString(uuid).XMLDesc(0))
+    source = etree.fromstring(xml.encode()).find("devices/disk/source")
+    assert source is not None
+    return str(source.get("file"))
+
+
+@needs_qemu_img
+def test_existing_disk_where_it_is_makes_no_folder(
+    lib_client: TestClient, conn: Any, labs: Path, tmp_path: Path, cleanup_domains: None
+) -> None:
+    disk = qcow2(tmp_path / "Downloads" / "appliance.qcow2")
+    response = lib_client.post("/api/vms", headers=AUTH, json=existing(disk, "in_place"))
+    assert response.status_code == 201
+    assert disk_of(conn, response.json()["uuid"]) == str(disk)
+    assert list(labs.iterdir()) == []
+    vm = next(v for v in lib_client.get("/api/vms", headers=AUTH).json() if v["name"] == "SRV-WS22")
+    assert (vm["folder"], vm["files"]) == ("Labs", "outside")
+
+
+@needs_qemu_img
+def test_existing_disk_copied_or_moved_into_its_folder(
+    lib_client: TestClient, conn: Any, labs: Path, tmp_path: Path, cleanup_domains: None
+) -> None:
+    disk = qcow2(tmp_path / "Downloads" / "appliance.qcow2")
+    response = lib_client.post("/api/vms", headers=AUTH, json=existing(disk, "copy"))
+    assert response.status_code == 201
+    copy = labs / "SRV-WS22" / "SRV-WS22.qcow2"
+    assert disk_of(conn, response.json()["uuid"]) == str(copy)
+    assert copy.is_file()
+    assert disk.is_file()
+    conn.run(lambda c: c.lookupByName("SRV-WS22").undefine())
+    shutil.rmtree(labs / "SRV-WS22")
+
+    response = lib_client.post("/api/vms", headers=AUTH, json=existing(disk, "move"))
+    assert response.status_code == 201
+    assert copy.is_file()
+    assert not disk.exists()
+    vm = next(v for v in lib_client.get("/api/vms", headers=AUTH).json() if v["name"] == "SRV-WS22")
+    assert (vm["folder"], vm["files"], vm["managed"]) == ("Labs", "own", True)
+
+
+@needs_qemu_img
+def test_existing_disk_rules(
+    lib_client: TestClient, labs: Path, tmp_path: Path, cleanup_domains: None
+) -> None:
+    in_iso = qcow2(tmp_path / "iso" / "rhel-kvm.qcow2")
+    # An ISO library is read only: copied, never used in place nor moved.
+    for mode in ("in_place", "move"):
+        r = lib_client.post("/api/vms", headers=AUTH, json=existing(in_iso, mode))
+        assert (r.status_code, r.json()["error"]["code"]) == (409, "vm.disk_in_iso_library")
+    r = lib_client.post("/api/vms", headers=AUTH, json=existing(tmp_path / "nope.qcow2", "copy"))
+    assert r.status_code == 404
+    assert (
+        lib_client.post("/api/vms", headers=AUTH, json=existing(in_iso, "copy")).status_code == 201
+    )
+    assert in_iso.is_file()
+
+
+def test_guest_disks_stay_in_the_library(lib_config: Config, tmp_path: Path) -> None:
+    outside = touch(tmp_path / "Downloads" / "appliance.qcow2")
+    with pytest.raises(ApiException) as err:
+        create_module.existing_disk(str(outside), lib_config, "copy", confined=True)
+    assert err.value.status == 403
+    inside = touch(tmp_path / "data" / "KVM-Studio" / "VM" / "x.qcow2")
+    assert create_module.existing_disk(str(inside), lib_config, "move", confined=True) == inside

@@ -51,6 +51,7 @@ def test_list_vms(client: TestClient, auth: dict[str, str]) -> None:
         "folder",
         "managed",
         "drift",
+        "files",
     }
     assert vm["folder"] == ""
     assert vm["managed"] is False

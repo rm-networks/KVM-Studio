@@ -19,6 +19,7 @@ from .api import (
     clone,
     create,
     display,
+    files,
     guest,
     hardware,
     isos,
@@ -141,6 +142,7 @@ def create_app(
     private.include_router(snapshots.router)
     private.include_router(guest.router)
     private.include_router(isos.router)
+    private.include_router(files.router)
     private.include_router(setup.router)
     private.include_router(sharing_api.router)
     private.include_router(uninstall.router)

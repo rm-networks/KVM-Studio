@@ -20,7 +20,12 @@ browser, and is installed from a .rpm or .deb package.
   library.
 - **Path confinement.** Every path received from the client is resolved and
   must then be under the VM folder or under a declared ISO library, otherwise
-  the request is refused (403). The backend does the check.
+  the request is refused (403). The backend does the check. Two exceptions
+  for the owner only, as a file dialog would allow: the existing disk a new
+  VM starts from (used where it is, copied or moved in) and the folders the
+  Browse buttons list in a web browser (`/api/files`). A guest stays
+  confined there too. ISO libraries stay read only: a disk found there can
+  only be copied.
 - **No shell.** External tools (`qemu-img`, `nft`, `firewall-cmd`, `ufw`,
   `semanage`, `setfacl`) are called with a list of arguments, never through a
   command built as text.

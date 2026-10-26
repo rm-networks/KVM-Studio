@@ -24,6 +24,10 @@ class HostClipboard(Protocol):
     def write(self, text: str) -> None: ...
 
 
+# Same suffixes as services.browse.DISK_SUFFIXES.
+DISK_FILE_TYPES = "Disk images (*.qcow2;*.raw;*.img)"
+
+
 class DesktopApi:
     """Object handed to pywebview as js_api: every public method is callable from JS."""
 
@@ -91,6 +95,21 @@ class DesktopApi:
         kind = getattr(webview, "FileDialog", None)
         folder_kind = kind.FOLDER if kind is not None else webview.FOLDER_DIALOG
         result = self._window.create_file_dialog(folder_kind, directory=start or "")
+        return str(result[0]) if result else None
+
+    def choose_disk(self, start: str | None = None) -> str | None:
+        """Native file picker for a disk image (File > Open, existing disk)."""
+        if self._window is None:
+            return None
+        import webview
+
+        kind = getattr(webview, "FileDialog", None)
+        open_kind = kind.OPEN if kind is not None else webview.OPEN_DIALOG
+        result = self._window.create_file_dialog(
+            open_kind,
+            directory=start or "",
+            file_types=(DISK_FILE_TYPES, "All files (*.*)"),
+        )
         return str(result[0]) if result else None
 
     def save_file(self, name: str, text: str) -> bool:

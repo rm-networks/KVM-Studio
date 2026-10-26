@@ -75,6 +75,21 @@ const networks = [
   },
 ];
 
+const listing = {
+  path: "/home/me/Downloads",
+  parent: "/home/me",
+  entries: [
+    {
+      name: "appliance.qcow2",
+      path: "/home/me/Downloads/appliance.qcow2",
+      folder: false,
+      size: 2 * 1024 ** 3,
+    },
+  ],
+  places: [{ kind: "home", path: "/home/me" }],
+  truncated: false,
+};
+
 function mockApi() {
   const posts: unknown[] = [];
   vi.stubGlobal(
@@ -91,7 +106,9 @@ function mockApi() {
             ? host
             : path === "/api/networks"
               ? networks
-              : {};
+              : path.startsWith("/api/files")
+                ? listing
+                : {};
       return Promise.resolve(new Response(JSON.stringify(body)));
     }),
   );
@@ -169,5 +186,43 @@ describe("NewVmWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Suivant >" }));
     expect(screen.getByText(/Aucun emplacement des machines virtuelles/)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Suivant >" }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("builds a VM around a disk moved in, after a confirmation", async () => {
+    const posts = mockApi();
+    render(
+      <NotificationProvider>
+        <NewVmWizard
+          library={{ root: "/data/KVM-Studio/VM", folders: ["Labs"], order: {} }}
+          vms={[]}
+          onCreated={() => undefined}
+          onClose={() => undefined}
+        />
+      </NotificationProvider>,
+    );
+    fireEvent.click(await screen.findByLabelText(/Utiliser un disque existant/));
+    // In a browser, Browse lists the folders through the backend.
+    fireEvent.click(screen.getByRole("button", { name: "Parcourir…" }));
+    fireEvent.doubleClick(await screen.findByText("appliance.qcow2"));
+    expect(screen.getByDisplayValue("/home/me/Downloads/appliance.qcow2")).toBeTruthy();
+    expect(screen.getByLabelText(/Utiliser le disque là où il est/)).toHaveProperty(
+      "checked",
+      true,
+    );
+    fireEvent.click(screen.getByLabelText(/Déplacer dans/));
+    for (let i = 0; i < 3; i += 1) {
+      fireEvent.click(screen.getByRole("button", { name: "Suivant >" }));
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Terminer" }));
+    // Nothing moves before the confirmation, which says where the file goes.
+    expect(posts).toHaveLength(0);
+    expect(await screen.findByText(/appliance.qcow2 → \/data\/KVM-Studio\/VM\//)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Déplacer et créer" }));
+    await waitFor(() => expect(posts).toHaveLength(1));
+    expect(posts[0]).toMatchObject({
+      existing_disk: "/home/me/Downloads/appliance.qcow2",
+      existing_mode: "move",
+      disk_gib: 0,
+    });
   });
 });

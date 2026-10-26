@@ -42,6 +42,9 @@ MAX_DEPTH = 8
 LIBRARY_KEY = "library"
 
 Drift = Literal["missing_files", "folder_mismatch"]
+# Where a VM's disk files are: in its own folder of the library, loose in the
+# library (a folder shared with other files), outside the library, or none.
+Files = Literal["own", "loose", "outside", "none"]
 
 # Moves and deletions touch several files: one at a time.
 _lock = threading.Lock()
@@ -56,6 +59,7 @@ class Placement:
     managed: bool  # files inside the library root
     vm_dir: Path | None
     drift: tuple[Drift, ...]
+    files: Files = "none"
 
 
 # Metadata
@@ -197,23 +201,28 @@ def placements(xmls: list[str], config: Config) -> list[Placement]:
     result = []
     for xml, candidate in zip(xmls, candidates, strict=True):
         meta = metadata_folder(xml)
-        missing = any(not Path(p).exists() for p in _file_disks(xml))
+        disks = _file_disks(xml)
+        missing = any(not Path(p).exists() for p in disks)
         drift: list[Drift] = ["missing_files"] if missing else []
+        outside = any(not in_library(p, config) for p in disks)
         if root is None or candidate is None:
-            result.append(Placement(meta or "", False, None, tuple(drift)))
+            files: Files = "outside" if outside else "none"
+            result.append(Placement(meta or "", False, None, tuple(drift), files))
             continue
         meta = _noted_folder(xml, root)
         if not _own_folder(candidate, root, counts[candidate] > 1):
             # Loose files in a library folder: shown there, never moved as a block.
             folder = meta if meta is not None else _rel(candidate, root)
-            result.append(Placement(folder, False, None, tuple(drift)))
+            files = "outside" if outside else "loose"
+            result.append(Placement(folder, False, None, tuple(drift), files))
             continue
         actual = _rel(candidate.parent, root)
         if meta is not None and meta != actual:
             drift.append("folder_mismatch")
         # Files moved by hand: the XML points to the old place, trust the note.
         folder = meta if missing and meta is not None else actual
-        result.append(Placement(folder, True, candidate, tuple(drift)))
+        files = "outside" if outside else "own"
+        result.append(Placement(folder, True, candidate, tuple(drift), files))
     return result
 
 
@@ -313,24 +322,31 @@ class _Move:
     new_dir: Path
 
 
-def _dependents(target_dirs: list[Path], others: list[str], config: Config) -> list[str]:
-    """Files outside the moved folders that use something inside them as backing."""
+def _dependents(
+    target_dirs: list[Path], others: list[str], config: Config, files: Iterable[Path] = ()
+) -> list[str]:
+    """Images outside the moved folders (or files) that use something in them as backing."""
+    files = set(files)
+
+    def moved(path: Path) -> bool:
+        return path in files or any(path.is_relative_to(d) for d in target_dirs)
+
     used_by: list[str] = []
     for xml in others:
         for disk in domain_xml.disks(xml):
             if not disk.path:
                 continue
             chain = qemu_img.backing_files(Path(disk.path)) or list(disk.backing_paths)
-            if any(resolve(b).is_relative_to(d) for b in chain for d in target_dirs):
+            if any(moved(resolve(b)) for b in chain):
                 used_by.append(disk.path)
     root = library_root(config)
     if root is not None and root.is_dir():
         for image in resolve(root).rglob("*"):
-            if any(image.is_relative_to(d) for d in target_dirs):
+            if moved(image):
                 continue
             if image.is_file() and qemu_img.is_qcow2(image):
                 chain = qemu_img.backing_files(image) or []
-                if any(resolve(b).is_relative_to(d) for b in chain for d in target_dirs):
+                if any(moved(resolve(b)) for b in chain):
                     used_by.append(str(image))
     return sorted(set(used_by))
 
@@ -662,6 +678,101 @@ def move_vm(conn: LibvirtConnection, config: Config, uuid: str, folder: str) -> 
             os.rename(new_dir, old_dir)  # put things back as they were
             raise
     return folder
+
+
+# Loose files in the library put in the VM's own folder
+
+
+@dataclass(slots=True)
+class TidyPlan:
+    vm_dir: str
+    moves: list[tuple[str, str]]
+
+
+def _tidy_plan(config: Config, xml: str, name: str, place: Placement) -> TidyPlan:
+    if place.files != "loose":
+        raise ApiException(
+            409, "library.nothing_to_tidy", "The files are already in their own folder"
+        )
+    if not _SEGMENT_RE.match(name):
+        raise ApiException(422, "library.invalid_name", f"invalid folder name: {name}")
+    root = _require_root(config)
+    vm_dir = resolve(_folder_dir(root, place.folder)) / name
+    if vm_dir.exists():
+        raise ApiException(409, "library.exists", f"{vm_dir} already exists")
+    moves: list[tuple[str, str]] = []
+    for path in _file_disks(xml):
+        target = vm_dir / Path(path).name
+        n = 2
+        while str(target) in (t for _s, t in moves):
+            target = vm_dir / f"{Path(path).stem}-{n}{Path(path).suffix}"
+            n += 1
+        moves.append((path, str(target)))
+    return TidyPlan(str(vm_dir), moves)
+
+
+def plan_tidy(conn: LibvirtConnection, config: Config, uuid: str) -> TidyPlan:
+    domains = _snapshot(conn)
+    match = [(n, x) for u, n, _a, x in domains if u == uuid]
+    if not match:
+        raise ApiException(404, "libvirt.no_domain", "Domain not found")
+    name, xml = match[0]
+    place = placement(xml, config, (x for u, _n, _a, x in domains if u != uuid))
+    return _tidy_plan(config, xml, name, place)
+
+
+def tidy_vm_files(conn: LibvirtConnection, config: Config, uuid: str) -> TidyPlan:
+    """Move the loose disk files of a VM into <folder>/<VM name>/, inside the library."""
+    with _lock:
+        domains = _snapshot(conn)
+        match = [(n, a, x) for u, n, a, x in domains if u == uuid]
+        if not match:
+            raise ApiException(404, "libvirt.no_domain", "Domain not found")
+        name, active, xml = match[0]
+        others = [x for u, _n, _a, x in domains if u != uuid]
+        place = placement(xml, config, others)
+        plan = _tidy_plan(config, xml, name, place)
+        if active:
+            raise ApiException(409, "vm.not_shut_off", "Power the virtual machine off first")
+        _no_snapshots(conn, [uuid])
+        if "missing_files" in place.drift:
+            raise ApiException(
+                409, "library.drift", "Files were moved by hand; fix the gap before moving"
+            )
+        used = {resolve(p) for x in others for p in _file_disks(x)}
+        sources = [resolve(src) for src, _t in plan.moves]
+        if blockers := [str(p) for p in sources if p in used] + _dependents(
+            [], others, config, sources
+        ):
+            raise ApiException(
+                409, "library.backing_in_use", "Other VMs use these files: " + ", ".join(blockers)
+            )
+        Path(plan.vm_dir).mkdir(parents=True)
+        done: list[tuple[str, str]] = []
+        try:
+            for src, target in plan.moves:
+                os.rename(src, target)
+                done.append((src, target))
+            mapping = dict(plan.moves)
+            tree = etree.fromstring(xml.encode(), parser=etree.XMLParser(resolve_entities=False))
+            for source in tree.iterfind("devices/disk/source"):
+                if (path := source.get("file")) in mapping:
+                    source.set("file", mapping[path])
+
+            def op(c: libvirt.virConnect) -> None:
+                c.defineXML(etree.tostring(tree).decode())
+                set_metadata_folder(c.lookupByUUIDString(uuid), place.folder, config)
+
+            conn.run(op)
+        except Exception as exc:
+            for src, target in reversed(done):
+                os.rename(target, src)  # put things back as they were
+            with contextlib.suppress(OSError):
+                Path(plan.vm_dir).rmdir()
+            if isinstance(exc, OSError):
+                raise ApiException(500, "library.move_failed", str(exc)) from exc
+            raise
+    return plan
 
 
 # Bringing an outside VM into the library

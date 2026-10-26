@@ -321,6 +321,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/vms/{uuid}/tidy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Tidy Plan */
+    get: operations["tidy_plan_api_vms__uuid__tidy_get"];
+    put?: never;
+    /** Tidy */
+    post: operations["tidy_api_vms__uuid__tidy_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/vms/{uuid}/import": {
     parameters: {
       query?: never;
@@ -1139,6 +1157,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/files": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Files */
+    get: operations["list_files_api_files_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/setup": {
     parameters: {
       query?: never;
@@ -1573,6 +1608,30 @@ export interface components {
       code: string;
       /** Detail */
       detail: string;
+    };
+    /** FileEntry */
+    FileEntry: {
+      /** Name */
+      name: string;
+      /** Path */
+      path: string;
+      /** Folder */
+      folder: boolean;
+      /** Size */
+      size: number;
+    };
+    /** FileListing */
+    FileListing: {
+      /** Path */
+      path: string;
+      /** Parent */
+      parent: string | null;
+      /** Entries */
+      entries: components["schemas"]["FileEntry"][];
+      /** Places */
+      places: components["schemas"]["Place"][];
+      /** Truncated */
+      truncated: boolean;
     };
     /** FolderCreate */
     FolderCreate: {
@@ -2124,6 +2183,12 @@ export interface components {
       iso?: string | null;
       /** Existing Disk */
       existing_disk?: string | null;
+      /**
+       * Existing Mode
+       * @default in_place
+       * @enum {string}
+       */
+      existing_mode: "in_place" | "copy" | "move";
       /** Disk Gib */
       disk_gib: number;
       /**
@@ -2282,6 +2347,13 @@ export interface components {
       packaged: boolean;
       /** Present */
       present: boolean;
+    };
+    /** Place */
+    Place: {
+      /** Kind */
+      kind: string;
+      /** Path */
+      path: string;
     };
     /**
      * PortForward
@@ -2508,6 +2580,13 @@ export interface components {
       /** Error Detail */
       error_detail: string | null;
     };
+    /** TidyPlan */
+    TidyPlan: {
+      /** Vm Dir */
+      vm_dir: string;
+      /** Moves */
+      moves: [string, string][];
+    };
     /** UiPreferences */
     UiPreferences: {
       /**
@@ -2651,6 +2730,11 @@ export interface components {
       managed: boolean;
       /** Drift */
       drift: ("missing_files" | "folder_mismatch")[];
+      /**
+       * Files
+       * @enum {string}
+       */
+      files: "own" | "loose" | "outside" | "none";
     };
     /** VmUpdate */
     VmUpdate: {
@@ -4055,6 +4139,176 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  tidy_plan_api_vms__uuid__tidy_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        uuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TidyPlan"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  tidy_api_vms__uuid__tidy_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        uuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TidyPlan"];
+        };
       };
       /** @description Unauthorized */
       401: {
@@ -8871,6 +9125,92 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AccessReport"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  list_files_api_files_get: {
+    parameters: {
+      query?: {
+        path?: string | null;
+        kind?: "disk" | "folder";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FileListing"];
         };
       };
       /** @description Unauthorized */

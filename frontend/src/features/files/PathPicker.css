@@ -1,0 +1,77 @@
+.path-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.path-current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: text;
+}
+
+.path-body {
+  display: flex;
+  gap: var(--space-2);
+  height: min(340px, calc(100vh - 300px));
+  min-height: 160px;
+}
+
+.path-places {
+  width: 170px;
+  flex: none;
+  padding: 2px 0;
+}
+
+.path-entries {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.path-entries ul {
+  margin: 0;
+  padding: 2px 0;
+  list-style: none;
+}
+
+.path-places .list-row,
+.path-entries .list-row {
+  gap: var(--space-2);
+  min-height: 22px;
+  padding-right: var(--space-2);
+  white-space: nowrap;
+}
+
+.path-places .list-row > svg,
+.path-entries .list-row > svg {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.list-row[aria-selected="true"] > svg {
+  color: inherit;
+}
+
+.path-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.path-size {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.list-row[aria-selected="true"] .path-size {
+  color: inherit;
+}
+
+.path-empty {
+  margin: var(--space-3);
+  color: var(--text-muted);
+}

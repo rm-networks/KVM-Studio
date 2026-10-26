@@ -13,6 +13,7 @@ function vm(name: string, folder = "", state: VmSummary["state"] = "shutoff"): V
     persistent: true,
     folder,
     managed: true,
+    files: "own",
     drift: [],
   };
 }

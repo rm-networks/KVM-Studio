@@ -60,6 +60,7 @@ class NewVmRequest(BaseModel):
     profile: str
     iso: str | None = None
     existing_disk: str | None = None
+    existing_mode: create.ExistingMode = "in_place"
     disk_gib: int = Field(ge=0, le=16384)
     disk_bus: DiskBus
     disk_format: str = "qcow2"
@@ -161,6 +162,8 @@ async def create_vm(ctx: Context, request: Request, body: NewVmRequest) -> Creat
         secure_boot=body.secure_boot,
         tpm=body.tpm,
         start=body.start,
+        existing_mode=body.existing_mode,
+        confined=getattr(request.state, "role", "owner") == "guest",
     )
     uuid = await run_in_threadpool(create.create_vm, ctx.conn, ctx.config, vm)
     return Created(uuid=uuid)

@@ -11,6 +11,8 @@ export interface LibraryActions {
   /** With a folder: move right away (drag and drop). Without: ask where. */
   moveVm: (vm: VmSummary, folder?: string) => void;
   importVm: (vm: VmSummary) => void;
+  /** Loose files in the library go into a folder of their own. */
+  tidyVm: (vm: VmSummary) => void;
   /**
    * Drag and drop of a folder: under another parent, its VMs move with it
    * (after a confirmation); in the same parent, only the display order changes.

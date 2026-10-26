@@ -9,7 +9,7 @@ import libvirt
 
 from ..config import Config
 from ..libvirt_conn import DomainState, LibvirtConnection, summarize
-from .library import Drift, placements
+from .library import Drift, Files, placements
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +23,7 @@ class VmEntry:
     folder: str
     managed: bool
     drift: tuple[Drift, ...]
+    files: Files
 
     def as_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -51,6 +52,7 @@ def _entries(doms: list[libvirt.virDomain], config: Config) -> list[VmEntry]:
             folder=p.folder,
             managed=p.managed,
             drift=p.drift,
+            files=p.files,
         )
         for (s, _xml), p in zip(rows, places, strict=True)
     ]

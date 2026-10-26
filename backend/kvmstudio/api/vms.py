@@ -15,7 +15,7 @@ from ..events import EventHub
 from ..libvirt_conn import DomainState
 from ..paths import is_strictly_within, library_root
 from ..services import clone, deletion, library, options, vm_view
-from ..services.library import Drift
+from ..services.library import Drift, Files
 
 router = APIRouter(prefix="/vms", tags=["vms"])
 
@@ -44,6 +44,7 @@ class VmSummary(BaseModel):
     folder: str
     managed: bool
     drift: list[Drift]
+    files: Files
 
 
 class MoveRequest(BaseModel):
@@ -163,6 +164,24 @@ async def move(ctx: Context, request: Request, uuid: str, body: MoveRequest) -> 
     await run_in_threadpool(library.move_vm, ctx.conn, ctx.config, uuid, body.folder)
     _library_changed(request)
     return Response(status_code=204)
+
+
+class TidyPlan(BaseModel):
+    vm_dir: str
+    moves: list[tuple[str, str]]
+
+
+@router.get("/{uuid}/tidy")
+async def tidy_plan(ctx: Context, uuid: str) -> TidyPlan:
+    plan = await run_in_threadpool(library.plan_tidy, ctx.conn, ctx.config, uuid)
+    return TidyPlan(vm_dir=plan.vm_dir, moves=plan.moves)
+
+
+@router.post("/{uuid}/tidy")
+async def tidy(ctx: Context, request: Request, uuid: str) -> TidyPlan:
+    plan = await run_in_threadpool(library.tidy_vm_files, ctx.conn, ctx.config, uuid)
+    _library_changed(request)
+    return TidyPlan(vm_dir=plan.vm_dir, moves=plan.moves)
 
 
 @router.post("/{uuid}/import")

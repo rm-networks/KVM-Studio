@@ -1,0 +1,9 @@
+.move-list {
+  max-height: 200px;
+  margin: var(--space-2) 0;
+  padding-left: var(--space-4);
+  overflow: auto;
+  font-size: var(--font-size-small);
+  user-select: text;
+  overflow-wrap: anywhere;
+}

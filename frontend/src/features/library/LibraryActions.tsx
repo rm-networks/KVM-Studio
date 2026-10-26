@@ -1,7 +1,8 @@
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { api, type LibraryInfo, type VmSummary } from "../../api/client";
+import { api, type LibraryInfo, type TidyPlan, type VmSummary } from "../../api/client";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useNotifier } from "../../components/notifier";
 import { DeleteFolderDialog } from "./DeleteFolderDialog";
 import { FolderNameDialog } from "./FolderNameDialog";
@@ -16,6 +17,7 @@ type Pending =
   | { kind: "delete"; path: string }
   | { kind: "move"; vm: VmSummary; importFiles: boolean }
   | { kind: "moveFolder"; path: string; parent: string; before: string | null }
+  | { kind: "tidy"; vm: VmSummary; plan: TidyPlan }
   | null;
 
 interface Props {
@@ -49,6 +51,12 @@ export function LibraryActionsProvider({ library, children }: Props) {
         else if (folder !== vm.folder) move(vm, folder);
       },
       importVm: (vm) => setPending({ kind: "move", vm, importFiles: true }),
+      tidyVm: (vm) => {
+        api
+          .tidyPlan(vm.uuid)
+          .then((plan) => setPending({ kind: "tidy", vm, plan }))
+          .catch((err: unknown) => notifyError(t("library.tidyTitle"), err));
+      },
       moveFolder: (path, parent, before) => {
         if (parent !== parentOf(path)) {
           setPending({ kind: "moveFolder", path, parent, before });
@@ -136,6 +144,28 @@ export function LibraryActionsProvider({ library, children }: Props) {
           }}
           onClose={close}
         />
+      )}
+      {pending?.kind === "tidy" && (
+        <ConfirmDialog
+          title={t("library.tidyTitle")}
+          confirmLabel={t("library.tidyMove")}
+          onConfirm={() =>
+            api
+              .tidyVm(pending.vm.uuid)
+              .then(() => notify(t("library.tidied", { name: pending.vm.name }), ""))
+          }
+          onClose={close}
+        >
+          <p>{t("library.tidyIntro", { name: pending.vm.name })}</p>
+          <ul className="move-list mono">
+            {pending.plan.moves.map(([from, to]) => (
+              <li key={from}>
+                {from} → {to}
+              </li>
+            ))}
+          </ul>
+          {pending.vm.state !== "shutoff" && <p className="field-error">{t("delete.mustBeOff")}</p>}
+        </ConfirmDialog>
       )}
     </LibraryActionsContext.Provider>
   );

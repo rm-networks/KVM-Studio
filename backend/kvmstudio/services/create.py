@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import uuid as uuidlib
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Literal
 
 import libvirt
 from lxml import etree
@@ -14,7 +16,7 @@ from lxml import etree
 from ..config import Config
 from ..errors import ApiException
 from ..libvirt_conn import LibvirtConnection
-from ..paths import confine, in_iso_library, library_root, resolve
+from ..paths import confine, in_iso_library, in_library, library_root, resolve
 from ..xml.domain import DiskSpec, DomainSpec, NicSpec, build_domain
 from ..xml.profiles import PROFILES, DiskBus, NicModel
 from . import qemu_img
@@ -22,6 +24,10 @@ from .host_kvm import kvm_state
 from .library import _SEGMENT_RE, check_folder, noted_root
 
 MAX_NICS = 10
+
+# What happens to an existing disk: used where it is (no folder is made for
+# the VM), copied into the VM's folder, or moved there.
+ExistingMode = Literal["in_place", "copy", "move"]
 
 
 @dataclass(slots=True)
@@ -48,6 +54,9 @@ class NewVm:
     secure_boot: bool = False
     tpm: bool = False
     start: bool = False
+    existing_mode: ExistingMode = "in_place"
+    # A guest of LAN sharing: disks only from inside the library (F-103).
+    confined: bool = False
 
 
 def nic_target(uuid: str, index: int) -> str:
@@ -88,9 +97,42 @@ def _check(conn: LibvirtConnection, config: Config, vm: NewVm) -> tuple[Path, st
         if nic.network not in networks:
             raise ApiException(404, "libvirt.no_network", f"network {nic.network} not found")
     vm_dir = parent / vm.name
-    if vm_dir.exists():
+    in_place = vm.existing_disk is not None and vm.existing_mode == "in_place"
+    if not in_place and vm_dir.exists():
         raise ApiException(409, "library.exists", f"{vm_dir} already exists")
     return vm_dir, "test" if driver.upper() == "TEST" else "kvm"
+
+
+def existing_disk(path: str, config: Config, mode: ExistingMode, *, confined: bool) -> Path:
+    """The disk file an existing-disk VM starts from, checked for the chosen mode.
+
+    The owner may pick a disk anywhere; a guest only inside the library. An ISO
+    library is read only: a disk there can be copied, never used or moved.
+    """
+    if not os.path.isabs(path):
+        raise ApiException(422, "vm.disk_not_absolute", f"{path} is not an absolute path")
+    source = resolve(path)
+    in_iso = in_iso_library(source, config)
+    if confined and not (in_library(source, config) or (in_iso and mode == "copy")):
+        raise ApiException(403, "path.not_allowed", f"{path} is outside the library")
+    if in_iso and mode != "copy":
+        raise ApiException(
+            409, "vm.disk_in_iso_library", "ISO libraries are read only: copy the disk instead"
+        )
+    if not source.is_file():
+        raise ApiException(404, "vm.no_disk", f"{path} is not a file")
+    if not os.access(source, os.R_OK):
+        raise ApiException(403, "library.unreadable", f"{path} is not readable")
+    return source
+
+
+def _move_file(src: Path, dest: Path) -> None:
+    """rename(), or a copy then removal across file systems."""
+    try:
+        os.rename(src, dest)
+    except OSError:
+        shutil.copy2(src, dest)
+        os.unlink(src)
 
 
 def machine_type(conn: LibvirtConnection) -> str:
@@ -111,15 +153,33 @@ def create_vm(conn: LibvirtConnection, config: Config, vm: NewVm) -> str:
         iso = confine(vm.iso, config)
         if not in_iso_library(iso, config):
             raise ApiException(403, "path.not_allowed", f"{vm.iso} is not in an ISO library")
-    existing = confine(vm.existing_disk, config, allow_iso=False) if vm.existing_disk else None
+    existing = (
+        existing_disk(vm.existing_disk, config, vm.existing_mode, confined=vm.confined)
+        if vm.existing_disk
+        else None
+    )
+    in_place = existing is not None and vm.existing_mode == "in_place"
 
     uuid = str(uuidlib.uuid4())
-    vm_dir.mkdir(parents=True)
+    if not in_place:
+        vm_dir.mkdir(parents=True)
+    moved: tuple[Path, Path] | None = None
     try:
         disks: list[DiskSpec] = []
         if existing is not None:
             fmt = "qcow2" if qemu_img.is_qcow2(existing) else "raw"
-            disks.append(DiskSpec(resolve(existing), fmt, vm.disk_bus))
+            path = existing
+            if not in_place:
+                path = vm_dir / f"{vm.name}.{fmt}"
+                try:
+                    if vm.existing_mode == "move":
+                        _move_file(existing, path)
+                        moved = (path, existing)
+                    else:
+                        qemu_img.convert(existing, path, fmt)
+                except (qemu_img.QemuImgError, OSError) as exc:
+                    raise ApiException(500, "library.copy_failed", str(exc)) from exc
+            disks.append(DiskSpec(path, fmt, vm.disk_bus))
         elif vm.disk_gib > 0:
             path = vm_dir / f"{vm.name}.{vm.disk_format}"
             try:
@@ -142,7 +202,9 @@ def create_vm(conn: LibvirtConnection, config: Config, vm: NewVm) -> str:
             uefi=vm.uefi,
             secure_boot=vm.secure_boot,
             tpm=vm.tpm,
-            nvram=vm_dir / f"{vm.name}_VARS.fd" if vm.uefi else None,
+            # A disk used where it is gets no folder: libvirt keeps the
+            # variables in its own place, as for a VM made in virt-manager.
+            nvram=vm_dir / f"{vm.name}_VARS.fd" if vm.uefi and not in_place else None,
             folder=check_folder(vm.folder),
             library=noted_root(config),
             domain_type=domain_type,
@@ -153,7 +215,10 @@ def create_vm(conn: LibvirtConnection, config: Config, vm: NewVm) -> str:
 
         conn.run(lambda c: c.defineXML(xml))
     except Exception:
-        shutil.rmtree(vm_dir, ignore_errors=True)
+        if moved is not None:
+            _move_file(*moved)  # the disk goes back where it was
+        if not in_place:
+            shutil.rmtree(vm_dir, ignore_errors=True)
         raise
     if vm.start:
         # The VM exists from here on: a failed start leaves it defined, with its files.
