@@ -50,6 +50,7 @@ from .errors import (
 from .events import EventHub, events_socket
 from .frontend import find_frontend_dir
 from .libvirt_conn import LibvirtConnection
+from .services import options as vm_options
 from .services import vm_view
 from .services.tasks import TaskRegistry
 
@@ -81,7 +82,10 @@ def create_app(
         entry = vm_view.one_vm(conn, app.state.context.config, uuid)
         return entry.as_dict() if entry else None
 
-    hub = EventHub(conn, describe)
+    # A VM installed from a CD placed first comes up on its disk after the reboot.
+    hub = EventHub(
+        conn, describe, on_reboot=lambda uuid: vm_options.after_install_reboot(conn, uuid)
+    )
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:

@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+import logging
 from collections.abc import Callable
 from typing import Any
 
@@ -33,12 +34,18 @@ QUEUE_SIZE = 256
 
 Message = dict[str, Any]
 Describe = Callable[[str], Message | None]
+OnReboot = Callable[[str], object]
+
+log = logging.getLogger(__name__)
 
 
 class EventHub:
-    def __init__(self, conn: LibvirtConnection, describe: Describe) -> None:
+    def __init__(
+        self, conn: LibvirtConnection, describe: Describe, on_reboot: OnReboot | None = None
+    ) -> None:
         self._conn = conn
         self._describe = describe
+        self._on_reboot_hook = on_reboot
         self._loop: asyncio.AbstractEventLoop | None = None
         self._subscribers: set[asyncio.Queue[Message]] = set()
         self._connected = False
@@ -54,6 +61,11 @@ class EventHub:
             None, libvirt.VIR_DOMAIN_EVENT_ID_LIFECYCLE, self._on_lifecycle, None
         )
         self._registrations.append((conn, callback_id))
+        if self._on_reboot_hook is not None:
+            callback_id = conn.domainEventRegisterAny(
+                None, libvirt.VIR_DOMAIN_EVENT_ID_REBOOT, self._on_reboot, None
+            )
+            self._registrations.append((conn, callback_id))
         with contextlib.suppress(libvirt.libvirtError):
             conn.registerCloseCallback(self._on_close, None)
 
@@ -68,6 +80,9 @@ class EventHub:
         ):
             return
         self._post(dom.UUIDString(), event)
+
+    def _on_reboot(self, _conn: libvirt.virConnect, dom: libvirt.virDomain, _o: Any) -> None:
+        self._call_soon(self._spawn_reboot, dom.UUIDString())
 
     def _on_close(self, _conn: libvirt.virConnect, _reason: int, _opaque: Any) -> None:
         self._call_soon(self._lost)
@@ -86,6 +101,20 @@ class EventHub:
         task = asyncio.ensure_future(self._domain_event(uuid, event))
         self._pending.add(task)
         task.add_done_callback(self._pending.discard)
+
+    def _spawn_reboot(self, uuid: str) -> None:
+        task = asyncio.ensure_future(self._rebooted(uuid))
+        self._pending.add(task)
+        task.add_done_callback(self._pending.discard)
+
+    async def _rebooted(self, uuid: str) -> None:
+        hook = self._on_reboot_hook
+        if hook is None:
+            return
+        try:
+            await run_in_threadpool(hook, uuid)
+        except libvirt.libvirtError as exc:
+            log.warning("after the reboot of %s: %s", uuid, exc.get_error_message())
 
     async def _domain_event(self, uuid: str, event: int) -> None:
         if event == libvirt.VIR_DOMAIN_EVENT_UNDEFINED:

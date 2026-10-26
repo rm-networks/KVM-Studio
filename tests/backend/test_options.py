@@ -209,3 +209,53 @@ def test_clipboard_channel_added_when_missing(conn: Any) -> None:
     options._set_clipboard(root, True)
     assert root.find("devices/channel[@type='qemu-vdagent']") is not None
     assert options.read(etree.tostring(root).decode(), active=False, autostart=False).clipboard
+
+
+def boot_order(root: etree._Element) -> list[tuple[str, str, bool]]:
+    return [(d.kind, d.id, d.enabled) for d in options.boot_devices(root)]
+
+
+@pytest.fixture
+def cd_first(conn: Any) -> Iterator[libvirt.virDomain]:
+    uuid = str(uuidlib.uuid4())
+    xml = domain_xml(uuid, "<type>hvm</type><boot dev='cdrom'/><boot dev='hd'/>")
+    dom = conn.run(lambda c: c.defineXML(xml))
+    yield dom
+    if dom.isActive():
+        dom.destroy()
+    dom.undefine()
+
+
+def test_reboot_after_an_install_puts_the_disk_first(
+    conn: Any, cd_first: libvirt.virDomain
+) -> None:
+    cd_first.create()
+    assert options.after_install_reboot(conn, cd_first.UUIDString())
+    # The CD stays, second; the VM runs again, now with the disk first.
+    assert boot_order(config(cd_first)) == [
+        ("disk", "vda", True),
+        ("cdrom", "sda", True),
+        ("nic", "52:54:00:aa:bb:cc", False),
+    ]
+    assert cd_first.isActive()
+    live = etree.fromstring(cd_first.XMLDesc(0).encode())
+    assert boot_order(live)[0] == ("disk", "vda", True)
+    assert attr(live, "devices/disk[@device='cdrom']/source", "file") == "/iso/setup.iso"
+    # The next reboots change nothing.
+    assert not options.after_install_reboot(conn, cd_first.UUIDString())
+
+
+def test_reboot_leaves_a_disk_first_or_an_empty_cd_alone(conn: Any, vm: libvirt.virDomain) -> None:
+    vm.create()
+    before = boot_order(config(vm))
+    assert not options.after_install_reboot(conn, vm.UUIDString())
+    assert boot_order(config(vm)) == before
+    vm.destroy()
+    empty = etree.fromstring(
+        domain_xml(
+            "0" * 32,
+            "<boot dev='cdrom'/><boot dev='hd'/>",
+            DEVICES.replace("<source file='/iso/setup.iso'/>", ""),
+        ).encode()
+    )
+    assert options.disk_before_cd(empty) is None

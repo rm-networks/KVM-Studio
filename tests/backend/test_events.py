@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import Iterator
 from pathlib import Path
@@ -13,6 +14,7 @@ from starlette.websockets import WebSocketDisconnect
 
 from kvmstudio.app import create_app
 from kvmstudio.config import Config
+from kvmstudio.events import EventHub
 from kvmstudio.libvirt_conn import LibvirtConnection
 
 from .conftest import TOKEN
@@ -102,3 +104,22 @@ def test_hub_hook_runs_on_an_already_open_connection(conn: LibvirtConnection) ->
     seen: list[libvirt.virConnect] = []
     conn.add_connect_hook(seen.append)
     assert len(seen) == 1
+
+
+def test_a_guest_reboot_calls_the_hook(conn: LibvirtConnection) -> None:
+    seen: list[str] = []
+    hub = EventHub(conn, lambda _uuid: None, on_reboot=seen.append)
+    dom = conn.run(lambda c: c.lookupByName("test"))
+
+    async def run() -> None:
+        await hub.start()
+        # As libvirt's event thread calls it when the guest resets.
+        hub._on_reboot(conn.run(lambda c: c), dom, None)
+        for _ in range(100):
+            if seen:
+                break
+            await asyncio.sleep(0.02)
+        await hub.stop()
+
+    asyncio.run(run())
+    assert seen == [dom.UUIDString()]

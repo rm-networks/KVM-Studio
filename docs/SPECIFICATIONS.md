@@ -275,7 +275,7 @@ The library folders are real folders on disk: what the user sees in the tree mat
 - **F-52** CD/DVD drives: several per VM, ISO or empty.
 - **F-53** Network adapters: several per VM, added in one click, model (virtio, e1000e, rtl8139, vmxnet3), target kvmnet network, MAC, card connected/disconnected live.
 - **F-54** Display (virtio-gpu, qxl, vga), sound card, USB controller, serial port, TPM.
-- **F-55** Firmware and boot: boot order, boot menu, Secure Boot.
+- **F-55** Firmware and boot: boot order, boot menu, Secure Boot. When a VM started on a CD placed first in the boot order reboots (end of an installation), the first disk moves ahead of the CD and the VM starts again on it; the CD stays inserted, second. Done by the backend while it runs.
 - **F-56** Raw XML editor with validation before applying (owner only).
 - **F-57** USB passthrough (V2), PCI passthrough (later), owner only.
 

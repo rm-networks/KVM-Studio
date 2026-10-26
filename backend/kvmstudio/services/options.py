@@ -8,6 +8,7 @@ next start of a running VM.
 from __future__ import annotations
 
 import os
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -330,6 +331,54 @@ def _set_boot(root: etree._Element, order: list[tuple[BootKind, str, bool]]) -> 
         if enabled:
             rank += 1
             etree.SubElement(by_id[(kind, name)], "boot", order=str(rank))
+
+
+def disk_before_cd(root: etree._Element) -> list[tuple[BootKind, str, bool]] | None:
+    """The boot order with the first disk ahead, when a CD with a disc boots first."""
+    devices = boot_devices(root)
+    enabled = [d for d in devices if d.enabled]
+    if not enabled or enabled[0].kind != "cdrom" or not enabled[0].detail:
+        return None
+    disk = next((d for d in enabled if d.kind == "disk"), None) or next(
+        (d for d in devices if d.kind == "disk"), None
+    )
+    if disk is None:
+        return None
+    rest = [d for d in devices if d is not disk]
+    return [("disk", disk.id, True), *((d.kind, d.id, d.enabled) for d in rest)]
+
+
+# A guest reset can come as two events: one at a time, the second finds the disk first.
+_reboot_lock = threading.Lock()
+
+
+def after_install_reboot(conn: LibvirtConnection, uuid: str) -> bool:
+    """Called when a guest reboots: the CD it started from goes behind the disk.
+
+    A guest that started on a CD placed first boots it again at each reset,
+    the firmware keeping the order it read at power on. When it reboots, the
+    installer is done: the first disk moves ahead of the CD, which stays in
+    its drive and second in the boot order, and the VM starts again so that
+    it comes up on the installed system. Returns True when that happened.
+    """
+
+    def op(c: libvirt.virConnect) -> bool:
+        dom = c.lookupByUUIDString(uuid)
+        if not dom.isPersistent() or disk_before_cd(_parse(dom.XMLDesc(0))) is None:
+            return False
+        root = _parse(dom.XMLDesc(libvirt.VIR_DOMAIN_XML_INACTIVE))
+        order = disk_before_cd(root)
+        if order is not None:
+            _set_boot(root, order)
+            dom = c.defineXML(etree.tostring(root).decode())
+        # Graceful: QEMU flushes the disks before it exits.
+        dom.destroyFlags(libvirt.VIR_DOMAIN_DESTROY_GRACEFUL)
+        dom.createWithFlags(start_flags(dom.XMLDesc(0)))
+        started(dom)
+        return True
+
+    with _reboot_lock:
+        return conn.run(op)
 
 
 def _set_boot_menu(root: etree._Element, on: bool) -> None:
