@@ -145,7 +145,7 @@ The interface follows the layout, menus and dialogs of Workstation 17 (from scre
 
 - Menu bar: File, Edit, View, VM, Tabs, Help.
 - Toolbar: power (with a drop-down menu), send Ctrl+Alt+Del, snapshot / revert / manager, show the library, thumbnails, full screen, console.
-- Library on the left: search with a filter, "My Computer" tree → folders → VMs, drag and drop between folders. A single click on a VM shows its tab (and opens it if needed).
+- Library on the left: search with a filter, "My Computer" tree → folders → VMs, drag and drop between folders. A single click on a VM shows its tab (and opens it if needed); the other way round, the active tab selects its VM in the library, opening its folder and scrolling to it. With the Home tab active, no VM is selected.
 - Tabbed central area: Home + one tab per open VM. A VM tab always shows the VM name.
 - Status bar: devices (disk, network, CD, USB) with activity, reminder of the release shortcut.
 

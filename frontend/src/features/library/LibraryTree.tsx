@@ -8,7 +8,14 @@ import {
   MonitorSmartphone,
   TriangleAlert,
 } from "lucide-react";
-import { type DragEvent, type KeyboardEvent, type ReactNode, useRef, useState } from "react";
+import {
+  type DragEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 
 import type { VmSummary } from "../../api/client";
@@ -106,6 +113,26 @@ export function LibraryTree({
   const [dropTarget, setDropTarget] = useState<{ path: string; where: DropWhere } | null>(null);
   // The folder being dragged: its path cannot be read from the event before the drop.
   const draggedFolder = useRef<string | null>(null);
+
+  // A VM selected from elsewhere (its tab) shows: its folders open, its row scrolled to.
+  const [revealed, setRevealed] = useState<string | null>(null);
+  if (selected !== revealed) {
+    setRevealed(selected);
+    const folder = selected?.startsWith("v:")
+      ? vmsByUuid.get(selected.slice(2))?.folder
+      : undefined;
+    if (folder) {
+      const parts = folder.split("/");
+      const above = parts.map((_, i) => parts.slice(0, i + 1).join("/"));
+      if (above.some((path) => !expanded.has(path))) {
+        setExpanded((prev) => new Set([...prev, ...above]));
+      }
+    }
+  }
+  useEffect(() => {
+    if (selected)
+      document.getElementById(`tree-${selected}`)?.scrollIntoView?.({ block: "nearest" });
+  }, [selected]);
 
   const rows = visibleRows(root, expanded, forceOpen);
   const ids = rows.map((r) => r.id);

@@ -87,6 +87,12 @@ function MainWindow() {
   // Names given when a tab opens on a VM the list does not have yet (just created).
   const [tabNames, setTabNames] = useState<ReadonlyMap<string, string>>(new Map());
   const [activeTab, setActiveTab] = useState<string>(HOME_TAB);
+  // The library follows the active tab: its VM selected, none on Home.
+  const [syncedTab, setSyncedTab] = useState<string>(HOME_TAB);
+  if (activeTab !== syncedTab) {
+    setSyncedTab(activeTab);
+    setSelectedNode(activeTab === HOME_TAB ? null : `v:${activeTab}`);
+  }
   // Quitting asks first what to do with the VMs still running.
   const [quitting, setQuitting] = useState(false);
   const [snapshotFor, setSnapshotFor] = useState<{ uuid: string; kind: SnapshotKind } | null>(null);
