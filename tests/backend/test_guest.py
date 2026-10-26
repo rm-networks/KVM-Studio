@@ -190,4 +190,4 @@ def test_events_socket_refused_without_a_cookie(lan: TestClient) -> None:
 
 def test_websocket_routes_check_the_role(app_with_sharing: FastAPI) -> None:
     sockets = [r.path for r in app_with_sharing.routes if isinstance(r, APIWebSocketRoute)]
-    assert sorted(sockets) == ["/api/vms/{uuid}/console", "/ws/events"]
+    assert sorted(sockets) == ["/api/vms/{uuid}/console", "/api/vms/{uuid}/serial", "/ws/events"]

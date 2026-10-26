@@ -186,6 +186,7 @@ def test_display_info_and_adding_vnc(
             "clipboard_config": False,
             "clipboard_isolated": False,
             "active": False,
+            "serial": False,
         }
         result = client.post(f"/api/vms/{uuid}/display/vnc", headers=auth).json()
         assert result == {"restart_required": False}
