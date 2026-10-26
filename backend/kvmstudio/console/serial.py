@@ -147,13 +147,17 @@ async def serial_console(websocket: WebSocket, uuid: str) -> None:
             await websocket.send_bytes(chunk)
 
     tasks = [asyncio.create_task(to_vm()), asyncio.create_task(to_browser())]
-    done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-    for task in pending:
-        task.cancel()
+    try:
+        done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        # Also when this coroutine is cancelled (server stopping): the stream
+        # would otherwise keep the VM's console taken.
+        for task in tasks:
+            task.cancel()
+        channel.close()
     for task in tasks:
         with contextlib.suppress(asyncio.CancelledError, Exception):
             await task
-    await run_in_threadpool(channel.close)
     if tasks[1] in done:
         # The VM side ended (guest powered off): tell the browser.
         with contextlib.suppress(Exception):
