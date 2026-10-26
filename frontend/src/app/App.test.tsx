@@ -117,6 +117,33 @@ describe("App", () => {
     await act(() => i18n.changeLanguage("fr"));
   });
 
+  it("builds a VM around a disk opened from the File menu", async () => {
+    const listing = {
+      path: "/home/me",
+      parent: "/home",
+      entries: [{ name: "pfsense.qcow2", path: "/home/me/pfsense.qcow2", folder: false, size: 1 }],
+      places: [{ kind: "home", path: "/home/me" }],
+      truncated: false,
+    };
+    mockFetch((path) => {
+      if (path.startsWith("/api/files")) return [200, listing];
+      if (path === "/api/profiles" || path === "/api/networks") return [200, []];
+      if (path === "/api/host") return [200, { disk_buses: [], uefi: true, tpm: true }];
+      return [200, apiResponse(path)];
+    });
+    render(<App />);
+    await screen.findByText("FW-VYOS");
+    fireEvent.pointerDown(screen.getByRole("menuitem", { name: "Fichier" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Ouvrir…" }));
+    // No window dialog in a browser: the backend lists the files.
+    fireEvent.doubleClick(await screen.findByText("pfsense.qcow2"));
+    expect(await screen.findByDisplayValue("/home/me/pfsense.qcow2")).toBeTruthy();
+    expect(screen.getByLabelText(/Utiliser un disque existant/)).toHaveProperty("checked", true);
+  });
+
   it("explains an invalid session", async () => {
     mockFetch(() => [
       401,

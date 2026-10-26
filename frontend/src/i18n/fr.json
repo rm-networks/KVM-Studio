@@ -7,6 +7,7 @@
     "tabs": "Onglets",
     "help": "Aide",
     "newVm": "Nouvelle machine virtuelle…",
+    "open": "Ouvrir…",
     "closeTab": "Fermer l'onglet",
     "quit": "Quitter",
     "networkEditor": "Éditeur de réseaux virtuels…",
@@ -1126,6 +1127,7 @@
       "home": "Dossier personnel",
       "library": "{{app}}",
       "iso": "Bibliothèque ISO"
-    }
+    },
+    "openDisk": "Ouvrir un disque"
   }
 }

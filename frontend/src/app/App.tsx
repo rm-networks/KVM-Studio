@@ -16,6 +16,7 @@ import { FirstRunWizard } from "../features/first-run/FirstRunWizard";
 import { IsoPicker } from "../features/iso-picker/IsoPicker";
 import { GuestToolsDialog } from "../features/guest-tools/GuestToolsDialog";
 import { VmSettings } from "../features/vm-settings/VmSettings";
+import { PathPicker } from "../features/files/PathPicker";
 import { NewVmWizard } from "../features/wizard/NewVmWizard";
 import { FullscreenBar } from "../features/console/FullscreenBar";
 import { CloseDialog } from "../features/session/CloseDialog";
@@ -30,6 +31,7 @@ import {
 } from "../platform/fullscreen";
 import { VmTab } from "../features/vm/VmTab";
 import { storeGuestLanguage } from "../i18n";
+import { diskPicker } from "../platform/folders";
 import { AboutDialog } from "./AboutDialog";
 import { MenuBar } from "./MenuBar";
 import { StatusBar } from "./StatusBar";
@@ -74,6 +76,9 @@ function MainWindow() {
   const [firstRunOpen, setFirstRunOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
+  // File > Open: the disk the wizard starts from, and the browser's listing of files.
+  const [wizardDisk, setWizardDisk] = useState<string | undefined>(undefined);
+  const [pickingDisk, setPickingDisk] = useState(false);
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
   const [guestToolsFor, setGuestToolsFor] = useState<string | null>(null);
   const [openVms, setOpenVms] = useState<string[]>([]);
@@ -230,6 +235,16 @@ function MainWindow() {
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, [consoleFullscreen]);
 
+  const startFromDisk = (path: string) => {
+    setWizardDisk(path);
+    setWizardOpen(true);
+  };
+  const openDisk = () => {
+    const native = diskPicker();
+    if (native) void native(library?.root ?? null).then((path) => path && startFromDisk(path));
+    else setPickingDisk(true);
+  };
+
   useShortcuts({
     newVm: () => setWizardOpen(true),
     closeTab: () => activeTab !== HOME_TAB && closeTab(activeTab),
@@ -281,6 +296,7 @@ function MainWindow() {
               : undefined
           }
           onNewVm={() => setWizardOpen(true)}
+          onOpenDisk={openDisk}
           onSettings={() => currentVm && setSettingsFor(currentVm.uuid)}
           onSnapshot={
             currentVm ? (kind) => setSnapshotFor({ uuid: currentVm.uuid, kind }) : undefined
@@ -384,11 +400,27 @@ function MainWindow() {
             library={library}
             vms={vms ?? []}
             initialFolder={selectedNode?.startsWith("f:") ? selectedNode.slice(2) : ""}
+            initialDisk={wizardDisk}
             onCreated={(uuid, name) => {
               refresh();
               openVm(uuid, name);
             }}
-            onClose={() => setWizardOpen(false)}
+            onClose={() => {
+              setWizardOpen(false);
+              setWizardDisk(undefined);
+            }}
+          />
+        )}
+        {pickingDisk && (
+          <PathPicker
+            kind="disk"
+            title={t("files.openDisk")}
+            start={library?.root ?? null}
+            onChoose={(path) => {
+              setPickingDisk(false);
+              startFromDisk(path);
+            }}
+            onClose={() => setPickingDisk(false)}
           />
         )}
         {mediaTarget && currentVm && (

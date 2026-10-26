@@ -7,6 +7,7 @@
     "tabs": "Tabs",
     "help": "Help",
     "newVm": "New Virtual Machine…",
+    "open": "Open…",
     "closeTab": "Close Tab",
     "quit": "Quit",
     "networkEditor": "Virtual Network Editor…",
@@ -1126,6 +1127,7 @@
       "home": "Home folder",
       "library": "{{app}}",
       "iso": "ISO library"
-    }
+    },
+    "openDisk": "Open a Disk"
   }
 }

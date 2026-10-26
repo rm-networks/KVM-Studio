@@ -30,11 +30,20 @@ interface Props {
   library: LibraryInfo | null;
   vms: VmSummary[];
   initialFolder?: string;
+  /** File > Open: a disk to build the VM around. */
+  initialDisk?: string;
   onCreated: (uuid: string, name: string) => void;
   onClose: () => void;
 }
 
-export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClose }: Props) {
+export function NewVmWizard({
+  library,
+  vms,
+  initialFolder = "",
+  initialDisk,
+  onCreated,
+  onClose,
+}: Props) {
   const { t } = useTranslation();
   const { notifyError } = useNotifier();
   const [step, setStep] = useState<Step>("source");
@@ -45,9 +54,9 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
   const [busy, setBusy] = useState(false);
   const [customize, setCustomize] = useState(false);
 
-  const [source, setSource] = useState<Source>("iso");
+  const [source, setSource] = useState<Source>(initialDisk ? "existing" : "iso");
   const [iso, setIso] = useState<string | null>(null);
-  const [existingDisk, setExistingDisk] = useState("");
+  const [existingDisk, setExistingDisk] = useState(initialDisk ?? "");
   const [existingMode, setExistingMode] = useState<ExistingMode>("in_place");
   const [confirmMove, setConfirmMove] = useState(false);
   const [profileId, setProfileId] = useState("linux");
@@ -88,7 +97,9 @@ export function NewVmWizard({ library, vms, initialFolder = "", onCreated, onClo
     setSecureBoot(p.secure_boot && (caps?.secure_boot ?? true));
     setTpm(p.tpm && (caps?.tpm ?? true));
     setNics(defaultNics(p, nets));
-    if (!nameTouched) setName(uniqueName(t(`wizard.profile.${id}`), taken));
+    // A VM built around a disk is named after its file, otherwise after the profile.
+    const stem = initialDisk?.replace(/^.*\//, "").replace(/\.[^.]*$/, "");
+    if (!nameTouched) setName(uniqueName(stem || t(`wizard.profile.${id}`), taken));
   };
 
   useEffect(() => {

@@ -41,6 +41,8 @@ interface Props {
   /** Guest of LAN sharing: their own language, the only setting they have. */
   guestLanguage?: { current: string; onChange: (language: Language) => void };
   onNewVm: () => void;
+  /** File > Open: a disk image to build a VM around. */
+  onOpenDisk: () => void;
   onSettings: () => void;
   onSnapshot?: (kind: SnapshotKind) => void;
   onGuestTools: () => void;
@@ -73,6 +75,7 @@ export function MenuBar({
   onLogout,
   guestLanguage,
   onNewVm,
+  onOpenDisk,
   onSettings,
   onSnapshot,
   onGuestTools,
@@ -135,6 +138,7 @@ export function MenuBar({
       "file",
       [
         item(m("newVm"), ["Ctrl", "N"], onNewVm),
+        item(m("open"), undefined, onOpenDisk),
         sep,
         item(m("closeTab"), ["Ctrl", "W"], onCloseTab),
         ...(onQuit ? [sep, item(m("quit"), undefined, onQuit)] : []),
