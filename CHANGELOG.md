@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Port forwarding no longer uses a libvirt network hook: SELinux keeps
+  virtnetworkd from running it on Fedora, and once libvirt loaded it every VM
+  start on a network failed. A udev rule and a systemd unit write the table
+  again when a kvmnet bridge is created; upgrading removes the hook.
 - New Virtual Machine assistant: its backdrop covered it, so the page was
   dimmed and any click closed it. Interface tests in a real browser
   (Playwright) now go through it to the last page.

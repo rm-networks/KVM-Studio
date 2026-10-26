@@ -1,0 +1,5 @@
+# KVM Studio: when libvirt (re)creates a kvmnet bridge, write the port
+# forwarding table again (route_localnet is set on the bridge itself).
+# A systemd unit, not a libvirt hook: SELinux keeps virtnetworkd from
+# running hooks on Fedora.
+ACTION=="add", SUBSYSTEM=="net", KERNEL=="kvmnet*", TAG+="systemd", ENV{SYSTEMD_WANTS}+="kvmstudio-bridge@%k.service"

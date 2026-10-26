@@ -131,11 +131,11 @@ contents:
   - src: build/stage/files/firewalld/kvm-studio.xml
     dst: /usr/lib/firewalld/services/kvm-studio.xml
 
-  # Writes the port forwarding table again when libvirt starts a network.
-  - src: packaging/libvirt/network-hook
-    dst: /etc/libvirt/hooks/network.d/50-kvm-studio
-    file_info:
-      mode: 0755
+  # Writes the port forwarding table again when libvirt creates a kvmnet bridge.
+  - src: packaging/udev/90-kvm-studio.rules
+    dst: /usr/lib/udev/rules.d/90-kvm-studio.rules
+  - src: build/stage/files/systemd/kvmstudio-bridge@.service
+    dst: /usr/lib/systemd/system/kvmstudio-bridge@.service
 
   - src: packaging/networkmanager/90-kvm-studio.conf
     dst: /etc/NetworkManager/conf.d/90-kvm-studio.conf

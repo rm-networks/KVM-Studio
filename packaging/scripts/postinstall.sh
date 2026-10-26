@@ -21,6 +21,7 @@ hide_kvm_studio_interfaces() {
 
 if [ -d /run/systemd/system ]; then
     systemctl daemon-reload || :
+    udevadm control --reload 2>/dev/null || :
     systemctl enable --now kvmstudio-helper.socket || :
     # Writes the port forwarding table at boot and after nftables, firewalld
     # or libvirt restart; restarted here so the new code applies it.

@@ -72,11 +72,13 @@ ports (1 to 65535), the host address, and that the VM address lies in the
 subnet of the libvirt network, which it reads from libvirt itself. It keeps the
 rules in `/var/lib/kvm-studio/port-forwards.json` and writes the whole nftables
 table `inet kvmstudio` again at each change; no other table, firewalld
-included, is touched. A libvirt network hook
-(`/etc/libvirt/hooks/network.d/50-kvm-studio`) writes it again when a network
-starts, so the rules survive a restart (libvirt reads its hooks when its
-network daemon starts), and `kvmstudio-forwards.service` writes it again after
-nftables or firewalld restart or reload (`systemctl restart nftables`
+included, is touched. When libvirt creates a `kvmnet` bridge (a network
+starts), a udev rule (`/usr/lib/udev/rules.d/90-kvm-studio.rules`) starts
+`kvmstudio-bridge@<bridge>.service`, which writes it again and sets
+`route_localnet` on the new bridge. There is no libvirt hook: on Fedora,
+SELinux keeps `virtnetworkd` from running one, and a hook it cannot run makes
+every VM start fail. `kvmstudio-forwards.service` writes the table again
+after nftables or firewalld restart or reload (`systemctl restart nftables`
 flushes every table). Deleting a network deletes its rules, and removing the
 package deletes the table.
 

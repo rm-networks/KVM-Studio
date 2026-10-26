@@ -1,4 +1,0 @@
-#!/bin/sh
-# libvirt network hook of KVM Studio: when a network starts, write the port
-# forwarding table again (inet kvmstudio). It never calls back into libvirt.
-exec /opt/kvm-studio/bin/kvmstudio-helper --apply-forwards "$1" "$2"

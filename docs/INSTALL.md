@@ -20,6 +20,7 @@ Contents:
 | `/usr/share/applications/kvm-studio-uninstall.desktop` | "Uninstall KVM Studio" entry |
 | `kvmstudio-helper.socket` / `.service` | root helper, started on demand |
 | `kvmstudio-forwards.service` | writes the port forwarding table at boot and after nftables or firewalld restart |
+| `90-kvm-studio.rules`, `kvmstudio-bridge@.service` | write it again when libvirt creates a `kvmnet` bridge |
 | `/usr/share/polkit-1/actions/org.kvmstudio.helper.policy` | helper authorizations |
 | `/etc/kvm-studio/helper.toml` | helper settings, libraries declared by the administrator |
 | `/var/lib/kvm-studio` | helper state: ISO libraries declared from Preferences, access rights it added |
@@ -108,7 +109,8 @@ and the firewall. What to know when they are updated:
   included: libvirt rebuilds its own when `virtnetworkd` or firewalld
   restarts, and `kvmstudio-forwards.service` writes the `inet kvmstudio`
   table again after nftables and firewalld (reload or restart). libvirt
-  leaves that table alone; the network hook writes it when a network starts. The LAN sharing port is
+  leaves that table alone; a udev rule writes it again when a
+  `kvmnet` bridge is created. The LAN sharing port is
   opened in firewalld permanently, so a reload keeps it.
 - **KVM Studio.** `dnf upgrade` (or `rpm -U`, `apt`, `dpkg -i`) keeps the
   settings (`~/.config/kvm-studio`), the guest account, `helper.toml`, the

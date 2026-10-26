@@ -27,6 +27,7 @@ TEMPLATES = [
     "systemd/kvmstudio-helper.service",
     "systemd/kvmstudio-helper.socket",
     "systemd/kvmstudio-forwards.service",
+    "systemd/kvmstudio-bridge@.service",
 ]
 # Not packaged by Fedora: shipped in /opt/kvm-studio/vendor.
 VENDOR = ["pywebview==6.2.1", "proxy_tools==0.1.0"]

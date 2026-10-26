@@ -1,0 +1,8 @@
+[Unit]
+Description=@APP_NAME@ port forwarding for bridge %i
+Documentation=https://github.com/rm-networks/kvm-studio/blob/main/docs/NETWORKING.md
+After=sys-subsystem-net-devices-%i.device
+
+[Service]
+Type=oneshot
+ExecStart=/opt/kvm-studio/bin/kvmstudio-helper --apply-forwards

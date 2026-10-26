@@ -24,7 +24,7 @@ def main(argv: list[str] | None = None) -> int:
         "--apply-forwards",
         nargs="*",
         metavar="HOOK_ARG",
-        help="write the port forwarding table again from the state (libvirt network hook)",
+        help="write the port forwarding table again from the state (boot, bridge creation)",
     )
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -34,7 +34,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"kvmstudio-helper: {exc}", file=sys.stderr)
         return 1
     if args.apply_forwards is not None:
-        # libvirt network hook: "<network> <operation> ..." (nothing to do but on start).
+        # Formerly a libvirt hook passed "<network> <operation>": only "started" mattered.
         if len(args.apply_forwards) < 2 or args.apply_forwards[1] == "started":
             try:
                 port_forward.apply(config, run_tool)
