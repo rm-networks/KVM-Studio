@@ -8,6 +8,7 @@
     "help": "Help",
     "newVm": "New Virtual Machine…",
     "open": "Open…",
+    "scan": "Scan for Virtual Machines…",
     "closeTab": "Close Tab",
     "quit": "Quit",
     "networkEditor": "Virtual Network Editor…",
@@ -308,6 +309,10 @@
       "not_absolute": "Give a full path, starting with /.",
       "no_folder": "This folder does not exist.",
       "unreadable": "This folder cannot be read."
+    },
+    "scan": {
+      "gone": "This virtual machine is no longer in the folder: scan again.",
+      "known": "This virtual machine is already in libvirt."
     }
   },
   "about": {
@@ -586,7 +591,10 @@
       "suspend": "Suspend them",
       "shutdown": "Shut them down (forced after 60 s if asked)"
     },
-    "closeReminder": "Remind me that virtual machines keep running"
+    "closeReminder": "Remind me that virtual machines keep running",
+    "scanGroup": "Virtual machines already on disk",
+    "scanHint": "Bring in virtual machines found in a folder: disks copied from another computer, a former VM location.",
+    "scanButton": "Scan for Virtual Machines…"
   },
   "iso": {
     "title": "Choose an ISO Image",
@@ -1129,5 +1137,32 @@
       "iso": "ISO library"
     },
     "openDisk": "Open a Disk"
+  },
+  "scan": {
+    "title": "Scan for Virtual Machines",
+    "intro": "Look through a folder and its subfolders for virtual machines: .qcow2 disks grouped by folder, and libvirt definitions (.xml). Pick the ones to bring into {{app}}.",
+    "folder": "Folder to scan",
+    "scan": "Scan",
+    "scanning": "Scanning…",
+    "none": "No virtual machine found in this folder.",
+    "name": "Name",
+    "libraryFolder": "Library folder",
+    "disks": "Disks",
+    "files": "Files",
+    "known": "Already in libvirt as {{name}}",
+    "definition": "libvirt definition",
+    "mode": {
+      "keep": "Leave where they are",
+      "copy": "Copy into {{app}}",
+      "move": "Move into {{app}}"
+    },
+    "import_one": "Import {{count}} VM",
+    "import_other": "Import {{count}} VMs",
+    "confirmTitle": "Copy and Move Files",
+    "confirmIntro": "These files will be copied or moved into the {{app}} folder. Moved files leave their current folder.",
+    "confirm": "Import",
+    "imported_one": "{{count}} virtual machine imported",
+    "imported_other": "{{count}} virtual machines imported",
+    "failed": "{{name}} was not imported"
   }
 }

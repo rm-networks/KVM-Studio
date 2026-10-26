@@ -17,6 +17,9 @@ export type FolderMovePlan = components["schemas"]["FolderMovePlan"];
 export type ImportResult = components["schemas"]["ImportResult"];
 export type TidyPlan = components["schemas"]["TidyPlan"];
 export type FileListing = components["schemas"]["FileListing"];
+export type FoundVm = components["schemas"]["FoundVm"];
+export type ScanChoice = components["schemas"]["ScanChoice"];
+export type ScanResult = components["schemas"]["ScanResult"];
 export type Drift = VmSummary["drift"][number];
 export type Network = components["schemas"]["Network"];
 // Fields with a default on the server stay optional here.
@@ -147,6 +150,11 @@ export const api = {
     request<ImportResult>("POST", `${vmPath(uuid)}/import`, { folder }),
   tidyPlan: (uuid: string) => request<TidyPlan>("GET", `${vmPath(uuid)}/tidy`),
   tidyVm: (uuid: string) => request<TidyPlan>("POST", `${vmPath(uuid)}/tidy`),
+  scan: (path: string) => request<FoundVm[]>("GET", `/api/scan?path=${encodeURIComponent(path)}`),
+  scanPlan: (path: string, choices: ScanChoice[]) =>
+    request<{ moves: [string, string][] }>("POST", "/api/scan/plan", { path, choices }),
+  scanImport: (path: string, choices: ScanChoice[]) =>
+    request<ScanResult>("POST", "/api/scan/import", { path, choices }),
   listFiles: (path: string | null, kind: "disk" | "folder") =>
     request<FileListing>(
       "GET",

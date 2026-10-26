@@ -27,6 +27,7 @@ from .api import (
     networks,
     options,
     preferences,
+    scan,
     session,
     setup,
     snapshots,
@@ -143,6 +144,7 @@ def create_app(
     private.include_router(guest.router)
     private.include_router(isos.router)
     private.include_router(files.router)
+    private.include_router(scan.router)
     private.include_router(setup.router)
     private.include_router(sharing_api.router)
     private.include_router(uninstall.router)

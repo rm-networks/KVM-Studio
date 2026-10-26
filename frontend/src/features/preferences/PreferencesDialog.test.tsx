@@ -85,7 +85,7 @@ afterEach(() => vi.unstubAllGlobals());
 function open(onSaved = () => undefined) {
   render(
     <NotificationProvider>
-      <PreferencesDialog onClose={() => undefined} onSaved={onSaved} />
+      <PreferencesDialog onClose={() => undefined} onSaved={onSaved} onScan={() => undefined} />
     </NotificationProvider>,
   );
 }

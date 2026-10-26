@@ -43,6 +43,8 @@ interface Props {
   onNewVm: () => void;
   /** File > Open: a disk image to build a VM around. */
   onOpenDisk: () => void;
+  /** Host files: none for a guest of LAN sharing. */
+  onScan?: () => void;
   onSettings: () => void;
   onSnapshot?: (kind: SnapshotKind) => void;
   onGuestTools: () => void;
@@ -76,6 +78,7 @@ export function MenuBar({
   guestLanguage,
   onNewVm,
   onOpenDisk,
+  onScan,
   onSettings,
   onSnapshot,
   onGuestTools,
@@ -139,6 +142,7 @@ export function MenuBar({
       [
         item(m("newVm"), ["Ctrl", "N"], onNewVm),
         item(m("open"), undefined, onOpenDisk),
+        ...(onScan ? [item(m("scan"), undefined, onScan)] : []),
         sep,
         item(m("closeTab"), ["Ctrl", "W"], onCloseTab),
         ...(onQuit ? [sep, item(m("quit"), undefined, onQuit)] : []),

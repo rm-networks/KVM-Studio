@@ -6,6 +6,7 @@ import json
 import re
 import shutil
 import subprocess
+import tempfile
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -138,3 +139,15 @@ def convert_progress(src: Path, dest: Path, fmt: str, on_progress: Callable[[flo
 def create_overlay(dest: Path, backing: Path, backing_format: str) -> None:
     """A new qcow2 image whose unchanged blocks are read from backing (linked clone)."""
     _run(["create", "-q", "-f", "qcow2", "-b", str(backing), "-F", backing_format, str(dest)])
+
+
+def has_gpt(path: Path, fmt: str) -> bool:
+    """True when the disk starts with a GPT partition table (an UEFI system)."""
+    with tempfile.TemporaryDirectory(prefix="kvmstudio-") as tmp:
+        out = Path(tmp) / "head.raw"
+        try:
+            _run(["dd", "-f", fmt, "-O", "raw", "bs=512", "count=2", f"if={path}", f"of={out}"])
+            head = out.read_bytes()
+        except (QemuImgError, subprocess.SubprocessError, OSError):
+            return False
+    return head[512:520] == b"EFI PART"

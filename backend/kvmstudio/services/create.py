@@ -55,6 +55,8 @@ class NewVm:
     tpm: bool = False
     start: bool = False
     existing_mode: ExistingMode = "in_place"
+    # More disks of the same VM, used where they are (folder scan).
+    extra_disks: list[str] = field(default_factory=list)
     # A guest of LAN sharing: disks only from inside the library (F-103).
     confined: bool = False
 
@@ -126,7 +128,7 @@ def existing_disk(path: str, config: Config, mode: ExistingMode, *, confined: bo
     return source
 
 
-def _move_file(src: Path, dest: Path) -> None:
+def move_file(src: Path, dest: Path) -> None:
     """rename(), or a copy then removal across file systems."""
     try:
         os.rename(src, dest)
@@ -173,13 +175,17 @@ def create_vm(conn: LibvirtConnection, config: Config, vm: NewVm) -> str:
                 path = vm_dir / f"{vm.name}.{fmt}"
                 try:
                     if vm.existing_mode == "move":
-                        _move_file(existing, path)
+                        move_file(existing, path)
                         moved = (path, existing)
                     else:
                         qemu_img.convert(existing, path, fmt)
                 except (qemu_img.QemuImgError, OSError) as exc:
                     raise ApiException(500, "library.copy_failed", str(exc)) from exc
             disks.append(DiskSpec(path, fmt, vm.disk_bus))
+            for extra in vm.extra_disks:
+                more = existing_disk(extra, config, "in_place", confined=vm.confined)
+                fmt = "qcow2" if qemu_img.is_qcow2(more) else "raw"
+                disks.append(DiskSpec(more, fmt, vm.disk_bus))
         elif vm.disk_gib > 0:
             path = vm_dir / f"{vm.name}.{vm.disk_format}"
             try:
@@ -216,7 +222,7 @@ def create_vm(conn: LibvirtConnection, config: Config, vm: NewVm) -> str:
         conn.run(lambda c: c.defineXML(xml))
     except Exception:
         if moved is not None:
-            _move_file(*moved)  # the disk goes back where it was
+            move_file(*moved)  # the disk goes back where it was
         if not in_place:
             shutil.rmtree(vm_dir, ignore_errors=True)
         raise

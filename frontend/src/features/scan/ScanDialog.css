@@ -1,0 +1,35 @@
+.scan-path {
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.scan-path input {
+  flex: 1;
+  min-width: 0;
+}
+
+.scan-results {
+  max-height: min(360px, calc(100vh - 320px));
+  overflow: auto;
+}
+
+.scan-results td {
+  vertical-align: middle;
+}
+
+.scan-results td.mono {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scan-known td {
+  color: var(--text-muted);
+}
+
+.scan-note {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}

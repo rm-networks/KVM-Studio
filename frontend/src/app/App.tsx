@@ -17,6 +17,7 @@ import { IsoPicker } from "../features/iso-picker/IsoPicker";
 import { GuestToolsDialog } from "../features/guest-tools/GuestToolsDialog";
 import { VmSettings } from "../features/vm-settings/VmSettings";
 import { PathPicker } from "../features/files/PathPicker";
+import { ScanDialog } from "../features/scan/ScanDialog";
 import { NewVmWizard } from "../features/wizard/NewVmWizard";
 import { FullscreenBar } from "../features/console/FullscreenBar";
 import { CloseDialog } from "../features/session/CloseDialog";
@@ -79,6 +80,7 @@ function MainWindow() {
   // File > Open: the disk the wizard starts from, and the browser's listing of files.
   const [wizardDisk, setWizardDisk] = useState<string | undefined>(undefined);
   const [pickingDisk, setPickingDisk] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
   const [guestToolsFor, setGuestToolsFor] = useState<string | null>(null);
   const [openVms, setOpenVms] = useState<string[]>([]);
@@ -297,6 +299,7 @@ function MainWindow() {
           }
           onNewVm={() => setWizardOpen(true)}
           onOpenDisk={openDisk}
+          onScan={guest ? undefined : () => setScanOpen(true)}
           onSettings={() => currentVm && setSettingsFor(currentVm.uuid)}
           onSnapshot={
             currentVm ? (kind) => setSnapshotFor({ uuid: currentVm.uuid, kind }) : undefined
@@ -411,6 +414,9 @@ function MainWindow() {
             }}
           />
         )}
+        {scanOpen && (
+          <ScanDialog start={library?.root ?? null} onClose={() => setScanOpen(false)} />
+        )}
         {pickingDisk && (
           <PathPicker
             kind="disk"
@@ -434,7 +440,14 @@ function MainWindow() {
           />
         )}
         {preferencesOpen && (
-          <PreferencesDialog onClose={() => setPreferencesOpen(false)} onSaved={refresh} />
+          <PreferencesDialog
+            onClose={() => setPreferencesOpen(false)}
+            onSaved={refresh}
+            onScan={() => {
+              setPreferencesOpen(false);
+              setScanOpen(true);
+            }}
+          />
         )}
         {snapshotFor && vmByUuid.get(snapshotFor.uuid) && (
           <SnapshotRequest

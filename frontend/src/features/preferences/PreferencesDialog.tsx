@@ -103,9 +103,11 @@ interface Props {
   onClose: () => void;
   /** Called after a save, so the main window picks up theme and language. */
   onSaved: () => void;
+  /** Scan for Virtual Machines: Preferences close and the scan opens. */
+  onScan: () => void;
 }
 
-export function PreferencesDialog({ onClose, onSaved }: Props) {
+export function PreferencesDialog({ onClose, onSaved, onScan }: Props) {
   const { t } = useTranslation();
   const { notifyError } = useNotifier();
   const [section, setSection] = useState<Section>("workspace");
@@ -285,6 +287,12 @@ export function PreferencesDialog({ onClose, onSaved }: Props) {
                     ? t("prefs.libraryRoot", { path: libraryRoot })
                     : t("prefs.libraryRootUnset")}
                 </p>
+              </Group>
+              <Group title={t("prefs.scanGroup")}>
+                <p className="prefs-muted">{t("prefs.scanHint")}</p>
+                <button type="button" className="button" onClick={onScan}>
+                  {t("prefs.scanButton")}
+                </button>
               </Group>
             </>
           )}

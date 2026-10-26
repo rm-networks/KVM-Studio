@@ -43,8 +43,10 @@ GUEST_FORBIDDEN: list[tuple[frozenset[str] | None, re.Pattern[str]]] = [
     (None, re.compile(r"^/api/uninstall(/.*)?$")),
     (None, re.compile(r"^/api/restart$")),
     (None, re.compile(r"^/api/session(/.*)?$")),
-    # Importing copies disks from outside the KVM-Studio root (F-103).
+    # Importing copies disks from outside the KVM-Studio root (F-103), and so
+    # does a folder scan, which also reads folders anywhere.
     (None, re.compile(r"^/api/vms/[^/]+/import$")),
+    (None, re.compile(r"^/api/scan(/.*)?$")),
 ]
 
 

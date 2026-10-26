@@ -8,6 +8,7 @@
     "help": "Aide",
     "newVm": "Nouvelle machine virtuelle…",
     "open": "Ouvrir…",
+    "scan": "Rechercher des machines virtuelles…",
     "closeTab": "Fermer l'onglet",
     "quit": "Quitter",
     "networkEditor": "Éditeur de réseaux virtuels…",
@@ -308,6 +309,10 @@
       "not_absolute": "Donnez un chemin complet, commençant par /.",
       "no_folder": "Ce dossier n'existe pas.",
       "unreadable": "Ce dossier ne peut pas être lu."
+    },
+    "scan": {
+      "gone": "Cette machine virtuelle n'est plus dans le dossier : relancez la recherche.",
+      "known": "Cette machine virtuelle est déjà dans libvirt."
     }
   },
   "about": {
@@ -586,7 +591,10 @@
       "suspend": "Les suspendre",
       "shutdown": "Les éteindre (forcé après 60 s si vous le demandez)"
     },
-    "closeReminder": "Me rappeler que les machines virtuelles continuent de tourner"
+    "closeReminder": "Me rappeler que les machines virtuelles continuent de tourner",
+    "scanGroup": "Machines virtuelles déjà sur disque",
+    "scanHint": "Reprend des machines virtuelles trouvées dans un dossier : disques copiés d'un autre ordinateur, ancien emplacement des VM.",
+    "scanButton": "Rechercher des machines virtuelles…"
   },
   "iso": {
     "title": "Choisir une image ISO",
@@ -1129,5 +1137,32 @@
       "iso": "Bibliothèque ISO"
     },
     "openDisk": "Ouvrir un disque"
+  },
+  "scan": {
+    "title": "Rechercher des machines virtuelles",
+    "intro": "Parcourt un dossier et ses sous-dossiers à la recherche de machines virtuelles : disques .qcow2 regroupés par dossier et définitions libvirt (.xml). Cochez celles à reprendre dans {{app}}.",
+    "folder": "Dossier à parcourir",
+    "scan": "Rechercher",
+    "scanning": "Recherche…",
+    "none": "Aucune machine virtuelle trouvée dans ce dossier.",
+    "name": "Nom",
+    "libraryFolder": "Dossier de bibliothèque",
+    "disks": "Disques",
+    "files": "Fichiers",
+    "known": "Déjà dans libvirt sous le nom {{name}}",
+    "definition": "définition libvirt",
+    "mode": {
+      "keep": "Les laisser où ils sont",
+      "copy": "Copier dans {{app}}",
+      "move": "Déplacer dans {{app}}"
+    },
+    "import_one": "Importer {{count}} VM",
+    "import_other": "Importer {{count}} VM",
+    "confirmTitle": "Copier et déplacer les fichiers",
+    "confirmIntro": "Ces fichiers seront copiés ou déplacés dans le dossier {{app}}. Les fichiers déplacés quittent leur dossier actuel.",
+    "confirm": "Importer",
+    "imported_one": "{{count}} machine virtuelle importée",
+    "imported_other": "{{count}} machines virtuelles importées",
+    "failed": "{{name}} n'a pas été importée"
   }
 }
