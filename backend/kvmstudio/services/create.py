@@ -19,7 +19,7 @@ from ..xml.domain import DiskSpec, DomainSpec, NicSpec, build_domain
 from ..xml.profiles import PROFILES, DiskBus, NicModel
 from . import qemu_img
 from .host_kvm import kvm_state
-from .library import _SEGMENT_RE, check_folder
+from .library import _SEGMENT_RE, check_folder, noted_root
 
 MAX_NICS = 10
 
@@ -144,6 +144,7 @@ def create_vm(conn: LibvirtConnection, config: Config, vm: NewVm) -> str:
             tpm=vm.tpm,
             nvram=vm_dir / f"{vm.name}_VARS.fd" if vm.uefi else None,
             folder=check_folder(vm.folder),
+            library=noted_root(config),
             domain_type=domain_type,
             machine=machine_type(conn) if domain_type == "kvm" else "q35",
             cpu_vendor=kvm_state().vendor,

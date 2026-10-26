@@ -48,7 +48,7 @@ and setting a new password ends them all.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `vm_default_location` | none | Location chosen for the VMs. KVM Studio keeps everything under `KVM-Studio/VM/`: `<location>/KVM-Studio/VM/<folders>/<VM name>/<disks>`. Chosen at first run. `~` is accepted. |
+| `vm_default_location` | none | Location chosen for the VMs. KVM Studio keeps everything under `KVM-Studio/VM/`: `<location>/KVM-Studio/VM/<folders>/<VM name>/<disks>`. Chosen at first run. `~` is accepted. Picking the `KVM-Studio` or `KVM-Studio/VM` folder of an existing tree sets its parent, so the VMs already there show up. |
 
 ## [[iso_libraries]]
 

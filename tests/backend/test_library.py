@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from kvmstudio.config import Config
 from kvmstudio.libvirt_conn import LibvirtConnection
 from kvmstudio.services import domain_xml
-from kvmstudio.services.library import metadata_folder, placement
+from kvmstudio.services.library import metadata_folder, placement, set_metadata_folder
 
 from .helpers import AUTH, add_domain, needs_qemu_img, qcow2, touch
 from .helpers import domain_xml as make_xml
@@ -110,9 +110,19 @@ def test_folder_mismatch_is_detected(library: Path, lib_config: Config) -> None:
         "'https://github.com/rm-networks/kvm-studio/ns/1.0'>"
         "<kvmstudio:folder>B</kvmstudio:folder></kvmstudio:vm></metadata>",
     )
+    # A note written before the root was noted counts if its folder exists.
+    assert placement(xml, lib_config).drift == ()
+    (library / "B").mkdir()
     place = placement(xml, lib_config)
     assert place.folder == "A"
     assert place.drift == ("folder_mismatch",)
+    # A note written under this root counts; one from another root does not.
+    noted = f"<kvmstudio:library>{library.resolve()}</kvmstudio:library></kvmstudio:vm>"
+    assert placement(xml.replace("</kvmstudio:vm>", noted), lib_config).drift == (
+        "folder_mismatch",
+    )
+    elsewhere = "<kvmstudio:library>/old/KVM-Studio/VM</kvmstudio:library></kvmstudio:vm>"
+    assert placement(xml.replace("</kvmstudio:vm>", elsewhere), lib_config).drift == ()
 
 
 # Folders
@@ -390,3 +400,40 @@ def test_transient_vm_can_be_filed(
         assert vm(lib_client, uuid)["folder"] == "Labs"
     finally:
         dom.destroy()
+
+
+def test_a_new_location_shows_the_vms_already_there(
+    tmp_path: Path,
+    lib_config: Config,
+    lib_client: TestClient,
+    conn: LibvirtConnection,
+    define: list[Any],
+) -> None:
+    # VMs defined in libvirt whose files sit in another tree, which becomes the location.
+    other = tmp_path / "other"
+    disk = touch(other / "KVM-Studio" / "VM" / "Labs" / "Web" / "Web.qcow2")
+    loose = touch(other / "KVM-Studio" / "VM" / "Labs" / "loose.qcow2")
+    web = add_domain(conn, define, make_xml("Web", [("disk", str(disk))]))
+    old = add_domain(conn, define, make_xml("Loose", [("disk", str(loose))]))
+    # Notes written under the former location say nothing of the new tree.
+    set_metadata_folder(web, "Old/Place", lib_config)
+    set_metadata_folder(old, "", lib_config)
+    before = {v["name"]: v for v in lib_client.get("/api/vms", headers=AUTH).json()}
+    assert before["Web"]["folder"] == "Old/Place"  # outside the library: the note
+
+    prefs = lib_client.get("/api/preferences", headers=AUTH).json()["config"]
+    # Picked at the level of its KVM-Studio folder: the location is its parent.
+    prefs["storage"]["vm_default_location"] = str(other / "KVM-Studio")
+    assert lib_client.put("/api/preferences", headers=AUTH, json=prefs).status_code == 200
+
+    after = {v["name"]: v for v in lib_client.get("/api/vms", headers=AUTH).json()}
+    assert after["Web"]["folder"] == "Labs"
+    assert after["Web"]["drift"] == []
+    assert after["Loose"]["folder"] == "Labs"
+    folders = lib_client.get("/api/library", headers=AUTH).json()["folders"]
+    assert "Labs" in folders
+    assert "Labs/Web" not in folders
+    assert web.UUIDString() in {v["uuid"] for v in after.values()}
+    saved = lib_client.get("/api/preferences", headers=AUTH).json()["config"]
+    assert saved["storage"]["vm_default_location"] == str(other)
+    assert not (other / "KVM-Studio" / "KVM-Studio").exists()

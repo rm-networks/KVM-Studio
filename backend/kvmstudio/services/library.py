@@ -37,6 +37,9 @@ from .deletion import KeptFile, plan_files, used_elsewhere
 NAMESPACE = "https://github.com/rm-networks/kvm-studio/ns/1.0"
 PREFIX = "kvmstudio"
 MAX_DEPTH = 8
+# Library root a folder note was written under: once the VM location changes,
+# a note from the former tree no longer says where a VM is.
+LIBRARY_KEY = "library"
 
 Drift = Literal["missing_files", "folder_mismatch"]
 
@@ -99,8 +102,14 @@ def set_metadata(dom: libvirt.virDomain, **values: str) -> None:
     )
 
 
-def set_metadata_folder(dom: libvirt.virDomain, folder: str) -> None:
-    set_metadata(dom, folder=folder)
+def noted_root(config: Config) -> str:
+    """The library root a folder note is written under (LIBRARY_KEY)."""
+    root = library_root(config)
+    return str(resolve(root)) if root is not None else ""
+
+
+def set_metadata_folder(dom: libvirt.virDomain, folder: str, config: Config) -> None:
+    set_metadata(dom, folder=folder, **{LIBRARY_KEY: noted_root(config)})
 
 
 # Validation
@@ -162,6 +171,19 @@ def _own_folder(candidate: Path, root: Path, shared: bool) -> bool:
         return True  # moved away by hand: it was a VM folder, see drift
 
 
+def _noted_folder(xml: str, root: Path) -> str | None:
+    """The folder note, if it was written under this library root."""
+    values = metadata_values(xml)
+    meta = values.get("folder")
+    if meta is None:
+        return None
+    noted = values.get(LIBRARY_KEY)
+    if noted is not None:
+        return meta if noted == str(resolve(root)) else None
+    # Written before the root was noted: believed if that folder exists here.
+    return meta if meta and (root / meta).is_dir() else None
+
+
 def _rel(path: Path, root: Path) -> str:
     rel = path.relative_to(resolve(root))
     return "" if str(rel) == "." else rel.as_posix()
@@ -180,6 +202,7 @@ def placements(xmls: list[str], config: Config) -> list[Placement]:
         if root is None or candidate is None:
             result.append(Placement(meta or "", False, None, tuple(drift)))
             continue
+        meta = _noted_folder(xml, root)
         if not _own_folder(candidate, root, counts[candidate] > 1):
             # Loose files in a library folder: shown there, never moved as a block.
             folder = meta if meta is not None else _rel(candidate, root)
@@ -331,12 +354,14 @@ def _rebase_internal_chains(moves: list[_Move]) -> None:
                 qemu_img.rebase_unsafe(overlay, new_backing, info.get("backing-filename-format"))
 
 
-def _apply_moves(conn: LibvirtConnection, moves: list[_Move], folders: dict[str, str]) -> None:
+def _apply_moves(
+    conn: LibvirtConnection, config: Config, moves: list[_Move], folders: dict[str, str]
+) -> None:
     def op(c: libvirt.virConnect) -> None:
         for move in moves:
             c.defineXML(_rewrite_paths(move.xml, move.old_dir, move.new_dir))
         for uuid, folder in folders.items():
-            set_metadata_folder(c.lookupByUUIDString(uuid), folder)
+            set_metadata_folder(c.lookupByUUIDString(uuid), folder, config)
 
     conn.run(op)
 
@@ -463,7 +488,7 @@ def _relocate(conn: LibvirtConnection, config: Config, folder: str, target: str)
             if renamed and place.managed and on_disk:
                 moves.append(_Move(uuid, xml, old_resolved, new_resolved))
         _rebase_internal_chains(moves)
-        _apply_moves(conn, moves, folders)
+        _apply_moves(conn, config, moves, folders)
     return target
 
 
@@ -605,7 +630,7 @@ def move_vm(conn: LibvirtConnection, config: Config, uuid: str, folder: str) -> 
 
         if not place.managed or place.vm_dir is None:
             # Not our files: only the note in <metadata> changes.
-            conn.run(lambda c: set_metadata_folder(c.lookupByUUIDString(uuid), folder))
+            conn.run(lambda c: set_metadata_folder(c.lookupByUUIDString(uuid), folder, config))
             return folder
 
         if active:
@@ -632,7 +657,7 @@ def move_vm(conn: LibvirtConnection, config: Config, uuid: str, folder: str) -> 
         move = _Move(uuid, xml, old_dir, new_dir)
         try:
             _rebase_internal_chains([move])
-            _apply_moves(conn, [move], {uuid: folder})
+            _apply_moves(conn, config, [move], {uuid: folder})
         except Exception:
             os.rename(new_dir, old_dir)  # put things back as they were
             raise
@@ -703,7 +728,7 @@ def import_vm_files(
 
         def op(c: libvirt.virConnect) -> None:
             c.defineXML(etree.tostring(tree).decode())
-            set_metadata_folder(c.lookupByUUIDString(uuid), folder)
+            set_metadata_folder(c.lookupByUUIDString(uuid), folder, config)
 
         conn.run(op)
     return result

@@ -33,7 +33,15 @@ from ..libvirt_conn import LibvirtConnection
 from ..paths import library_root, resolve
 from . import domain_xml, qemu_img
 from .create import nic_target
-from .library import _SEGMENT_RE, NAMESPACE, PREFIX, check_folder, metadata_values
+from .library import (
+    _SEGMENT_RE,
+    LIBRARY_KEY,
+    NAMESPACE,
+    PREFIX,
+    check_folder,
+    metadata_values,
+    noted_root,
+)
 from .tasks import Task
 
 Kind = Literal["full", "linked"]
@@ -66,6 +74,7 @@ class ClonePlan:
     nvram_source: Path | None = None
     nvram_dest: Path | None = None
     tpm: bool = False
+    library: str = ""
 
 
 def _parse(xml: str) -> etree._Element:
@@ -106,6 +115,7 @@ def prepare(
         raise ApiException(409, "library.exists", f"{vm_dir} already exists")
 
     plan = ClonePlan(uuid, source_name, kind, name, folder, vm_dir, str(uuidlib.uuid4()), xml)
+    plan.library = noted_root(config)
     files = [d for d in domain_xml.disks(xml) if d.device == "disk" and d.path]
     for index, disk in enumerate(files):
         if disk.source_type != "file" or disk.path is None:
@@ -184,6 +194,7 @@ def clone_xml(plan: ClonePlan) -> str:
 def _set_metadata(root: etree._Element, plan: ClonePlan) -> None:
     values = metadata_values(plan.xml)
     values["folder"] = plan.folder
+    values[LIBRARY_KEY] = plan.library
     if plan.kind == "linked":
         values["linked_to"] = plan.source_uuid
     else:

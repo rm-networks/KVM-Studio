@@ -9,7 +9,9 @@ browser, and is installed from a .rpm or .deb package.
   KVM Studio's own data goes into the domain `<metadata>`, under the namespace
   `https://github.com/rm-networks/kvm-studio/ns/1.0` (prefix `kvmstudio`).
   After each definition, the XML is read back with `XMLDesc()`, since libvirt
-  normalizes it.
+  normalizes it. The library folder of a VM (`folder`) is noted with the
+  library root it is relative to (`library`): after the VM location changes,
+  a VM under the new root is placed by the real path of its files.
 - **virt-manager and virsh compatibility.** Domains, networks and volumes
   created by KVM Studio stay usable in these tools.
 - **No hard-coded path.** URI, pools, networks, ports and folders come from the

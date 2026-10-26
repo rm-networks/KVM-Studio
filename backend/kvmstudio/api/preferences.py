@@ -10,7 +10,7 @@ from ..auth import guest
 from ..config import Config, save_config
 from ..context import Context
 from ..errors import ApiException
-from ..paths import library_root
+from ..paths import library_root, location_of
 from ..services import iso_libraries
 
 router = APIRouter(prefix="/preferences", tags=["preferences"])
@@ -127,6 +127,8 @@ async def save(ctx: Context, body: Config) -> SaveResult:
             raise ApiException(
                 409, "prefs.iso_through_helper", "ISO libraries are added and removed one by one"
             )
+        if body.storage.vm_default_location is not None:
+            body.storage.vm_default_location = location_of(body.storage.vm_default_location)
         _check(body)
         _prepare_library(body)
         old = ctx.config

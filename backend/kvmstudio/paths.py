@@ -29,6 +29,20 @@ def library_root(config: Config) -> Path | None:
     return location / LIBRARY_DIRNAME / VMS_DIRNAME
 
 
+def location_of(chosen: Path) -> Path:
+    """The location meant when a KVM-Studio tree is picked at its own level.
+
+    Picking <location>/KVM-Studio or <location>/KVM-Studio/VM of an existing
+    tree means <location>: without this, the library would be looked for in
+    KVM-Studio/KVM-Studio/VM and the VMs already there would not show.
+    """
+    if chosen.name == VMS_DIRNAME and chosen.parent.name == LIBRARY_DIRNAME:
+        return chosen.parent.parent
+    if chosen.name == LIBRARY_DIRNAME and (chosen / VMS_DIRNAME).is_dir():
+        return chosen.parent
+    return chosen
+
+
 def iso_roots(config: Config) -> list[Path]:
     return [lib.path for lib in config.iso_libraries]
 

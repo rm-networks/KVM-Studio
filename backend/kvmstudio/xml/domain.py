@@ -58,6 +58,8 @@ class DomainSpec:
     # Host processor, for the virtualization extension a nested profile needs.
     cpu_vendor: str | None = None
     extra_cdroms: list[Path] = field(default_factory=list)
+    # Library root the folder is relative to (services.library.LIBRARY_KEY).
+    library: str = ""
 
 
 def _sub(parent: etree._Element, tag: str, text: str | None = None, **attrs: str) -> etree._Element:
@@ -83,6 +85,8 @@ def build_domain(spec: DomainSpec) -> str:
     vm = etree.SubElement(metadata, f"{{{NAMESPACE}}}vm", nsmap={"kvmstudio": NAMESPACE})
     etree.SubElement(vm, f"{{{NAMESPACE}}}folder").text = spec.folder
     etree.SubElement(vm, f"{{{NAMESPACE}}}profile").text = p.id
+    if spec.library:
+        etree.SubElement(vm, f"{{{NAMESPACE}}}library").text = spec.library
     _sub(root, "memory", str(spec.memory_mib), unit="MiB")
     _sub(root, "currentMemory", str(spec.memory_mib), unit="MiB")
     _sub(root, "vcpu", str(spec.vcpus), placement="static")
