@@ -100,6 +100,15 @@ def test_login_only_on_the_lan_listener(app_with_sharing: FastAPI) -> None:
         assert local.post("/api/auth/login", json={"password": PASSWORD}).status_code == 404
 
 
+def test_guest_language_never_reaches_the_host(guest_client: TestClient, config: Config) -> None:
+    # The guest's language stays in their browser: the preferences are the owner's.
+    r = guest_client.put("/api/preferences", json={"ui": {"language": "fr"}})
+    assert r.status_code == 403
+    assert guest_client.get("/api/preferences").status_code == 403
+    assert config.ui.language != "fr"
+    assert guest_client.get("/api/info").json()["role"] == "guest"
+
+
 def test_guest_manages_vms(guest_client: TestClient) -> None:
     assert guest_client.get("/api/vms").status_code == 200
     assert guest_client.get("/api/networks").status_code == 200

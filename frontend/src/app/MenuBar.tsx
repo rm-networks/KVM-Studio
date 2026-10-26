@@ -3,6 +3,7 @@ import { Check, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { CdromDevice, VmSummary } from "../api/client";
+import { languages, type Language } from "../i18n";
 import type { ConsoleHandle } from "../features/console/consoleRegistry";
 import { COMBOS } from "../features/console/keys";
 import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
@@ -25,6 +26,7 @@ const item = (label: string, keys?: string[], onSelect?: () => void): Entry => (
 });
 const sub = (label: string, entries?: Entry[]): Entry => ({ kind: "sub", label, entries });
 const sep: Entry = { kind: "sep" };
+const LANGUAGE_NAMES: Record<Language, string> = { en: "English", fr: "Français" };
 
 interface Props {
   layout: Layout;
@@ -36,6 +38,8 @@ interface Props {
   onFirstRun?: () => void;
   /** Guest of LAN sharing: ends the session. */
   onLogout?: () => void;
+  /** Guest of LAN sharing: their own language, the only setting they have. */
+  guestLanguage?: { current: string; onChange: (language: Language) => void };
   onNewVm: () => void;
   onSettings: () => void;
   onSnapshot?: (kind: SnapshotKind) => void;
@@ -67,6 +71,7 @@ export function MenuBar({
   onPreferences,
   onFirstRun,
   onLogout,
+  guestLanguage,
   onNewVm,
   onSettings,
   onSnapshot,
@@ -138,10 +143,27 @@ export function MenuBar({
     ],
     [
       "edit",
-      [
-        ...(onNetworkEditor ? [item(m("networkEditor"), undefined, onNetworkEditor)] : []),
-        ...(onPreferences ? [item(m("preferences"), ["Ctrl", "P"], onPreferences)] : []),
-      ],
+      guestLanguage
+        ? [
+            // The host's settings stay out of reach, greyed out.
+            item(m("networkEditor")),
+            item(m("preferences"), ["Ctrl", "P"]),
+            sep,
+            sub(
+              m("language"),
+              languages.map((language) => ({
+                kind: "check" as const,
+                // Each language under its own name, whatever the current one.
+                label: LANGUAGE_NAMES[language],
+                checked: guestLanguage.current === language,
+                onChange: () => guestLanguage.onChange(language),
+              })),
+            ),
+          ]
+        : [
+            ...(onNetworkEditor ? [item(m("networkEditor"), undefined, onNetworkEditor)] : []),
+            ...(onPreferences ? [item(m("preferences"), ["Ctrl", "P"], onPreferences)] : []),
+          ],
     ],
     [
       "view",

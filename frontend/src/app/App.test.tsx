@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { captureToken } from "../api/token";
+import i18n from "../i18n";
 import { FakeWebSocket } from "../test/fakeWebSocket";
 import { makeVm } from "../test/fixtures";
 import { App } from "./App";
@@ -87,7 +88,33 @@ describe("App", () => {
     render(<App />);
     expect(await screen.findByText("FW-VYOS")).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: "Fichier" })).toBeTruthy();
-    expect(screen.queryByRole("menuitem", { name: "Édition" })).toBeNull();
+  });
+
+  it("lets a guest pick a language for their browser only", async () => {
+    const calls: [string, string][] = [];
+    mockFetch((path, init) => {
+      calls.push([init?.method ?? "GET", path]);
+      return [200, path === "/api/info" ? { ...info, role: "guest" } : apiResponse(path)];
+    });
+    render(<App />);
+    await screen.findByText("FW-VYOS");
+    fireEvent.pointerDown(screen.getByRole("menuitem", { name: "Édition" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    const prefs = await screen.findByRole("menuitem", { name: /Préférences/ });
+    expect(prefs.getAttribute("aria-disabled")).toBe("true");
+    const editor = screen.getByRole("menuitem", { name: /Éditeur de réseaux/ });
+    expect(editor.getAttribute("aria-disabled")).toBe("true");
+    const language = screen.getByRole("menuitem", { name: "Langue" });
+    expect(language.getAttribute("aria-disabled")).toBeNull();
+    fireEvent.keyDown(language, { key: "ArrowRight" });
+    fireEvent.click(await screen.findByRole("menuitemcheckbox", { name: "English" }));
+    expect(await screen.findByRole("menuitem", { name: "Edit" })).toBeTruthy();
+    expect(localStorage.getItem("kvmstudio.guestLanguage")).toBe("en");
+    expect(calls.filter(([method]) => method !== "GET")).toEqual([]);
+    localStorage.clear();
+    await act(() => i18n.changeLanguage("fr"));
   });
 
   it("explains an invalid session", async () => {

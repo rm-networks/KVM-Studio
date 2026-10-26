@@ -29,6 +29,7 @@ import {
   toggleFullscreen,
 } from "../platform/fullscreen";
 import { VmTab } from "../features/vm/VmTab";
+import { storeGuestLanguage } from "../i18n";
 import { AboutDialog } from "./AboutDialog";
 import { MenuBar } from "./MenuBar";
 import { StatusBar } from "./StatusBar";
@@ -267,6 +268,18 @@ function MainWindow() {
           onPreferences={guest ? undefined : () => setPreferencesOpen(true)}
           onFirstRun={guest ? undefined : () => setFirstRunOpen(true)}
           onLogout={guest ? logout : undefined}
+          guestLanguage={
+            guest
+              ? {
+                  current: i18n.language,
+                  onChange: (language) => {
+                    storeGuestLanguage(language);
+                    void i18n.changeLanguage(language);
+                    document.documentElement.lang = language;
+                  },
+                }
+              : undefined
+          }
           onNewVm={() => setWizardOpen(true)}
           onSettings={() => currentVm && setSettingsFor(currentVm.uuid)}
           onSnapshot={
