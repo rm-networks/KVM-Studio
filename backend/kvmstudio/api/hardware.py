@@ -119,6 +119,15 @@ async def change_nic(
     return Changed(restart_required=restart)
 
 
+class NewMac(BaseModel):
+    mac: str
+
+
+@router.post("/{uuid}/nics/{mac}/new-mac")
+async def new_mac(ctx: Context, uuid: str, mac: str) -> NewMac:
+    return NewMac(mac=await run_in_threadpool(hardware.new_mac, ctx.conn, uuid, mac))
+
+
 @router.delete("/{uuid}/nics/{mac}", status_code=204)
 async def remove_nic(ctx: Context, uuid: str, mac: str) -> Response:
     await run_in_threadpool(hardware.remove_nic, ctx.conn, uuid, mac)

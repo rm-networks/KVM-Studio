@@ -212,6 +212,8 @@ export const api = {
       `${vmPath(uuid)}/nics/${encodeURIComponent(mac)}`,
       change,
     ),
+  newMac: (uuid: string, mac: string) =>
+    request<{ mac: string }>("POST", `${vmPath(uuid)}/nics/${encodeURIComponent(mac)}/new-mac`),
   removeNic: (uuid: string, mac: string) =>
     request<undefined>("DELETE", `${vmPath(uuid)}/nics/${encodeURIComponent(mac)}`),
   addCdrom: (uuid: string, path: string | null) =>

@@ -868,6 +868,23 @@ export interface paths {
     patch: operations["change_nic_api_vms__uuid__nics__mac__patch"];
     trace?: never;
   };
+  "/api/vms/{uuid}/nics/{mac}/new-mac": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** New Mac */
+    post: operations["new_mac_api_vms__uuid__nics__mac__new_mac_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/vms/{uuid}/cdroms": {
     parameters: {
       query?: never;
@@ -2252,6 +2269,11 @@ export interface components {
        * @default true
        */
       recursive: boolean;
+    };
+    /** NewMac */
+    NewMac: {
+      /** Mac */
+      mac: string;
     };
     /** NewVmRequest */
     NewVmRequest: {
@@ -7469,6 +7491,92 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Changed"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  new_mac_api_vms__uuid__nics__mac__new_mac_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        uuid: string;
+        mac: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NewMac"];
         };
       };
       /** @description Unauthorized */

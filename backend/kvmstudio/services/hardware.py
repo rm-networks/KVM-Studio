@@ -255,6 +255,23 @@ def remove_nic(conn: LibvirtConnection, uuid: str, mac: str) -> None:
     conn.run(op)
 
 
+def new_mac(conn: LibvirtConnection, uuid: str, mac: str) -> str:
+    """Give a card a new address, unused by every VM; the VM must be off."""
+
+    def op(c: libvirt.virConnect) -> str:
+        dom, root = _domain(c, uuid)
+        if dom.isActive():
+            # The card would keep its old address until a cold restart.
+            raise ApiException(409, "vm.not_shut_off", "Power the virtual machine off first")
+        el = _find_nic(root, mac).find("mac")
+        address = _new_mac(_all_macs(c))
+        el.set("address", address)  # type: ignore[union-attr]
+        c.defineXML(etree.tostring(root).decode())
+        return address
+
+    return conn.run(op)
+
+
 def _edit_nic(
     iface: etree._Element,
     network: str | None,

@@ -131,6 +131,34 @@ describe("VmSettings", () => {
     );
   });
 
+  it("generates a new MAC address only when the VM is off", async () => {
+    const calls = mockApi();
+    const { unmount } = render(
+      <NotificationProvider>
+        <VmSettings vm={makeVm({ uuid: "u1", name: "FW-OPN" })} onClose={() => undefined} />
+      </NotificationProvider>,
+    );
+    fireEvent.click(await screen.findByText("Carte réseau 1"));
+    expect(screen.getByRole("button", { name: "Générer" }).hasAttribute("disabled")).toBe(true);
+    unmount();
+    hardware.active = false;
+    render(
+      <NotificationProvider>
+        <VmSettings vm={makeVm({ uuid: "u1", name: "FW-OPN" })} onClose={() => undefined} />
+      </NotificationProvider>,
+    );
+    fireEvent.click(await screen.findByText("Carte réseau 1"));
+    fireEvent.click(screen.getByRole("button", { name: "Générer" }));
+    hardware.active = true;
+    await waitFor(() =>
+      expect(calls[0]).toEqual({
+        method: "POST",
+        path: "/api/vms/u1/nics/52%3A54%3A00%3Aaa%3Abb%3Acc/new-mac",
+        body: null,
+      }),
+    );
+  });
+
   it("asks before removing a card", async () => {
     const calls = mockApi();
     render(

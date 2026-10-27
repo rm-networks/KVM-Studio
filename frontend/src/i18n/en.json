@@ -729,6 +729,7 @@
     "network": "Network",
     "model": "Model",
     "mac": "MAC address:",
+    "newMac": "Generate",
     "hostInterface": "Host interface:",
     "runningNote": "The virtual machine is running: an adapter's cable and network change at once, the rest at next boot.",
     "saved": "Settings saved",

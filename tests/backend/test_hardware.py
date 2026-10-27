@@ -129,3 +129,28 @@ def test_notes_in_the_description(lib_client: TestClient, vm: libvirt.virDomain)
     assert config_root(vm).find("description") is None
     too_long = {"notes": "x" * 10001}
     assert lib_client.put(f"/api/vms/{uuid}/notes", headers=AUTH, json=too_long).status_code == 422
+
+
+def test_new_mac_address(lib_client: TestClient, vm: libvirt.virDomain, conn: Any) -> None:
+    uuid = vm.UUIDString()
+    url = f"/api/vms/{uuid}/nics/52:54:00:aa:bb:cc/new-mac"
+    mac = lib_client.post(url, headers=AUTH).json()["mac"]
+    assert mac.startswith("52:54:00:")
+    assert mac != "52:54:00:aa:bb:cc"
+    assert config_root(vm).find("devices/interface/mac").get("address") == mac  # type: ignore[union-attr]
+    vm.create()
+    try:
+        running = lib_client.post(f"/api/vms/{uuid}/nics/{mac}/new-mac", headers=AUTH)
+        assert running.status_code == 409
+    finally:
+        vm.destroy()
+    missing = lib_client.post(f"/api/vms/{uuid}/nics/52:54:00:00:00:01/new-mac", headers=AUTH)
+    assert missing.status_code == 404
+
+
+def test_new_mac_skips_addresses_in_use(monkeypatch: pytest.MonkeyPatch) -> None:
+    from kvmstudio.services import hardware
+
+    draws = iter([0xAA, 0xBB, 0xCC, 0x01, 0x02, 0x03])
+    monkeypatch.setattr("random.randint", lambda _a, _b: next(draws))
+    assert hardware._new_mac({"52:54:00:aa:bb:cc"}) == "52:54:00:01:02:03"

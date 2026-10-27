@@ -729,6 +729,7 @@
     "network": "Réseau",
     "model": "Modèle",
     "mac": "Adresse MAC :",
+    "newMac": "Générer",
     "hostInterface": "Interface sur l'hôte :",
     "runningNote": "La machine virtuelle est allumée : le câble et le réseau d'une carte changent tout de suite, le reste au prochain démarrage.",
     "saved": "Paramètres enregistrés",

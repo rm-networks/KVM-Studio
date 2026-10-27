@@ -461,9 +461,25 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
                     ))}
                   </select>
                 </label>
-                <p className="muted">
-                  {t("settings.mac")} <span className="mono">{nic.mac}</span>
-                </p>
+                <div className="settings-row">
+                  <span className="muted">
+                    {t("settings.mac")} <span className="mono">{nic.mac}</span>
+                  </span>
+                  <button
+                    type="button"
+                    className="button"
+                    disabled={busy || hw?.active}
+                    title={hw?.active ? t("errors.vm.not_shut_off") : undefined}
+                    onClick={() =>
+                      void run(async () => {
+                        const { mac } = await api.newMac(vm.uuid, nic.mac);
+                        setSelection({ kind: "nic", mac });
+                      })
+                    }
+                  >
+                    {t("settings.newMac")}
+                  </button>
+                </div>
                 {nic.target && (
                   <p className="muted">
                     {t("settings.hostInterface")} <span className="mono">{nic.target}</span>
