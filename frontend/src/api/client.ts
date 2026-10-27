@@ -141,6 +141,8 @@ export const api = {
   cancelTask: (id: string) =>
     request<TaskInfo>("POST", `/api/tasks/${encodeURIComponent(id)}/cancel`),
   rename: (uuid: string, name: string) => request<undefined>("PATCH", vmPath(uuid), { name }),
+  setNotes: (uuid: string, notes: string) =>
+    request<undefined>("PUT", `${vmPath(uuid)}/notes`, { notes }),
   deletionPlan: (uuid: string) => request<DeletionPlan>("GET", `${vmPath(uuid)}/deletion-plan`),
   deleteVm: (uuid: string, files: boolean) =>
     request<DeletionResult>("DELETE", `${vmPath(uuid)}?files=${files}`),

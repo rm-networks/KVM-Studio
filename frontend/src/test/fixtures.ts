@@ -11,6 +11,7 @@ export function makeVm(overrides: Partial<VmSummary> & { name: string }): VmSumm
     managed: true,
     files: "own",
     drift: [],
+    notes: "",
     ...overrides,
   };
 }

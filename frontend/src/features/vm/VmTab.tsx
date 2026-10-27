@@ -138,6 +138,12 @@ export function VmTab({ vm, onSettings }: { vm: VmSummary | undefined; onSetting
           )}
         </tbody>
       </table>
+      {vm.notes && (
+        <>
+          <h2 className="vm-summary-heading">{t("summary.notes")}</h2>
+          <p className="vm-summary-notes">{vm.notes}</p>
+        </>
+      )}
     </div>
   );
 }

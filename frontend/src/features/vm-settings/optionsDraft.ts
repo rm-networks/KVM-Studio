@@ -22,6 +22,7 @@ export interface OptionsDraft {
   boot_menu: boolean;
   boot: BootDevice[];
   clipboard: boolean;
+  notes: string;
 }
 
 export function draftOf(o: VmOptions): OptionsDraft {
@@ -37,6 +38,7 @@ export function draftOf(o: VmOptions): OptionsDraft {
     boot_menu: o.boot_menu,
     boot: o.boot,
     clipboard: o.clipboard,
+    notes: o.notes,
   };
 }
 
@@ -44,7 +46,7 @@ export const sameBoot = (a: BootDevice[], b: BootDevice[]) =>
   a.length === b.length &&
   a.every((d, i) => d.kind === b[i]?.kind && d.id === b[i]?.id && d.enabled === b[i]?.enabled);
 
-/** What the user changed, as the API wants it (the name goes through a rename). */
+/** What the user changed, as the API wants it (the name and notes have their own calls). */
 export type OptionsEdit = Omit<VmOptionsChange, "confirmed">;
 
 export function optionsChange(o: VmOptions, d: OptionsDraft): OptionsEdit {

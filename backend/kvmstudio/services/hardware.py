@@ -24,6 +24,7 @@ from .create import nic_target
 _PARSER = etree.XMLParser(resolve_entities=False, remove_blank_text=True)
 MAC_RE = re.compile(r"^([0-9a-f]{2}:){5}[0-9a-f]{2}$")
 MAX_NICS = 10
+MAX_NOTES = 10000
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,6 +144,41 @@ def set_cpu_memory(conn: LibvirtConnection, uuid: str, memory_mib: int, vcpus: i
         return bool(dom.isActive())
 
     return conn.run(op)
+
+
+def set_notes(conn: LibvirtConnection, uuid: str, notes: str) -> None:
+    """The VM notes, in libvirt's own description element (virt-manager shows it too)."""
+
+    def op(c: libvirt.virConnect) -> None:
+        dom, root = _domain(c, uuid)
+        el = root.find("description")
+        if notes and el is None:
+            el = etree.Element("description")
+            # Right after the name, uuid or title, where libvirt writes it.
+            anchor = next(
+                (root.find(tag) for tag in ("title", "uuid", "name") if root.find(tag) is not None),
+                None,
+            )
+            if anchor is not None:
+                anchor.addnext(el)
+            else:
+                root.insert(0, el)
+        if el is not None:
+            if notes:
+                el.text = notes
+            else:
+                root.remove(el)
+        c.defineXML(etree.tostring(root).decode())
+        if dom.isActive():
+            dom.setMetadata(
+                libvirt.VIR_DOMAIN_METADATA_DESCRIPTION,
+                notes or None,
+                None,
+                None,
+                libvirt.VIR_DOMAIN_AFFECT_LIVE,
+            )
+
+    conn.run(op)
 
 
 def _new_mac(taken: set[str]) -> str:

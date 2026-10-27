@@ -110,3 +110,22 @@ def test_cd_dvd_drives(lib_client: TestClient, vm: libvirt.virDomain, tmp_path: 
     assert refused.status_code == 403
     assert lib_client.delete(f"/api/vms/{uuid}/cdroms/sdb", headers=AUTH).status_code == 200
     assert lib_client.delete(f"/api/vms/{uuid}/cdroms/sdz", headers=AUTH).status_code == 404
+
+
+def test_notes_in_the_description(lib_client: TestClient, vm: libvirt.virDomain) -> None:
+    uuid = vm.UUIDString()
+    put = lib_client.put(f"/api/vms/{uuid}/notes", headers=AUTH, json={"notes": "Lab <DNS> & DHCP"})
+    assert put.status_code == 204
+    assert config_root(vm).findtext("description") == "Lab <DNS> & DHCP"
+    listed = lib_client.get("/api/vms", headers=AUTH).json()
+    assert next(v for v in listed if v["uuid"] == uuid)["notes"] == "Lab <DNS> & DHCP"
+    vm.create()
+    try:
+        lib_client.put(f"/api/vms/{uuid}/notes", headers=AUTH, json={"notes": "live"})
+        assert etree.fromstring(vm.XMLDesc(0).encode()).findtext("description") == "live"
+    finally:
+        vm.destroy()
+    lib_client.put(f"/api/vms/{uuid}/notes", headers=AUTH, json={"notes": ""})
+    assert config_root(vm).find("description") is None
+    too_long = {"notes": "x" * 10001}
+    assert lib_client.put(f"/api/vms/{uuid}/notes", headers=AUTH, json=too_long).status_code == 422

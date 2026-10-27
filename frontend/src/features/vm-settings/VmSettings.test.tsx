@@ -49,6 +49,7 @@ const options = {
   ],
   clipboard: true,
   reset_nvram_pending: false,
+  notes: "",
 };
 const networks = [
   { name: "kvmnet8", kind: "nat" },
@@ -111,6 +112,23 @@ describe("VmSettings", () => {
       body: { network: "LAN-1", connected: false },
     });
     expect(await screen.findByText(/prochain démarrage de la machine virtuelle/)).toBeTruthy();
+  });
+
+  it("saves the notes into the VM description", async () => {
+    const calls = mockApi();
+    render(
+      <NotificationProvider>
+        <VmSettings vm={makeVm({ uuid: "u1", name: "FW-OPN" })} onClose={() => undefined} />
+      </NotificationProvider>,
+    );
+    fireEvent.click(await screen.findByRole("tab", { name: "Options" }));
+    fireEvent.change(screen.getByLabelText("Notes"), { target: { value: "WAN on LAN-1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Appliquer" }));
+    await waitFor(() =>
+      expect(calls).toEqual([
+        { method: "PUT", path: "/api/vms/u1/notes", body: { notes: "WAN on LAN-1" } },
+      ]),
+    );
   });
 
   it("asks before removing a card", async () => {

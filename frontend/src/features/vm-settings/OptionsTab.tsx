@@ -119,6 +119,15 @@ export function OptionsTab({ options, draft, onChange }: Props) {
               </select>
             </label>
             <p className="muted">{t("options.osHint")}</p>
+            <label className="settings-notes">
+              {t("options.notes")}
+              <textarea
+                value={draft.notes}
+                maxLength={10000}
+                rows={6}
+                onChange={(e) => set({ notes: e.target.value })}
+              />
+            </label>
           </fieldset>
         )}
 

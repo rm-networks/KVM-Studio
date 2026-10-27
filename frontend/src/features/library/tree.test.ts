@@ -14,6 +14,7 @@ function vm(name: string, folder = "", state: VmSummary["state"] = "shutoff"): V
     folder,
     managed: true,
     files: "own",
+    notes: "",
     drift: [],
   };
 }

@@ -56,6 +56,10 @@ class CdromCreate(BaseModel):
     path: str | None = None
 
 
+class Notes(BaseModel):
+    notes: str = Field(max_length=hardware.MAX_NOTES)
+
+
 class Changed(BaseModel):
     restart_required: bool
 
@@ -87,6 +91,12 @@ async def cpu_memory(ctx: Context, uuid: str, body: CpuMemory) -> Changed:
         hardware.set_cpu_memory, ctx.conn, uuid, body.memory_mib, body.vcpus
     )
     return Changed(restart_required=restart)
+
+
+@router.put("/{uuid}/notes", status_code=204)
+async def set_notes(ctx: Context, uuid: str, body: Notes) -> Response:
+    await run_in_threadpool(hardware.set_notes, ctx.conn, uuid, body.notes)
+    return Response(status_code=204)
 
 
 @router.post("/{uuid}/nics", status_code=201)

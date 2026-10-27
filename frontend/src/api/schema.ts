@@ -816,6 +816,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/vms/{uuid}/notes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Set Notes */
+    put: operations["set_notes_api_vms__uuid__notes_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/vms/{uuid}/nics": {
     parameters: {
       query?: never;
@@ -2347,6 +2364,11 @@ export interface components {
        */
       model: "virtio" | "e1000e" | "rtl8139" | "vmxnet3";
     };
+    /** Notes */
+    Notes: {
+      /** Notes */
+      notes: string;
+    };
     /** Options */
     Options: {
       /** Name */
@@ -2380,6 +2402,8 @@ export interface components {
       clipboard: boolean;
       /** Reset Nvram Pending */
       reset_nvram_pending: boolean;
+      /** Notes */
+      notes: string;
     };
     /** OptionsChange */
     OptionsChange: {
@@ -2840,6 +2864,8 @@ export interface components {
        * @enum {string}
        */
       files: "own" | "loose" | "outside" | "none";
+      /** Notes */
+      notes: string;
     };
     /** VmUpdate */
     VmUpdate: {
@@ -7094,6 +7120,93 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["Changed"];
         };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  set_notes_api_vms__uuid__notes_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        uuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Notes"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Unauthorized */
       401: {

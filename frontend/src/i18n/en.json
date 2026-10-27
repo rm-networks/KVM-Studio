@@ -408,6 +408,7 @@
     }
   },
   "summary": {
+    "notes": "Notes",
     "start": "Power on this virtual machine",
     "devices": "Devices",
     "memory": "Memory",
@@ -979,6 +980,7 @@
     "name": "Name",
     "os": "Guest system",
     "osHint": "Used for the defaults {{app}} suggests; the hardware is not changed.",
+    "notes": "Notes",
     "autostart": "Start this virtual machine with the host",
     "autostartShort": "Starts with the host",
     "onReboot": "When the guest restarts",

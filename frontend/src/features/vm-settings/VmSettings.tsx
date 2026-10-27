@@ -111,7 +111,8 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
 
   const optChange = opts && optDraft ? optionsChange(opts, optDraft) : {};
   const renamed = opts !== null && optDraft !== null && optDraft.name.trim() !== opts.name;
-  const optionsDirty = renamed || Object.keys(optChange).length > 0;
+  const notesChanged = opts !== null && optDraft !== null && optDraft.notes !== opts.notes;
+  const optionsDirty = renamed || notesChanged || Object.keys(optChange).length > 0;
   const invalid =
     optDraft !== null && (!optDraft.boot.some((d) => d.enabled) || !optDraft.name.trim());
   const dirty =
@@ -155,6 +156,7 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
           restart = result.restart_required || restart;
         }
         if (renamed) await api.rename(vm.uuid, optDraft.name.trim());
+        if (notesChanged) await api.setNotes(vm.uuid, optDraft.notes);
       }
       if (restart) notify(t("settings.saved"), t("settings.nextBoot"));
       await reload();

@@ -6,10 +6,18 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 import libvirt
+from lxml import etree
 
 from ..config import Config
 from ..libvirt_conn import DomainState, LibvirtConnection, summarize
 from .library import Drift, Files, placements
+
+_PARSER = etree.XMLParser(resolve_entities=False)
+
+
+def _notes(xml: str) -> str:
+    # The description element, shown by virt-manager as well.
+    return etree.fromstring(xml.encode(), parser=_PARSER).findtext("description", "")
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +32,7 @@ class VmEntry:
     managed: bool
     drift: tuple[Drift, ...]
     files: Files
+    notes: str = ""
 
     def as_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -53,8 +62,9 @@ def _entries(doms: list[libvirt.virDomain], config: Config) -> list[VmEntry]:
             managed=p.managed,
             drift=p.drift,
             files=p.files,
+            notes=_notes(xml),
         )
-        for (s, _xml), p in zip(rows, places, strict=True)
+        for (s, xml), p in zip(rows, places, strict=True)
     ]
 
 

@@ -140,3 +140,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.settings-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+
+.settings-notes textarea {
+  resize: vertical;
+  font: inherit;
+}

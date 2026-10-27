@@ -45,6 +45,7 @@ class VmSummary(BaseModel):
     managed: bool
     drift: list[Drift]
     files: Files
+    notes: str
 
 
 class MoveRequest(BaseModel):

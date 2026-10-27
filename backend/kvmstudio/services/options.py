@@ -60,6 +60,7 @@ class Options:
     boot: list[BootDevice] = field(default_factory=list)
     clipboard: bool = True
     reset_nvram_pending: bool = False
+    notes: str = ""
 
 
 @dataclass(slots=True)
@@ -194,6 +195,7 @@ def read(xml: str, *, active: bool, autostart: bool) -> Options:
         boot=boot_devices(root),
         clipboard=_clipboard(root),
         reset_nvram_pending=meta.get(RESET_NVRAM_KEY) == "yes",
+        notes=root.findtext("description", ""),
     )
 
 

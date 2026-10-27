@@ -112,3 +112,11 @@
   flex: 1;
   height: auto;
 }
+
+.vm-summary-notes {
+  max-width: 640px;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}

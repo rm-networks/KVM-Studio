@@ -408,6 +408,7 @@
     }
   },
   "summary": {
+    "notes": "Notes",
     "start": "Démarrer cette machine virtuelle",
     "devices": "Périphériques",
     "memory": "Mémoire",
@@ -979,6 +980,7 @@
     "name": "Nom",
     "os": "Système invité",
     "osHint": "Sert aux valeurs que {{app}} propose ; le matériel n'est pas modifié.",
+    "notes": "Notes",
     "autostart": "Démarrer cette machine virtuelle avec l'hôte",
     "autostartShort": "Démarre avec l'hôte",
     "onReboot": "Quand l'invité redémarre",

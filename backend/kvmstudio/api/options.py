@@ -34,6 +34,7 @@ class Options(BaseModel):
     boot: list[BootDevice]
     clipboard: bool
     reset_nvram_pending: bool
+    notes: str
 
 
 class BootEntry(BaseModel):
