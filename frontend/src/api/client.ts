@@ -5,6 +5,7 @@ export type AppInfo = components["schemas"]["AppInfo"];
 export type AuthMe = components["schemas"]["Me"];
 export type SharingState = components["schemas"]["SharingState"];
 export type DiskSize = components["schemas"]["DiskSize"];
+export type DiskCreate = components["schemas"]["DiskCreate"];
 export type VmSummary = components["schemas"]["VmSummary"];
 export type VmState = VmSummary["state"];
 export type DeletionPlan = components["schemas"]["DeletionPlan"];
@@ -232,6 +233,14 @@ export const api = {
     request<undefined>("PUT", `${vmPath(uuid)}/cdroms/${encodeURIComponent(target)}`, { path }),
   diskSize: (uuid: string, target: string) =>
     request<DiskSize>("GET", `${vmPath(uuid)}/disks/${encodeURIComponent(target)}`),
+  disksFolder: (uuid: string) => request<{ path: string }>("GET", `${vmPath(uuid)}/disks-folder`),
+  addDisk: (uuid: string, disk: DiskCreate) =>
+    request<{ target: string; path: string }>("POST", `${vmPath(uuid)}/disks`, disk),
+  removeDisk: (uuid: string, target: string, deleteFile: boolean) =>
+    request<{ deleted: string[] }>(
+      "DELETE",
+      `${vmPath(uuid)}/disks/${encodeURIComponent(target)}?delete_file=${String(deleteFile)}`,
+    ),
   expandDisk: (uuid: string, target: string, gib: number) =>
     request<DiskSize>("POST", `${vmPath(uuid)}/disks/${encodeURIComponent(target)}/expand`, {
       gib,

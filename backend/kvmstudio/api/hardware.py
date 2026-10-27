@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
@@ -152,6 +154,7 @@ class DiskSize(BaseModel):
     capacity: int
     allocation: int
     expandable: bool
+    deletable: bool
 
 
 class DiskExpand(BaseModel):
@@ -168,3 +171,55 @@ async def disk_size(ctx: Context, uuid: str, target: str) -> DiskSize:
 async def expand_disk(ctx: Context, uuid: str, target: str, body: DiskExpand) -> DiskSize:
     found = await run_in_threadpool(disks.expand, ctx.conn, ctx.config, uuid, target, body.gib)
     return DiskSize.model_validate(found, from_attributes=True)
+
+
+class DiskCreate(BaseModel):
+    """A new disk of size_gib, or the existing file at path."""
+
+    bus: Literal["virtio", "sata", "scsi"] = "virtio"
+    size_gib: int = Field(default=0, ge=0, le=disks.MAX_GIB)
+    format: Literal["qcow2", "raw"] = "qcow2"
+    existing: str | None = None
+
+
+class AddedDisk(BaseModel):
+    target: str
+    path: str
+
+
+class RemovedDisk(BaseModel):
+    deleted: list[str]
+
+
+@router.get("/{uuid}/disks-folder")
+async def disks_folder(ctx: Context, uuid: str) -> dict[str, str]:
+    folder = await run_in_threadpool(disks.default_dir, ctx.conn, ctx.config, uuid)
+    return {"path": str(folder)}
+
+
+@router.post("/{uuid}/disks", status_code=201)
+async def add_disk(ctx: Context, request: Request, uuid: str, body: DiskCreate) -> AddedDisk:
+    added = await run_in_threadpool(
+        lambda: disks.add(
+            ctx.conn,
+            ctx.config,
+            uuid,
+            bus=body.bus,
+            size_gib=body.size_gib,
+            fmt=body.format,
+            existing=body.existing,
+            # A guest picks an existing disk only inside the library.
+            confined=getattr(request.state, "role", "owner") == "guest",
+        )
+    )
+    return AddedDisk(target=added.target, path=added.path)
+
+
+@router.delete("/{uuid}/disks/{target}")
+async def remove_disk(
+    ctx: Context, uuid: str, target: str, delete_file: bool = False
+) -> RemovedDisk:
+    deleted = await run_in_threadpool(
+        lambda: disks.remove(ctx.conn, ctx.config, uuid, target, delete_file=delete_file)
+    )
+    return RemovedDisk(deleted=deleted)

@@ -171,6 +171,8 @@
     "retry": "Réessayer",
     "sessionTitle": "Session expirée",
     "vm": {
+      "bad_bus": "Ce bus ne peut pas recevoir de nouveau disque.",
+      "too_many_disks": "Plus d'emplacement libre sur ce bus.",
       "not_shut_off": "Éteignez d'abord la machine virtuelle.",
       "no_cdrom": "Cette machine virtuelle n'a pas ce lecteur CD/DVD.",
       "bad_name": "Nom de machine virtuelle invalide.",
@@ -297,6 +299,11 @@
       "stalled": "La console série ne lit pas ce qui est tapé."
     },
     "disk": {
+      "hotplug_refused": "La machine virtuelle en marche n'a pas accepté ce disque (disque SATA, ou plus d'emplacement PCIe libre). Éteignez-la, puis ajoutez le disque.",
+      "unplug_refused": "Le système invité n'a pas libéré le disque : rien n'a été modifié. Éteignez la machine virtuelle, puis retirez le disque.",
+      "not_deletable": "Ce fichier ne peut pas être supprimé : il est hors de la bibliothèque, ou utilisé par une autre machine virtuelle ou par des clones liés.",
+      "bad_size": "Choisissez une taille d'au moins 1 Gio.",
+      "delete_failed": "Le disque a été retiré, mais son fichier n'a pas pu être supprimé.",
       "not_larger": "La nouvelle taille doit être plus grande que l'actuelle.",
       "linked_clones": "Des clones liés reposent sur ce disque : sa taille ne peut pas changer.",
       "resize_failed": "qemu-img n'a pas pu redimensionner le disque (instantanés internes, ou disque utilisé).",
@@ -418,7 +425,8 @@
     "mb": "Mo",
     "gb": "Go",
     "kb": "Ko",
-    "mibShort": "Mio"
+    "mibShort": "Mio",
+    "gibShort": "Gio"
   },
   "common": {
     "cancel": "Annuler",
@@ -709,6 +717,19 @@
     "remove": "Retirer",
     "addNic": "Carte réseau",
     "addCdrom": "Lecteur CD/DVD",
+    "addDisk": "Disque dur",
+    "addDiskTitle": "Ajouter un disque dur",
+    "addDiskOk": "Ajouter",
+    "diskNew": "Créer un nouveau disque virtuel",
+    "diskSize": "Taille :",
+    "diskWhere": "Créé dans",
+    "diskExisting": "Utiliser un disque virtuel existant",
+    "diskFile": "Fichier du disque",
+    "diskBus": "Bus :",
+    "sataNeedsOff": "Un disque SATA ne s'ajoute qu'à une machine virtuelle éteinte.",
+    "confirmRemoveDisk": "Retirer ce disque de la machine virtuelle ? Son fichier est conservé, sauf si vous demandez sa suppression.",
+    "deleteDiskFile": "Supprimer aussi ce fichier du disque :",
+    "diskFileKept": "Le fichier est conservé : il est hors de la bibliothèque, ou utilisé par une autre machine virtuelle ou par des clones liés.",
     "disk": "Disque {{bus}} ({{target}})",
     "cdrom": "CD/DVD ({{target}})",
     "nic": "Carte réseau {{index}}",

@@ -171,6 +171,8 @@
     "retry": "Retry",
     "sessionTitle": "Session expired",
     "vm": {
+      "bad_bus": "This bus cannot take a new disk.",
+      "too_many_disks": "No free slot on this bus.",
       "not_shut_off": "Power the virtual machine off first.",
       "no_cdrom": "This virtual machine has no such CD/DVD drive.",
       "bad_name": "Invalid virtual machine name.",
@@ -297,6 +299,11 @@
       "stalled": "The serial console does not read what is typed."
     },
     "disk": {
+      "hotplug_refused": "The running virtual machine did not accept this disk (SATA disks, or no free PCIe slot). Power it off, then add the disk.",
+      "unplug_refused": "The guest system did not release the disk: nothing was changed. Power the virtual machine off, then remove the disk.",
+      "not_deletable": "This file cannot be deleted: it is outside the library, or used by another virtual machine or by linked clones.",
+      "bad_size": "Choose a size of at least 1 GiB.",
+      "delete_failed": "The disk was removed, but its file could not be deleted.",
       "not_larger": "The new size must be larger than the current one.",
       "linked_clones": "Linked clones are built on this disk: it cannot change size.",
       "resize_failed": "qemu-img could not resize the disk (internal snapshots, or the disk is in use).",
@@ -418,7 +425,8 @@
     "mb": "MB",
     "gb": "GB",
     "kb": "KB",
-    "mibShort": "MiB"
+    "mibShort": "MiB",
+    "gibShort": "GiB"
   },
   "common": {
     "cancel": "Cancel",
@@ -709,6 +717,19 @@
     "remove": "Remove",
     "addNic": "Network adapter",
     "addCdrom": "CD/DVD drive",
+    "addDisk": "Hard disk",
+    "addDiskTitle": "Add Hard Disk",
+    "addDiskOk": "Add",
+    "diskNew": "Create a new virtual disk",
+    "diskSize": "Size:",
+    "diskWhere": "Created in",
+    "diskExisting": "Use an existing virtual disk",
+    "diskFile": "Disk file",
+    "diskBus": "Bus:",
+    "sataNeedsOff": "A SATA disk can only be added to a powered-off virtual machine.",
+    "confirmRemoveDisk": "Remove this disk from the virtual machine? Its file is kept unless you ask to delete it.",
+    "deleteDiskFile": "Also delete this file from the disk:",
+    "diskFileKept": "The file is kept: it is outside the library, or used by another virtual machine or by linked clones.",
     "disk": "{{bus}} disk ({{target}})",
     "cdrom": "CD/DVD ({{target}})",
     "nic": "Network adapter {{index}}",

@@ -26,7 +26,9 @@ import { IsoPicker } from "../iso-picker/IsoPicker";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import { OptionsTab } from "./OptionsTab";
 import { type OptionsDraft, draftOf, optionsChange, risky } from "./optionsDraft";
+import { AddDiskDialog } from "./AddDiskDialog";
 import { DiskPanel } from "./DiskPanel";
+import { RemoveDiskDialog } from "./RemoveDiskDialog";
 import "./VmSettings.css";
 
 type Selection =
@@ -59,6 +61,7 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
   const [busy, setBusy] = useState(false);
   const [picking, setPicking] = useState<string | null>(null);
   const [removing, setRemoving] = useState<Selection | null>(null);
+  const [addingDisk, setAddingDisk] = useState(false);
   const [tab, setTab] = useState<"hardware" | "options">("hardware");
   const [opts, setOpts] = useState<VmOptions | null>(null);
   const [optDraft, setOptDraft] = useState<OptionsDraft | null>(null);
@@ -217,7 +220,8 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
       ]
     : [];
   const same = (a: Selection, b: Selection) => JSON.stringify(a) === JSON.stringify(b);
-  const removable = selection.kind === "cdrom" || selection.kind === "nic";
+  const removable =
+    selection.kind === "cdrom" || selection.kind === "nic" || selection.kind === "disk";
 
   const nic = selection.kind === "nic" ? hw?.nics.find((n) => n.mac === selection.mac) : undefined;
   const cdrom =
@@ -309,6 +313,10 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content className="menu" align="start" sideOffset={2}>
+                    <DropdownMenu.Item className="menu-item" onSelect={() => setAddingDisk(true)}>
+                      <span className="menu-indicator" />
+                      <span className="menu-label">{t("settings.addDisk")}</span>
+                    </DropdownMenu.Item>
                     <DropdownMenu.Item
                       className="menu-item"
                       disabled={!defaultNetwork}
@@ -515,7 +523,34 @@ export function VmSettings({ vm, onClose }: { vm: VmSummary; onClose: () => void
           }}
         />
       )}
-      {removing && (
+      {addingDisk && (
+        <AddDiskDialog
+          uuid={vm.uuid}
+          off={!hw?.active}
+          onCancel={() => setAddingDisk(false)}
+          onAdd={(disk) => {
+            setAddingDisk(false);
+            void run(async () => {
+              const added = await api.addDisk(vm.uuid, { ...disk, format: "qcow2" });
+              setSelection({ kind: "disk", target: added.target });
+            });
+          }}
+        />
+      )}
+      {removing?.kind === "disk" && (
+        <RemoveDiskDialog
+          uuid={vm.uuid}
+          target={removing.target}
+          onCancel={() => setRemoving(null)}
+          onRemove={(deleteFile) => {
+            const { target } = removing;
+            setRemoving(null);
+            setSelection({ kind: "memory" });
+            void run(() => api.removeDisk(vm.uuid, target, deleteFile));
+          }}
+        />
+      )}
+      {removing && removing.kind !== "disk" && (
         <ConfirmDialog
           title={t("settings.remove")}
           message={

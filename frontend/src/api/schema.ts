@@ -935,7 +935,8 @@ export interface paths {
     get: operations["disk_size_api_vms__uuid__disks__target__get"];
     put?: never;
     post?: never;
-    delete?: never;
+    /** Remove Disk */
+    delete: operations["remove_disk_api_vms__uuid__disks__target__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -952,6 +953,40 @@ export interface paths {
     put?: never;
     /** Expand Disk */
     post: operations["expand_disk_api_vms__uuid__disks__target__expand_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/vms/{uuid}/disks-folder": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Disks Folder */
+    get: operations["disks_folder_api_vms__uuid__disks_folder_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/vms/{uuid}/disks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Add Disk */
+    post: operations["add_disk_api_vms__uuid__disks_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1444,6 +1479,13 @@ export interface components {
       /** Failed */
       failed: components["schemas"]["Failure"][];
     };
+    /** AddedDisk */
+    AddedDisk: {
+      /** Target */
+      target: string;
+      /** Path */
+      path: string;
+    };
     /** AgentStatus */
     AgentStatus: {
       /** Responding */
@@ -1616,6 +1658,31 @@ export interface components {
       /** End */
       end: string;
     };
+    /**
+     * DiskCreate
+     * @description A new disk of size_gib, or the existing file at path.
+     */
+    DiskCreate: {
+      /**
+       * Bus
+       * @default virtio
+       * @enum {string}
+       */
+      bus: "virtio" | "sata" | "scsi";
+      /**
+       * Size Gib
+       * @default 0
+       */
+      size_gib: number;
+      /**
+       * Format
+       * @default qcow2
+       * @enum {string}
+       */
+      format: "qcow2" | "raw";
+      /** Existing */
+      existing?: string | null;
+    };
     /** DiskExpand */
     DiskExpand: {
       /** Gib */
@@ -1633,6 +1700,8 @@ export interface components {
       allocation: number;
       /** Expandable */
       expandable: boolean;
+      /** Deletable */
+      deletable: boolean;
     };
     /** DisplayChange */
     DisplayChange: {
@@ -2555,6 +2624,11 @@ export interface components {
       serial: boolean;
       /** Nested */
       nested: boolean;
+    };
+    /** RemovedDisk */
+    RemovedDisk: {
+      /** Deleted */
+      deleted: string[];
     };
     /** Restarting */
     Restarting: {
@@ -8078,6 +8152,94 @@ export interface operations {
       };
     };
   };
+  remove_disk_api_vms__uuid__disks__target__delete: {
+    parameters: {
+      query?: {
+        delete_file?: boolean;
+      };
+      header?: never;
+      path: {
+        uuid: string;
+        target: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RemovedDisk"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
   expand_disk_api_vms__uuid__disks__target__expand_post: {
     parameters: {
       query?: never;
@@ -8101,6 +8263,182 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["DiskSize"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  disks_folder_api_vms__uuid__disks_folder_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        uuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: string;
+          };
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiError"];
+        };
+      };
+    };
+  };
+  add_disk_api_vms__uuid__disks_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        uuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DiskCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AddedDisk"];
         };
       };
       /** @description Unauthorized */

@@ -12,6 +12,10 @@ from .profiles import DiskBus, NicModel, Profile
 
 NAMESPACE = "https://github.com/rm-networks/kvm-studio/ns/1.0"
 
+# PCIe slots of a q35 VM, as virt-manager makes them: its devices take about
+# half, the rest stay free for disks, cards and controllers added while it runs.
+ROOT_PORTS = 14
+
 # Disk target name prefix for each bus.
 _TARGET_PREFIX: dict[str, str] = {
     "virtio": "vd",
@@ -169,6 +173,11 @@ def build_domain(spec: DomainSpec) -> str:
         _sub(el, "target", dev=nic.target)
 
     _sub(devices, "controller", type="usb", model="qemu-xhci", ports="15")
+    if "q35" in spec.machine:
+        # The root first: an unnumbered controller would otherwise claim index 0.
+        _sub(devices, "controller", type="pci", index="0", model="pcie-root")
+        for _ in range(ROOT_PORTS):
+            _sub(devices, "controller", type="pci", model="pcie-root-port")
     _sub(devices, "input", type="tablet", bus="usb")
     devices.append(vnc_graphics())
     devices.append(vdagent_channel())

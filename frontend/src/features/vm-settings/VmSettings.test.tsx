@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { NotificationProvider } from "../../components/Notifications";
@@ -154,6 +154,42 @@ describe("VmSettings", () => {
       expect(calls[0]).toEqual({
         method: "POST",
         path: "/api/vms/u1/nics/52%3A54%3A00%3Aaa%3Abb%3Acc/new-mac",
+        body: null,
+      }),
+    );
+  });
+
+  it("adds a new virtio disk, and removes one keeping its file", async () => {
+    const calls = mockApi();
+    render(
+      <NotificationProvider>
+        <VmSettings vm={makeVm({ uuid: "u1", name: "FW-OPN" })} onClose={() => undefined} />
+      </NotificationProvider>,
+    );
+    fireEvent.pointerDown(await screen.findByRole("button", { name: "Ajouter…" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Disque dur" }));
+    const dialog = await screen.findByRole("dialog", { name: "Ajouter un disque dur" });
+    fireEvent.change(within(dialog).getByRole("spinbutton"), { target: { value: "30" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Ajouter" }));
+    await waitFor(() =>
+      expect(calls[0]).toEqual({
+        method: "POST",
+        path: "/api/vms/u1/disks",
+        body: { bus: "virtio", size_gib: 30, existing: null, format: "qcow2" },
+      }),
+    );
+
+    fireEvent.click(await screen.findByText("Disque VIRTIO (vda)"));
+    fireEvent.click(screen.getByRole("button", { name: "Retirer" }));
+    const confirm = await screen.findByRole("dialog", { name: "Retirer" });
+    fireEvent.click(within(confirm).getByRole("button", { name: "Retirer" }));
+    await waitFor(() =>
+      expect(calls[1]).toEqual({
+        method: "DELETE",
+        path: "/api/vms/u1/disks/vda?delete_file=false",
         body: null,
       }),
     );
