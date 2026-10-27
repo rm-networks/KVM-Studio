@@ -41,8 +41,21 @@ sharing on the LAN with a guest account (F-100 to F-106).
 Moved to V2: Easy Install (F-26), shared folders through virtiofs (F-65) and
 network diagnostics (F-78).
 
+## 1.1.0: done
+
+Add and remove a hard disk in the VM settings, live where QEMU allows it;
+USB storage devices of the host connected to a running VM (Removable
+Devices); Autofit Guest for virtio displays; notes of a VM in its libvirt
+description; Generate for a MAC address; New Virtual Machine from a folder's
+context menu; one Snapshot Manager entry for a VM; dialogs moved by their
+title bar.
+
+Not delivered: live resolution change for Windows guests (the VirtIO GPU
+driver only reads the size at startup) and for X11 sessions.
+
 ## V2 (public release)
 
-Easy Install, virtiofs shared folders, network diagnostics, Bridged, USB,
+Easy Install, virtiofs shared folders, network diagnostics, Bridged, USB
+devices other than storage,
 thumbnails, topology, AutoProtect, import and export of OVF,
 COPR and APT repositories, remote server.

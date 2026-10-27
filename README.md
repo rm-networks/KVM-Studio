@@ -16,7 +16,7 @@ Workspace can suspend or shut them down instead).
 
 ## Status
 
-Version 1.0.0 is the current version: a .rpm for Fedora and a .deb for
+Version 1.1.0 is the current version: a .rpm for Fedora and a .deb for
 Debian 13 and Ubuntu 26.04 LTS, on the releases page. See the
 [roadmap](docs/ROADMAP.md).
 
@@ -24,11 +24,13 @@ Debian 13 and Ubuntu 26.04 LTS, on the releases page. See the
 
 - VM library with folders, tabs, a New Virtual Machine assistant and an ISO
   picker over read-only ISO libraries.
-- Console with copy and paste, full screen, and a serial console for
+- Console with copy and paste, full screen, a guest display that follows the
+  window (virtio display, Wayland session), and a serial console for
   firewalls and appliances.
 - Virtual network editor (NAT, host-only, DHCP, NAT port forwarding), with
   the host network applet kept free of KVM Studio's interfaces.
-- Snapshots (with or without the memory), clones, disk expansion.
+- Snapshots (with or without the memory), clones, hard disks added, removed
+  and expanded, USB storage devices of the host connected to a running VM.
 - Web mode, and sharing on the local network with a guest account (HTTPS).
 - Installation and removal that leave the host clean.
 

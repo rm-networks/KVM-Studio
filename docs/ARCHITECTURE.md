@@ -173,6 +173,21 @@ offered. Normal, independent persistent (`snapshot='no'`) and independent non
 persistent (`<transient/>`) modes. Utilities: expand, compact, convert,
 information.
 
+A disk added to a running VM is attached live first (`virDomainAttachDeviceFlags`)
+and written to the config only once QEMU took it; a disk removed from a
+running VM is detached, and the config and the file change only once the
+guest has released it. New q35 VMs get 14 `pcie-root-port` controllers so
+that hotplugged devices find a slot.
+
+## USB storage
+
+`services/usb.py` reads `/sys`: USB devices with a mass storage interface
+(class 08), the block devices below them, their mount points
+(`/proc/self/mountinfo`), swap (`/proc/swaps`) and device mapper holders. A
+device is attached live as `<hostdev type='usb' managed='yes'>` by bus and
+device number; libvirt sets the owner and SELinux label of the device node,
+so the helper is not involved.
+
 ## Source tree
 
 Some parts (answer files) arrive in later phases of the

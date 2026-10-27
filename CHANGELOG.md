@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.1.0 (2026-10-27)
+
+- VM settings, Add > Hard disk: a new qcow2 disk in the VM folder, or an
+  existing file, on a VirtIO, SCSI or SATA bus; added live when QEMU allows
+  it. Remove keeps the file unless asked, and then deletes only that file.
+  New q35 VMs get spare PCIe slots for devices added while they run.
+- VM > Removable Devices lists the USB storage devices plugged into the host
+  and connects one to the running VM, or disconnects it. A device mounted
+  on the host stays with the host.
+- View > Autofit Guest: the guest resolution follows the window and full
+  screen, for a virtio display with a Wayland session.
+- Notes of a VM in Options > General, kept in libvirt's description (shown
+  by virt-manager too) and in the VM tab.
+- Network adapter: Generate gives a new MAC address.
+- New Virtual Machine from the context menu of a library folder.
+- One Snapshot Manager entry in the VM menu and the VM's context menu.
+- Dialogs move by their title bar.
+
 ## 1.0.0 (2026-10-26)
 
 - Packages for Debian 13 and Ubuntu 26.04 LTS (.deb) next to the Fedora .rpm.
