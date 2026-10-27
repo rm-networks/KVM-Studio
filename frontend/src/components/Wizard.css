@@ -36,6 +36,8 @@
 
 .wizard-header {
   position: relative;
+  /* Moved by its header in the main window (useDragMove). */
+  touch-action: none;
   display: flex;
   align-items: center;
   gap: var(--space-3);

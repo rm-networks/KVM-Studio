@@ -1,9 +1,10 @@
 import * as RadixDialog from "@radix-ui/react-dialog";
-import type { ReactNode } from "react";
+import type { PointerEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import "./Wizard.css";
 import { focusFirstField } from "./focus";
+import { useDragMove } from "./useDragMove";
 
 interface Props {
   /** Name of the assistant, for assistive technologies and the window title. */
@@ -22,12 +23,19 @@ interface Props {
   onCancel?: () => void;
 }
 
-function Frame({ title, step, steps, children, buttons }: Omit<Props, "name">) {
+function Frame({
+  title,
+  step,
+  steps,
+  children,
+  buttons,
+  onTitlePointerDown,
+}: Omit<Props, "name"> & { onTitlePointerDown?: (e: PointerEvent<HTMLElement>) => void }) {
   const { t } = useTranslation();
   const progress = steps > 1 ? (step / (steps - 1)) * 100 : 100;
   return (
     <>
-      <header className="wizard-header">
+      <header className="wizard-header" onPointerDown={onTitlePointerDown}>
         <img className="wizard-logo" src="/logo.png" alt="" width={32} height={32} />
         <div className="wizard-heading">
           <h2 className="wizard-title">{title}</h2>
@@ -52,6 +60,7 @@ function Frame({ title, step, steps, children, buttons }: Omit<Props, "name">) {
 }
 
 export function Wizard({ name, mode = "dialog", width = 680, onCancel, ...frame }: Props) {
+  const drag = useDragMove();
   if (mode === "window") {
     return (
       <main className="wizard wizard-window" aria-label={name}>
@@ -65,7 +74,7 @@ export function Wizard({ name, mode = "dialog", width = 680, onCancel, ...frame 
         <RadixDialog.Overlay className="dialog-overlay" />
         <RadixDialog.Content
           className="wizard wizard-dialog"
-          style={{ width: `min(${width}px, calc(100vw - 32px))` }}
+          style={{ ...drag.style, width: `min(${width}px, calc(100vw - 32px))` }}
           aria-describedby={undefined}
           aria-label={name}
           onOpenAutoFocus={(e) =>
@@ -73,7 +82,7 @@ export function Wizard({ name, mode = "dialog", width = 680, onCancel, ...frame 
           }
         >
           <RadixDialog.Title className="visually-hidden">{name}</RadixDialog.Title>
-          <Frame {...frame} />
+          <Frame {...frame} onTitlePointerDown={drag.onPointerDown} />
         </RadixDialog.Content>
       </RadixDialog.Portal>
     </RadixDialog.Root>

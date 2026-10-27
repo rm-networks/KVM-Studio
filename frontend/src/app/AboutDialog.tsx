@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { APP_NAME } from "../brand";
 import "../components/Dialog.css";
 import { focusFirstField } from "../components/focus";
+import { useDragMove } from "../components/useDragMove";
 import "./AboutDialog.css";
 
 interface Props {
@@ -15,16 +16,17 @@ interface Props {
 
 export function AboutDialog({ open, onOpenChange, version }: Props) {
   const { t } = useTranslation();
+  const drag = useDragMove(open);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content
           className="dialog"
-          style={{ width: "min(460px, calc(100vw - 32px))" }}
+          style={{ ...drag.style, width: "min(460px, calc(100vw - 32px))" }}
           onOpenAutoFocus={(e) => focusFirstField(e, ".dialog-body", ".dialog-buttons .button")}
         >
-          <div className="dialog-titlebar">
+          <div className="dialog-titlebar" onPointerDown={drag.onPointerDown}>
             <Dialog.Title className="dialog-title">{t("about.title")}</Dialog.Title>
             <Dialog.Close className="icon-button" aria-label={t("about.close")}>
               <X />

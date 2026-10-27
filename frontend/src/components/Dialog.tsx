@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import "./Dialog.css";
 import { focusFirstField } from "./focus";
+import { useDragMove } from "./useDragMove";
 
 interface Props {
   open: boolean;
@@ -28,19 +29,20 @@ export function Dialog({
   width = 440,
 }: Props) {
   const { t } = useTranslation();
+  const drag = useDragMove(open);
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="dialog-overlay" />
         <RadixDialog.Content
           className="dialog"
-          style={{ width: `min(${width}px, calc(100vw - 32px))` }}
+          style={{ ...drag.style, width: `min(${width}px, calc(100vw - 32px))` }}
           aria-describedby={undefined}
           onOpenAutoFocus={(e) =>
             focusFirstField(e, ".dialog-body", ".dialog-buttons .button-primary")
           }
         >
-          <div className="dialog-titlebar">
+          <div className="dialog-titlebar" onPointerDown={drag.onPointerDown}>
             <RadixDialog.Title className="dialog-title">{title}</RadixDialog.Title>
             <RadixDialog.Close className="icon-button" aria-label={t("about.close")}>
               <X />

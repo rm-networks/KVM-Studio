@@ -68,3 +68,8 @@
   gap: var(--space-2);
   margin-right: auto;
 }
+
+/* Moved by the title bar (useDragMove). */
+.dialog-titlebar {
+  touch-action: none;
+}
