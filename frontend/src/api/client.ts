@@ -37,6 +37,7 @@ export type IsoListing = components["schemas"]["IsoListing"];
 export type IsoFile = components["schemas"]["IsoFile"];
 export type AccessReport = components["schemas"]["AccessReport"];
 export type CdromDevice = components["schemas"]["CdromDevice"];
+export type UsbDevice = components["schemas"]["UsbDevice"];
 export type ProfileInfo = components["schemas"]["ProfileInfo"];
 export type HostCapabilities = components["schemas"]["HostInfo"];
 export type NewVmRequest = components["schemas"]["NewVmRequest"];
@@ -229,6 +230,11 @@ export const api = {
     request<AccessReport>("GET", `/api/isos/access?path=${encodeURIComponent(path)}`),
   fixIsoAccess: (path: string) => request<AccessReport>("POST", "/api/isos/access/fix", { path }),
   cdroms: (uuid: string) => request<CdromDevice[]>("GET", `${vmPath(uuid)}/cdroms`),
+  usbDevices: () => request<UsbDevice[]>("GET", "/api/usb"),
+  connectUsb: (uuid: string, bus: number, device: number) =>
+    request<UsbDevice>("POST", `${vmPath(uuid)}/usb`, { bus, device }),
+  disconnectUsb: (uuid: string, bus: number, device: number) =>
+    request<undefined>("DELETE", `${vmPath(uuid)}/usb/${bus}/${device}`),
   changeMedia: (uuid: string, target: string, path: string | null) =>
     request<undefined>("PUT", `${vmPath(uuid)}/cdroms/${encodeURIComponent(target)}`, { path }),
   diskSize: (uuid: string, target: string) =>

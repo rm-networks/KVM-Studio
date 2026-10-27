@@ -2,7 +2,8 @@ import * as Menubar from "@radix-ui/react-menubar";
 import { Check, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import type { CdromDevice, VmSummary } from "../api/client";
+import type { CdromDevice, UsbDevice, VmSummary } from "../api/client";
+import { formatSize } from "../features/iso-picker/isoTree";
 import { LANGUAGE_NAMES, languages, type Language } from "../i18n";
 import { type ConsoleHandle, setAutofit, useAutofit } from "../features/console/consoleRegistry";
 import { COMBOS } from "../features/console/keys";
@@ -15,7 +16,14 @@ import "./MenuBar.css";
 type Entry =
   | { kind: "item"; label: string; keys?: string[]; onSelect?: () => void }
   | { kind: "sub"; label: string; entries?: Entry[] }
-  | { kind: "check"; label: string; checked: boolean; onChange: () => void; keepOpen?: boolean }
+  | {
+      kind: "check";
+      label: string;
+      checked: boolean;
+      onChange: () => void;
+      keepOpen?: boolean;
+      disabled?: boolean;
+    }
   | { kind: "sep" };
 
 const item = (label: string, keys?: string[], onSelect?: () => void): Entry => ({
@@ -63,6 +71,11 @@ interface Props {
   drives: CdromDevice[];
   onChangeMedia: (target: string) => void;
   onEject: (target: string) => void;
+  /** USB storage of the host: connected to this VM, or not. */
+  usb: UsbDevice[];
+  onUsb: (device: UsbDevice, connect: boolean) => void;
+  /** A menu of the bar opened (its key), to refresh what it lists. */
+  onMenuOpen?: (menu: string) => void;
   vm: VmSummary | null;
 }
 
@@ -95,6 +108,9 @@ export function MenuBar({
   drives,
   onChangeMedia,
   onEject,
+  usb,
+  onUsb,
+  onMenuOpen,
   vm,
 }: Props) {
   const { t } = useTranslation();
@@ -120,6 +136,25 @@ export function MenuBar({
       ],
     ),
   );
+  const units: [string, string, string] = [t("units.mb"), t("units.gb"), t("units.kb")];
+  const usbEntries: Entry[] = usb.map((device) => {
+    const here = vm !== null && device.vm === vm.uuid;
+    const elsewhere = device.vm !== null && !here;
+    const details = [
+      device.size > 0 ? formatSize(device.size, units) : null,
+      elsewhere ? t("menu.usbInVm", { name: device.vm_name }) : null,
+      device.mountpoints.length ? t("menu.usbMounted", { path: device.mountpoints[0] }) : null,
+    ].filter(Boolean);
+    return {
+      kind: "check",
+      label: details.length ? `${device.name} (${details.join(", ")})` : device.name,
+      checked: here,
+      disabled: elsewhere || vm?.state !== "running",
+      onChange: () => onUsb(device, !here),
+    };
+  });
+  if (removableEntries.length && usbEntries.length) removableEntries.push(sep);
+  removableEntries.push(...usbEntries);
   const manageEntries: Entry[] = [
     item(m("clone"), undefined, vm ? () => actions.clone(vm) : undefined),
     item(m("rename"), undefined, vm ? () => actions.rename(vm) : undefined),
@@ -267,6 +302,7 @@ export function MenuBar({
               key={i}
               className="menu-item"
               checked={entry.checked}
+              disabled={entry.disabled}
               onCheckedChange={entry.onChange}
               onSelect={(e) => entry.keepOpen && e.preventDefault()}
             >
@@ -299,11 +335,11 @@ export function MenuBar({
     });
 
   return (
-    <Menubar.Root className="menubar">
+    <Menubar.Root className="menubar" onValueChange={(menu) => menu && onMenuOpen?.(menu)}>
       {menus
         .filter(([, entries]) => entries.length > 0)
         .map(([key, entries]) => (
-          <Menubar.Menu key={key}>
+          <Menubar.Menu key={key} value={key}>
             <Menubar.Trigger className="menubar-trigger">{m(key)}</Menubar.Trigger>
             <Menubar.Portal>
               <Menubar.Content className="menu" align="start" sideOffset={0}>

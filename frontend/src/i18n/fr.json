@@ -38,6 +38,11 @@
     "noMedia": "vide",
     "changeIso": "Changer d'image ISO…",
     "eject": "Éjecter",
+    "usbConnectFailed": "{{device}} n'a pas pu être connecté à {{name}}",
+    "usbDisconnectFailed": "{{device}} n'a pas pu être déconnecté de {{name}}",
+    "usbMountedRefused": "Il est monté sur l'hôte sur {{path}} : il reste à l'hôte.",
+    "usbInVm": "dans {{name}}",
+    "usbMounted": "monté sur {{path}}",
     "sendKeys": "Envoyer une combinaison",
     "firstRun": "Assistant de premier lancement…",
     "clone": "Cloner…",
@@ -143,6 +148,17 @@
     "grabHint": "Cliquez dans la console ou appuyez sur Ctrl+G pour diriger la saisie vers la VM"
   },
   "errors": {
+    "usb": {
+      "not_found": "Ce périphérique USB n'est plus branché sur l'hôte.",
+      "in_vm": "Ce périphérique USB est déjà connecté à une autre machine virtuelle.",
+      "mounted": "Ce périphérique USB est monté sur l'hôte : il reste à l'hôte.",
+      "in_use": "Ce périphérique USB est utilisé par l'hôte (swap, chiffrement ou LVM) : il reste à l'hôte.",
+      "vm_off": "Démarrez d'abord la machine virtuelle : un périphérique USB se connecte pendant qu'elle tourne.",
+      "no_controller": "La machine virtuelle n'avait pas de contrôleur USB. Il a été ajouté : il est prêt au prochain démarrage.",
+      "attach_failed": "libvirt n'a pas pu connecter le périphérique.",
+      "detach_failed": "libvirt n'a pas pu déconnecter le périphérique.",
+      "not_connected": "Ce périphérique n'est pas connecté à cette machine virtuelle."
+    },
     "auth": {
       "invalid_token": "Session invalide. Relancez {{app}} ou, en mode web, ouvrez le lien affiché dans le terminal.",
       "bad_password": "Mot de passe incorrect.",

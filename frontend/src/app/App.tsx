@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { ApiError, api, type VmSummary } from "../api/client";
+import { ApiError, api, type UsbDevice, type VmSummary } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { NotificationProvider } from "../components/Notifications";
 import { useNotifier } from "../components/notifier";
@@ -24,6 +24,7 @@ import { CloseDialog } from "../features/session/CloseDialog";
 import { type SnapshotKind, SnapshotRequest } from "../features/snapshots/SnapshotRequest";
 import { useConsole } from "../features/console/consoleRegistry";
 import { useCdroms } from "../features/vm/useCdroms";
+import { useUsb } from "../features/vm/useUsb";
 import {
   browserFullscreen,
   keyboardLockAvailable,
@@ -191,6 +192,7 @@ function MainWindow() {
   const selectedVm = selectedNode?.startsWith("v:") ? selectedNode.slice(2) : "";
   const currentVm = vmByUuid.get(activeTab !== HOME_TAB ? activeTab : selectedVm) ?? null;
   const { drives, reload: reloadDrives } = useCdroms(currentVm);
+  const { devices: usb, reload: reloadUsb } = useUsb(currentVm);
   const vmConsole = useConsole(currentVm?.uuid);
   const allTabs = [HOME_TAB, ...openVms];
   const cycleTab = (delta: number) => {
@@ -266,6 +268,26 @@ function MainWindow() {
     consoleFullscreen: toggleConsoleFullscreen,
     appFullscreen: toggleFullscreen,
   });
+  const toggleUsb = (device: UsbDevice, connect: boolean) => {
+    if (!currentVm) return;
+    const vm = currentVm;
+    const title = t(connect ? "menu.usbConnectFailed" : "menu.usbDisconnectFailed", {
+      device: device.name,
+      name: vm.name,
+    });
+    if (connect && device.mountpoints.length) {
+      // The host keeps a mounted device; the backend refuses it as well.
+      notify(title, t("menu.usbMountedRefused", { path: device.mountpoints.join(", ") }));
+      return;
+    }
+    (connect
+      ? api.connectUsb(vm.uuid, device.bus, device.device)
+      : api.disconnectUsb(vm.uuid, device.bus, device.device)
+    )
+      .catch((err: unknown) => notifyError(title, err))
+      .finally(reloadUsb);
+  };
+
   const setMedia = (target: string, path: string | null) => {
     if (!currentVm) return;
     api
@@ -334,6 +356,9 @@ function MainWindow() {
           drives={drives}
           onChangeMedia={setMediaTarget}
           onEject={(target) => setMedia(target, null)}
+          usb={usb}
+          onUsb={toggleUsb}
+          onMenuOpen={(menu) => menu === "vm" && reloadUsb()}
           vm={currentVm}
         />
         {layout.toolbar && (

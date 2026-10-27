@@ -138,6 +138,9 @@ def test_the_forbidden_list_covers_the_host(app_with_sharing: FastAPI) -> None:
         "/api/restart",
         "/api/setup",
         "/api/vms/x/import",
+        "/api/usb",
+        "/api/vms/x/usb",
+        "/api/vms/x/usb/x/x",
     ):
         assert expected in paths
 

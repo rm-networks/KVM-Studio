@@ -38,6 +38,11 @@
     "noMedia": "empty",
     "changeIso": "Change ISO Image…",
     "eject": "Eject",
+    "usbConnectFailed": "{{device}} could not be connected to {{name}}",
+    "usbDisconnectFailed": "{{device}} could not be disconnected from {{name}}",
+    "usbMountedRefused": "It is mounted on the host at {{path}}, so it stays with the host.",
+    "usbInVm": "in {{name}}",
+    "usbMounted": "mounted on {{path}}",
     "sendKeys": "Send Key Combination",
     "firstRun": "First-run assistant…",
     "clone": "Clone…",
@@ -143,6 +148,17 @@
     "grabHint": "Click in the console or press Ctrl+G to direct input to the VM"
   },
   "errors": {
+    "usb": {
+      "not_found": "This USB device is no longer plugged into the host.",
+      "in_vm": "This USB device is already connected to another virtual machine.",
+      "mounted": "This USB device is mounted on the host, so it stays with the host.",
+      "in_use": "This USB device is used by the host (swap, encryption or LVM), so it stays with the host.",
+      "vm_off": "Start the virtual machine first: a USB device is connected while it runs.",
+      "no_controller": "The virtual machine had no USB controller. One was added: it is ready at the next start.",
+      "attach_failed": "libvirt could not connect the device.",
+      "detach_failed": "libvirt could not disconnect the device.",
+      "not_connected": "This device is not connected to this virtual machine."
+    },
     "auth": {
       "invalid_token": "Invalid session. Restart {{app}} or, in web mode, open the link printed in the terminal.",
       "bad_password": "Wrong password.",

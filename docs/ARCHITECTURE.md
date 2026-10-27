@@ -129,8 +129,10 @@ The backend checks the rights on every route.
   (`/api/sharing`), the access fix of an ISO (`/api/isos/access/fix`), first
   run, uninstall, restart and closing actions (`/api/setup`, `/api/uninstall`,
   `/api/restart`, `/api/session`), importing a VM's disks from outside the
-  root (`/api/vms/{uuid}/import`). There is no raw XML editor nor passthrough
-  route, and every path stays confined.
+  root (`/api/vms/{uuid}/import`), the host's USB storage devices and their
+  connection to a VM (`/api/usb`, `/api/vms/{uuid}/usb`; a device the owner
+  connected stays usable in the guest system). There is no raw XML editor nor
+  PCI passthrough route, and every path stays confined.
 
 The owner's token is only accepted from a loopback address; a guest's session
 cookie (HttpOnly, Secure, SameSite=Strict) only on the HTTPS listener. Both

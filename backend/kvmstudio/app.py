@@ -33,6 +33,7 @@ from .api import (
     snapshots,
     system,
     uninstall,
+    usb,
     vms,
 )
 from .api import sharing as sharing_api
@@ -148,6 +149,7 @@ def create_app(
     private.include_router(setup.router)
     private.include_router(sharing_api.router)
     private.include_router(uninstall.router)
+    private.include_router(usb.router)
 
     app.include_router(public)
     app.include_router(private)

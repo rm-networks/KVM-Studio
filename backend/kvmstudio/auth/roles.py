@@ -47,6 +47,9 @@ GUEST_FORBIDDEN: list[tuple[frozenset[str] | None, re.Pattern[str]]] = [
     # does a folder scan, which also reads folders anywhere.
     (None, re.compile(r"^/api/vms/[^/]+/import$")),
     (None, re.compile(r"^/api/scan(/.*)?$")),
+    # Host USB devices: the owner connects them, a guest uses what is connected.
+    (None, re.compile(r"^/api/usb$")),
+    (None, re.compile(r"^/api/vms/[^/]+/usb(/.*)?$")),
 ]
 
 
