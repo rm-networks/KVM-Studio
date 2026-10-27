@@ -15,6 +15,7 @@ interface HarnessProps {
   folders?: string[];
   onOpen?: (uuid: string) => void;
   onSettings?: (uuid: string) => void;
+  onNewVm?: (folder: string) => void;
 }
 
 function Harness({
@@ -22,12 +23,16 @@ function Harness({
   folders = [],
   onOpen = () => undefined,
   onSettings = () => undefined,
+  onNewVm,
 }: HarnessProps) {
   const [selected, setSelected] = useState<string | null>(null);
   return (
     <NotificationProvider>
       <VmActionsProvider>
-        <LibraryActionsProvider library={{ root: "/data/KVM-Studio/VM", folders, order: {} }}>
+        <LibraryActionsProvider
+          library={{ root: "/data/KVM-Studio/VM", folders, order: {} }}
+          onNewVm={onNewVm}
+        >
           <LibraryTree
             root={buildTree(folders, vms, "", "all", "name")}
             selected={selected}
@@ -127,6 +132,14 @@ describe("LibraryTree", () => {
     expect(last.previousElementSibling?.getAttribute("role")).toBe("separator");
     fireEvent.click(screen.getByRole("menuitem", { name: /Paramètres/ }));
     expect(settings).toEqual(["a"]);
+  });
+
+  it("starts the new VM assistant in the folder right-clicked", async () => {
+    const asked: string[] = [];
+    render(<Harness vms={[]} folders={["lab"]} onNewVm={(folder) => asked.push(folder)} />);
+    fireEvent.contextMenu(screen.getByText("lab"));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Nouvelle machine virtuelle…" }));
+    expect(asked).toEqual(["lab"]);
   });
 
   it("offers to move files only when there is something to move", async () => {

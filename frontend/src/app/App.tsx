@@ -77,6 +77,8 @@ function MainWindow() {
   const [firstRunOpen, setFirstRunOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
+  // Chosen from a folder's context menu, rather than the selected node.
+  const [wizardFolder, setWizardFolder] = useState<string>();
   // File > Open: the disk the wizard starts from, and the browser's listing of files.
   const [wizardDisk, setWizardDisk] = useState<string | undefined>(undefined);
   const [pickingDisk, setPickingDisk] = useState(false);
@@ -281,7 +283,13 @@ function MainWindow() {
   }
 
   return (
-    <LibraryActionsProvider library={library}>
+    <LibraryActionsProvider
+      library={library}
+      onNewVm={(folder) => {
+        setWizardFolder(folder);
+        setWizardOpen(true);
+      }}
+    >
       <div className="app">
         <MenuBar
           layout={layout}
@@ -408,7 +416,9 @@ function MainWindow() {
           <NewVmWizard
             library={library}
             vms={vms ?? []}
-            initialFolder={selectedNode?.startsWith("f:") ? selectedNode.slice(2) : ""}
+            initialFolder={
+              wizardFolder ?? (selectedNode?.startsWith("f:") ? selectedNode.slice(2) : "")
+            }
             initialDisk={wizardDisk}
             onCreated={(uuid, name) => {
               refresh();
@@ -417,6 +427,7 @@ function MainWindow() {
             onClose={() => {
               setWizardOpen(false);
               setWizardDisk(undefined);
+              setWizardFolder(undefined);
             }}
           />
         )}

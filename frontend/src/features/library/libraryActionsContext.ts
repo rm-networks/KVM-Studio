@@ -6,6 +6,8 @@ export interface LibraryActions {
   /** False until a VM location is configured: folders cannot exist yet. */
   available: boolean;
   newFolder: (parent: string) => void;
+  /** The new VM assistant, with this folder chosen. */
+  newVm: (folder: string) => void;
   renameFolder: (path: string) => void;
   deleteFolder: (path: string) => void;
   /** With a folder: move right away (drag and drop). Without: ask where. */

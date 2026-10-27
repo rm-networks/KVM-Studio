@@ -76,6 +76,7 @@ function FolderMenu({ path, children }: { path: string; children: ReactNode }) {
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
         <ContextMenu.Content className="menu">
+          <MenuItem label={t("menu.newVm")} onSelect={() => actions.newVm(path)} />
           <MenuItem
             label={t("library.newFolder")}
             disabled={!actions.available}
