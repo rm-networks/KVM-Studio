@@ -23,10 +23,11 @@ type Pending =
 interface Props {
   library: LibraryInfo | null;
   onNewVm?: (folder: string) => void;
+  onSnapshots?: (vm: VmSummary) => void;
   children: ReactNode;
 }
 
-export function LibraryActionsProvider({ library, onNewVm, children }: Props) {
+export function LibraryActionsProvider({ library, onNewVm, onSnapshots, children }: Props) {
   const { t } = useTranslation();
   const { notify, notifyError } = useNotifier();
   const [pending, setPending] = useState<Pending>(null);
@@ -46,6 +47,7 @@ export function LibraryActionsProvider({ library, onNewVm, children }: Props) {
       available,
       newFolder: (parent) => setPending({ kind: "new", parent }),
       newVm: (folder) => onNewVm?.(folder),
+      snapshots: (vm) => onSnapshots?.(vm),
       renameFolder: (path) => setPending({ kind: "rename", path }),
       deleteFolder: (path) => setPending({ kind: "delete", path }),
       moveVm: (vm, folder) => {
@@ -81,7 +83,7 @@ export function LibraryActionsProvider({ library, onNewVm, children }: Props) {
           );
       },
     }),
-    [available, move, library, notifyError, onNewVm, t],
+    [available, move, library, notifyError, onNewVm, onSnapshots, t],
   );
 
   const close = () => setPending(null);

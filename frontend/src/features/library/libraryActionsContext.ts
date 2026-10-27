@@ -8,6 +8,7 @@ export interface LibraryActions {
   newFolder: (parent: string) => void;
   /** The new VM assistant, with this folder chosen. */
   newVm: (folder: string) => void;
+  snapshots: (vm: VmSummary) => void;
   renameFolder: (path: string) => void;
   deleteFolder: (path: string) => void;
   /** With a folder: move right away (drag and drop). Without: ask where. */

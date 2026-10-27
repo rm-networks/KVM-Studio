@@ -200,17 +200,7 @@ export function MenuBar({
         ),
         item(m("grab"), ["Ctrl", "G"], vmConsole ? () => vmConsole.grab() : undefined),
         sep,
-        sub(
-          m("snapshot"),
-          onSnapshot
-            ? [
-                item(m("takeSnapshot"), undefined, () => onSnapshot("take")),
-                item(m("revertSnapshot"), undefined, () => onSnapshot("revert")),
-                sep,
-                item(m("snapshotManager"), undefined, () => onSnapshot("manager")),
-              ]
-            : undefined,
-        ),
+        item(m("snapshotManager"), undefined, onSnapshot ? () => onSnapshot("manager") : undefined),
         sub(m("manage"), vm ? manageEntries : undefined),
         item(m("guestTools"), undefined, vm?.state === "running" ? onGuestTools : undefined),
         sep,

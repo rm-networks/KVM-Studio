@@ -42,9 +42,6 @@
     "firstRun": "First-run assistant…",
     "clone": "Clone…",
     "appFullscreen": "Toggle Application Full Screen",
-    "snapshot": "Snapshot",
-    "takeSnapshot": "Take Snapshot…",
-    "revertSnapshot": "Restore Current Snapshot…",
     "snapshotManager": "Snapshot Manager…",
     "logout": "Log Out"
   },

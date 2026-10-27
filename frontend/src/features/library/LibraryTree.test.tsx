@@ -16,6 +16,7 @@ interface HarnessProps {
   onOpen?: (uuid: string) => void;
   onSettings?: (uuid: string) => void;
   onNewVm?: (folder: string) => void;
+  onSnapshots?: (vm: VmSummary) => void;
 }
 
 function Harness({
@@ -24,6 +25,7 @@ function Harness({
   onOpen = () => undefined,
   onSettings = () => undefined,
   onNewVm,
+  onSnapshots,
 }: HarnessProps) {
   const [selected, setSelected] = useState<string | null>(null);
   return (
@@ -32,6 +34,7 @@ function Harness({
         <LibraryActionsProvider
           library={{ root: "/data/KVM-Studio/VM", folders, order: {} }}
           onNewVm={onNewVm}
+          onSnapshots={onSnapshots}
         >
           <LibraryTree
             root={buildTree(folders, vms, "", "all", "name")}
@@ -140,6 +143,16 @@ describe("LibraryTree", () => {
     fireEvent.contextMenu(screen.getByText("lab"));
     fireEvent.click(await screen.findByRole("menuitem", { name: "Nouvelle machine virtuelle…" }));
     expect(asked).toEqual(["lab"]);
+  });
+
+  it("opens the snapshot manager from a VM's context menu", async () => {
+    const asked: string[] = [];
+    render(<Harness vms={[makeVm({ name: "a" })]} onSnapshots={(vm) => asked.push(vm.name)} />);
+    fireEvent.contextMenu(screen.getByText("a"));
+    const items = (await screen.findAllByRole("menuitem")).map((el) => el.textContent);
+    expect(items.filter((label) => /instantané/i.test(label ?? ""))).toHaveLength(1);
+    fireEvent.click(screen.getByRole("menuitem", { name: /Gestionnaire d.instantanés/ }));
+    expect(asked).toEqual(["a"]);
   });
 
   it("offers to move files only when there is something to move", async () => {

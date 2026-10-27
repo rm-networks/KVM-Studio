@@ -54,6 +54,7 @@ export function VmContextMenu({ vm, onOpen, onSettings, children }: Props) {
             />
           ))}
           <ContextMenu.Separator className="menu-separator" />
+          <Item label={t("menu.snapshotManager")} onSelect={() => library.snapshots(vm)} />
           <Item label={t("menu.clone")} onSelect={() => actions.clone(vm)} />
           <Item label={t("menu.rename")} onSelect={() => actions.rename(vm)} />
           <Item label={t("library.moveTo")} onSelect={() => library.moveVm(vm)} />

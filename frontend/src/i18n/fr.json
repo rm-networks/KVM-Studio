@@ -42,9 +42,6 @@
     "firstRun": "Assistant de premier lancement…",
     "clone": "Cloner…",
     "appFullscreen": "Basculer l'application en plein écran",
-    "snapshot": "Instantané",
-    "takeSnapshot": "Prendre un instantané…",
-    "revertSnapshot": "Restaurer l'instantané courant…",
     "snapshotManager": "Gestionnaire d'instantanés…",
     "logout": "Se déconnecter"
   },

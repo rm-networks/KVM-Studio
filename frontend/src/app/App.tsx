@@ -289,6 +289,7 @@ function MainWindow() {
         setWizardFolder(folder);
         setWizardOpen(true);
       }}
+      onSnapshots={(vm) => setSnapshotFor({ uuid: vm.uuid, kind: "manager" })}
     >
       <div className="app">
         <MenuBar
