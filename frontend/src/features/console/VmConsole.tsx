@@ -11,7 +11,13 @@ import { hostClipboard } from "../../platform/hostClipboard";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import { useBootSplash } from "./bootSplash";
 import { ClipboardBridge } from "./clipboardBridge";
-import { registerConsole, unregisterConsole, updateConsole } from "./consoleRegistry";
+import {
+  getAutofit,
+  registerConsole,
+  subscribeAutofit,
+  unregisterConsole,
+  updateConsole,
+} from "./consoleRegistry";
 import { pressCombo } from "./keys";
 import { useViewers } from "./viewers";
 import "./VmConsole.css";
@@ -53,6 +59,10 @@ function useHiddenFor(ref: { current: HTMLElement | null }, ms: number): boolean
 
 // A console that has not answered by then will not: say so instead of waiting.
 const CONNECT_TIMEOUT_MS = 15_000;
+// Autofit Guest: the size is asked once the console has stopped changing for
+// this long, so dragging a window edge does not make the guest change mode at
+// every step. A guest with a virtio display and a Wayland session follows.
+export const AUTOFIT_DELAY_MS = 400;
 
 // X11 keysyms replayed after a paste shortcut.
 const XK_V = 0x0076;
@@ -260,9 +270,24 @@ function VncScreen({
     const timer = setTimeout(() => {
       setStatus((s) => (s === "connecting" ? "timeout" : s));
     }, CONNECT_TIMEOUT_MS);
+    // noVNC asks the server for the console's size when resizeSession is set.
+    const fitGuest = () => {
+      if (!getAutofit() || rfb.viewOnly) return;
+      rfb.resizeSession = true;
+      rfb.resizeSession = false;
+    };
+    let fitTimer: ReturnType<typeof setTimeout> | undefined;
+    const scheduleFit = () => {
+      clearTimeout(fitTimer);
+      fitTimer = setTimeout(fitGuest, AUTOFIT_DELAY_MS);
+    };
+    const resizes = new ResizeObserver(scheduleFit);
+    const stopAutofit = subscribeAutofit(scheduleFit);
     const onConnect = () => {
       clearTimeout(timer);
       setStatus("connected");
+      resizes.observe(screen);
+      scheduleFit();
       registerConsole(uuid, {
         sendCtrlAltDel: () => rfb.sendCtrlAltDel(),
         sendKeys: (keys) => pressCombo((s, c, d) => rfb.sendKey(s, c, d), keys),
@@ -324,6 +349,9 @@ function VncScreen({
 
     return () => {
       clearTimeout(timer);
+      clearTimeout(fitTimer);
+      resizes.disconnect();
+      stopAutofit();
       unregisterConsole(uuid);
       screen.removeEventListener("focusin", onFocus);
       screen.removeEventListener("focusout", onBlur);

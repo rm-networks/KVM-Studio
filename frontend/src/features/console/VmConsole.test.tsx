@@ -2,7 +2,8 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { noteStart } from "./bootSplash";
-import { type ConsoleHandle, useConsole } from "./consoleRegistry";
+import { FakeResizeObserver } from "../../test/fakeResizeObserver";
+import { type ConsoleHandle, setAutofit, useConsole } from "./consoleRegistry";
 import { COMBOS } from "./keys";
 import { VmConsole } from "./VmConsole";
 
@@ -24,6 +25,12 @@ const { FakeRfb, instances } = vi.hoisted(() => {
     url: string;
     options: { wsProtocols?: string[] };
     scaleViewport = false;
+    viewOnly = false;
+    sizeRequests = 0;
+    set resizeSession(on: boolean) {
+      // noVNC sends the size request when the option is switched on.
+      if (on) this.sizeRequests += 1;
+    }
     focusOnClick = false;
     background = "";
     pasted: string[] = [];
@@ -135,6 +142,33 @@ describe("VmConsole", () => {
       vi.useRealTimers();
     }
     await waitFor(() => expect(instances).toHaveLength(2));
+  });
+
+  it("asks the guest for the console size once resizing stops", async () => {
+    render(<VmConsole uuid="abc" />);
+    const rfb = await connected();
+    vi.useFakeTimers();
+    try {
+      act(() => void rfb.dispatchEvent(new Event("connect")));
+      act(() => vi.advanceTimersByTime(400));
+      expect(rfb.sizeRequests).toBe(1);
+      const observer = FakeResizeObserver.instances.at(-1) as FakeResizeObserver;
+      // A window edge dragged: one request at the end, not one per step.
+      for (let i = 0; i < 10; i++) {
+        act(() => observer.resize());
+        act(() => vi.advanceTimersByTime(100));
+      }
+      expect(rfb.sizeRequests).toBe(1);
+      act(() => vi.advanceTimersByTime(300));
+      expect(rfb.sizeRequests).toBe(2);
+      act(() => setAutofit(false));
+      act(() => observer.resize());
+      act(() => vi.advanceTimersByTime(1000));
+      expect(rfb.sizeRequests).toBe(2);
+    } finally {
+      setAutofit(true);
+      vi.useRealTimers();
+    }
   });
 
   it("connects with the token as a WebSocket subprotocol", async () => {

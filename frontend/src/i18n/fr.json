@@ -42,6 +42,7 @@
     "firstRun": "Assistant de premier lancement…",
     "clone": "Cloner…",
     "appFullscreen": "Basculer l'application en plein écran",
+    "autofit": "Ajuster l'invité à la fenêtre",
     "snapshotManager": "Gestionnaire d'instantanés…",
     "logout": "Se déconnecter"
   },

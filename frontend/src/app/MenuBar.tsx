@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import type { CdromDevice, VmSummary } from "../api/client";
 import { LANGUAGE_NAMES, languages, type Language } from "../i18n";
-import type { ConsoleHandle } from "../features/console/consoleRegistry";
+import { type ConsoleHandle, setAutofit, useAutofit } from "../features/console/consoleRegistry";
 import { COMBOS } from "../features/console/keys";
 import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
 import type { SnapshotKind } from "../features/snapshots/SnapshotRequest";
@@ -98,6 +98,7 @@ export function MenuBar({
   vm,
 }: Props) {
   const { t } = useTranslation();
+  const autofit = useAutofit();
   const m = (key: string) => t(`menu.${key}`);
   const actions = useVmActions();
   const powerEntries: Entry[] = POWER_ACTIONS.map((action) =>
@@ -177,6 +178,13 @@ export function MenuBar({
       [
         item(m("fullscreen"), ["Ctrl", "Alt", "Enter"], onFullscreen),
         item(m("appFullscreen"), ["F11"], onAppFullscreen),
+        {
+          kind: "check",
+          label: m("autofit"),
+          checked: autofit,
+          onChange: () => setAutofit(!autofit),
+          keepOpen: true,
+        },
         sep,
         sub(m("customize"), [check("library"), check("toolbar"), check("statusBar")]),
       ],

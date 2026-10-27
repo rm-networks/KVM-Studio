@@ -45,3 +45,25 @@ export function useConsole(uuid: string | undefined): ConsoleHandle | null {
   useSyncExternalStore(subscribe, () => version);
   return uuid ? (consoles.get(uuid) ?? null) : null;
 }
+
+// Autofit Guest (View menu): the guest display follows the console's size.
+let autofit = true;
+const autofitListeners = new Set<() => void>();
+
+export function getAutofit(): boolean {
+  return autofit;
+}
+
+export function setAutofit(value: boolean): void {
+  autofit = value;
+  for (const listener of autofitListeners) listener();
+}
+
+export function subscribeAutofit(listener: () => void): () => void {
+  autofitListeners.add(listener);
+  return () => autofitListeners.delete(listener);
+}
+
+export function useAutofit(): boolean {
+  return useSyncExternalStore(subscribeAutofit, getAutofit);
+}
