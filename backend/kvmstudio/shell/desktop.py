@@ -63,6 +63,15 @@ def _set_app_id(gui: Literal["qt", "gtk"]) -> None:
         GLib.set_prgname(DESKTOP_ID)
 
 
+def _qt_environment() -> None:
+    """Environment of the window process, set before Qt starts."""
+    # Plasma asks Qt to reconnect when the compositor restarts after a crash.
+    # Qt WebEngine does not come back from it: the window stays frozen and has
+    # to be killed. Without reconnection the window closes; the VMs keep
+    # running in libvirt and KVM Studio finds them again when reopened.
+    os.environ["QT_WAYLAND_RECONNECT"] = "0"
+
+
 def run(config: Config, config_path: Path | None = None, page: str | None = None) -> int:
     try:
         import webview
@@ -70,6 +79,7 @@ def run(config: Config, config_path: Path | None = None, page: str | None = None
         print(t("cli.no_pywebview"), file=sys.stderr)
         return 1
 
+    _qt_environment()
     gui = _pick_gui()
     if gui is None:
         print(t("cli.no_web_engine"), file=sys.stderr)

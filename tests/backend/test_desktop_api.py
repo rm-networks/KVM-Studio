@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -145,3 +146,13 @@ def test_closing_waits_for_the_page_once() -> None:
     api.close_window()
     assert window.destroyed
     assert api._on_closing() is True
+
+
+def test_window_does_not_reconnect_to_a_restarted_compositor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from kvmstudio.shell import desktop
+
+    monkeypatch.setenv("QT_WAYLAND_RECONNECT", "1")
+    desktop._qt_environment()
+    assert os.environ["QT_WAYLAND_RECONNECT"] == "0"
