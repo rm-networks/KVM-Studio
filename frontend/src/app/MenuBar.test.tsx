@@ -158,3 +158,21 @@ describe("MenuBar", () => {
     },
   );
 });
+
+describe("Help menu", () => {
+  it("opens the documentation in the default browser", async () => {
+    const opened: string[] = [];
+    window.pywebview = {
+      api: { open_link: (url: string) => (opened.push(url), Promise.resolve()) },
+    } as never;
+    render(
+      <Providers>
+        <Bar vm={makeVm({ uuid: "u1", name: "CLT-DEB13" })} />
+      </Providers>,
+    );
+    open("Aide");
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Documentation" }));
+    expect(opened).toEqual(["https://github.com/rm-networks/KVM-Studio"]);
+    delete window.pywebview;
+  });
+});

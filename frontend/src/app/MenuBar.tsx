@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import type { CdromDevice, UsbDevice, VmSummary } from "../api/client";
 import { MenuEntries } from "../components/MenuEntries";
 import { type MenuEntry as Entry, item, sep, sub } from "../components/menuModel";
+import { DOCS_URL } from "../brand";
+import { openLink } from "../platform/links";
 import { LANGUAGE_NAMES, languages, type Language } from "../i18n";
 import { setAutofit, useAutofit } from "../features/console/consoleRegistry";
 import { useVmMenu } from "../features/vm/vmMenu";
@@ -160,7 +162,9 @@ export function MenuBar({
     [
       "help",
       [
-        ...(onFirstRun ? [item(m("firstRun"), undefined, onFirstRun), sep] : []),
+        item(m("documentation"), undefined, () => openLink(DOCS_URL)),
+        ...(onFirstRun ? [item(m("firstRun"), undefined, onFirstRun)] : []),
+        sep,
         item(m("about"), undefined, onAbout),
       ],
     ],

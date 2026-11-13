@@ -49,7 +49,8 @@
     "appFullscreen": "Toggle Application Full Screen",
     "autofit": "Autofit Guest",
     "snapshotManager": "Snapshot Manager…",
-    "logout": "Log Out"
+    "logout": "Log Out",
+    "documentation": "Documentation"
   },
   "toolbar": {
     "start": "Start",

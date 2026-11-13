@@ -21,6 +21,7 @@ const variables = (text: string) => [...text.matchAll(/\{\{\s*(\w+)/g)].map((m) 
 // Terms that read the same in every language.
 const UNTRANSLATED = new Set([
   "BIOS",
+  "Documentation",
   "CD/DVD",
   "English",
   "Français",
