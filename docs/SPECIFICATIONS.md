@@ -61,14 +61,14 @@ A single Python backend drives libvirt; the same frontend shows either in a nati
 | Real time | libvirt events → WebSocket | VM states up to date without refreshing |
 | XML | lxml, builders per OS profile | XML following the libvirt schema, testable |
 | Frontend | React + TypeScript + Vite, Radix UI, Lucide | Dense desktop software style interface |
-| Window mode | pywebview (Qt WebEngine, GTK WebKit fallback) | A real window, a launcher in the applications menu, native clipboard |
+| Window mode | pywebview (Qt WebEngine) | A real window, a launcher in the applications menu, native clipboard |
 | Processes | The window (or the tray icon in web mode) alone in the main process; server, libvirt and its event loop in a child process | The libvirt loop and Qt share the default GLib context: in a single process, the window crashes |
 | Web mode | Same frontend served over HTTPS, guest account | Working together on the LAN |
 | Graphical console | noVNC + QEMU `qemu-vdagent` channel, VNC in shared mode | Native text copy and paste; several people on the same console |
 | Serial console | xterm.js | Firewalls and appliances without a GUI |
 | Answer files | autounattend.xml (Windows), kickstart (Fedora/RHEL), preseed / autoinstall (Debian/Ubuntu) templates | Easy install with guest tools |
 | Privileged helper | `kvmstudio-helper`: root systemd service, Unix socket, polkit authorizations | The only root component: joining the libvirt group, opening the web port in the firewall, NAT port forwarding, ISO libraries and their access rights, uninstall |
-| OS detection | libosinfo, internal profiles as a fallback | Good defaults (virtio, UEFI, TPM) |
+| OS detection | Internal profiles | Good defaults (virtio, UEFI, TPM) |
 | Packaging | .rpm and .deb packages built by the CI (nfpm), published in the GitHub Releases, then COPR and APT repositories | Double click to install, dependencies and uninstall handled by the distribution |
 | Tests | pytest + `test:///default` URI, Playwright | Tests without a real VM, in GitHub Actions CI |
 
@@ -245,7 +245,7 @@ The library folders are real folders on disk: what the user sees in the tree mat
 - **F-20** Typical: installation source → guest OS → name and location (default folder from Preferences) → disk → summary with "Customize Hardware".
 - **F-21** Custom: firmware (BIOS/UEFI, Secure Boot), processors (sockets/cores/threads), memory, network, disk controller and type, disk (new / existing / none).
 - **F-22** Source: ISO through the picker (F-30), "install the OS later", or an existing disk, picked with Browse. An existing disk is used where it is (default, no folder created), copied into the VM's folder (the original stays) or moved there after a confirmation that lists the move. File > Open… picks a disk image (`.qcow2`, `.raw`, `.img`) and opens the wizard on it, named after the file. A VM whose disks lie loose in the `KVM-Studio` root offers "Put Files in Their Own Folder…"; one whose disks are outside offers "Move Files into KVM Studio…"; neither entry shows when there is nothing to move.
-- **F-23** OS detection from the ISO (libosinfo), manual choice as a fallback.
+- **F-23** OS detection from the ISO name (internal profiles), manual choice as a fallback.
 - **F-24** OS profiles: Windows 11 (UEFI + Secure Boot + TPM 2.0), Windows Server, Linux, firewall/BSD (pfSense, OPNsense, FortiGate VM, Stormshield EVA…: 3 NICs + serial console by default), nested hypervisor (host-passthrough CPU).
 - **F-25** Windows: a second CD drive with the virtio-win ISO when it is configured.
 - **F-26** Easy install (the counterpart of Workstation's Easy Install): the assistant asks for a user name, password, language, keyboard and, for Windows, the product key (optional). KVM Studio generates an answer file (autounattend.xml, kickstart, preseed or autoinstall) on a small separate ISO, without touching the original ISO. The OS installs without intervention, guest tools included. Targets: Windows 10/11, Windows Server, Fedora/RHEL, Debian, Ubuntu.
@@ -422,7 +422,7 @@ Advised order in the MVP: foundation → UTF-8 copy and paste prototype → list
 | Guest tools installation | Command typed wrongly (AZERTY/QWERTY layout) | Nothing is typed in the guest: a CD started by the user, checked through the agent afterwards |
 | Answer files specific to each OS version | Easy install failing | Templates tested per version, manual installation as a fallback |
 | Root helper | Attack surface | Minimal API, validated inputs, polkit, mandatory review of the PRs touching it |
-| Qt WebEngine missing or heavy | Degraded window mode | GTK WebKit fallback, otherwise web mode offered |
+| Qt WebEngine missing or heavy | Degraded window mode | Web mode offered |
 | ISO rights (qemu user, SELinux) | OS installation impossible | Detection + "Fix" button |
 | Snapshots + UEFI depending on libvirt versions | Snapshots unavailable | Version detection, external snapshots |
 | Closeness to Workstation | Trademark risk | Original visuals, non-affiliation notice, no VMware asset |

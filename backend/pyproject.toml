@@ -8,8 +8,8 @@ version = "1.1.0"
 description = "Virtual machine manager for Linux, built on libvirt"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.11"
-# libvirt-python and PyGObject come from the distribution (python3-libvirt,
-# python3-gobject), so they are not listed here.
+# libvirt-python comes from the distribution (python3-libvirt), so it is not
+# listed here.
 dependencies = [
     "fastapi>=0.115,<1",
     "uvicorn>=0.35,<1",

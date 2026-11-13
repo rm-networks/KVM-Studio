@@ -21,7 +21,6 @@ overrides:
     depends:
       - python3 >= 3.11
       - python3-libvirt
-      - python3-gobject
       - python3-fastapi
       - python3-uvicorn
       - python3-pydantic >= 2.7
@@ -40,7 +39,6 @@ overrides:
       - qemu-kvm
       - qemu-img
       - xorriso
-      - libosinfo
       - edk2-ovmf
       - swtpm-tools
       - acl
@@ -52,8 +50,6 @@ overrides:
     depends:
       - python3 (>= 3.11)
       - python3-libvirt
-      - python3-gi
-      - gir1.2-libosinfo-1.0
       - python3-fastapi
       - python3-uvicorn
       - python3-pydantic (>= 2.7)
@@ -70,7 +66,6 @@ overrides:
       - qemu-system-x86
       - qemu-utils
       - xorriso
-      - libosinfo-bin
       - ovmf
       - swtpm-tools
       - acl

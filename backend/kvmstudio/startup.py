@@ -83,10 +83,9 @@ def _texts() -> tuple[str, str]:
 
 
 def show_error(details: str) -> None:
-    """A message box with the messages unfolded on demand: Qt, else GTK, else nothing."""
+    """A message box with the messages unfolded on demand, when Qt is there."""
     title, text = _texts()
-    if not _qt_box(title, text, details):
-        _gtk_box(title, text, details)
+    _qt_box(title, text, details)
 
 
 def _qt_box(title: str, text: str, details: str) -> bool:
@@ -101,29 +100,4 @@ def _qt_box(title: str, text: str, details: str) -> bool:
     box.setInformativeText(details.splitlines()[-1][:300])
     box.exec()
     del app
-    return True
-
-
-def _gtk_box(title: str, text: str, details: str) -> bool:
-    try:
-        import gi
-
-        gi.require_version("Gtk", "3.0")
-        from gi.repository import Gtk
-    except Exception:
-        return False
-    dialog = Gtk.MessageDialog(
-        message_type=Gtk.MessageType.ERROR, buttons=Gtk.ButtonsType.CLOSE, text=title
-    )
-    dialog.format_secondary_text(text)
-    expander = Gtk.Expander(label=details.splitlines()[-1][:300])
-    view = Gtk.TextView(editable=False, monospace=True)
-    view.get_buffer().set_text(details)
-    scroller = Gtk.ScrolledWindow(min_content_height=200, min_content_width=520)
-    scroller.add(view)
-    expander.add(scroller)
-    dialog.get_message_area().pack_start(expander, True, True, 0)
-    dialog.show_all()
-    dialog.run()
-    dialog.destroy()
     return True

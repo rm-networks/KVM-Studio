@@ -11,9 +11,8 @@ from __future__ import annotations
 import importlib
 import threading
 import webbrowser
-from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import Any, Protocol
 
 CLIPBOARD_TIMEOUT = 5.0
 MAX_SAVED_TEXT = 4 * 1024 * 1024
@@ -186,42 +185,5 @@ def _qt_clipboard() -> HostClipboard:
     return QtClipboard()
 
 
-def _gtk_clipboard() -> HostClipboard:
-    repo = importlib.import_module("gi.repository")
-    Gdk, GLib, Gtk = repo.Gdk, repo.GLib, repo.Gtk
-
-    def in_gui_thread(fn: Callable[[], str]) -> str:
-        result: list[str] = []
-        done = threading.Event()
-
-        def run() -> bool:
-            try:
-                result.append(fn())
-            finally:
-                done.set()
-            return False
-
-        GLib.idle_add(run)
-        done.wait(CLIPBOARD_TIMEOUT)
-        return result[0] if result else ""
-
-    def board() -> Any:
-        return Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-
-    class GtkClipboard:
-        def read(self) -> str:
-            return in_gui_thread(lambda: board().wait_for_text() or "")
-
-        def write(self, text: str) -> None:
-            def set_text() -> str:
-                board().set_text(text, -1)
-                board().store()
-                return ""
-
-            in_gui_thread(set_text)
-
-    return GtkClipboard()
-
-
-def make_clipboard(gui: Literal["qt", "gtk"]) -> HostClipboard:
-    return _qt_clipboard() if gui == "qt" else _gtk_clipboard()
+def make_clipboard() -> HostClipboard:
+    return _qt_clipboard()

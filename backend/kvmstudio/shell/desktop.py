@@ -9,7 +9,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 from .. import APP_NAME
 from ..auth.token import new_token
@@ -35,32 +35,15 @@ def _has_module(name: str) -> bool:
         return False
 
 
-def _pick_gui() -> Literal["qt", "gtk"] | None:
-    """Prefer Qt WebEngine, fall back to GTK WebKit."""
+def _has_qt() -> bool:
     os.environ.setdefault("QT_API", "pyqt6")
-    if _has_module("qtpy") and _has_module("PyQt6.QtWebEngineWidgets"):
-        return "qt"
-    if _has_module("gi"):
-        import gi
-
-        for webkit in ("4.1", "4.0"):
-            try:
-                gi.require_version("WebKit2", webkit)
-            except ValueError:
-                continue
-            return "gtk"
-    return None
+    return _has_module("qtpy") and _has_module("PyQt6.QtWebEngineWidgets")
 
 
-def _set_app_id(gui: Literal["qt", "gtk"]) -> None:
-    if gui == "qt":
-        from qtpy.QtGui import QGuiApplication
+def _set_app_id() -> None:
+    from qtpy.QtGui import QGuiApplication
 
-        QGuiApplication.setDesktopFileName(DESKTOP_ID)
-    else:
-        from gi.repository import GLib
-
-        GLib.set_prgname(DESKTOP_ID)
+    QGuiApplication.setDesktopFileName(DESKTOP_ID)
 
 
 def _qt_environment() -> None:
@@ -80,13 +63,12 @@ def run(config: Config, config_path: Path | None = None, page: str | None = None
         return 1
 
     _qt_environment()
-    gui = _pick_gui()
-    if gui is None:
+    if not _has_qt():
         print(t("cli.no_web_engine"), file=sys.stderr)
         return 1
 
-    _set_app_id(gui)
-    api = DesktopApi(make_clipboard(gui))
+    _set_app_id()
+    api = DesktopApi(make_clipboard())
     frontend_dir = find_frontend_dir()
     icon = frontend_dir / "logo.png" if frontend_dir else None
 
@@ -129,7 +111,7 @@ def run(config: Config, config_path: Path | None = None, page: str | None = None
                 window.destroy()
 
         threading.Thread(target=watch_backend, daemon=True).start()
-        webview.start(gui=gui, icon=str(icon) if icon and icon.is_file() else None)
+        webview.start(gui="qt", icon=str(icon) if icon and icon.is_file() else None)
     finally:
         backend.stop()
     if restart.is_set():

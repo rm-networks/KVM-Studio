@@ -46,7 +46,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends git ca-certificates python3 python3-pip python3-fastapi python3-uvicorn python3-pydantic python3-websockets python3-lxml python3-tomli-w python3-argon2 python3-gi python3-libvirt python3-pytest python3-httpx python3-bottle python3-typing-extensions qemu-utils xorriso gir1.2-libosinfo-1.0 libvirt-clients
+          apt-get install -y --no-install-recommends git ca-certificates python3 python3-pip python3-fastapi python3-uvicorn python3-pydantic python3-websockets python3-lxml python3-tomli-w python3-argon2 python3-libvirt python3-pytest python3-httpx python3-bottle python3-typing-extensions qemu-utils xorriso libvirt-clients
 
       - uses: actions/checkout@v5
 

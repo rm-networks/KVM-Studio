@@ -32,11 +32,10 @@ browser, and is installed from a .rpm or .deb package.
 
 ## Processes
 
-The main process only holds the window (pywebview, Qt WebEngine or else GTK
-WebKit) or the tray icon. The backend (Uvicorn, FastAPI, libvirt connection,
-event loop) runs in a child process (`shell/backend_process.py`). libvirt is
-never loaded in the Qt process: both share the GLib `GMainContext`, which leads
-to crashes.
+The main process only holds the window (pywebview, Qt WebEngine) or the tray
+icon. The backend (Uvicorn, FastAPI, libvirt connection, event loop) runs in a
+child process (`shell/backend_process.py`). libvirt is never loaded in the Qt
+process: both share the GLib `GMainContext`, which leads to crashes.
 
 libvirt events reach the frontend through the `/ws/events` WebSocket.
 
@@ -236,9 +235,9 @@ kvm-studio/
 | Backend | Python 3.11+, FastAPI, Uvicorn, Pydantic v2 |
 | Hypervisor | `libvirt-python` from the distribution |
 | XML | `lxml`, builders per OS profile |
-| OS detection | libosinfo when available, internal profiles otherwise |
+| OS detection | internal profiles, and the libosinfo id recorded by virt-manager |
 | Frontend | React 18, strict TypeScript, Vite, Radix UI, Lucide, i18next (en, fr) |
-| Window | pywebview (Qt WebEngine, GTK WebKit fallback) |
+| Window | pywebview (Qt WebEngine) |
 | Console | noVNC, `qemu-vdagent` chardev, xterm.js for the serial console |
 | Answer files | Jinja2 |
 | Configuration | TOML validated by Pydantic |

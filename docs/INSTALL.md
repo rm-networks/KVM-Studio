@@ -131,19 +131,13 @@ kvm-studio --check
 Hypervisor and Python bindings from the distribution:
 
 ```bash
-sudo dnf install libvirt-daemon-kvm qemu-kvm python3-libvirt python3-gobject libosinfo xorriso
+sudo dnf install libvirt-daemon-kvm qemu-kvm python3-libvirt xorriso
 ```
 
 Engine of the native window (Qt WebEngine):
 
 ```bash
 sudo dnf install python3-pyqt6-webengine python3-QtPy
-```
-
-GTK WebKit fallback, optional:
-
-```bash
-sudo dnf install webkit2gtk4.1
 ```
 
 Node.js, only to build the interface:
@@ -161,8 +155,8 @@ sudo usermod -aG libvirt "$USER"
 
 ### Backend
 
-`--system-site-packages` lets the venv see `python3-libvirt`,
-`python3-gobject` and PyQt6, installed by dnf.
+`--system-site-packages` lets the venv see `python3-libvirt` and PyQt6,
+installed by dnf.
 
 ```bash
 python3 -m venv --system-site-packages .venv
