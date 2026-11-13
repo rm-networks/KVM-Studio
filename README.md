@@ -16,7 +16,7 @@ Workspace can suspend or shut them down instead).
 
 ## Status
 
-Version 1.1.0 is the current version: a .rpm for Fedora and a .deb for
+Version 1.1.1 is the current version: a .rpm for Fedora and a .deb for
 Debian 13 and Ubuntu 26.04 LTS, on the releases page. See the
 [roadmap](docs/ROADMAP.md).
 

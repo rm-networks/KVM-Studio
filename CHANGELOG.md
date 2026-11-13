@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.1.1 (2026-11-13)
+
+- The VM menu and the right click on a VM of the library are one list: same
+  entries, order, greyed out entries and shortcuts.
+- Send Key, in the toolbar, the full screen bar and the VM menu, replaces
+  Send Ctrl+Alt+Del. Its combinations are set in Preferences, Hotkeys (add,
+  change, rename, remove, restore the defaults) and sent as key presses. A
+  LAN guest gets the default list.
+- Preferences, Memory: a limit in GB. When the running VMs hold more host
+  memory than that, a notice shows once. Nothing is stopped or refused.
+- Preferences, Interface: show or hide the VM tab bar.
+- Open Folder Directory in the context menu of a library folder (owner only).
+- Help, Documentation opens the project page.
+- Preferences no longer scroll sideways (Running virtual machines list).
+- The native window closes instead of freezing when the KDE compositor
+  restarts after a crash (seen with DisplayLink screens when going full
+  screen); the VMs keep running.
+- python3-gobject and libosinfo are no longer package dependencies.
+
 ## 1.1.0 (2026-10-27)
 
 - VM settings, Add > Hard disk: a new qcow2 disk in the VM folder, or an

@@ -32,9 +32,12 @@ window.
 ## Main window
 
 - Menus: File, Edit, View, VM, Tabs, Help.
-- Toolbar under the menus.
+- Toolbar under the menus. Send Key lists the combinations of Preferences >
+  Hotkeys; the full screen bar has the same list.
 - Library tree on the left (folders and VMs).
-- Tabs in the middle: Home, then one tab per open VM.
+- Tabs in the middle: Home, then one tab per open VM. Preferences >
+  Interface hides the tab bar; a VM is then opened from the library or the
+  Tabs menu.
 - Status bar at the bottom: connection, versions, number of VMs, and the
   long tasks under way (a snapshot of a running VM) with a Cancel button.
 - A running VM with a serial console shows Screen and Serial Console views
@@ -43,6 +46,12 @@ window.
 
 A guest of LAN sharing has no Edit menu (Preferences, virtual network editor)
 and no first-run assistant; File > Log Out ends the session.
+
+The VM menu and the right click on a VM of the library show the same list.
+The right click on a library folder has Open Folder Directory, which opens the
+folder in the file manager of the desktop (owner only). Help > Documentation
+opens the project page in the default browser. When the running VMs hold more
+host memory than the limit of Preferences > Memory, a notice says so once.
 
 The menu entries are detailed in section 5 of the
 [specifications](SPECIFICATIONS.md).
@@ -53,7 +62,8 @@ The menu entries are detailed in section 5 of the
 - New VM assistant (Typical, Custom, Easy Install).
 - Snapshot manager.
 - Virtual network editor.
-- Preferences.
+- Preferences: Workspace, ISO Libraries, Virtual Machines, Interface,
+  Display, Hotkeys, Memory, Advanced.
 - ISO picker.
 - Login (shared web mode).
 - First-run assistant.

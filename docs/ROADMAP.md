@@ -53,6 +53,15 @@ title bar.
 Not delivered: live resolution change for Windows guests (the VirtIO GPU
 driver only reads the size at startup) and for X11 sessions.
 
+## 1.1.1: done
+
+One definition for the VM menu and the right click on a VM; Send Key with
+the Hotkeys list of Preferences; memory warning past a limit (Preferences >
+Memory); the VM tab bar can be hidden; Open Folder Directory on a library
+folder; Help > Documentation; Preferences fit their window; the native window
+closes instead of freezing when the KDE compositor restarts; python3-gobject
+and libosinfo are no longer required.
+
 ## V2 (public release)
 
 Easy Install, virtiofs shared folders, network diagnostics, Bridged, USB
