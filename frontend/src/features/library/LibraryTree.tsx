@@ -44,7 +44,6 @@ interface Props {
   selected: string | null;
   onSelect: (id: string) => void;
   onOpen: (uuid: string) => void;
-  onSettings: (uuid: string) => void;
   /** While searching, every folder is shown open. */
   forceOpen: boolean;
   emptyLabel?: string;
@@ -103,7 +102,6 @@ export function LibraryTree({
   selected,
   onSelect,
   onOpen,
-  onSettings,
   forceOpen,
   emptyLabel,
   vmsByUuid,
@@ -335,7 +333,7 @@ export function LibraryTree({
             aria-level={row.depth + 1}
             aria-selected={isSelected}
           >
-            <VmContextMenu vm={vm} onOpen={onOpen} onSettings={onSettings}>
+            <VmContextMenu vm={vm}>
               <div
                 className={isSelected ? "tree-row selected" : "tree-row"}
                 style={{ paddingLeft: 22 + row.depth * 16 }}

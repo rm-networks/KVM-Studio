@@ -6,6 +6,7 @@ import type { VmSummary } from "../../api/client";
 import { NotificationProvider } from "../../components/Notifications";
 import { makeVm } from "../../test/fixtures";
 import { VmActionsProvider } from "../vm/VmActions";
+import { type VmCommands, VmCommandsContext } from "../vm/vmMenu";
 import { LibraryActionsProvider } from "./LibraryActions";
 import { LibraryTree } from "./LibraryTree";
 import { buildTree, ROOT_ID } from "./tree";
@@ -28,23 +29,33 @@ function Harness({
   onSnapshots,
 }: HarnessProps) {
   const [selected, setSelected] = useState<string | null>(null);
+  const none = () => undefined;
+  const commands: VmCommands = {
+    openTab: (vm) => onOpen(vm.uuid),
+    settings: (vm) => onSettings(vm.uuid),
+    snapshots: (vm) => onSnapshots?.(vm),
+    guestTools: none,
+    changeMedia: none,
+    eject: none,
+    usb: none,
+  };
   return (
     <NotificationProvider>
       <VmActionsProvider>
         <LibraryActionsProvider
           library={{ root: "/data/KVM-Studio/VM", folders, order: {} }}
           onNewVm={onNewVm}
-          onSnapshots={onSnapshots}
         >
-          <LibraryTree
-            root={buildTree(folders, vms, "", "all", "name")}
-            selected={selected}
-            onSelect={setSelected}
-            onOpen={onOpen}
-            onSettings={onSettings}
-            forceOpen={false}
-            vmsByUuid={new Map(vms.map((v) => [v.uuid, v]))}
-          />
+          <VmCommandsContext.Provider value={commands}>
+            <LibraryTree
+              root={buildTree(folders, vms, "", "all", "name")}
+              selected={selected}
+              onSelect={setSelected}
+              onOpen={onOpen}
+              forceOpen={false}
+              vmsByUuid={new Map(vms.map((v) => [v.uuid, v]))}
+            />
+          </VmCommandsContext.Provider>
         </LibraryActionsProvider>
       </VmActionsProvider>
     </NotificationProvider>
@@ -124,13 +135,13 @@ describe("LibraryTree", () => {
     expect(opened).toEqual(["a", "b"]);
   });
 
-  it("opens the settings from the context menu, last after Delete from disk", async () => {
+  it("opens the settings from the context menu, last after a separator", async () => {
     const settings: string[] = [];
     render(<Harness vms={[makeVm({ name: "a" })]} onSettings={(uuid) => settings.push(uuid)} />);
     fireEvent.contextMenu(screen.getByText("a"));
     const items = (await screen.findAllByRole("menuitem")).map((el) => el.textContent);
     expect(items[0]).toBe("Ouvrir dans un onglet");
-    expect(items.slice(-2)).toEqual(["Supprimer du disque…", "Paramètres…Ctrl+D"]);
+    expect(items.at(-1)).toBe("Paramètres…Ctrl+D");
     const last = screen.getAllByRole("menuitem").at(-1) as HTMLElement;
     expect(last.previousElementSibling?.getAttribute("role")).toBe("separator");
     fireEvent.click(screen.getByRole("menuitem", { name: /Paramètres/ }));
@@ -158,13 +169,17 @@ describe("LibraryTree", () => {
   it("offers to move files only when there is something to move", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(() =>
+      vi.fn((path: string) =>
         Promise.resolve(
           new Response(
-            JSON.stringify({
-              vm_dir: "/data/KVM-Studio/VM/loose",
-              moves: [["/data/KVM-Studio/VM/x.qcow2", "/data/KVM-Studio/VM/loose/x.qcow2"]],
-            }),
+            JSON.stringify(
+              /cdroms|usb/.test(path)
+                ? []
+                : {
+                    vm_dir: "/data/KVM-Studio/VM/loose",
+                    moves: [["/data/KVM-Studio/VM/x.qcow2", "/data/KVM-Studio/VM/loose/x.qcow2"]],
+                  },
+            ),
           ),
         ),
       ),
@@ -180,7 +195,9 @@ describe("LibraryTree", () => {
     );
     const items = async (name: string) => {
       fireEvent.contextMenu(screen.getByText(name));
-      const found = (await screen.findAllByRole("menuitem")).map((el) => el.textContent);
+      fireEvent.click(await screen.findByRole("menuitem", { name: "Gérer" }));
+      await screen.findAllByRole("menu");
+      const found = screen.getAllByRole("menuitem").map((el) => el.textContent);
       fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
       return found;
     };
@@ -189,6 +206,7 @@ describe("LibraryTree", () => {
     expect(await items("outside")).toContain("Déplacer les fichiers dans KVM Studio…");
     expect(await items("outside")).not.toContain("Ranger les fichiers dans leur dossier…");
     fireEvent.contextMenu(screen.getByText("loose"));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Gérer" }));
     fireEvent.click(await screen.findByRole("menuitem", { name: /Ranger les fichiers/ }));
     expect(
       await screen.findByText("/data/KVM-Studio/VM/x.qcow2 → /data/KVM-Studio/VM/loose/x.qcow2"),
