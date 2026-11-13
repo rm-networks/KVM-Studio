@@ -389,7 +389,14 @@ function MainWindow() {
               />
             )}
             <main className="workspace">
-              <TabBar tabs={tabs} active={activeTab} onActivate={setActiveTab} onClose={closeTab} />
+              {(info?.ui.vm_tabs ?? true) && (
+                <TabBar
+                  tabs={tabs}
+                  active={activeTab}
+                  onActivate={setActiveTab}
+                  onClose={closeTab}
+                />
+              )}
               <div className="workspace-content" hidden={activeTab !== HOME_TAB}>
                 <HomeTab onNewVm={() => setWizardOpen(true)} />
               </div>

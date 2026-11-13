@@ -618,7 +618,10 @@
     "closeReminder": "Me rappeler que les machines virtuelles continuent de tourner",
     "scanGroup": "Machines virtuelles déjà sur disque",
     "scanHint": "Reprend des machines virtuelles trouvées dans un dossier : disques copiés d'un autre ordinateur, ancien emplacement des VM.",
-    "scanButton": "Rechercher des machines virtuelles…"
+    "scanButton": "Rechercher des machines virtuelles…",
+    "tabsGroup": "Onglets",
+    "vmTabs": "Afficher la barre d'onglets des machines virtuelles",
+    "vmTabsHint": "Sans elle, une machine virtuelle s'ouvre depuis la bibliothèque (double clic) ou le menu Onglets."
   },
   "iso": {
     "title": "Choisir une image ISO",

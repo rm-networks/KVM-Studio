@@ -35,6 +35,7 @@ class KvmInfo(BaseModel):
 class UiPreferences(BaseModel):
     theme: Literal["system", "light", "dark"]
     language: Literal["en", "fr"]
+    vm_tabs: bool
 
 
 class AppInfo(BaseModel):
@@ -64,7 +65,11 @@ def info(ctx: Context, request: Request) -> AppInfo:
             libvirt_version=host.libvirt_version,
             hypervisor_version=host.hypervisor_version,
         ),
-        ui=UiPreferences(theme=ctx.config.ui.theme, language=resolve(ctx.config.ui.language)),
+        ui=UiPreferences(
+            theme=ctx.config.ui.theme,
+            language=resolve(ctx.config.ui.language),
+            vm_tabs=ctx.config.ui.vm_tabs,
+        ),
         kvm=_kvm() if host.uri.startswith("qemu") else None,
         role=getattr(request.state, "role", "owner"),
     )

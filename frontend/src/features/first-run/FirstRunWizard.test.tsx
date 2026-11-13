@@ -21,7 +21,7 @@ const config: Config = {
   iso_libraries: [],
   defaults: { firmware: "uefi", disk_bus: "virtio", nic_model: "virtio", virtio_win_iso: null },
   workspace: { on_close: "keep", close_reminder: true },
-  ui: { theme: "system", language: "fr" },
+  ui: { theme: "system", language: "fr", vm_tabs: true },
 };
 
 const status: SetupStatus = {

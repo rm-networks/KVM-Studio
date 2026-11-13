@@ -52,3 +52,21 @@ for (const language of ["en", "fr"] as const) {
     });
   }
 }
+
+test("the VM tab bar hides and comes back without a restart", async ({ page }) => {
+  await page.goto("/#token=e2e");
+  await expect(page.getByRole("tab", { name: "Home" })).toBeVisible();
+  const toggle = async () => {
+    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await page.getByRole("menuitem", { name: /Preferences/ }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("tab", { name: "Interface" }).click();
+    await dialog.getByLabel("Show the tab bar of the virtual machines").click();
+    await dialog.getByRole("button", { name: "OK" }).click();
+    await expect(dialog).toBeHidden();
+  };
+  await toggle();
+  await expect(page.getByRole("tab")).toHaveCount(0);
+  await toggle();
+  await expect(page.getByRole("tab", { name: "Home" })).toBeVisible();
+});

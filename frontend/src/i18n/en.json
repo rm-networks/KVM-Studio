@@ -618,7 +618,10 @@
     "closeReminder": "Remind me that virtual machines keep running",
     "scanGroup": "Virtual machines already on disk",
     "scanHint": "Bring in virtual machines found in a folder: disks copied from another computer, a former VM location.",
-    "scanButton": "Scan for Virtual Machines…"
+    "scanButton": "Scan for Virtual Machines…",
+    "tabsGroup": "Tabs",
+    "vmTabs": "Show the tab bar of the virtual machines",
+    "vmTabsHint": "Without it, a virtual machine opens from the library (double click) or from the Tabs menu."
   },
   "iso": {
     "title": "Choose an ISO Image",

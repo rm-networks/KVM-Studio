@@ -491,6 +491,19 @@ export function PreferencesDialog({ onClose, onSaved, onScan }: Props) {
             </Group>
           )}
           {config && section === "interface" && (
+            <Group title={t("prefs.tabsGroup")}>
+              <label className="prefs-check">
+                <input
+                  type="checkbox"
+                  checked={config.ui.vm_tabs}
+                  onChange={(e) => update("ui", { ...config.ui, vm_tabs: e.target.checked })}
+                />
+                {t("prefs.vmTabs")}
+              </label>
+              <p className="prefs-muted">{t("prefs.vmTabsHint")}</p>
+            </Group>
+          )}
+          {config && section === "interface" && (
             <Group title={t("sharing.title")}>
               <SharingPrefs
                 web={config.web}

@@ -66,6 +66,8 @@ class UiSettings(_Section):
     theme: Literal["system", "light", "dark"] = "system"
     # English unless French is chosen; the desktop language is not looked at.
     language: Literal["en", "fr"] = "en"
+    # Bar of the open VM tabs above the console.
+    vm_tabs: bool = True
 
     @field_validator("language", mode="before")
     @classmethod

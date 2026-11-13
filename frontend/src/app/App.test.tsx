@@ -17,7 +17,7 @@ const info = {
     libvirt_version: "12.0.0",
     hypervisor_version: "10.2.2",
   },
-  ui: { theme: "system", language: "fr" },
+  ui: { theme: "system", language: "fr", vm_tabs: true },
 };
 
 const vms = [
@@ -29,6 +29,8 @@ const library = { root: null, folders: [] };
 function apiResponse(path: string): unknown {
   if (path === "/api/info") return info;
   if (path === "/api/library") return library;
+  if (path === "/api/usb" || path.endsWith("/cdroms")) return [];
+  if (path.endsWith("/linked-clones")) return { names: [] };
   return vms;
 }
 
@@ -208,5 +210,17 @@ describe("App", () => {
     const before = calls();
     act(() => socket.push({ type: "vm.removed", uuid: "2" }));
     await vi.waitFor(() => expect(calls()).toBeGreaterThan(before));
+  });
+
+  it("hides the VM tab bar when the preferences say so, the library still selects", async () => {
+    mockFetch((path) => [
+      200,
+      path === "/api/info" ? { ...info, ui: { ...info.ui, vm_tabs: false } } : apiResponse(path),
+    ]);
+    render(<App />);
+    fireEvent.click(await screen.findByText("CLT-DEB13"));
+    expect(screen.queryAllByRole("tab")).toEqual([]);
+    const row = screen.getByRole("treeitem", { name: /CLT-DEB13/ });
+    expect(row.getAttribute("aria-selected")).toBe("true");
   });
 });

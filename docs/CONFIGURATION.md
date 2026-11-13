@@ -88,6 +88,7 @@ not KVM Studio. You find them again the next time it starts.
 | --- | --- | --- |
 | `theme` | `"system"` | `"system"`, `"light"`, `"dark"` |
 | `language` | `"en"` | `"en"` or `"fr"`. The desktop language is not looked at. `"system"`, from versions before 1.0.0, reads as `"en"`. |
+| `vm_tabs` | `true` | Shows the bar of the open VM tabs. Without it, a VM is opened from the library or the Tabs menu. |
 
 ## Environment variables
 

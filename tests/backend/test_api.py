@@ -62,7 +62,7 @@ def test_info(client: TestClient, auth: dict[str, str]) -> None:
     data = client.get("/api/info", headers=auth).json()
     assert data["mode"] == "web"
     assert data["libvirt"]["driver"] == "TEST"
-    assert data["ui"] == {"theme": "system", "language": "en"}
+    assert data["ui"] == {"theme": "system", "language": "en", "vm_tabs": True}
 
 
 def test_foreign_host_header_is_refused(client: TestClient, auth: dict[str, str]) -> None:

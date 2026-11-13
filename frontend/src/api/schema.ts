@@ -2875,6 +2875,8 @@ export interface components {
        * @enum {string}
        */
       language: "en" | "fr";
+      /** Vm Tabs */
+      vm_tabs: boolean;
     };
     /** UiSettings */
     UiSettings: {
@@ -2890,6 +2892,11 @@ export interface components {
        * @enum {string}
        */
       language: "en" | "fr";
+      /**
+       * Vm Tabs
+       * @default true
+       */
+      vm_tabs: boolean;
     };
     /** UninstallPlan */
     UninstallPlan: {
