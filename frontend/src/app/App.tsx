@@ -314,6 +314,7 @@ function MainWindow() {
   return (
     <LibraryActionsProvider
       library={library}
+      hostFiles={!guest}
       onNewVm={(folder) => {
         setWizardFolder(folder);
         setWizardOpen(true);

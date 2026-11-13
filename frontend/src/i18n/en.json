@@ -121,7 +121,9 @@
     "tidyTitle": "Put Files in Their Own Folder",
     "tidyIntro": "The disks of \"{{name}}\" are in the {{app}} folder but not in a folder of their own. They will move as follows:",
     "tidyMove": "Move",
-    "tidied": "{{name}} now has its own folder"
+    "tidied": "{{name}} now has its own folder",
+    "openFolder": "Open Folder Directory",
+    "openFolderFailed": "Cannot open the folder {{name}}"
   },
   "state": {
     "running": "Running",
@@ -242,7 +244,9 @@
       "copy_failed": "Copying the disks failed.",
       "unreadable": "A disk cannot be read with your permissions.",
       "already_inside": "The disks are already in the {{app}} folder.",
-      "nothing_to_tidy": "The files are already in a folder of their own."
+      "nothing_to_tidy": "The files are already in a folder of their own.",
+      "gone": "This folder no longer exists on disk.",
+      "open_failed": "The file manager could not be opened."
     },
     "prefs": {
       "location_relative": "Enter a full path (starting with /).",

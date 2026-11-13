@@ -24,10 +24,18 @@ interface Props {
   library: LibraryInfo | null;
   onNewVm?: (folder: string) => void;
   onSnapshots?: (vm: VmSummary) => void;
+  /** The owner sees the library folders in the host's file manager. */
+  hostFiles?: boolean;
   children: ReactNode;
 }
 
-export function LibraryActionsProvider({ library, onNewVm, onSnapshots, children }: Props) {
+export function LibraryActionsProvider({
+  library,
+  onNewVm,
+  onSnapshots,
+  hostFiles = false,
+  children,
+}: Props) {
   const { t } = useTranslation();
   const { notify, notifyError } = useNotifier();
   const [pending, setPending] = useState<Pending>(null);
@@ -48,6 +56,15 @@ export function LibraryActionsProvider({ library, onNewVm, onSnapshots, children
       newFolder: (parent) => setPending({ kind: "new", parent }),
       newVm: (folder) => onNewVm?.(folder),
       snapshots: (vm) => onSnapshots?.(vm),
+      openFolder: hostFiles
+        ? (path) => {
+            api
+              .openFolder(path)
+              .catch((err: unknown) =>
+                notifyError(t("library.openFolderFailed", { name: path || library?.root }), err),
+              );
+          }
+        : undefined,
       renameFolder: (path) => setPending({ kind: "rename", path }),
       deleteFolder: (path) => setPending({ kind: "delete", path }),
       moveVm: (vm, folder) => {
@@ -83,7 +100,7 @@ export function LibraryActionsProvider({ library, onNewVm, onSnapshots, children
           );
       },
     }),
-    [available, move, library, notifyError, onNewVm, onSnapshots, t],
+    [available, hostFiles, move, library, notifyError, onNewVm, onSnapshots, t],
   );
 
   const close = () => setPending(null);

@@ -121,7 +121,9 @@
     "tidyTitle": "Ranger les fichiers dans leur dossier",
     "tidyIntro": "Les disques de « {{name}} » sont dans le dossier {{app}} mais pas dans un dossier à eux. Ils seront déplacés ainsi :",
     "tidyMove": "Déplacer",
-    "tidied": "{{name}} a maintenant son propre dossier"
+    "tidied": "{{name}} a maintenant son propre dossier",
+    "openFolder": "Ouvrir le dossier sur le disque",
+    "openFolderFailed": "Impossible d'ouvrir le dossier {{name}}"
   },
   "state": {
     "running": "Allumée",
@@ -242,7 +244,9 @@
       "copy_failed": "La copie des disques a échoué.",
       "unreadable": "Un disque n'est pas lisible avec vos droits.",
       "already_inside": "Les disques sont déjà dans le dossier {{app}}.",
-      "nothing_to_tidy": "Les fichiers sont déjà dans un dossier à eux."
+      "nothing_to_tidy": "Les fichiers sont déjà dans un dossier à eux.",
+      "gone": "Ce dossier n'existe plus sur le disque.",
+      "open_failed": "Le gestionnaire de fichiers n'a pas pu être ouvert."
     },
     "prefs": {
       "location_relative": "Indiquez un chemin complet (qui commence par /).",

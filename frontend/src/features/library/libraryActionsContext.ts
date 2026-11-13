@@ -9,6 +9,8 @@ export interface LibraryActions {
   /** The new VM assistant, with this folder chosen. */
   newVm: (folder: string) => void;
   snapshots: (vm: VmSummary) => void;
+  /** The folder in the host's file manager; owner only, absent for a LAN guest. */
+  openFolder?: (path: string) => void;
   renameFolder: (path: string) => void;
   deleteFolder: (path: string) => void;
   /** With a folder: move right away (drag and drop). Without: ask where. */

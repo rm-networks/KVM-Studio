@@ -81,6 +81,13 @@ function FolderMenu({ path, children }: { path: string; children: ReactNode }) {
             disabled={!actions.available}
             onSelect={() => actions.newFolder(path)}
           />
+          {actions.openFolder && (
+            <MenuItem
+              label={t("library.openFolder")}
+              disabled={!actions.available}
+              onSelect={() => actions.openFolder?.(path)}
+            />
+          )}
           {path !== "" && (
             <>
               <MenuItem label={t("menu.rename")} onSelect={() => actions.renameFolder(path)} />

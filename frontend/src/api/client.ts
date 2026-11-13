@@ -167,6 +167,7 @@ export const api = {
   library: () => request<LibraryInfo>("GET", "/api/library"),
   createFolder: (path: string) =>
     request<{ path: string }>("POST", "/api/library/folders", { path }),
+  openFolder: (path: string) => request<undefined>("POST", "/api/library/folders/open", { path }),
   renameFolder: (path: string, name: string) =>
     request<{ path: string }>("POST", "/api/library/folders/rename", { path, name }),
   folderMovePlan: (path: string, parent: string) =>

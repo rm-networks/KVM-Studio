@@ -512,3 +512,35 @@ def test_browse_keeps_a_guest_in_the_library(lib_config: Config, tmp_path: Path)
     inside = browse.listing(lib_config, None, "disk", confined=True)
     assert inside.parent is None
     assert [kind for kind, _p in inside.places] == ["library", "iso"]
+
+
+def test_open_folder_hands_the_library_folder_to_xdg_open(
+    lib_client: TestClient, library: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[list[str]] = []
+
+    def run(args: list[str], **_kw: object) -> subprocess.CompletedProcess[str]:
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 0)
+
+    monkeypatch.setattr(subprocess, "run", run)
+    (library / "Labs").mkdir()
+    (tmp_path / "secret").mkdir()
+    (library / "escape").symlink_to(tmp_path / "secret")
+
+    def post(path: str) -> int:
+        r = lib_client.post("/api/library/folders/open", headers=AUTH, json={"path": path})
+        status: int = r.status_code
+        return status
+
+    assert post("Labs") == 204
+    assert post("") == 204
+    # The name is read inside the library: "/etc" is a folder "etc" there.
+    assert post("/etc") == 404
+    assert post("../..") == 422
+    assert post("escape") == 403
+    assert post("Missing") == 404
+    assert calls == [
+        ["xdg-open", str(library / "Labs")],
+        ["xdg-open", str(library)],
+    ]

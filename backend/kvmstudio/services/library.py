@@ -257,6 +257,26 @@ def list_folders(config: Config, placements: Iterable[Placement]) -> list[str]:
     return sorted(folders, key=str.casefold)
 
 
+def open_folder(config: Config, folder: str) -> Path:
+    """Show a folder of the library in the file manager of the desktop."""
+    path = resolve(_folder_dir(_require_root(config), check_folder(folder)))
+    if not path.is_dir():
+        raise ApiException(404, "library.gone", f"{folder} does not exist")
+    try:
+        # xdg-open hands the folder to the file manager and returns.
+        subprocess.run(  # noqa: S603
+            ["xdg-open", str(path)],  # noqa: S607
+            check=False,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise ApiException(500, "library.open_failed", f"xdg-open: {exc}") from exc
+    return path
+
+
 def create_folder(config: Config, folder: str) -> str:
     folder = check_folder(folder)
     if not folder:
@@ -642,7 +662,7 @@ def move_vm(conn: LibvirtConnection, config: Config, uuid: str, folder: str) -> 
             root = _require_root(config)
             target_parent = _folder_dir(root, folder)
             if not target_parent.is_dir():
-                raise ApiException(404, "library.no_folder", f"{folder} does not exist")
+                raise ApiException(404, "library.gone", f"{folder} does not exist")
 
         if not place.managed or place.vm_dir is None:
             # Not our files: only the note in <metadata> changes.

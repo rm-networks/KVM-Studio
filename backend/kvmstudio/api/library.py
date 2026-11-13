@@ -112,6 +112,13 @@ async def move_plan(
     return FolderMovePlan.model_validate(plan, from_attributes=True)
 
 
+@router.post("/folders/open", status_code=204)
+async def open_folder(ctx: Context, body: FolderRef) -> Response:
+    """The folder named in the library, never a path sent as such (owner only)."""
+    await run_in_threadpool(library.open_folder, ctx.config, body.path)
+    return Response(status_code=204)
+
+
 @router.post("/folders/move")
 async def move(ctx: Context, request: Request, body: FolderMove) -> FolderRef:
     path = await run_in_threadpool(

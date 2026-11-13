@@ -18,6 +18,7 @@ interface HarnessProps {
   onSettings?: (uuid: string) => void;
   onNewVm?: (folder: string) => void;
   onSnapshots?: (vm: VmSummary) => void;
+  hostFiles?: boolean;
 }
 
 function Harness({
@@ -27,6 +28,7 @@ function Harness({
   onSettings = () => undefined,
   onNewVm,
   onSnapshots,
+  hostFiles,
 }: HarnessProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const none = () => undefined;
@@ -45,6 +47,7 @@ function Harness({
         <LibraryActionsProvider
           library={{ root: "/data/KVM-Studio/VM", folders, order: {} }}
           onNewVm={onNewVm}
+          hostFiles={hostFiles}
         >
           <VmCommandsContext.Provider value={commands}>
             <LibraryTree
@@ -250,6 +253,30 @@ describe("LibraryTree", () => {
       path: "/api/library/folders/move",
       body: { path: "Labs", parent: "Archive", before: null },
     });
+  });
+
+  it("opens a folder in the file manager for the owner only", async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(new Response(null, { status: 204 })));
+    vi.stubGlobal("fetch", fetchMock);
+    const { unmount } = render(<Harness vms={[]} folders={["lab"]} hostFiles />);
+    fireEvent.contextMenu(screen.getByText("lab"));
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: "Ouvrir le dossier sur le disque" }),
+    );
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [path, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect([path, init.method, init.body]).toEqual([
+      "/api/library/folders/open",
+      "POST",
+      JSON.stringify({ path: "lab" }),
+    ]);
+    unmount();
+
+    // A guest of LAN sharing: the entry does not exist.
+    render(<Harness vms={[]} folders={["lab"]} />);
+    fireEvent.contextMenu(screen.getByText("lab"));
+    await screen.findAllByRole("menuitem");
+    expect(screen.queryByRole("menuitem", { name: /Ouvrir le dossier/ })).toBeNull();
   });
 });
 

@@ -130,7 +130,8 @@ The backend checks the rights on every route.
   `/api/restart`, `/api/session`), importing a VM's disks from outside the
   root (`/api/vms/{uuid}/import`), the host's USB storage devices and their
   connection to a VM (`/api/usb`, `/api/vms/{uuid}/usb`; a device the owner
-  connected stays usable in the guest system). There is no raw XML editor nor
+  connected stays usable in the guest system), opening a library folder in
+  the host's file manager (`/api/library/folders/open`). There is no raw XML editor nor
   PCI passthrough route, and every path stays confined.
 
 The owner's token is only accepted from a loopback address; a guest's session

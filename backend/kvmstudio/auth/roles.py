@@ -50,6 +50,8 @@ GUEST_FORBIDDEN: list[tuple[frozenset[str] | None, re.Pattern[str]]] = [
     # Host USB devices: the owner connects them, a guest uses what is connected.
     (None, re.compile(r"^/api/usb$")),
     (None, re.compile(r"^/api/vms/[^/]+/usb(/.*)?$")),
+    # The host's file manager, on the host's screen.
+    (None, re.compile(r"^/api/library/folders/open$")),
 ]
 
 
