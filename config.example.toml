@@ -48,6 +48,11 @@ theme = "system"         # "system" | "light" | "dark"
 language = "en"          # "en" | "fr"
 vm_tabs = true           # bar of the open VM tabs
 
+[memory]
+# Warning, shown once, when the running VMs hold more host memory than this
+# (GB, decimals allowed). Leave it out for no warning. Nothing is ever stopped.
+# limit_gb = 16
+
 # Send Key combinations (Preferences, Hotkeys). Without any [[hotkeys]] table
 # the default list is used. Modifiers first (Ctrl, Alt, Shift, Win), then one
 # key: a letter, a digit, F1 to F12, Delete, Escape, Tab, Enter, Backspace,

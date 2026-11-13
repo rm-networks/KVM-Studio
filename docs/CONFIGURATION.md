@@ -90,6 +90,21 @@ not KVM Studio. You find them again the next time it starts.
 | `language` | `"en"` | `"en"` or `"fr"`. The desktop language is not looked at. `"system"`, from versions before 1.0.0, reads as `"en"`. |
 | `vm_tabs` | `true` | Shows the bar of the open VM tabs. Without it, a VM is opened from the library or the Tabs menu. |
 
+## [memory]
+
+| Key | Default | Values |
+| --- | --- | --- |
+| `limit_gb` | none | Above this many GB held by the running VMs, a warning shows once (again only after going back below 95 % of the limit). No value: no warning. |
+
+The figure is the memory the VMs really hold on the host, not the memory given
+to them: the resident size of each QEMU process, read by libvirt
+(`balloon.rss` of the domain statistics, the same as `virsh domstats
+--balloon`). It grows as the guests use their memory. A VM backed by huge pages
+counts in full. Without that statistic, the size is read from the QEMU process
+in `/proc`; a VM found nowhere counts for nothing. Every running VM of the
+libvirt connection counts, KVM Studio's or not. The check runs every 15 s
+while KVM Studio is open, in one libvirt call; it never stops or refuses a VM.
+
 ## [[hotkeys]]
 
 The combinations of Send Key (Preferences, Hotkeys), at most 50. Without any

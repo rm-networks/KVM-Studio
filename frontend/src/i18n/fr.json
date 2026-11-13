@@ -562,7 +562,8 @@
       "interface": "Interface",
       "display": "Affichage",
       "advanced": "Avancé",
-      "hotkeys": "Combinaisons"
+      "hotkeys": "Combinaisons",
+      "memory": "Mémoire"
     },
     "browse": "Parcourir…",
     "vmLocation": "Emplacement des machines virtuelles",
@@ -645,7 +646,11 @@
     "hotkeyName": "Nom",
     "hotkeyModifiers": "Touches de modification",
     "hotkeyKey": "Touche",
-    "hotkeyNoKey": "(aucune)"
+    "hotkeyNoKey": "(aucune)",
+    "memoryGroup": "Mémoire occupée par les machines virtuelles",
+    "memoryLimit": "Avertir au-delà de (Go)",
+    "memoryNoLimit": "aucune",
+    "memoryHint": "Un avis s'affiche une fois quand les machines virtuelles allumées, ici ou ailleurs, occupent plus de mémoire sur l'hôte que cette valeur. C'est la mémoire réellement utilisée qui compte, elle monte à mesure que les invités tournent, pas la mémoire qui leur est attribuée. Rien n'est arrêté ni refusé. Vide : aucun avertissement."
   },
   "iso": {
     "title": "Choisir une image ISO",
@@ -1231,5 +1236,9 @@
     "imported_one": "{{count}} machine virtuelle importée",
     "imported_other": "{{count}} machines virtuelles importées",
     "failed": "{{name}} n'a pas été importée"
+  },
+  "memory": {
+    "overTitle": "Les machines virtuelles occupent beaucoup de mémoire",
+    "overText": "Les machines virtuelles allumées occupent {{used}} de mémoire sur l'hôte, au-delà de la limite de {{limit}}. La limite se règle dans Édition, Préférences, Mémoire."
   }
 }

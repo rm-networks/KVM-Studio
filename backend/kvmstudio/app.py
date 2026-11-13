@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import os
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
@@ -12,6 +14,7 @@ from fastapi import APIRouter, Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 
 from . import APP_NAME, __version__
 from .api import (
@@ -53,8 +56,8 @@ from .errors import (
 from .events import EventHub, events_socket
 from .frontend import find_frontend_dir
 from .libvirt_conn import LibvirtConnection
+from .services import host_memory, vm_view
 from .services import options as vm_options
-from .services import vm_view
 from .services.tasks import TaskRegistry
 
 # Only loopback names are accepted, which defeats DNS rebinding.
@@ -90,10 +93,30 @@ def create_app(
         conn, describe, on_reboot=lambda uuid: vm_options.after_install_reboot(conn, uuid)
     )
 
+    async def watch_memory() -> None:
+        watch = host_memory.MemoryWatch()
+        while True:
+            await asyncio.sleep(host_memory.CHECK_INTERVAL)
+            gb = app.state.context.config.memory.limit_gb
+            limit = host_memory.gib_to_bytes(gb) if gb else None
+            if limit is None:
+                watch.check(0, None)
+                continue
+            try:
+                used = await run_in_threadpool(conn.run, host_memory.used_by_vms)
+            except libvirt.libvirtError:
+                continue
+            if watch.check(used, limit):
+                hub.broadcast({"type": "memory.over", "used": used, "limit": limit})
+
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         await hub.start()
+        memory = asyncio.create_task(watch_memory())
         yield
+        memory.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await memory
         await hub.stop()
 
     app = FastAPI(

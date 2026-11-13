@@ -14,6 +14,8 @@ export interface AppData {
   loading: boolean;
   /** libvirt dropped and the backend is trying to reconnect. */
   libvirtLost: boolean;
+  /** Last memory warning of the server: a new object each time. */
+  memoryOver: { used: number; limit: number } | null;
   refresh: () => void;
 }
 
@@ -35,6 +37,7 @@ function applyEvent(vms: VmSummary[] | null, event: ServerEvent): VmSummary[] | 
 export function useAppData(): AppData {
   const [info, setInfo] = useState<AppInfo | null>(null);
   const [vms, setVms] = useState<VmSummary[] | null>(null);
+  const [memoryOver, setMemoryOver] = useState<{ used: number; limit: number } | null>(null);
   const [knownNames, setKnownNames] = useState<ReadonlyMap<string, string>>(new Map());
   const remember = useCallback((list: VmSummary[]) => {
     setKnownNames((names) => {
@@ -94,6 +97,10 @@ export function useAppData(): AppData {
             if (event.state === "restored") refresh();
             return;
           }
+          if (event.type === "memory.over") {
+            setMemoryOver({ used: event.used, limit: event.limit });
+            return;
+          }
           if (event.type === "vm.changed") remember([event.vm]);
           setVms((current) => applyEvent(current, event));
         },
@@ -102,5 +109,5 @@ export function useAppData(): AppData {
     [refresh, remember],
   );
 
-  return { info, vms, knownNames, library, error, loading, libvirtLost, refresh };
+  return { info, vms, knownNames, library, error, loading, libvirtLost, memoryOver, refresh };
 }

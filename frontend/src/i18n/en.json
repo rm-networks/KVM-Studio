@@ -562,7 +562,8 @@
       "interface": "Interface",
       "display": "Display",
       "advanced": "Advanced",
-      "hotkeys": "Hotkeys"
+      "hotkeys": "Hotkeys",
+      "memory": "Memory"
     },
     "browse": "Browse…",
     "vmLocation": "Virtual machine location",
@@ -645,7 +646,11 @@
     "hotkeyName": "Name",
     "hotkeyModifiers": "Modifier keys",
     "hotkeyKey": "Key",
-    "hotkeyNoKey": "(none)"
+    "hotkeyNoKey": "(none)",
+    "memoryGroup": "Memory used by the virtual machines",
+    "memoryLimit": "Warning above (GB)",
+    "memoryNoLimit": "none",
+    "memoryHint": "A notice appears once when the running virtual machines, started here or elsewhere, hold more host memory than this. It counts the memory they really use, which grows as the guests run, not the memory given to them. Nothing is stopped or refused. Empty: no warning."
   },
   "iso": {
     "title": "Choose an ISO Image",
@@ -1231,5 +1236,9 @@
     "imported_one": "{{count}} virtual machine imported",
     "imported_other": "{{count}} virtual machines imported",
     "failed": "{{name}} was not imported"
+  },
+  "memory": {
+    "overTitle": "Virtual machines use a lot of memory",
+    "overText": "The running virtual machines hold {{used}} of host memory, above the limit of {{limit}}. The limit is set in Edit, Preferences, Memory."
   }
 }

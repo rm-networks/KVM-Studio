@@ -1656,6 +1656,7 @@ export interface components {
       defaults?: components["schemas"]["DefaultsSettings"];
       workspace?: components["schemas"]["WorkspaceSettings"];
       ui?: components["schemas"]["UiSettings"];
+      memory?: components["schemas"]["MemorySettings"];
       /** Hotkeys */
       hotkeys?: components["schemas"]["Hotkey"][] | null;
     };
@@ -2238,6 +2239,11 @@ export interface components {
     MediaChange: {
       /** Path */
       path: string | null;
+    };
+    /** MemorySettings */
+    MemorySettings: {
+      /** Limit Gb */
+      limit_gb?: number | null;
     };
     /** MoveRequest */
     MoveRequest: {

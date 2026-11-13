@@ -76,6 +76,11 @@ class UiSettings(_Section):
         return "en" if value == "system" else value
 
 
+class MemorySettings(_Section):
+    # Warning when the running VMs hold more host memory than this; None: never.
+    limit_gb: float | None = Field(default=None, gt=0, le=65536)
+
+
 MODIFIER_KEYS = ("Ctrl", "Alt", "Shift", "Win")
 # Keys a hotkey ends with; the interface knows the keysym and the code of each.
 FINAL_KEYS = frozenset(
@@ -115,6 +120,7 @@ class Config(_Section):
     defaults: DefaultsSettings = Field(default_factory=DefaultsSettings)
     workspace: WorkspaceSettings = Field(default_factory=WorkspaceSettings)
     ui: UiSettings = Field(default_factory=UiSettings)
+    memory: MemorySettings = Field(default_factory=MemorySettings)
     # Send Key list; None keeps the combinations the interface ships with.
     hotkeys: list[Hotkey] | None = Field(default=None, max_length=50)
 

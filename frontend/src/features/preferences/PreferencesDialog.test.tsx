@@ -22,6 +22,7 @@ const config: Config = {
   workspace: { on_close: "keep", close_reminder: true },
   ui: { theme: "system", language: "fr", vm_tabs: true },
   hotkeys: null,
+  memory: { limit_gb: null },
 };
 
 function mockApi(restart = false) {

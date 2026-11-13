@@ -7,7 +7,9 @@ export type ServerEvent =
   | { type: "library.changed" }
   | { type: "snapshots.changed"; uuid: string }
   | { type: "console.viewers"; uuid: string; count: number }
-  | { type: "connection"; state: "lost" | "restored" };
+  | { type: "connection"; state: "lost" | "restored" }
+  /** The running VMs hold more host memory than the limit of Preferences (bytes). */
+  | { type: "memory.over"; used: number; limit: number };
 
 interface Handlers {
   onEvent: (event: ServerEvent) => void;

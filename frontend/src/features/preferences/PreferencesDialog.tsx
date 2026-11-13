@@ -4,6 +4,7 @@ import {
   FolderTree,
   HardDrive,
   Keyboard,
+  MemoryStick,
   Monitor,
   Settings2,
   SquareTerminal,
@@ -37,7 +38,8 @@ const VIRTIO_WIN_LINKS = [
   },
 ] as const;
 
-type Section = "workspace" | "iso" | "vm" | "interface" | "display" | "hotkeys" | "advanced";
+type Section =
+  "workspace" | "iso" | "vm" | "interface" | "display" | "hotkeys" | "memory" | "advanced";
 
 const SECTIONS: { id: Section; icon: typeof Monitor }[] = [
   { id: "workspace", icon: FolderTree },
@@ -46,6 +48,7 @@ const SECTIONS: { id: Section; icon: typeof Monitor }[] = [
   { id: "interface", icon: SquareTerminal },
   { id: "display", icon: Monitor },
   { id: "hotkeys", icon: Keyboard },
+  { id: "memory", icon: MemoryStick },
   { id: "advanced", icon: Settings2 },
 ];
 
@@ -525,6 +528,28 @@ export function PreferencesDialog({ onClose, onSaved, onScan }: Props) {
                 onChange={(list) => update("hotkeys", list)}
                 onReset={() => update("hotkeys", null)}
               />
+            </Group>
+          )}
+
+          {config && section === "memory" && (
+            <Group title={t("prefs.memoryGroup")}>
+              <label className="prefs-field prefs-inline">
+                <span>{t("prefs.memoryLimit")}</span>
+                <input
+                  type="number"
+                  min={0.5}
+                  step={0.5}
+                  placeholder={t("prefs.memoryNoLimit")}
+                  value={config.memory.limit_gb ?? ""}
+                  onChange={(e) =>
+                    update("memory", {
+                      limit_gb:
+                        e.target.value === "" ? null : Math.max(0.5, Number(e.target.value)),
+                    })
+                  }
+                />
+              </label>
+              <p className="prefs-muted">{t("prefs.memoryHint")}</p>
             </Group>
           )}
 

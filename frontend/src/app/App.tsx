@@ -71,7 +71,8 @@ export function App() {
 function MainWindow() {
   const { t, i18n } = useTranslation();
   const { notify, notifyError } = useNotifier();
-  const { info, vms, knownNames, library, error, loading, libvirtLost, refresh } = useAppData();
+  const { info, vms, knownNames, library, error, loading, libvirtLost, memoryOver, refresh } =
+    useAppData();
   const [layout, setLayout] = useState<Layout>({ library: true, toolbar: true, statusBar: true });
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -128,6 +129,16 @@ function MainWindow() {
       new ApiError(0, `kvm.${kvm.problem}`, `${kvm.module}, kernel ${kvm.kernel}`),
     );
   }, [info, notifyError, t]);
+
+  // Preferences, Memory: the server says once when the running VMs go past the limit.
+  useEffect(() => {
+    if (!memoryOver || info?.role === "guest") return;
+    const gb = (bytes: number) => `${(bytes / 1024 ** 3).toFixed(1)} ${t("units.gb")}`;
+    notify(
+      t("memory.overTitle"),
+      t("memory.overText", { used: gb(memoryOver.used), limit: gb(memoryOver.limit) }),
+    );
+  }, [memoryOver, info?.role, notify, t]);
 
   // A VM can be missing from the list for a moment (renamed, defined elsewhere):
   // its tab keeps the last known name, and the list is fetched again.
