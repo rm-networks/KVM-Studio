@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import type { VmSummary } from "../api/client";
 import type { ConsoleHandle } from "../features/console/consoleRegistry";
+import { SendKeyItems } from "../features/console/SendKeyItems";
 import { POWER_ACTIONS, powerAllowed } from "../features/vm/power";
 import type { SnapshotKind } from "../features/snapshots/SnapshotRequest";
 import { useVmActions } from "../features/vm/vmActionsContext";
@@ -99,11 +100,21 @@ export function Toolbar({
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
       <span className="toolbar-separator" />
-      <Tool
-        icon={Keyboard}
-        label={l("sendCad")}
-        onClick={vmConsole ? () => vmConsole.sendCtrlAltDel() : undefined}
-      />
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger
+          className="icon-button"
+          title={l("sendKey")}
+          aria-label={l("sendKey")}
+          disabled={!vmConsole}
+        >
+          <Keyboard />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content className="menu" align="start" sideOffset={2}>
+            <SendKeyItems vmConsole={vmConsole} />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
       <span className="toolbar-separator" />
       <Tool
         icon={Camera}

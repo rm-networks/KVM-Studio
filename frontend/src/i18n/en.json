@@ -21,7 +21,6 @@
     "statusBar": "Status Bar",
     "power": "Power",
     "removable": "Removable Devices",
-    "sendCad": "Send Ctrl+Alt+Del",
     "grab": "Grab Input",
     "manage": "Manage",
     "guestTools": "Install Guest Tools…",
@@ -43,24 +42,24 @@
     "usbMountedRefused": "It is mounted on the host at {{path}}, so it stays with the host.",
     "usbInVm": "in {{name}}",
     "usbMounted": "mounted on {{path}}",
-    "sendKeys": "Send Key Combination",
     "firstRun": "First-run assistant…",
     "clone": "Clone…",
     "appFullscreen": "Toggle Application Full Screen",
     "autofit": "Autofit Guest",
     "snapshotManager": "Snapshot Manager…",
     "logout": "Log Out",
-    "documentation": "Documentation"
+    "documentation": "Documentation",
+    "sendKey": "Send Key"
   },
   "toolbar": {
     "start": "Start",
     "powerMenu": "More power actions",
-    "sendCad": "Send Ctrl+Alt+Del",
     "library": "Show or hide the library",
     "fullscreen": "Full screen",
     "snapshot": "Take a snapshot",
     "revert": "Restore the current snapshot",
-    "snapshotManager": "Snapshot Manager"
+    "snapshotManager": "Snapshot Manager",
+    "sendKey": "Send Key"
   },
   "library": {
     "title": "Library",
@@ -353,10 +352,19 @@
     "Shift": "Shift",
     "Enter": "Enter",
     "PrintScreen": "PrtScn",
-    "combo": {
-      "ctrl-alt-backspace": "Ctrl+Alt+Backspace",
-      "print": "Print Screen"
-    }
+    "Delete": "Del",
+    "Escape": "Esc",
+    "Space": "Space",
+    "Insert": "Ins",
+    "Home": "Home",
+    "End": "End",
+    "PageUp": "PgUp",
+    "PageDown": "PgDn",
+    "Up": "Up",
+    "Down": "Down",
+    "Left": "Left",
+    "Right": "Right",
+    "Backspace": "Backspace"
   },
   "console": {
     "connecting": "Connecting to the console…",
@@ -553,7 +561,8 @@
       "vm": "Virtual Machines",
       "interface": "Interface",
       "display": "Display",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "hotkeys": "Hotkeys"
     },
     "browse": "Browse…",
     "vmLocation": "Virtual machine location",
@@ -626,7 +635,17 @@
     "scanButton": "Scan for Virtual Machines…",
     "tabsGroup": "Tabs",
     "vmTabs": "Show the tab bar of the virtual machines",
-    "vmTabsHint": "Without it, a virtual machine opens from the library (double click) or from the Tabs menu."
+    "vmTabsHint": "Without it, a virtual machine opens from the library (double click) or from the Tabs menu.",
+    "hotkeysIntro": "Key combinations of Send Key, sent to the virtual machine as key presses. Letters are the keys at their place on a US keyboard: on an AZERTY guest, A, Q, Z, W and M are other keys.",
+    "noHotkey": "No key combination.",
+    "addHotkey": "Add",
+    "editHotkey": "Edit",
+    "removeHotkey": "Remove",
+    "resetHotkeys": "Restore Defaults",
+    "hotkeyName": "Name",
+    "hotkeyModifiers": "Modifier keys",
+    "hotkeyKey": "Key",
+    "hotkeyNoKey": "(none)"
   },
   "iso": {
     "title": "Choose an ISO Image",

@@ -4,16 +4,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { noteStart } from "./bootSplash";
 import { FakeResizeObserver } from "../../test/fakeResizeObserver";
 import { type ConsoleHandle, setAutofit, useConsole } from "./consoleRegistry";
-import { COMBOS } from "./keys";
+import { DEFAULT_HOTKEYS, hotkeyKeys } from "./hotkeys";
 import { VmConsole } from "./VmConsole";
 
 function Probe() {
   const handle: ConsoleHandle | null = useConsole("abc");
-  const f2 = COMBOS.find((c) => c.id === "ctrl-alt-f2");
+  const send = (keys: string[]) => handle?.sendKeys(hotkeyKeys({ name: "", keys }));
   return (
     <div data-testid="probe" data-ready={handle ? "yes" : "no"}>
-      <button onClick={() => handle?.sendCtrlAltDel()}>cad</button>
-      <button onClick={() => handle?.sendKeys(f2?.keys ?? [])}>f2</button>
+      <button onClick={() => send(["Win", "R"])}>win-r</button>
+      <button onClick={() => send(["Ctrl", "Alt", "F2"])}>f2</button>
     </div>
   );
 }
@@ -282,8 +282,15 @@ describe("VmConsole", () => {
     expect(probe.dataset.ready).toBe("no");
     act(() => void rfb.dispatchEvent(new Event("connect")));
     expect(probe.dataset.ready).toBe("yes");
-    fireEvent.click(screen.getByText("cad"));
-    expect(rfb.cad).toBe(1);
+    fireEvent.click(screen.getByText("win-r"));
+    // Keysym and the physical key: QEMU types the key at its place.
+    expect(rfb.keys.splice(0)).toEqual([
+      [0xffeb, "MetaLeft", true],
+      [0x72, "KeyR", true],
+      [0x72, "KeyR", false],
+      [0xffeb, "MetaLeft", false],
+    ]);
+    expect(DEFAULT_HOTKEYS.every((h) => hotkeyKeys(h).length === h.keys.length)).toBe(true);
     fireEvent.click(screen.getByText("f2"));
     expect(rfb.keys.map(([sym, , down]) => [sym, down])).toEqual([
       [0xffe3, true],

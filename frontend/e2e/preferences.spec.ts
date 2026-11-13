@@ -70,3 +70,28 @@ test("the VM tab bar hides and comes back without a restart", async ({ page }) =
   await toggle();
   await expect(page.getByRole("tab", { name: "Home" })).toBeVisible();
 });
+
+test("a combination is added in Hotkeys, then the default list comes back", async ({ page }) => {
+  await page.goto("/#token=e2e");
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  await page.getByRole("menuitem", { name: /Preferences/ }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("tab", { name: "Hotkeys" }).click();
+  await dialog.getByRole("button", { name: "Add" }).click();
+  await dialog.getByLabel("Win").click();
+  await dialog.locator(".prefs-subform select").selectOption("E");
+  await dialog.getByLabel("Name").fill("test-explorer");
+  await dialog.getByRole("button", { name: "Add" }).nth(1).click();
+  if (process.env.PREFS_SHOTS) await dialog.screenshot({ path: "test-results/test-hotkeys.png" });
+  await dialog.getByRole("button", { name: "OK" }).click();
+  await expect(dialog).toBeHidden();
+
+  // Back to the default list.
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  await page.getByRole("menuitem", { name: /Preferences/ }).click();
+  await dialog.getByRole("tab", { name: "Hotkeys" }).click();
+  await expect(dialog.getByRole("option", { name: /test-explorer/ })).toBeVisible();
+  await dialog.getByRole("button", { name: "Restore Defaults" }).click();
+  await expect(dialog.getByRole("option", { name: /test-explorer/ })).toHaveCount(0);
+  await dialog.getByRole("button", { name: "OK" }).click();
+});

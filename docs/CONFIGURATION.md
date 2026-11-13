@@ -90,6 +90,23 @@ not KVM Studio. You find them again the next time it starts.
 | `language` | `"en"` | `"en"` or `"fr"`. The desktop language is not looked at. `"system"`, from versions before 1.0.0, reads as `"en"`. |
 | `vm_tabs` | `true` | Shows the bar of the open VM tabs. Without it, a VM is opened from the library or the Tabs menu. |
 
+## [[hotkeys]]
+
+The combinations of Send Key (Preferences, Hotkeys), at most 50. Without any
+`[[hotkeys]]` table, the default list is used: Ctrl+Alt+Del, Ctrl+Shift+Esc,
+Win, Win+R, Win+L, Win+D, Alt+Tab, Alt+F4, Ctrl+Alt+F1 to F7 and Print Screen.
+A LAN guest always gets the default list.
+
+| Key | Default | Values |
+| --- | --- | --- |
+| `name` | `""` | Up to 60 characters. Empty: the keys are shown. |
+| `keys` | | Modifiers first, each once (`"Ctrl"`, `"Alt"`, `"Shift"`, `"Win"`), then at most one key: `"A"` to `"Z"`, `"0"` to `"9"`, `"F1"` to `"F12"`, `"Delete"`, `"Escape"`, `"Tab"`, `"Enter"`, `"Backspace"`, `"Space"`, `"PrintScreen"`, `"Insert"`, `"Home"`, `"End"`, `"PageUp"`, `"PageDown"`, `"Up"`, `"Down"`, `"Left"`, `"Right"`, `"Pause"`. |
+
+The keys are sent as key presses, not as text: a letter is the key at its
+place on a US keyboard, read by the guest through its own layout. Win+R,
+Win+L and Win+D work on AZERTY, QWERTZ and Spanish layouts; on AZERTY, A, Q,
+Z, W and M give other letters.
+
 ## Environment variables
 
 | Variable | Purpose |

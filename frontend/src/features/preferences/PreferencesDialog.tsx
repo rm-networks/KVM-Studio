@@ -3,6 +3,7 @@ import {
   Disc3,
   FolderTree,
   HardDrive,
+  Keyboard,
   Monitor,
   Settings2,
   SquareTerminal,
@@ -18,6 +19,8 @@ import { LANGUAGE_NAMES, languages } from "../../i18n";
 import { openLink } from "../../platform/links";
 import { CloseDialog } from "../session/CloseDialog";
 import { SharingPrefs } from "../sharing/SharingPrefs";
+import { DEFAULT_HOTKEYS } from "../console/hotkeys";
+import { HotkeysPrefs } from "./HotkeysPrefs";
 import { IsoPicker } from "../iso-picker/IsoPicker";
 import { ConfirmDialog } from "../vm/ConfirmDialog";
 import "./PreferencesDialog.css";
@@ -34,7 +37,7 @@ const VIRTIO_WIN_LINKS = [
   },
 ] as const;
 
-type Section = "workspace" | "iso" | "vm" | "interface" | "display" | "advanced";
+type Section = "workspace" | "iso" | "vm" | "interface" | "display" | "hotkeys" | "advanced";
 
 const SECTIONS: { id: Section; icon: typeof Monitor }[] = [
   { id: "workspace", icon: FolderTree },
@@ -42,6 +45,7 @@ const SECTIONS: { id: Section; icon: typeof Monitor }[] = [
   { id: "vm", icon: HardDrive },
   { id: "interface", icon: SquareTerminal },
   { id: "display", icon: Monitor },
+  { id: "hotkeys", icon: Keyboard },
   { id: "advanced", icon: Settings2 },
 ];
 
@@ -509,6 +513,17 @@ export function PreferencesDialog({ onClose, onSaved, onScan }: Props) {
                 web={config.web}
                 webMode={config.interface.mode === "web"}
                 onChange={(web) => update("web", web)}
+              />
+            </Group>
+          )}
+
+          {config && section === "hotkeys" && (
+            <Group title={t("prefs.section.hotkeys")}>
+              <HotkeysPrefs
+                hotkeys={config.hotkeys ?? DEFAULT_HOTKEYS}
+                isDefault={config.hotkeys === null || config.hotkeys === undefined}
+                onChange={(list) => update("hotkeys", list)}
+                onReset={() => update("hotkeys", null)}
               />
             </Group>
           )}

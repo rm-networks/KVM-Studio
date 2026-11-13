@@ -4,7 +4,6 @@ import type { Key } from "./keys";
 
 /** What the menus and the toolbar can do with a connected console. */
 export interface ConsoleHandle {
-  sendCtrlAltDel: () => void;
   sendKeys: (keys: Key[]) => void;
   grab: () => void;
   grabbed: boolean;

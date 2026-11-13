@@ -146,3 +146,13 @@
 .prefs-help a {
   overflow-wrap: anywhere;
 }
+
+.prefs-modifiers {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-3);
+}
+
+.prefs-hotkeys {
+  max-height: 220px;
+}

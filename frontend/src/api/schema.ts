@@ -1656,6 +1656,8 @@ export interface components {
       defaults?: components["schemas"]["DefaultsSettings"];
       workspace?: components["schemas"]["WorkspaceSettings"];
       ui?: components["schemas"]["UiSettings"];
+      /** Hotkeys */
+      hotkeys?: components["schemas"]["Hotkey"][] | null;
     };
     /** CpuMemory */
     CpuMemory: {
@@ -2037,6 +2039,19 @@ export interface components {
       secure_boot: boolean;
       /** Tpm */
       tpm: boolean;
+    };
+    /**
+     * Hotkey
+     * @description A key combination sent to the guest (Send Key). An empty name shows the keys.
+     */
+    Hotkey: {
+      /**
+       * Name
+       * @default
+       */
+      name: string;
+      /** Keys */
+      keys: string[];
     };
     /** ImportReport */
     ImportReport: {
@@ -2897,6 +2912,8 @@ export interface components {
       language: "en" | "fr";
       /** Vm Tabs */
       vm_tabs: boolean;
+      /** Hotkeys */
+      hotkeys: components["schemas"]["Hotkey"][] | null;
     };
     /** UiSettings */
     UiSettings: {

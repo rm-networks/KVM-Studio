@@ -7,6 +7,7 @@ import type { VmSummary } from "../../api/client";
 import { POWER_ACTIONS, powerAllowed } from "../vm/power";
 import { useVmActions } from "../vm/vmActionsContext";
 import type { ConsoleHandle } from "./consoleRegistry";
+import { SendKeyItems } from "./SendKeyItems";
 import "./FullscreenBar.css";
 
 const BAR_HIDE_MS = 2000;
@@ -28,6 +29,7 @@ export function FullscreenBar({ vm, vmConsole, onExit }: Props) {
   const actions = useVmActions();
   const [shown, setShown] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [keysOpen, setKeysOpen] = useState(false);
   const hovered = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -50,7 +52,7 @@ export function FullscreenBar({ vm, vmConsole, onExit }: Props) {
     };
   }, []);
 
-  const visible = shown || menuOpen;
+  const visible = shown || menuOpen || keysOpen;
   return (
     <div
       className="fullscreen-bar"
@@ -88,15 +90,18 @@ export function FullscreenBar({ vm, vmConsole, onExit }: Props) {
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
-      <button
-        type="button"
-        className="fullscreen-bar-button"
-        disabled={!vmConsole}
-        onClick={() => vmConsole?.sendCtrlAltDel()}
-      >
-        <Keyboard aria-hidden />
-        {t("menu.sendCad")}
-      </button>
+      <DropdownMenu.Root open={keysOpen} onOpenChange={setKeysOpen}>
+        <DropdownMenu.Trigger className="fullscreen-bar-button" disabled={!vmConsole}>
+          <Keyboard aria-hidden />
+          {t("menu.sendKey")}
+          <ChevronDown aria-hidden className="fullscreen-bar-chevron" />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content className="menu fullscreen-bar-menu" align="center" sideOffset={2}>
+            <SendKeyItems vmConsole={vmConsole} />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
       <button type="button" className="fullscreen-bar-button" onClick={onExit}>
         <Minimize aria-hidden />
         {t("console.exitFullscreen")}

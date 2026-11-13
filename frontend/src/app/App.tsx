@@ -23,6 +23,7 @@ import { FullscreenBar } from "../features/console/FullscreenBar";
 import { CloseDialog } from "../features/session/CloseDialog";
 import { type SnapshotKind, SnapshotRequest } from "../features/snapshots/SnapshotRequest";
 import { useConsole } from "../features/console/consoleRegistry";
+import { DEFAULT_HOTKEYS, HotkeysContext } from "../features/console/hotkeys";
 import { useCdroms } from "../features/vm/useCdroms";
 import { useUsb } from "../features/vm/useUsb";
 import { type VmCommands, VmCommandsContext } from "../features/vm/vmMenu";
@@ -293,6 +294,8 @@ function MainWindow() {
       .then(reloadDrives)
       .catch((err: unknown) => notifyError(t("iso.changeFailed", { name: vm.name }), err));
   };
+  // A LAN guest keeps the default list: Preferences belong to the owner.
+  const hotkeys = (!guest && info?.ui.hotkeys) || DEFAULT_HOTKEYS;
   const vmCommands: VmCommands = {
     openTab: (vm) => openVm(vm.uuid, vm.name),
     settings: (vm) => setSettingsFor(vm.uuid),
@@ -322,202 +325,204 @@ function MainWindow() {
       onSnapshots={(vm) => setSnapshotFor({ uuid: vm.uuid, kind: "manager" })}
     >
       <VmCommandsContext.Provider value={vmCommands}>
-        <div className="app">
-          <MenuBar
-            layout={layout}
-            onToggle={toggle}
-            onAbout={() => setAboutOpen(true)}
-            onNetworkEditor={guest ? undefined : () => setNetworkEditorOpen(true)}
-            onPreferences={guest ? undefined : () => setPreferencesOpen(true)}
-            onFirstRun={guest ? undefined : () => setFirstRunOpen(true)}
-            onLogout={guest ? logout : undefined}
-            guestLanguage={
-              guest
-                ? {
-                    current: i18n.language,
-                    onChange: (language) => {
-                      storeGuestLanguage(language);
-                      void i18n.changeLanguage(language);
-                      document.documentElement.lang = language;
-                    },
-                  }
-                : undefined
-            }
-            onNewVm={() => setWizardOpen(true)}
-            onOpenDisk={openDisk}
-            onScan={guest ? undefined : () => setScanOpen(true)}
-            onFullscreen={consoleFullscreenFor ? toggleConsoleFullscreen : undefined}
-            onAppFullscreen={toggleFullscreen}
-            onGoHome={() => setActiveTab(HOME_TAB)}
-            onCloseTab={activeTab !== HOME_TAB ? () => closeTab(activeTab) : undefined}
-            onNextTab={allTabs.length > 1 ? () => cycleTab(1) : undefined}
-            onPreviousTab={allTabs.length > 1 ? () => cycleTab(-1) : undefined}
-            tabs={[{ id: HOME_TAB, label: t("home.tab") }, ...tabs]}
-            activeTab={activeTab}
-            onActivateTab={setActiveTab}
-            onQuit={
-              info?.mode === "desktop" && desktopWindow() ? () => setQuitting(true) : undefined
-            }
-            drives={drives}
-            usb={usb}
-            onMenuOpen={(menu) => menu === "vm" && reloadUsb()}
-            vm={currentVm}
-          />
-          {layout.toolbar && (
-            <Toolbar
-              libraryVisible={layout.library}
-              onToggleLibrary={() => toggle("library")}
-              vm={currentVm}
-              vmConsole={vmConsole}
-              onFullscreen={consoleFullscreenFor ? toggleConsoleFullscreen : undefined}
-              onSnapshot={
-                currentVm ? (kind) => setSnapshotFor({ uuid: currentVm.uuid, kind }) : undefined
+        <HotkeysContext.Provider value={hotkeys}>
+          <div className="app">
+            <MenuBar
+              layout={layout}
+              onToggle={toggle}
+              onAbout={() => setAboutOpen(true)}
+              onNetworkEditor={guest ? undefined : () => setNetworkEditorOpen(true)}
+              onPreferences={guest ? undefined : () => setPreferencesOpen(true)}
+              onFirstRun={guest ? undefined : () => setFirstRunOpen(true)}
+              onLogout={guest ? logout : undefined}
+              guestLanguage={
+                guest
+                  ? {
+                      current: i18n.language,
+                      onChange: (language) => {
+                        storeGuestLanguage(language);
+                        void i18n.changeLanguage(language);
+                        document.documentElement.lang = language;
+                      },
+                    }
+                  : undefined
               }
+              onNewVm={() => setWizardOpen(true)}
+              onOpenDisk={openDisk}
+              onScan={guest ? undefined : () => setScanOpen(true)}
+              onFullscreen={consoleFullscreenFor ? toggleConsoleFullscreen : undefined}
+              onAppFullscreen={toggleFullscreen}
+              onGoHome={() => setActiveTab(HOME_TAB)}
+              onCloseTab={activeTab !== HOME_TAB ? () => closeTab(activeTab) : undefined}
+              onNextTab={allTabs.length > 1 ? () => cycleTab(1) : undefined}
+              onPreviousTab={allTabs.length > 1 ? () => cycleTab(-1) : undefined}
+              tabs={[{ id: HOME_TAB, label: t("home.tab") }, ...tabs]}
+              activeTab={activeTab}
+              onActivateTab={setActiveTab}
+              onQuit={
+                info?.mode === "desktop" && desktopWindow() ? () => setQuitting(true) : undefined
+              }
+              drives={drives}
+              usb={usb}
+              onMenuOpen={(menu) => menu === "vm" && reloadUsb()}
+              vm={currentVm}
             />
-          )}
-          <div className="app-body">
-            {layout.library && (
-              <LibraryPanel
-                vms={vms}
-                library={library}
-                loading={loading}
-                error={error}
-                selected={selectedNode}
-                onSelect={setSelectedNode}
-                onOpen={(uuid) => openVm(uuid, vmByUuid.get(uuid)?.name)}
-                onRefresh={refresh}
-                onClose={() => toggle("library")}
+            {layout.toolbar && (
+              <Toolbar
+                libraryVisible={layout.library}
+                onToggleLibrary={() => toggle("library")}
+                vm={currentVm}
+                vmConsole={vmConsole}
+                onFullscreen={consoleFullscreenFor ? toggleConsoleFullscreen : undefined}
+                onSnapshot={
+                  currentVm ? (kind) => setSnapshotFor({ uuid: currentVm.uuid, kind }) : undefined
+                }
               />
             )}
-            <main className="workspace">
-              {(info?.ui.vm_tabs ?? true) && (
-                <TabBar
-                  tabs={tabs}
-                  active={activeTab}
-                  onActivate={setActiveTab}
-                  onClose={closeTab}
+            <div className="app-body">
+              {layout.library && (
+                <LibraryPanel
+                  vms={vms}
+                  library={library}
+                  loading={loading}
+                  error={error}
+                  selected={selectedNode}
+                  onSelect={setSelectedNode}
+                  onOpen={(uuid) => openVm(uuid, vmByUuid.get(uuid)?.name)}
+                  onRefresh={refresh}
+                  onClose={() => toggle("library")}
                 />
               )}
-              <div className="workspace-content" hidden={activeTab !== HOME_TAB}>
-                <HomeTab onNewVm={() => setWizardOpen(true)} />
-              </div>
-              {/* VM tabs stay mounted so their console keeps its connection. */}
-              {openVms.map((uuid) => (
-                <div
-                  key={uuid}
-                  className={
-                    uuid === consoleFullscreen
-                      ? "workspace-content workspace-fullscreen"
-                      : "workspace-content"
-                  }
-                  hidden={activeTab !== uuid}
-                >
-                  <VmTab vm={vmByUuid.get(uuid)} onSettings={() => setSettingsFor(uuid)} />
+              <main className="workspace">
+                {(info?.ui.vm_tabs ?? true) && (
+                  <TabBar
+                    tabs={tabs}
+                    active={activeTab}
+                    onActivate={setActiveTab}
+                    onClose={closeTab}
+                  />
+                )}
+                <div className="workspace-content" hidden={activeTab !== HOME_TAB}>
+                  <HomeTab onNewVm={() => setWizardOpen(true)} />
                 </div>
-              ))}
-            </main>
+                {/* VM tabs stay mounted so their console keeps its connection. */}
+                {openVms.map((uuid) => (
+                  <div
+                    key={uuid}
+                    className={
+                      uuid === consoleFullscreen
+                        ? "workspace-content workspace-fullscreen"
+                        : "workspace-content"
+                    }
+                    hidden={activeTab !== uuid}
+                  >
+                    <VmTab vm={vmByUuid.get(uuid)} onSettings={() => setSettingsFor(uuid)} />
+                  </div>
+                ))}
+              </main>
+            </div>
+            {layout.statusBar && (
+              <StatusBar
+                info={info}
+                vms={vms}
+                libvirtLost={libvirtLost}
+                vmConsole={activeTab !== HOME_TAB ? vmConsole : null}
+              />
+            )}
+            {consoleFullscreen && (
+              <FullscreenBar
+                vm={vmByUuid.get(consoleFullscreen) as VmSummary}
+                vmConsole={vmConsole}
+                onExit={exitConsoleFullscreen}
+              />
+            )}
+            <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} version={info?.version} />
+            {networkEditorOpen && <NetworkEditor onClose={() => setNetworkEditorOpen(false)} />}
+            {settingsFor && vmByUuid.get(settingsFor) && (
+              <VmSettings
+                vm={vmByUuid.get(settingsFor) as VmSummary}
+                onClose={() => setSettingsFor(null)}
+              />
+            )}
+            {guestToolsFor && vmByUuid.get(guestToolsFor) && (
+              <GuestToolsDialog
+                vm={vmByUuid.get(guestToolsFor) as VmSummary}
+                onClose={() => setGuestToolsFor(null)}
+              />
+            )}
+            {wizardOpen && (
+              <NewVmWizard
+                library={library}
+                vms={vms ?? []}
+                initialFolder={
+                  wizardFolder ?? (selectedNode?.startsWith("f:") ? selectedNode.slice(2) : "")
+                }
+                initialDisk={wizardDisk}
+                onCreated={(uuid, name) => {
+                  refresh();
+                  openVm(uuid, name);
+                }}
+                onClose={() => {
+                  setWizardOpen(false);
+                  setWizardDisk(undefined);
+                  setWizardFolder(undefined);
+                }}
+              />
+            )}
+            {scanOpen && (
+              <ScanDialog start={library?.root ?? null} onClose={() => setScanOpen(false)} />
+            )}
+            {pickingDisk && (
+              <PathPicker
+                kind="disk"
+                title={t("files.openDisk")}
+                start={library?.root ?? null}
+                onChoose={(path) => {
+                  setPickingDisk(false);
+                  startFromDisk(path);
+                }}
+                onClose={() => setPickingDisk(false)}
+              />
+            )}
+            {mediaTarget && (
+              <IsoPicker
+                title={t("iso.titleFor", { name: mediaTarget.vm.name, target: mediaTarget.target })}
+                onPick={(path) => {
+                  setMedia(mediaTarget.vm, mediaTarget.target, path);
+                  setMediaTarget(null);
+                }}
+                onClose={() => setMediaTarget(null)}
+              />
+            )}
+            {preferencesOpen && (
+              <PreferencesDialog
+                onClose={() => setPreferencesOpen(false)}
+                onSaved={refresh}
+                onScan={() => {
+                  setPreferencesOpen(false);
+                  setScanOpen(true);
+                }}
+              />
+            )}
+            {snapshotFor && vmByUuid.get(snapshotFor.uuid) && (
+              <SnapshotRequest
+                vm={vmByUuid.get(snapshotFor.uuid) as VmSummary}
+                kind={snapshotFor.kind}
+                onClose={closeSnapshot}
+              />
+            )}
+            {quitting && (
+              <CloseDialog
+                reason="quit"
+                onCancel={() => setQuitting(false)}
+                onProceed={() => void window.pywebview?.api?.close_window?.()}
+              />
+            )}
+            {firstRunOpen && (
+              <FirstRunWizard onClose={() => setFirstRunOpen(false)} onSaved={refresh} />
+            )}
           </div>
-          {layout.statusBar && (
-            <StatusBar
-              info={info}
-              vms={vms}
-              libvirtLost={libvirtLost}
-              vmConsole={activeTab !== HOME_TAB ? vmConsole : null}
-            />
-          )}
-          {consoleFullscreen && (
-            <FullscreenBar
-              vm={vmByUuid.get(consoleFullscreen) as VmSummary}
-              vmConsole={vmConsole}
-              onExit={exitConsoleFullscreen}
-            />
-          )}
-          <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} version={info?.version} />
-          {networkEditorOpen && <NetworkEditor onClose={() => setNetworkEditorOpen(false)} />}
-          {settingsFor && vmByUuid.get(settingsFor) && (
-            <VmSettings
-              vm={vmByUuid.get(settingsFor) as VmSummary}
-              onClose={() => setSettingsFor(null)}
-            />
-          )}
-          {guestToolsFor && vmByUuid.get(guestToolsFor) && (
-            <GuestToolsDialog
-              vm={vmByUuid.get(guestToolsFor) as VmSummary}
-              onClose={() => setGuestToolsFor(null)}
-            />
-          )}
-          {wizardOpen && (
-            <NewVmWizard
-              library={library}
-              vms={vms ?? []}
-              initialFolder={
-                wizardFolder ?? (selectedNode?.startsWith("f:") ? selectedNode.slice(2) : "")
-              }
-              initialDisk={wizardDisk}
-              onCreated={(uuid, name) => {
-                refresh();
-                openVm(uuid, name);
-              }}
-              onClose={() => {
-                setWizardOpen(false);
-                setWizardDisk(undefined);
-                setWizardFolder(undefined);
-              }}
-            />
-          )}
-          {scanOpen && (
-            <ScanDialog start={library?.root ?? null} onClose={() => setScanOpen(false)} />
-          )}
-          {pickingDisk && (
-            <PathPicker
-              kind="disk"
-              title={t("files.openDisk")}
-              start={library?.root ?? null}
-              onChoose={(path) => {
-                setPickingDisk(false);
-                startFromDisk(path);
-              }}
-              onClose={() => setPickingDisk(false)}
-            />
-          )}
-          {mediaTarget && (
-            <IsoPicker
-              title={t("iso.titleFor", { name: mediaTarget.vm.name, target: mediaTarget.target })}
-              onPick={(path) => {
-                setMedia(mediaTarget.vm, mediaTarget.target, path);
-                setMediaTarget(null);
-              }}
-              onClose={() => setMediaTarget(null)}
-            />
-          )}
-          {preferencesOpen && (
-            <PreferencesDialog
-              onClose={() => setPreferencesOpen(false)}
-              onSaved={refresh}
-              onScan={() => {
-                setPreferencesOpen(false);
-                setScanOpen(true);
-              }}
-            />
-          )}
-          {snapshotFor && vmByUuid.get(snapshotFor.uuid) && (
-            <SnapshotRequest
-              vm={vmByUuid.get(snapshotFor.uuid) as VmSummary}
-              kind={snapshotFor.kind}
-              onClose={closeSnapshot}
-            />
-          )}
-          {quitting && (
-            <CloseDialog
-              reason="quit"
-              onCancel={() => setQuitting(false)}
-              onProceed={() => void window.pywebview?.api?.close_window?.()}
-            />
-          )}
-          {firstRunOpen && (
-            <FirstRunWizard onClose={() => setFirstRunOpen(false)} onSaved={refresh} />
-          )}
-        </div>
+        </HotkeysContext.Provider>
       </VmCommandsContext.Provider>
     </LibraryActionsProvider>
   );

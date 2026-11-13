@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from kvmstudio.config import Config, ConfigError, config_dir, load_config, save_config
 
@@ -92,3 +93,18 @@ def test_old_default_port_is_dropped(tmp_path: Path) -> None:
     assert load_config(path).web.port == 60080
     path.write_text("[web]\nport = 61000\n")
     assert load_config(path).web.port == 61000
+
+
+def test_hotkeys_are_validated_and_saved(tmp_path: Path) -> None:
+    from kvmstudio.config import Hotkey
+
+    assert Hotkey(keys=["Win"]).keys == ["Win"]
+    assert Hotkey(name="Run", keys=["Win", "R"]).name == "Run"
+    for bad in (["R", "Win"], ["Ctrl", "Ctrl", "Delete"], ["Ctrl", "Nope"], [], ["Win", "Win"]):
+        with pytest.raises(ValidationError):
+            Hotkey(keys=bad)
+    path = tmp_path / "config.toml"
+    save_config(Config(hotkeys=[Hotkey(name="Run", keys=["Win", "R"])]), path)
+    assert load_config(path).hotkeys == [Hotkey(name="Run", keys=["Win", "R"])]
+    save_config(Config(), path)
+    assert load_config(path).hotkeys is None

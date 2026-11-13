@@ -76,6 +76,36 @@ class UiSettings(_Section):
         return "en" if value == "system" else value
 
 
+MODIFIER_KEYS = ("Ctrl", "Alt", "Shift", "Win")
+# Keys a hotkey ends with; the interface knows the keysym and the code of each.
+FINAL_KEYS = frozenset(
+    [chr(c) for c in range(ord("A"), ord("Z") + 1)]
+    + [str(d) for d in range(10)]
+    + [f"F{n}" for n in range(1, 13)]
+    + [
+        "Delete", "Escape", "Tab", "Enter", "Backspace", "Space", "PrintScreen", "Insert",
+        "Home", "End", "PageUp", "PageDown", "Up", "Down", "Left", "Right", "Pause",
+    ]
+)  # fmt: skip
+
+
+class Hotkey(_Section):
+    """A key combination sent to the guest (Send Key). An empty name shows the keys."""
+
+    name: str = Field(default="", max_length=60)
+    keys: list[str] = Field(min_length=1, max_length=5)
+
+    @field_validator("keys")
+    @classmethod
+    def _keys(cls, keys: list[str]) -> list[str]:
+        *modifiers, last = keys
+        if len(set(modifiers)) != len(modifiers) or any(k not in MODIFIER_KEYS for k in modifiers):
+            raise ValueError("modifiers first, each once: Ctrl, Alt, Shift, Win")
+        if last not in FINAL_KEYS and (last not in MODIFIER_KEYS or last in modifiers):
+            raise ValueError(f"unknown key: {last}")
+        return keys
+
+
 class Config(_Section):
     interface: InterfaceSettings = Field(default_factory=InterfaceSettings)
     web: WebSettings = Field(default_factory=WebSettings)
@@ -85,6 +115,8 @@ class Config(_Section):
     defaults: DefaultsSettings = Field(default_factory=DefaultsSettings)
     workspace: WorkspaceSettings = Field(default_factory=WorkspaceSettings)
     ui: UiSettings = Field(default_factory=UiSettings)
+    # Send Key list; None keeps the combinations the interface ships with.
+    hotkeys: list[Hotkey] | None = Field(default=None, max_length=50)
 
 
 class ConfigError(Exception):

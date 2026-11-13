@@ -47,3 +47,12 @@ close_reminder = true    # remind that VMs keep running (with "keep")
 theme = "system"         # "system" | "light" | "dark"
 language = "en"          # "en" | "fr"
 vm_tabs = true           # bar of the open VM tabs
+
+# Send Key combinations (Preferences, Hotkeys). Without any [[hotkeys]] table
+# the default list is used. Modifiers first (Ctrl, Alt, Shift, Win), then one
+# key: a letter, a digit, F1 to F12, Delete, Escape, Tab, Enter, Backspace,
+# Space, PrintScreen, Insert, Home, End, PageUp, PageDown, Up, Down, Left,
+# Right or Pause. An empty name shows the keys.
+# [[hotkeys]]
+# name = "Run"
+# keys = ["Win", "R"]

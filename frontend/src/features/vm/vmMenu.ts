@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { CdromDevice, UsbDevice, VmSummary } from "../../api/client";
 import { type MenuEntry, item, sep, sub } from "../../components/menuModel";
 import { useConsole } from "../console/consoleRegistry";
-import { COMBOS } from "../console/keys";
+import { hotkeyKeys, hotkeyLabel, useHotkeys } from "../console/hotkeys";
 import { formatSize } from "../iso-picker/isoTree";
 import { useLibraryActions } from "../library/libraryActionsContext";
 import { POWER_ACTIONS, powerAllowed } from "./power";
@@ -38,6 +38,7 @@ export function useVmMenu(
   const library = useLibraryActions();
   const commands = useContext(VmCommandsContext);
   const vmConsole = useConsole(vm?.uuid);
+  const hotkeys = useHotkeys();
   const m = (key: string) => t(`menu.${key}`);
   const on = (run: (vm: VmSummary) => void) => (vm ? () => run(vm) : undefined);
 
@@ -131,14 +132,11 @@ export function useVmMenu(
     sub(m("power"), vm ? power : undefined),
     sub(m("removable"), removable.length ? removable : undefined),
     sep,
-    item(m("sendCad"), undefined, vmConsole ? () => vmConsole.sendCtrlAltDel() : undefined),
     sub(
-      m("sendKeys"),
-      vmConsole
-        ? COMBOS.map((c) =>
-            item(t(`keys.combo.${c.id}`, { defaultValue: c.label }), undefined, () =>
-              vmConsole.sendKeys(c.keys),
-            ),
+      m("sendKey"),
+      vmConsole && hotkeys.length
+        ? hotkeys.map((h) =>
+            item(hotkeyLabel(h, t), undefined, () => vmConsole.sendKeys(hotkeyKeys(h))),
           )
         : undefined,
     ),

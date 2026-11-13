@@ -6,6 +6,7 @@ from fastapi import Request
 from pydantic import BaseModel
 
 from .. import APP_NAME, __version__
+from ..config import Hotkey
 from ..context import Context, Mode
 from ..errors import ApiException
 from ..i18n import resolve
@@ -36,6 +37,8 @@ class UiPreferences(BaseModel):
     theme: Literal["system", "light", "dark"]
     language: Literal["en", "fr"]
     vm_tabs: bool
+    # None: the default list of the interface.
+    hotkeys: list[Hotkey] | None
 
 
 class AppInfo(BaseModel):
@@ -69,6 +72,7 @@ def info(ctx: Context, request: Request) -> AppInfo:
             theme=ctx.config.ui.theme,
             language=resolve(ctx.config.ui.language),
             vm_tabs=ctx.config.ui.vm_tabs,
+            hotkeys=ctx.config.hotkeys,
         ),
         kvm=_kvm() if host.uri.startswith("qemu") else None,
         role=getattr(request.state, "role", "owner"),

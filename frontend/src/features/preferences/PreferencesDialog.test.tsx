@@ -21,6 +21,7 @@ const config: Config = {
   defaults: { firmware: "uefi", disk_bus: "virtio", nic_model: "virtio", virtio_win_iso: null },
   workspace: { on_close: "keep", close_reminder: true },
   ui: { theme: "system", language: "fr", vm_tabs: true },
+  hotkeys: null,
 };
 
 function mockApi(restart = false) {

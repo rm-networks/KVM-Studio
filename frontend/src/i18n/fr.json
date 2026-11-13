@@ -21,7 +21,6 @@
     "statusBar": "Barre d'état",
     "power": "Alimentation",
     "removable": "Périphériques amovibles",
-    "sendCad": "Envoyer Ctrl+Alt+Suppr",
     "grab": "Capturer la saisie",
     "manage": "Gérer",
     "guestTools": "Installer les outils invités…",
@@ -43,24 +42,24 @@
     "usbMountedRefused": "Il est monté sur l'hôte sur {{path}} : il reste à l'hôte.",
     "usbInVm": "dans {{name}}",
     "usbMounted": "monté sur {{path}}",
-    "sendKeys": "Envoyer une combinaison",
     "firstRun": "Assistant de premier lancement…",
     "clone": "Cloner…",
     "appFullscreen": "Basculer l'application en plein écran",
     "autofit": "Ajuster l'invité à la fenêtre",
     "snapshotManager": "Gestionnaire d'instantanés…",
     "logout": "Se déconnecter",
-    "documentation": "Documentation"
+    "documentation": "Documentation",
+    "sendKey": "Envoyer une touche"
   },
   "toolbar": {
     "start": "Démarrer",
     "powerMenu": "Autres actions d'alimentation",
-    "sendCad": "Envoyer Ctrl+Alt+Suppr",
     "library": "Afficher ou masquer la bibliothèque",
     "fullscreen": "Plein écran",
     "snapshot": "Prendre un instantané",
     "revert": "Restaurer l'instantané courant",
-    "snapshotManager": "Gestionnaire d'instantanés"
+    "snapshotManager": "Gestionnaire d'instantanés",
+    "sendKey": "Envoyer une touche"
   },
   "library": {
     "title": "Bibliothèque",
@@ -353,10 +352,19 @@
     "Shift": "Maj",
     "Enter": "Entrée",
     "PrintScreen": "Impr",
-    "combo": {
-      "ctrl-alt-backspace": "Ctrl+Alt+Retour arrière",
-      "print": "Impr. écran"
-    }
+    "Delete": "Suppr",
+    "Escape": "Échap",
+    "Space": "Espace",
+    "Insert": "Inser",
+    "Home": "Origine",
+    "End": "Fin",
+    "PageUp": "Pg préc",
+    "PageDown": "Pg suiv",
+    "Up": "Haut",
+    "Down": "Bas",
+    "Left": "Gauche",
+    "Right": "Droite",
+    "Backspace": "Retour arrière"
   },
   "console": {
     "connecting": "Connexion à la console…",
@@ -553,7 +561,8 @@
       "vm": "Machines virtuelles",
       "interface": "Interface",
       "display": "Affichage",
-      "advanced": "Avancé"
+      "advanced": "Avancé",
+      "hotkeys": "Combinaisons"
     },
     "browse": "Parcourir…",
     "vmLocation": "Emplacement des machines virtuelles",
@@ -626,7 +635,17 @@
     "scanButton": "Rechercher des machines virtuelles…",
     "tabsGroup": "Onglets",
     "vmTabs": "Afficher la barre d'onglets des machines virtuelles",
-    "vmTabsHint": "Sans elle, une machine virtuelle s'ouvre depuis la bibliothèque (double clic) ou le menu Onglets."
+    "vmTabsHint": "Sans elle, une machine virtuelle s'ouvre depuis la bibliothèque (double clic) ou le menu Onglets.",
+    "hotkeysIntro": "Combinaisons de touches de « Envoyer une touche », envoyées à la machine virtuelle comme des appuis sur les touches. Les lettres sont les touches à leur place sur un clavier américain : sur un invité AZERTY, A, Q, Z, W et M sont d'autres touches.",
+    "noHotkey": "Aucune combinaison.",
+    "addHotkey": "Ajouter",
+    "editHotkey": "Modifier",
+    "removeHotkey": "Supprimer",
+    "resetHotkeys": "Rétablir les valeurs par défaut",
+    "hotkeyName": "Nom",
+    "hotkeyModifiers": "Touches de modification",
+    "hotkeyKey": "Touche",
+    "hotkeyNoKey": "(aucune)"
   },
   "iso": {
     "title": "Choisir une image ISO",

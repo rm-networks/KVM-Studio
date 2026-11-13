@@ -289,7 +289,6 @@ function VncScreen({
       resizes.observe(screen);
       scheduleFit();
       registerConsole(uuid, {
-        sendCtrlAltDel: () => rfb.sendCtrlAltDel(),
         sendKeys: (keys) => pressCombo((s, c, d) => rfb.sendKey(s, c, d), keys),
         grab: () => rfb.focus(),
         grabbed: false,

@@ -15,14 +15,14 @@ afterEach(() => {
 describe("FullscreenBar", () => {
   it("comes out at the top edge and hides 2 s later", () => {
     vi.useFakeTimers();
-    const sendCtrlAltDel = vi.fn();
+    const sendKeys = vi.fn();
     const onExit = vi.fn();
     render(
       <NotificationProvider>
         <VmActionsProvider>
           <FullscreenBar
             vm={makeVm({ name: "OPNsense", state: "running" })}
-            vmConsole={{ sendCtrlAltDel, sendKeys: vi.fn(), grab: vi.fn(), grabbed: true }}
+            vmConsole={{ sendKeys, grab: vi.fn(), grabbed: true }}
             onExit={onExit}
           />
         </VmActionsProvider>
@@ -44,8 +44,7 @@ describe("FullscreenBar", () => {
     act(() => vi.advanceTimersByTime(BAR_HIDE_MS * 3));
     expect(bar.dataset.visible).toBe("true");
 
-    fireEvent.click(screen.getByRole("button", { name: /Ctrl\+Alt\+Suppr/ }));
-    expect(sendCtrlAltDel).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: /Envoyer une touche/ })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Quitter le plein écran/ }));
     expect(onExit).toHaveBeenCalledTimes(1);
   });
