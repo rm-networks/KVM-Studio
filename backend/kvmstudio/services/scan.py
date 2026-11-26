@@ -22,7 +22,7 @@ from ..errors import ApiException
 from ..libvirt_conn import LibvirtConnection
 from ..paths import LIBRARY_DIRNAME, VMS_DIRNAME, is_strictly_within, library_root, resolve
 from ..xml.profiles import PROFILES
-from . import create, domain_xml, qemu_img
+from . import create, disk_format, domain_xml, qemu_img
 from .library import _SEGMENT_RE, check_folder, create_folder, set_metadata_folder
 
 MAX_DEPTH = 8
@@ -205,6 +205,27 @@ def plan(
     return moves
 
 
+def _file_disks(root: etree._Element) -> list[tuple[etree._Element, etree._Element, str]]:
+    """(disk, source, declared format) of each hard disk backed by a file."""
+    found = []
+    for disk in root.iterfind("devices/disk[@device='disk']"):
+        source = disk.find("source")
+        if source is None or not source.get("file"):
+            continue
+        driver = disk.find("driver")
+        found.append((disk, source, (driver.get("type") if driver is not None else None) or "raw"))
+    return found
+
+
+def _formats(item: Found) -> list[str]:
+    """Format of each disk: from the definition found with it, else from its name."""
+    if item.definition is not None:
+        declared = [f for _d, _s, f in _file_disks(etree.parse(item.definition, _PARSER).getroot())]
+        if len(declared) == len(item.disks):
+            return declared
+    return [qemu_img.format_from_name(d) for d in item.disks]
+
+
 def _bring_in(item: Found, mode: Mode, config: Config) -> list[str]:
     """Copy or move the disks into the VM's folder of the library; their new paths."""
     if mode == "keep":
@@ -215,13 +236,12 @@ def _bring_in(item: Found, mode: Mode, config: Config) -> list[str]:
     target.mkdir(parents=True)
     placed: list[str] = []
     try:
-        for disk in item.disks:
+        for disk, fmt in zip(item.disks, _formats(item), strict=True):
             dest = target / Path(disk).name
             if mode == "move":
                 create.move_file(Path(disk), dest)
             else:
-                fmt = "qcow2" if qemu_img.is_qcow2(Path(disk)) else "raw"
-                qemu_img.convert(Path(disk), dest, fmt)
+                qemu_img.convert(Path(disk), fmt, dest, fmt)
             placed.append(str(dest))
     except (qemu_img.QemuImgError, OSError) as exc:
         if mode == "move":
@@ -235,9 +255,10 @@ def _bring_in(item: Found, mode: Mode, config: Config) -> list[str]:
 def _define(conn: LibvirtConnection, config: Config, item: Found, disks: list[str]) -> None:
     if item.definition is not None:
         root = etree.parse(item.definition, _PARSER).getroot()
-        sources = root.findall("devices/disk[@device='disk']/source")
-        for source, path in zip((s for s in sources if s.get("file")), disks, strict=False):
+        for (disk, source, fmt), path in zip(_file_disks(root), disks, strict=False):
             source.set("file", path)
+            chain = disk_format.checked_chain(Path(path), fmt, config, confined=False)
+            disk_format.set_backing_store(disk, fmt, chain)
         xml = etree.tostring(root).decode()
         dom = conn.run(lambda c: c.defineXML(xml))
         set_metadata_folder(dom, item.folder, config)

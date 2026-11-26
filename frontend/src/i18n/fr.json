@@ -328,7 +328,9 @@
       "not_larger": "La nouvelle taille doit être plus grande que l'actuelle.",
       "linked_clones": "Des clones liés reposent sur ce disque : sa taille ne peut pas changer.",
       "resize_failed": "qemu-img n'a pas pu redimensionner le disque (instantanés internes, ou disque utilisé).",
-      "not_found": "Ce disque n'existe plus."
+      "not_found": "Ce disque n'existe plus.",
+      "unreadable_image": "Cette image disque ne peut pas être lue dans le format déclaré.",
+      "in_use": "Ce disque appartient à une autre machine virtuelle."
     },
     "files": {
       "not_absolute": "Donnez un chemin complet, commençant par /.",

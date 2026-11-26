@@ -20,8 +20,11 @@ needs_qemu_img = pytest.mark.skipif(shutil.which("qemu-img") is None, reason="ne
 
 def domain_xml(name: str, disks: list[tuple[str, str]], nvram: str | None = None) -> str:
     """Test-driver domain; disks are (device, path) pairs."""
+    # A .qcow2 file is declared as such, as virt-manager does; others are raw.
     devices = "".join(
-        f"<disk type='file' device='{device}'><source file='{path}'/>"
+        f"<disk type='file' device='{device}'>"
+        + ("<driver name='qemu' type='qcow2'/>" if path.endswith(".qcow2") else "")
+        + f"<source file='{path}'/>"
         f"<target dev='vd{chr(97 + i)}'/></disk>"
         for i, (device, path) in enumerate(disks)
     )

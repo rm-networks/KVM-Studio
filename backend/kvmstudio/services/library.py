@@ -31,7 +31,7 @@ from ..config import Config
 from ..errors import ApiException
 from ..libvirt_conn import LibvirtConnection
 from ..paths import in_iso_library, in_library, is_strictly_within, library_root, resolve
-from . import domain_xml, folder_order, qemu_img
+from . import disk_format, domain_xml, folder_order, qemu_img
 from .deletion import KeptFile, plan_files, used_elsewhere
 
 NAMESPACE = "https://github.com/rm-networks/kvm-studio/ns/1.0"
@@ -356,7 +356,7 @@ def _dependents(
         for disk in domain_xml.disks(xml):
             if not disk.path:
                 continue
-            chain = qemu_img.backing_files(Path(disk.path)) or list(disk.backing_paths)
+            chain = qemu_img.backing_files(Path(disk.path), disk.format) or list(disk.backing_paths)
             if any(moved(resolve(b)) for b in chain):
                 used_by.append(disk.path)
     root = library_root(config)
@@ -364,8 +364,8 @@ def _dependents(
         for image in resolve(root).rglob("*"):
             if moved(image):
                 continue
-            if image.is_file() and qemu_img.is_qcow2(image):
-                chain = qemu_img.backing_files(image) or []
+            if image.is_file() and qemu_img.format_from_name(image) == "qcow2":
+                chain = qemu_img.backing_files(image, "qcow2") or []
                 if any(moved(resolve(b)) for b in chain):
                     used_by.append(str(image))
     return sorted(set(used_by))
@@ -374,11 +374,13 @@ def _dependents(
 def _rebase_internal_chains(moves: list[_Move]) -> None:
     """Overlays whose backing file moved with them get the new absolute path."""
     for move in moves:
-        for path in _file_disks(move.xml):
-            overlay = Path(_rebased(path, move.old_dir, move.new_dir))
-            if not overlay.exists() or not qemu_img.is_qcow2(overlay):
+        for disk in domain_xml.disks(move.xml):
+            if not disk.path or disk.source_type != "file" or disk.device != "disk":
                 continue
-            info = qemu_img.image_info(overlay)
+            overlay = Path(_rebased(disk.path, move.old_dir, move.new_dir))
+            if not overlay.exists() or disk.format != "qcow2":
+                continue
+            info = qemu_img.image_info(overlay, "qcow2")
             if info is None:
                 continue
             backing = info.get("backing-filename")
@@ -840,11 +842,13 @@ def import_vm_files(
         result = ImportResult()
         mapping: dict[str, str] = {}
         try:
+            declared = {d.path: d.format for d in domain_xml.disks(xml) if d.path}
             for i, src in enumerate(sources):
-                fmt = "qcow2" if qemu_img.is_qcow2(Path(src)) else "raw"
+                src_fmt = declared.get(src, "raw")
+                fmt = "qcow2" if src_fmt == "qcow2" else "raw"
                 suffix = "" if i == 0 else f"-{i + 1}"
                 dest = vm_dir / f"{name}{suffix}.{fmt}"
-                qemu_img.convert(Path(src), dest, fmt)
+                qemu_img.convert(Path(src), src_fmt, dest, fmt)
                 mapping[src] = str(dest)
                 result.copied.append(str(dest))
                 result.originals.append(src)
@@ -853,9 +857,19 @@ def import_vm_files(
             raise ApiException(500, "library.copy_failed", str(exc)) from exc
 
         tree = etree.fromstring(xml.encode(), parser=etree.XMLParser(resolve_entities=False))
-        for source in tree.iterfind("devices/disk/source"):
-            if (path := source.get("file")) in mapping:
-                source.set("file", mapping[path])
+        for disk in tree.iterfind("devices/disk"):
+            source = disk.find("source")
+            if source is None or (path := source.get("file")) not in mapping:
+                continue
+            source.set("file", mapping[path])
+            # The copy holds every block of the chain: it has no base.
+            fmt = qemu_img.format_from_name(mapping[path])
+            driver = disk.find("driver")
+            if driver is None:
+                driver = etree.Element("driver", name="qemu")
+                disk.insert(0, driver)
+            driver.set("type", fmt)
+            disk_format.set_backing_store(disk, fmt, [])
 
         def op(c: libvirt.virConnect) -> None:
             c.defineXML(etree.tostring(tree).decode())

@@ -33,9 +33,9 @@ def test_expand_a_powered_off_disk(
     # libvirt resizes the volume as root; the test driver has no real pools.
     resized: list[tuple[Path, int]] = []
 
-    def resize_volume(_c: libvirt.virConnect, path: Path, wanted: int) -> None:
+    def resize_volume(_c: libvirt.virConnect, path: Path, wanted: int, fmt: str) -> None:
         resized.append((path, wanted))
-        qemu_img._run(["resize", str(path), str(wanted)])
+        qemu_img._run(["resize", "-f", fmt, str(path), str(wanted)])
 
     monkeypatch.setattr(disks, "_resize_volume", resize_volume)
     disk = qcow2(library / "BIG" / "BIG.qcow2", 2)

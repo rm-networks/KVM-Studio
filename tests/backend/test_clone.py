@@ -86,7 +86,7 @@ def test_full_clone(
     assert done["result"]["warnings"] == ["state_not_copied"]
     disk = library / "copy" / "copy.qcow2"
     assert disk.is_file()
-    assert qemu_img.backing_files(disk) == []
+    assert qemu_img.backing_files(disk, "qcow2") == []
     root = domain(conn, "copy")
     src = domain(conn, "src-vm")
     assert root.findtext("uuid") == done["result"]["uuid"] != src.findtext("uuid")
@@ -112,7 +112,7 @@ def test_linked_clone_blocks_its_source(
     done = clone_request(lib_client, source, kind="linked", name="linked")
     assert done["state"] == "done", done
     overlay = library / "linked" / "linked.qcow2"
-    assert qemu_img.backing_files(overlay) == [str(library / "src-vm" / "src-vm.qcow2")]
+    assert qemu_img.backing_files(overlay, "qcow2") == [str(library / "src-vm" / "src-vm.qcow2")]
     assert metadata_values(etree.tostring(domain(conn, "linked")).decode())["linked_to"] == source
 
     clones = lib_client.get(f"/api/vms/{source}/linked-clones", headers=AUTH).json()
@@ -142,7 +142,9 @@ def test_a_full_copy_of_a_linked_clone_stands_alone(
     linked = clone_request(lib_client, source, kind="linked", name="linked-2")
     copy = clone_request(lib_client, linked["result"]["uuid"], kind="full", name="copy-of-linked")
     assert copy["state"] == "done", copy
-    assert qemu_img.backing_files(library / "copy-of-linked" / "copy-of-linked.qcow2") == []
+    assert (
+        qemu_img.backing_files(library / "copy-of-linked" / "copy-of-linked.qcow2", "qcow2") == []
+    )
     meta = metadata_values(etree.tostring(domain(conn, "copy-of-linked")).decode())
     assert "linked_to" not in meta
 

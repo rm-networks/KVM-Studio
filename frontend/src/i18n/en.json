@@ -328,7 +328,9 @@
       "not_larger": "The new size must be larger than the current one.",
       "linked_clones": "Linked clones are built on this disk: it cannot change size.",
       "resize_failed": "qemu-img could not resize the disk (internal snapshots, or the disk is in use).",
-      "not_found": "This disk no longer exists."
+      "not_found": "This disk no longer exists.",
+      "unreadable_image": "This disk image cannot be read in the format it is declared with.",
+      "in_use": "This disk belongs to another virtual machine."
     },
     "files": {
       "not_absolute": "Give a full path, starting with /.",

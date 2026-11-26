@@ -31,6 +31,9 @@ class DiskSpec:
     path: Path
     format: str  # "qcow2" or "raw"
     bus: DiskBus
+    # Backing chain of an existing image, None for a new one. An empty chain
+    # is written as <backingStore/>: libvirt then never reads one from the file.
+    backing: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -157,6 +160,8 @@ def build_domain(spec: DomainSpec) -> str:
         el = _sub(devices, "disk", type="file", device="disk")
         _sub(el, "driver", name="qemu", type=disk.format, discard="unmap")
         _sub(el, "source", file=str(disk.path))
+        if disk.backing == () and disk.format == "qcow2":
+            _sub(el, "backingStore")
         _sub(el, "target", dev=next_target(disk.bus), bus=disk.bus)
     for iso in [spec.iso, *spec.extra_cdroms]:
         el = _sub(devices, "disk", type="file", device="cdrom")

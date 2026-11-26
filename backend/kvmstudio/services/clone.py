@@ -30,8 +30,8 @@ from .. import helper_client
 from ..config import Config
 from ..errors import ApiException
 from ..libvirt_conn import LibvirtConnection
-from ..paths import library_root, resolve
-from . import domain_xml, qemu_img
+from ..paths import in_library, library_root, resolve
+from . import disk_format, domain_xml, qemu_img
 from .create import nic_target
 from .library import (
     _SEGMENT_RE,
@@ -82,7 +82,14 @@ def _parse(xml: str) -> etree._Element:
 
 
 def prepare(
-    conn: LibvirtConnection, config: Config, uuid: str, kind: Kind, name: str, folder: str
+    conn: LibvirtConnection,
+    config: Config,
+    uuid: str,
+    kind: Kind,
+    name: str,
+    folder: str,
+    *,
+    confined: bool = False,
 ) -> ClonePlan:
     """Check everything that can be checked before copying anything."""
     if not _SEGMENT_RE.match(name):
@@ -121,10 +128,14 @@ def prepare(
         if disk.source_type != "file" or disk.path is None:
             raise ApiException(422, "clone.unsupported_disk", f"{disk.target} is not a file")
         source = resolve(disk.path)
-        info = qemu_img.image_info(source)
+        if confined and not in_library(source, config):
+            raise ApiException(403, "path.not_allowed", f"{source} is outside the library")
+        # The format the definition declares, never the one the file looks like.
+        source_format = disk.format
+        info = qemu_img.image_info(source, source_format)
         if info is None or not os.access(source, os.R_OK):
             raise ApiException(403, "clone.unreadable_disk", f"Cannot read {source}")
-        source_format = str(info.get("format", "raw"))
+        disk_format.checked_chain(source, source_format, config, confined=confined)
         dest_format = "qcow2" if kind == "linked" else source_format
         if dest_format not in ("qcow2", "raw"):
             dest_format = "qcow2"
@@ -164,10 +175,15 @@ def clone_xml(plan: ClonePlan) -> str:
         if source is not None:
             source.set("file", str(copy.dest))
         driver = disk.find("driver")
-        if driver is not None:
-            driver.set("type", copy.dest_format)
-        for store in disk.findall("backingStore"):
-            disk.remove(store)
+        if driver is None:
+            driver = etree.Element("driver", name="qemu")
+            disk.insert(0, driver)
+        driver.set("type", copy.dest_format)
+        if plan.kind == "linked":
+            for store in disk.findall("backingStore"):
+                disk.remove(store)  # libvirt reads the overlay made just now
+        else:
+            disk_format.set_backing_store(disk, copy.dest_format, [])
     for index, nic in enumerate(root.iterfind("devices/interface")):
         for mac in nic.findall("mac"):
             nic.remove(mac)  # libvirt gives a new one
@@ -227,7 +243,9 @@ def run(conn: LibvirtConnection, plan: ClonePlan, task: Task) -> dict[str, Any]:
                 def progress(part: float, start: float = start, share: float = share) -> None:
                     task.report((start + part * share) * 0.95)
 
-                qemu_img.convert_progress(disk.source, disk.dest, disk.dest_format, progress)
+                qemu_img.convert_progress(
+                    disk.source, disk.source_format, disk.dest, disk.dest_format, progress
+                )
             done += max(disk.size, 1)
         task.report(0.95, plan.name)
         xml = clone_xml(plan)
@@ -310,7 +328,7 @@ def linked_clones(conn: LibvirtConnection, uuid: str) -> list[str]:
         for disk in domain_xml.disks(other):
             if not disk.path or disk.source_type != "file":
                 continue
-            chain = qemu_img.backing_files(Path(disk.path)) or list(disk.backing_paths)
+            chain = qemu_img.backing_files(Path(disk.path), disk.format) or list(disk.backing_paths)
             if any(str(resolve(b)) in own for b in chain):
                 clones.append(name)
                 break

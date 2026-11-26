@@ -30,7 +30,7 @@ from ..errors import ApiException
 from ..libvirt_conn import LibvirtConnection
 from ..paths import in_library, library_root
 from ..xml.profiles import DiskBus
-from . import qemu_img
+from . import disk_format, qemu_img
 from .clone import linked_clones
 from .create import existing_disk
 from .library import _snapshot, placement_of
@@ -71,7 +71,8 @@ def _find(conn: LibvirtConnection, uuid: str, target: str) -> tuple[Path, bool]:
 
 def size(conn: LibvirtConnection, config: Config, uuid: str, target: str) -> DiskSize:
     path, _active = _find(conn, uuid, target)
-    info = qemu_img.image_info(path) or {}
+    fmt = disk_format.format_of(path, disk_format.known_disks(conn))
+    info = qemu_img.image_info(path, fmt) or {}
     return DiskSize(
         target=target,
         path=str(path),
@@ -104,24 +105,38 @@ def expand(conn: LibvirtConnection, config: Config, uuid: str, target: str, gib:
         )
     else:
         try:
-            conn.run(lambda c: _resize_volume(c, path, wanted))
+            fmt = disk_format.format_of(path, disk_format.known_disks(conn))
+            conn.run(lambda c: _resize_volume(c, path, wanted, fmt))
         except libvirt.libvirtError as exc:
             raise ApiException(409, "disk.resize_failed", exc.get_error_message() or "") from exc
     return size(conn, config, uuid, target)
 
 
-def _resize_volume(c: libvirt.virConnect, path: Path, wanted: int) -> None:
+def _resize_checked(vol: libvirt.virStorageVol, wanted: int, fmt: str) -> None:
+    """A storage pool reads the format from the file: resize only when it agrees."""
+    found = etree.fromstring(vol.XMLDesc(0).encode(), parser=_PARSER).find("target/format")
+    seen = found.get("type") if found is not None else None
+    if seen is not None and seen != fmt:
+        raise ApiException(
+            409, "disk.resize_failed", f"the file does not hold a {fmt} image ({seen} found)"
+        )
+    vol.resize(wanted, 0)
+
+
+def _resize_volume(c: libvirt.virConnect, path: Path, wanted: int, fmt: str) -> None:
     try:
-        c.storageVolLookupByPath(str(path)).resize(wanted, 0)
-        return
+        vol = c.storageVolLookupByPath(str(path))
     except libvirt.libvirtError:
-        pass  # in no pool
+        vol = None  # in no pool
+    if vol is not None:
+        _resize_checked(vol, wanted, fmt)
+        return
     pool_xml = etree.Element("pool", type="dir")
     etree.SubElement(pool_xml, "name").text = f"kvmstudio-resize-{uuidlib.uuid4().hex[:8]}"
     etree.SubElement(etree.SubElement(pool_xml, "target"), "path").text = str(path.parent)
     pool = c.storagePoolCreateXML(etree.tostring(pool_xml).decode(), 0)
     try:
-        pool.storageVolLookupByName(path.name).resize(wanted, 0)
+        _resize_checked(pool.storageVolLookupByName(path.name), wanted, fmt)
     finally:
         pool.destroy()
 
@@ -189,11 +204,15 @@ def _target(bus: str, *roots: etree._Element) -> str:
     raise ApiException(422, "vm.too_many_disks", f"no free {bus} slot")
 
 
-def _disk_element(path: Path, fmt: str, bus: str, target: str) -> etree._Element:
+def _disk_element(
+    path: Path, fmt: str, bus: str, target: str, chain: list[str] | None
+) -> etree._Element:
     disk = etree.Element("disk", type="file", device="disk")
     etree.SubElement(disk, "driver", name="qemu", type=fmt, discard="unmap")
     etree.SubElement(disk, "source", file=str(path))
     etree.SubElement(disk, "target", dev=target, bus=bus)
+    if chain is not None:
+        disk_format.set_backing_store(disk, fmt, chain)
     return disk
 
 
@@ -212,9 +231,14 @@ def add(
     if bus not in ADD_BUSES:
         raise ApiException(422, "vm.bad_bus", f"{bus} disks cannot be added")
     created: Path | None = None
+    chain: list[str] | None = None
     if existing is not None:
         path = existing_disk(existing, config, "in_place", confined=confined)
-        fmt = "qcow2" if qemu_img.is_qcow2(path) else "raw"
+        known = disk_format.known_disks(conn)
+        if confined:
+            disk_format.not_another_vms(path, known, uuid)
+        fmt = disk_format.format_of(path, known)
+        chain = disk_format.checked_chain(path, fmt, config, confined=confined)
     else:
         if not 0 < size_gib <= MAX_GIB:
             raise ApiException(422, "disk.bad_size", f"size between 1 and {MAX_GIB} GiB")
@@ -240,7 +264,7 @@ def add(
         # Free in the config and, when it runs, in the live VM too.
         live = [etree.fromstring(dom.XMLDesc(0).encode(), parser=_PARSER)] if active else []
         target = _target(bus, root, *live)
-        disk = _disk_element(path, fmt, bus, target)
+        disk = _disk_element(path, fmt, bus, target, chain)
         if bus == "scsi" and devices.find("controller[@type='scsi']") is None:
             controller = etree.Element("controller", type="scsi", model="virtio-scsi")
             if active:

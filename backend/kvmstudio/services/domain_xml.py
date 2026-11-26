@@ -15,6 +15,7 @@ class DiskRef:
     target: str
     readonly: bool
     backing_paths: tuple[str, ...]  # chain reported by libvirt, top first
+    format: str = "raw"  # driver type of the definition; libvirt reads raw without one
 
 
 def _parse(xml: str) -> etree._Element:
@@ -37,6 +38,7 @@ def disks(xml: str) -> list[DiskRef]:
                 backing.append(p)
             store = store.find("backingStore")
         target = disk.find("target")
+        driver = disk.find("driver")
         result.append(
             DiskRef(
                 device=disk.get("device", "disk"),
@@ -45,6 +47,7 @@ def disks(xml: str) -> list[DiskRef]:
                 target=target.get("dev", "") if target is not None else "",
                 readonly=disk.find("readonly") is not None,
                 backing_paths=tuple(backing),
+                format=(driver.get("type") if driver is not None else None) or "raw",
             )
         )
     return result

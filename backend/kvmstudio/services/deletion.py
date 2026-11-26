@@ -58,7 +58,7 @@ def used_elsewhere(other_xmls: list[str], config: Config, own: set[str]) -> set[
         for disk in domain_xml.disks(xml):
             if disk.path:
                 used.add(str(resolve(disk.path)))
-                if chain := qemu_img.backing_files(Path(disk.path)):
+                if chain := qemu_img.backing_files(Path(disk.path), disk.format):
                     used.update(chain)
             used.update(str(resolve(p)) for p in disk.backing_paths)
         if nvram := domain_xml.nvram_path(xml):
@@ -67,9 +67,10 @@ def used_elsewhere(other_xmls: list[str], config: Config, own: set[str]) -> set[
     root = library_root(config)
     if root is not None and root.is_dir():
         for image in root.rglob("*"):
-            if str(image.resolve()) in own or not image.is_file() or not qemu_img.is_qcow2(image):
+            fmt = qemu_img.format_from_name(image)
+            if str(image.resolve()) in own or not image.is_file() or fmt != "qcow2":
                 continue
-            used.update(qemu_img.backing_files(image) or [])
+            used.update(qemu_img.backing_files(image, fmt) or [])
     return used
 
 
@@ -120,7 +121,7 @@ def plan_files(xml: str, others: list[str], config: Config) -> DeletionPlan:
             seen.add(path)
             plan.delete.append(path)
         if disk.source_type == "file":
-            for backing in qemu_img.backing_files(Path(path)) or disk.backing_paths:
+            for backing in qemu_img.backing_files(Path(path), disk.format) or disk.backing_paths:
                 keep(str(resolve(backing)), "backing")
 
     nvram = domain_xml.nvram_path(xml)

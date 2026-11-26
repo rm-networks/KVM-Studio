@@ -1,4 +1,9 @@
-"""qemu-img, called with argument lists only (never through a shell)."""
+"""qemu-img, called with argument lists only (never through a shell).
+
+The format of an image is always given with -f: it comes from the libvirt
+definition, or from the file name, never from what the file contains. A raw
+disk is written freely by its VM, which could put a qcow2 header there.
+"""
 
 from __future__ import annotations
 
@@ -11,8 +16,8 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-QCOW2_MAGIC = b"QFI\xfb"
 TIMEOUT = 30
+MAX_CHAIN = 64
 # "-p" prints "    (12.50/100%)" and rewrites it with carriage returns.
 _PERCENT = re.compile(rb"\((\d+(?:\.\d+)?)/100%\)")
 
@@ -28,34 +33,39 @@ def _qemu_img() -> str:
     return exe
 
 
-def is_qcow2(path: Path) -> bool:
-    try:
-        with path.open("rb") as f:
-            return f.read(4) == QCOW2_MAGIC
-    except OSError:
-        return False
+def format_from_name(path: Path | str) -> str:
+    """The format a file name stands for: qcow2 for .qcow2, raw for anything else."""
+    return "qcow2" if str(path).lower().endswith(".qcow2") else "raw"
 
 
-def backing_files(path: Path) -> list[str] | None:
-    """Absolute paths of the backing chain below path, or None if unreadable."""
-    try:
-        out = subprocess.run(  # noqa: S603
-            [_qemu_img(), "info", "--output=json", "--backing-chain", "-U", str(path)],
-            capture_output=True,
-            text=True,
-            timeout=TIMEOUT,
-            check=True,
-        ).stdout
-        images = json.loads(out)
-    except (subprocess.SubprocessError, OSError, ValueError, QemuImgError):
-        return None
-    chain = []
-    for image in images if isinstance(images, list) else [images]:
-        backing = image.get("full-backing-filename") or image.get("backing-filename")
-        if backing:
-            # Relative names are relative to the image that holds them.
-            base = Path(image.get("filename", str(path))).parent
-            chain.append(str((base / backing).resolve()))
+def backing_files(
+    path: Path, fmt: str, stop: Callable[[Path], bool] | None = None
+) -> list[str] | None:
+    """Absolute paths of the backing chain below path, or None if unreadable.
+
+    Only a qcow2 image has one: a raw image is never opened as anything else.
+    Each level is opened on its own, with the format its parent records (raw
+    when none), so nothing is opened before its name is known; the walk stops
+    after the first path for which stop() is true.
+    """
+    chain: list[str] = []
+    current, current_fmt = path, fmt
+    while current_fmt == "qcow2":
+        info = image_info(current, "qcow2")
+        if info is None:
+            return None
+        backing = info.get("full-backing-filename") or info.get("backing-filename")
+        if not backing:
+            break
+        # Relative names are relative to the image that holds them.
+        following = (current.parent / str(backing)).resolve()
+        if str(following) in chain or len(chain) >= MAX_CHAIN:
+            return None
+        chain.append(str(following))
+        if stop is not None and stop(following):
+            break
+        current = following
+        current_fmt = str(info.get("backing-filename-format") or "raw")
     return chain
 
 
@@ -68,9 +78,9 @@ def _run(args: list[str], timeout: float = TIMEOUT) -> str:
         raise QemuImgError(exc.stderr.strip() or str(exc)) from exc
 
 
-def image_info(path: Path) -> dict[str, Any] | None:
+def image_info(path: Path, fmt: str) -> dict[str, Any] | None:
     try:
-        info = json.loads(_run(["info", "--output=json", "-U", str(path)]))
+        info = json.loads(_run(["info", "--output=json", "-U", "-f", fmt, str(path)]))
     except (QemuImgError, subprocess.SubprocessError, OSError, ValueError):
         return None
     return info if isinstance(info, dict) else None
@@ -78,17 +88,17 @@ def image_info(path: Path) -> dict[str, Any] | None:
 
 def rebase_unsafe(overlay: Path, backing: Path, backing_format: str | None) -> None:
     """Point overlay at backing without touching data (the backing file only moved)."""
-    args = ["rebase", "-u", "-b", str(backing)]
+    args = ["rebase", "-u", "-f", "qcow2", "-b", str(backing)]
     if backing_format:
         args += ["-F", backing_format]
     _run([*args, str(overlay)])
 
 
-def convert(src: Path, dest: Path, fmt: str) -> None:
+def convert(src: Path, src_fmt: str, dest: Path, fmt: str) -> None:
     """Copy a disk image, keeping it sparse (no time limit: disks can be large)."""
     try:
         subprocess.run(  # noqa: S603
-            [_qemu_img(), "convert", "-p", "-O", fmt, str(src), str(dest)],
+            [_qemu_img(), "convert", "-p", "-f", src_fmt, "-O", fmt, str(src), str(dest)],
             capture_output=True,
             text=True,
             check=True,
@@ -105,13 +115,15 @@ def create(path: Path, fmt: str, size_gib: int, *, preallocate: bool) -> None:
     _run([*args, str(path), f"{size_gib}G"], timeout=600)
 
 
-def convert_progress(src: Path, dest: Path, fmt: str, on_progress: Callable[[float], None]) -> None:
+def convert_progress(
+    src: Path, src_fmt: str, dest: Path, fmt: str, on_progress: Callable[[float], None]
+) -> None:
     """convert(), telling on_progress how far it went (0 to 1).
 
     on_progress may raise to stop the copy: qemu-img is then ended and the
     exception goes on; the partial file is the caller's to remove.
     """
-    args = [_qemu_img(), "convert", "-p", "-O", fmt, str(src), str(dest)]
+    args = [_qemu_img(), "convert", "-p", "-f", src_fmt, "-O", fmt, str(src), str(dest)]
     proc = subprocess.Popen(  # noqa: S603
         args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0
     )

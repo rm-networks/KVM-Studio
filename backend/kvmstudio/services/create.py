@@ -19,7 +19,7 @@ from ..libvirt_conn import LibvirtConnection
 from ..paths import confine, in_iso_library, in_library, library_root, resolve
 from ..xml.domain import DiskSpec, DomainSpec, NicSpec, build_domain
 from ..xml.profiles import PROFILES, DiskBus, NicModel
-from . import qemu_img
+from . import disk_format, qemu_img
 from .host_kvm import kvm_state
 from .library import _SEGMENT_RE, check_folder, noted_root
 
@@ -169,23 +169,33 @@ def create_vm(conn: LibvirtConnection, config: Config, vm: NewVm) -> str:
     try:
         disks: list[DiskSpec] = []
         if existing is not None:
-            fmt = "qcow2" if qemu_img.is_qcow2(existing) else "raw"
+            known = disk_format.known_disks(conn)
+            if vm.confined and vm.existing_mode != "copy":
+                disk_format.not_another_vms(existing, known)
+            src_fmt = fmt = disk_format.format_of(existing, known)
+            chain = disk_format.checked_chain(existing, fmt, config, confined=vm.confined)
             path = existing
             if not in_place:
+                if vm.existing_mode == "copy":
+                    fmt = "qcow2" if src_fmt == "qcow2" else "raw"
+                    chain = []  # the copy holds every block of the chain
                 path = vm_dir / f"{vm.name}.{fmt}"
                 try:
                     if vm.existing_mode == "move":
                         move_file(existing, path)
                         moved = (path, existing)
                     else:
-                        qemu_img.convert(existing, path, fmt)
+                        qemu_img.convert(existing, src_fmt, path, fmt)
                 except (qemu_img.QemuImgError, OSError) as exc:
                     raise ApiException(500, "library.copy_failed", str(exc)) from exc
-            disks.append(DiskSpec(path, fmt, vm.disk_bus))
+            disks.append(DiskSpec(path, fmt, vm.disk_bus, tuple(chain)))
             for extra in vm.extra_disks:
                 more = existing_disk(extra, config, "in_place", confined=vm.confined)
-                fmt = "qcow2" if qemu_img.is_qcow2(more) else "raw"
-                disks.append(DiskSpec(more, fmt, vm.disk_bus))
+                if vm.confined:
+                    disk_format.not_another_vms(more, known)
+                fmt = disk_format.format_of(more, known)
+                chain = disk_format.checked_chain(more, fmt, config, confined=vm.confined)
+                disks.append(DiskSpec(more, fmt, vm.disk_bus, tuple(chain)))
         elif vm.disk_gib > 0:
             path = vm_dir / f"{vm.name}.{vm.disk_format}"
             try:

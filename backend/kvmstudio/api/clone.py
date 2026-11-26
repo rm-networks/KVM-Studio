@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 from typing import Any, Literal
 
 from fastapi import APIRouter, Request
@@ -57,7 +58,16 @@ def task_info(task: Task) -> TaskInfo:
 async def start_clone(ctx: Context, request: Request, uuid: str, body: CloneRequest) -> TaskInfo:
     """Checks the request, then copies in the background: follow /tasks/{id}."""
     plan = await run_in_threadpool(
-        clone.prepare, ctx.conn, ctx.config, uuid, body.kind, body.name, body.folder
+        partial(
+            clone.prepare,
+            ctx.conn,
+            ctx.config,
+            uuid,
+            body.kind,
+            body.name,
+            body.folder,
+            confined=getattr(request.state, "role", "owner") == "guest",
+        )
     )
     hub: EventHub = request.app.state.events
 

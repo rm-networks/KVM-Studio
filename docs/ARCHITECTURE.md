@@ -173,6 +173,14 @@ offered. Normal, independent persistent (`snapshot='no'`) and independent non
 persistent (`<transient/>`) modes. Utilities: expand, compact, convert,
 information.
 
+The format of an existing disk is never read from its content: a raw disk is
+written freely by its VM. It is the format declared in the libvirt definition
+of the VM that uses the file, otherwise the one its name stands for (`.qcow2`
+for qcow2, raw for anything else), and it is always passed to `qemu-img` with
+`-f`. A qcow2 disk brought in without a base gets an empty `<backingStore/>`;
+one with a base keeps it, and the chain is logged. A guest may only use disks
+whose whole chain lies in the library, and never the disk of another VM.
+
 A disk added to a running VM is attached live first (`virDomainAttachDeviceFlags`)
 and written to the config only once QEMU took it; a disk removed from a
 running VM is detached, and the config and the file change only once the
