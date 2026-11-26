@@ -30,6 +30,19 @@
     </defaults>
   </action>
 
+  <action id="org.kvmstudio.helper.lan-port-close">
+    <description>Close the port of LAN sharing in the firewall</description>
+    <description xml:lang="fr">Fermer le port du partage sur le réseau local dans le pare-feu</description>
+    <message>Authentication is required to close the LAN sharing port of the firewall.</message>
+    <message xml:lang="fr">Une authentification est nécessaire pour fermer le port du partage dans le pare-feu.</message>
+    <!-- Only takes back what was opened: no password in the active session. -->
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.kvmstudio.helper.lan-port">
     <description>Open or close the port of LAN sharing in the firewall</description>
     <description xml:lang="fr">Ouvrir ou fermer le port du partage sur le réseau local dans le pare-feu</description>

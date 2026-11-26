@@ -107,6 +107,7 @@ def call(
     return answer
 
 
+ACTION = "org.kvmstudio.helper.clone-state"
 PARAMS = {"source_uuid": SOURCE, "target_uuid": TARGET}
 
 
@@ -120,7 +121,7 @@ def test_copies_nvram_and_tpm_state(
 ) -> None:
     answer = call(config, PARAMS, owner)
     assert answer["ok"] is True, answer
-    assert answer["_asked"] == ["org.kvmstudio.helper.clone-state"]
+    assert answer["_asked"] == [ACTION]
     assert answer["result"] == {"nvram": True, "tpm": True}
     source = tree / "KVM-Studio" / "VM" / "src" / "src_VARS.fd"
     copy = tree / "KVM-Studio" / "VM" / "clone" / "clone_VARS.fd"
@@ -160,7 +161,7 @@ def test_without_nvram_or_tpm_yet(
         ({**PARAMS, "target_uuid": "11111111-2222-3333-4444-555555555555"}, "not_found"),
     ],
 )
-def test_refusals_before_the_password(
+def test_refusals(
     config: HelperConfig,
     tree: Path,
     owner: int,
@@ -170,7 +171,8 @@ def test_refusals_before_the_password(
 ) -> None:
     answer = call(config, params, owner)
     assert answer["error"] == error
-    assert answer["_asked"] == []
+    # Syntax before the password, libvirt only after it.
+    assert answer["_asked"] == ([] if error == "invalid_params" else [ACTION])
     assert nothing_copied(tree)
 
 
@@ -182,7 +184,7 @@ def test_a_vm_that_is_not_shut_off(
     libvirt.domains[which]["state"] = state
     answer = call(config, PARAMS, owner)
     assert answer["error"] == "running"
-    assert answer["_asked"] == []
+    assert answer["_asked"] == [ACTION]
     assert nothing_copied(tree)
 
 
@@ -219,7 +221,7 @@ def test_the_copy_stays_in_the_callers_vm_folder(
     libvirt.domains[TARGET]["nvram"] = target.format(tree=tree)
     answer = call(config, PARAMS, owner)
     assert answer["error"] == error
-    assert answer["_asked"] == []
+    assert answer["_asked"] == [ACTION]  # valid UUIDs: refused once authorized
     assert not list((tree / "elsewhere").rglob("*.fd"))
 
 
@@ -306,3 +308,15 @@ def test_virsh_is_called_without_a_shell(monkeypatch: pytest.MonkeyPatch) -> Non
     argv, kwargs = seen[0]
     assert argv == ["virsh", "-q", "-c", "qemu:///system", "domstate", SOURCE]
     assert "shell" not in kwargs
+
+
+def test_an_unauthorized_caller_learns_nothing_about_vms(
+    config: HelperConfig, tree: Path, owner: int, libvirt: Libvirt
+) -> None:
+    other = "11111111-2222-3333-4444-555555555555"
+    answers = [
+        call(config, {"source_uuid": source, "target_uuid": target}, owner, allow=False)
+        for source, target in [(SOURCE, TARGET), (other, TARGET), (SOURCE, other)]
+    ]
+    assert all(a == answers[0] for a in answers)
+    assert answers[0]["error"] == "not_authorized"

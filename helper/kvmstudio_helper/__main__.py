@@ -26,6 +26,11 @@ def main(argv: list[str] | None = None) -> int:
         metavar="HOOK_ARG",
         help="write the port forwarding table again from the state (boot, bridge creation)",
     )
+    parser.add_argument(
+        "--close-lan-port",
+        action="store_true",
+        help="close the LAN sharing port recorded as open (at boot), then exit",
+    )
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     try:
@@ -41,6 +46,10 @@ def main(argv: list[str] | None = None) -> int:
             except HelperError as exc:
                 print(f"kvmstudio-helper: {exc}", file=sys.stderr)
                 return 1
+        return 0
+    if args.close_lan_port:
+        # Boot: no backend runs yet, so nothing is shared.
+        lan_port.close_recorded(config, run_tool)
         return 0
     if args.clear_state:
         # Package removal: runs as root from the maintainer script.

@@ -130,7 +130,7 @@ def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int
     from ..frontend import find_frontend_dir
     from ..libvirt_conn import LibvirtConnection
     from .server import BackgroundServer, PortInUseError, bind_loopback
-    from .sharing import SharingError, start_sharing, stop_sharing
+    from .sharing import SharingError, close_leftover_port, start_sharing, stop_sharing
 
     token = os.environ.get(TOKEN_ENV)
     if not token:
@@ -155,6 +155,8 @@ def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int
             sock.close()
             print(exc, file=sys.stderr)
             return 2
+    else:
+        threading.Thread(target=close_leftover_port, daemon=True).start()
     conn = LibvirtConnection(config.libvirt.uri)
 
     def request_restart() -> None:

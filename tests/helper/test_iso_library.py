@@ -20,6 +20,7 @@ from kvmstudio_helper.config import HelperConfig, IsoLibrary
 from kvmstudio_helper.polkit import Peer
 
 QEMU = 107
+ACTION_LIBRARY = "org.kvmstudio.helper.iso-library"
 ADD, REMOVE, CLEAR, LIST = (
     "add_iso_library",
     "remove_iso_library",
@@ -185,7 +186,8 @@ def test_folders_that_cannot_be_declared(
 ) -> None:
     answer = call(config, ADD, {"path": path}, owner)
     assert answer["error"] == error
-    assert answer["_asked"] == []
+    # Syntax before the password; the folder itself only once authorized.
+    assert answer["_asked"] == ([] if error == "invalid_params" else [ACTION_LIBRARY])
     assert declared(config) == []
 
 
@@ -240,7 +242,8 @@ def test_folder_swapped_while_the_password_is_typed(
         return True
 
     answer = server.handle(raw, Peer(1, owner, owner), config, authorizer=swap)
-    assert answer["error"] == "path_changed"
+    # The folder is only looked at once authorized: the link is seen and refused.
+    assert answer["error"] == "system_folder"
     assert declared(config) == []
 
 

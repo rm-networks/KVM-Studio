@@ -10,6 +10,7 @@ import json
 import os
 import socket
 import threading
+import time
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -109,7 +110,8 @@ def test_paths_outside_or_invalid(
     path = str(lib / relative) if relative else str(lib)
     answer = call(config, iso_acl(path))
     assert answer["error"] == error
-    assert answer["_asked"] == []
+    # Polkit first: nothing on the disk is looked at for an unauthorized caller.
+    assert answer["_asked"] == [("org.kvmstudio.helper.iso-acl", PEER)]
 
 
 def test_symlink_to_outside_is_refused(config: HelperConfig, lib: Path, tmp_path: Path) -> None:
@@ -129,7 +131,7 @@ def test_symlink_inside_the_library_acts_on_its_target(config: HelperConfig, lib
 def test_folder_swapped_for_a_symlink_after_the_check(
     config: HelperConfig, lib: Path, tmp_path: Path
 ) -> None:
-    """The check passes, then the user replaces a folder before the change."""
+    """The user replaces a folder while the password is typed."""
     outside = tmp_path / "outside"
     outside.mkdir()
     (outside / "fedora.iso").write_bytes(b"")
@@ -142,7 +144,8 @@ def test_folder_swapped_for_a_symlink_after_the_check(
     runner = Recorder()
     raw = json.dumps(iso_acl(str(lib / "linux" / "fedora.iso"))).encode()
     answer = server.handle(raw, PEER, config, authorizer=swap, runner=runner)
-    assert answer["error"] == "path_changed"
+    # The path is only looked at once authorized: the link is seen and refused.
+    assert answer["error"] == "path_not_allowed"
     assert runner.calls == []
 
 
@@ -264,3 +267,102 @@ def test_socket_identifies_the_caller_by_kernel_credentials(
         answer = json.loads(client.makefile().readline())
     assert answer["error"] == "not_authorized"
     assert running == [Peer(os.getpid(), os.getuid(), os.getgid())]
+
+
+def test_an_unauthorized_caller_learns_nothing_about_paths(
+    config: HelperConfig, lib: Path, tmp_path: Path
+) -> None:
+    (tmp_path / "private").mkdir(mode=0o700)
+    (tmp_path / "private" / "id_ed25519").write_text("key")
+    paths = [
+        str(lib / "linux" / "fedora.iso"),
+        str(lib / "linux" / "missing.iso"),
+        str(tmp_path / "private" / "id_ed25519"),
+        str(tmp_path / "private" / "id_rsa"),
+        "/root/.ssh/id_rsa",
+    ]
+    answers = {
+        json.dumps(
+            server.handle(
+                json.dumps(iso_acl(p)).encode(), PEER, config, authorizer=lambda a, p: False
+            )
+        )
+        for p in paths
+    }
+    assert answers == {
+        json.dumps({"ok": False, "error": "not_authorized", "message": "authorization refused"})
+    }
+
+
+def ask_list(config: HelperConfig) -> dict[str, Any]:
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+        client.settimeout(5)
+        client.connect(str(config.socket))
+        client.sendall(b'{"op": "list_iso_libraries", "params": {}}\n')
+        line = client.makefile().readline()
+    return json.loads(line) if line else {}
+
+
+def test_idle_connections_cannot_pile_up(
+    running: list[Peer], config: HelperConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(server, "READ_TIMEOUT", 0.5)
+    flood = []
+    for _ in range(200):
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(str(config.socket))
+        flood.append(s)
+    time.sleep(0.2)
+    # One thread per connection at most, and no more than MAX_PER_UID for one account.
+    assert threading.active_count() <= server.MAX_PER_UID + 5
+    for s in flood:
+        s.close()
+    time.sleep(0.7)
+    started = time.monotonic()
+    assert ask_list(config)["ok"] is True
+    assert time.monotonic() - started < 1
+
+
+def test_one_account_leaves_room_for_the_others(
+    running: list[Peer], config: HelperConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    real_peer = server.peer_of
+    attacker = {"on": True}
+
+    def peer_of(sock: socket.socket) -> Peer:
+        peer = real_peer(sock)
+        return Peer(peer.pid, 1001, 1001) if attacker["on"] else peer
+
+    monkeypatch.setattr(server, "peer_of", peer_of)
+    flood = []
+    for _ in range(50):
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(str(config.socket))
+        flood.append(s)
+    time.sleep(0.2)
+    attacker["on"] = False
+    assert ask_list(config)["ok"] is True
+    for s in flood:
+        s.close()
+
+
+def test_a_slow_request_is_dropped(running: list[Peer], config: HelperConfig) -> None:
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+        client.connect(str(config.socket))
+        started = time.monotonic()
+        for _ in range(10):
+            try:
+                client.sendall(b" ")
+            except OSError:
+                break
+            time.sleep(0.5)
+        assert client.recv(1) == b""
+    assert time.monotonic() - started < server.READ_TIMEOUT + 1.5
+
+
+def test_the_kernel_gives_the_peer_groups() -> None:
+    left, right = socket.socketpair(socket.AF_UNIX)
+    with left, right:
+        peer = server.peer_of(left)
+    assert peer.uid == os.getuid()
+    assert set(peer.groups) == set(os.getgroups())

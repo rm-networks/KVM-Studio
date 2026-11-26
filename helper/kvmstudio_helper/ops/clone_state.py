@@ -291,6 +291,12 @@ def _check(src: Domain, dst: Domain, peer: Peer, qemu_uid: int | None) -> bool:
     return True
 
 
+def check(params: Mapping[str, object]) -> None:
+    expect_keys(params, {"source_uuid", "target_uuid"})
+    if _uuid(params["source_uuid"], "source_uuid") == _uuid(params["target_uuid"], "target_uuid"):
+        raise HelperError("invalid_params", "source and target must differ")
+
+
 def prepare(params: Mapping[str, object], config: HelperConfig, peer: Peer) -> Task:
     expect_keys(params, {"source_uuid", "target_uuid"})
     if peer.uid < UID_MIN or peer.uid == NOBODY:
@@ -299,7 +305,7 @@ def prepare(params: Mapping[str, object], config: HelperConfig, peer: Peer) -> T
     target = _uuid(params["target_uuid"], "target_uuid")
     if source == target:
         raise HelperError("invalid_params", "source and target must differ")
-    # Checked now so that a refusal comes before the password.
+    # Checked once authorized: libvirt is never asked for an unauthorized caller.
     src, dst = _shut_off(source, target)
     _check(src, dst, peer, config.qemu_uid)
 

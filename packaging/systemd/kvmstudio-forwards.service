@@ -12,8 +12,30 @@ ReloadPropagatedFrom=nftables.service firewalld.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+# At boot nothing is shared yet: a LAN sharing port left open (ufw rules last,
+# older versions also opened it permanently in firewalld) is closed.
+ExecStartPre=-/opt/kvm-studio/bin/kvmstudio-helper --close-lan-port
 ExecStart=/opt/kvm-studio/bin/kvmstudio-helper --apply-forwards
 ExecReload=/opt/kvm-studio/bin/kvmstudio-helper --apply-forwards
+# Same code as the helper, as root: the same confinement.
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectKernelLogs=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+UMask=0077
 
 [Install]
 WantedBy=multi-user.target

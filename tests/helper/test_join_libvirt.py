@@ -90,7 +90,7 @@ def test_refused_authorization_runs_nothing(accounts: object) -> None:
 def test_root_system_and_unknown_accounts_are_refused(accounts: object, uid: int) -> None:
     answer, ran, asked = call(JOIN, Peer(1, uid, uid))
     assert answer["error"] == "not_allowed"
-    assert (ran, asked) == ([], [])
+    assert (ran, asked) == ([], ["org.kvmstudio.helper.join-libvirt"])
 
 
 def test_account_name_that_looks_like_an_option(accounts: object) -> None:

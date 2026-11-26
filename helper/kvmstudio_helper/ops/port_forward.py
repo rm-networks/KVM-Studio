@@ -19,6 +19,7 @@ anything a VM sends to 127.0.0.0/8 through that bridge.
 from __future__ import annotations
 
 import contextlib
+import grp
 import ipaddress
 import json
 import os
@@ -38,6 +39,8 @@ from .clone_state import virsh
 ACTION = "org.kvmstudio.helper.port-forward"
 TABLE = "kvmstudio"
 MAX_RULES = 256
+LIBVIRT_GROUP = "libvirt"
+ANY_SUBNET = ipaddress.IPv4Network("0.0.0.0/0")
 MAX_DESCRIPTION = 200
 NETWORK_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,49}$")
 BRIDGE_RE = re.compile(r"^[A-Za-z0-9_.-]{1,15}$")
@@ -262,6 +265,29 @@ def clear(config: HelperConfig, runner: Runner) -> None:
 
 
 # Operations
+
+
+def check_set(params: Mapping[str, object]) -> None:
+    expect_keys(params, {"network", "rules"})
+    name, raw_rules = params["network"], params["rules"]
+    if not isinstance(name, str) or not NETWORK_RE.match(name):
+        raise HelperError("invalid_params", "network must be a libvirt network name")
+    if not isinstance(raw_rules, list) or len(raw_rules) > MAX_RULES:
+        raise HelperError("invalid_params", f"rules must be a list of at most {MAX_RULES}")
+    # The syntax of each rule; whether vm_ip is in the network comes after polkit.
+    for raw in raw_rules:
+        parse_rule(raw, ANY_SUBNET)
+
+
+def may_list(peer: Peer) -> bool:
+    """Reading the rules is for root and the libvirt group, as libvirt itself."""
+    if peer.uid == 0:
+        return True
+    try:
+        gid = grp.getgrnam(LIBVIRT_GROUP).gr_gid
+    except KeyError:
+        return False
+    return gid == peer.gid or gid in peer.groups
 
 
 def prepare_set(params: Mapping[str, object], config: HelperConfig, peer: Peer) -> Task:

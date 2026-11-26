@@ -75,6 +75,17 @@ def revoke(runner: Runner, entry: state.AclEntry) -> bool:
             os.close(fd)
 
 
+def check_path(params: Mapping[str, object]) -> None:
+    expect_keys(params, {"path"})
+    client_path(params["path"])
+
+
+def check_clear(params: Mapping[str, object]) -> None:
+    expect_keys(params, {"remove_acls"})
+    if not isinstance(params["remove_acls"], bool):
+        raise HelperError("invalid_params", "remove_acls must be true or false")
+
+
 def prepare_add(params: Mapping[str, object], config: HelperConfig, peer: Peer) -> Task:
     expect_keys(params, {"path"})
     uid = _caller(peer)

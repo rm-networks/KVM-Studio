@@ -22,3 +22,16 @@ ProtectControlGroups=yes
 LockPersonality=yes
 MemoryDenyWriteExecute=yes
 SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+ProtectClock=yes
+ProtectKernelLogs=yes
+ProtectHostname=yes
+# No device node is needed (setfacl, usermod, nft, firewall-cmd, virsh).
+PrivateDevices=yes
+UMask=0077
+# One thread per connection, at most 16 of them, and the tools they run.
+TasksMax=64

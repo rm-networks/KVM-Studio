@@ -9,6 +9,7 @@ be closed by the firewall, which the Preferences tell.
 
 from __future__ import annotations
 
+import contextlib
 import sys
 
 from .. import helper_client
@@ -57,6 +58,13 @@ def stop_sharing(sharing: Sharing) -> None:
     if sharing.firewall is None:
         return
     try:
-        helper_client.call("lan_port", {"open": False, "port": sharing.https_port})
+        # Closing asks for no password: it only takes back what was opened.
+        helper_client.call("close_lan_port", {})
     except ApiException as exc:
         print(t("cli.share_port_not_closed", error=exc.detail), file=sys.stderr)
+
+
+def close_leftover_port() -> None:
+    """Without sharing, a port a crashed backend left open is closed (no password)."""
+    with contextlib.suppress(ApiException):
+        helper_client.call("close_lan_port", {})

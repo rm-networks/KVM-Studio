@@ -1,8 +1,11 @@
 """Open or close the HTTPS port of LAN sharing in the host firewall (F-106).
 
-firewalld (default zone, runtime and permanent, so a reload keeps it) or else
-ufw. The helper writes down what it opened, so that closing, and the package
-removal, take back exactly that and nothing else.
+firewalld (default zone, runtime only: a crash, a reboot or a firewall
+reload leaves it closed) or else ufw, whose rules always last: the
+forwarding unit closes what was recorded at boot. The helper writes down what
+it opened, so that closing, and the package removal, take back exactly that
+and nothing else. Closing is its own operation, without a password for the
+active session: it can only take back what was opened.
 """
 
 from __future__ import annotations
@@ -21,6 +24,7 @@ from ..polkit import Peer
 from . import Runner, Task, expect_keys
 
 ACTION = "org.kvmstudio.helper.lan-port"
+CLOSE_ACTION = "org.kvmstudio.helper.lan-port-close"
 DEFAULT_PORT = 60443
 SERVICE = "kvm-studio"
 
@@ -51,9 +55,7 @@ def _firewalld_spec(port: int) -> str:
 
 def _open(tool: str, port: int, runner: Runner) -> None:
     if tool == "firewalld":
-        spec = _firewalld_spec(port).format("add")
-        runner(["firewall-cmd", "--permanent", spec], ())
-        runner(["firewall-cmd", spec], ())
+        runner(["firewall-cmd", _firewalld_spec(port).format("add")], ())
     else:
         runner(["ufw", "allow", f"{port}/tcp", "comment", "kvm-studio"], ())
 
@@ -62,9 +64,10 @@ def _close(tool: str, port: int, runner: Runner) -> None:
     if tool == "firewalld":
         spec = _firewalld_spec(port).format("remove")
         with contextlib.suppress(HelperError):
-            runner(["firewall-cmd", "--permanent", spec], ())
-        with contextlib.suppress(HelperError):
             runner(["firewall-cmd", spec], ())
+        # Versions up to 1.1.1 opened it in the permanent configuration too.
+        with contextlib.suppress(HelperError):
+            runner(["firewall-cmd", "--permanent", spec], ())
     else:
         with contextlib.suppress(HelperError):
             runner(["ufw", "delete", "allow", f"{port}/tcp"], ())
@@ -97,6 +100,15 @@ def close_recorded(config: HelperConfig, runner: Runner) -> None:
     _save(config, None)
 
 
+def check(params: Mapping[str, object]) -> None:
+    expect_keys(params, {"open", "port"})
+    if not isinstance(params["open"], bool):
+        raise HelperError("invalid_params", "open must be true or false")
+    port = params["port"]
+    if not isinstance(port, int) or isinstance(port, bool) or not 1024 <= port <= 65535:
+        raise HelperError("invalid_params", "port must be between 1024 and 65535")
+
+
 def prepare(params: Mapping[str, object], config: HelperConfig, peer: Peer) -> Task:
     expect_keys(params, {"open", "port"})
     wanted, port = params["open"], params["port"]
@@ -114,5 +126,20 @@ def prepare(params: Mapping[str, object], config: HelperConfig, peer: Peer) -> T
             _open(tool, port, runner)
             _save(config, {"tool": tool, "port": port})
         return {"firewall": tool}
+
+    return run
+
+
+def check_close(params: Mapping[str, object]) -> None:
+    expect_keys(params, set())
+
+
+def prepare_close(params: Mapping[str, object], config: HelperConfig, peer: Peer) -> Task:
+    expect_keys(params, set())
+
+    def run(runner: Runner) -> dict[str, Any]:
+        closed = bool(_load(config))
+        close_recorded(config, runner)
+        return {"closed": closed}
 
     return run

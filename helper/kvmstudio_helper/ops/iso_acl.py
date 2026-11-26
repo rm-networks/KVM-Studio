@@ -67,6 +67,11 @@ def _grant_above(runner: Runner, current: state.State, target: Confined, uid: in
     return changed[::-1]
 
 
+def check(params: Mapping[str, object]) -> None:
+    expect_keys(params, {"path"})
+    client_path(params["path"])
+
+
 def prepare(params: Mapping[str, object], config: HelperConfig, peer: Peer) -> Task:
     expect_keys(params, {"path"})
     target = confine(client_path(params["path"]), state.libraries(config))

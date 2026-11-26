@@ -22,6 +22,8 @@ class Peer:
     pid: int
     uid: int
     gid: int
+    # Supplementary groups at connect time (SO_PEERGROUPS).
+    groups: tuple[int, ...] = ()
 
 
 def start_time(pid: int) -> str:

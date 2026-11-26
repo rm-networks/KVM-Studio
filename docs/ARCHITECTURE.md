@@ -58,9 +58,13 @@ How it works:
 
 - systemd creates the socket `/run/kvmstudio-helper.sock` (unit
   `kvmstudio-helper.socket`) and starts the service at the first connection;
-- each connection carries one JSON request `{"op": ..., "params": {...}}`;
-  any extra key, unexpected type or unknown operation is refused before polkit
-  is asked;
+- each connection carries one JSON request `{"op": ..., "params": {...}}`,
+  read within 2 s; at most 16 connections are served at once, 8 per account;
+- only the syntax of the parameters is checked before polkit: any extra key,
+  unexpected type, relative path or unknown operation is refused there.
+  Paths, VMs, networks and accounts are only looked at once polkit said yes,
+  so a caller without the right gets the same answer whatever it names; they
+  are checked again just before the change;
 - the caller is identified by the kernel (`SO_PEERCRED`: pid, real uid) and
   never by a field of the request; polkit (`pkcheck`) authorizes this process
   for the action of the operation, showing the desktop authentication window
@@ -84,7 +88,9 @@ How it works:
 | `join_libvirt` | `org.kvmstudio.helper.join-libvirt` | adds the caller to the `libvirt` group; no parameter, refused for root and UIDs below 1000, administrator password on every call |
 | `clone_vm_state` | `org.kvmstudio.helper.clone-state` | copies the UEFI variables and the TPM state of a powered off VM to its clone; takes the two UUIDs only and reads both files from libvirt (`qemu:///system`); both VMs shut off, checked before and after the password; the copy goes to a new file in a folder of the caller's under `KVM-Studio/VM/`, with the owner and mode of the original (QEMU for the NVRAM, swtpm's account for the TPM); links, hard links and existing files are refused; administrator password on every call |
 | `set_port_forwards` | `org.kvmstudio.helper.port-forward` | NAT port forwarding of one network: takes the network name and the rules (protocol tcp or udp, host address, host port, VM address, VM port, description); checks the ports (1 to 65535), the addresses, and that the VM address is in the network's subnet read from libvirt (`qemu:///system`); writes the nftables table `inet kvmstudio` again as a whole (`nft -f`), and `route_localnet` on the bridge for loopback rules; administrator password on every call |
-| `list_port_forwards` | none | the rules kept by the helper; changes nothing |
+| `list_port_forwards` | none | the rules kept by the helper; changes nothing; root and members of the `libvirt` group only (groups read from the kernel, `SO_PEERGROUPS`) |
+| `lan_port` | `org.kvmstudio.helper.lan-port` | opens the HTTPS port of LAN sharing in firewalld (`kvm-studio` service, runtime only) or ufw, and writes down what it opened; administrator password on every call |
+| `close_lan_port` | `org.kvmstudio.helper.lan-port-close` | closes what `lan_port` wrote down and nothing else; no parameter; no password in the active session, refused elsewhere |
 | `remove_package` | `org.kvmstudio.helper.remove-package` | removes the `kvm-studio` package in a transient systemd unit; no parameter, administrator password on every call |
 
 Every ACL bit the helper adds is written to its state with the inode it was
@@ -98,6 +104,23 @@ ACL on VM folders under the home folder is set by the user, without the helper.
 
 A plain package removal runs `kvmstudio-helper --clear-state`, which takes back
 the entries still recorded, then deletes `/var/lib/kvm-studio`.
+
+Every action that opens or grants something asks the administrator password
+on every call, with one exception kept on purpose: `iso-acl` is
+`auth_admin_keep`, so making several images of a library readable in a row
+asks it once; for five minutes the same
+process may then give QEMU read access to other images of the declared
+libraries, nothing else. The LAN sharing port is opened at runtime only: a
+crash, a reboot or a firewall reload leaves it closed. At boot
+(`kvmstudio-forwards.service`) and when the backend starts without sharing, a
+port still recorded as open is closed.
+
+The units that run the helper's code as root (`kvmstudio-helper.service`,
+`kvmstudio-forwards.service`, `kvmstudio-bridge@.service`) are confined by
+systemd: no new privileges, no device nodes, no namespaces, no SUID files, no
+realtime scheduling, `@system-service` system calls only, `UMask=0077`, at
+most 64 tasks for the helper. `ProtectHome` cannot be used: ISO libraries may
+sit in home folders.
 
 ## Interface modes
 

@@ -49,6 +49,9 @@ if [ -d /run/systemd/system ]; then
 fi
 
 if command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1; then
+    # The sharing port is only opened at runtime now; versions up to 1.1.1
+    # also opened it in the permanent configuration, which stayed open.
+    firewall-cmd --permanent --remove-service=kvm-studio >/dev/null 2>&1 || :
     firewall-cmd --reload >/dev/null 2>&1 || :
 fi
 

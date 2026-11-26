@@ -1,7 +1,8 @@
 """The only things the helper can do. Each operation has its own polkit action.
 
-prepare() checks the parameters, and the caller as the kernel reports it, before
-anyone is asked for a password. It returns the task to run once authorized.
+check() looks at the parameters' syntax only, before anyone is asked for a
+password. prepare() runs once authorized: it checks the parameters against
+the system and the caller as the kernel reports it, and returns the task.
 """
 
 from __future__ import annotations
@@ -19,11 +20,24 @@ Runner = Callable[[list[str], tuple[int, ...]], None]
 Task = Callable[[Runner], dict[str, Any]]
 
 
+Check = Callable[[Mapping[str, object]], None]
+
+
 @dataclass(frozen=True, slots=True)
 class Operation:
     # None for the read-only operations, which change nothing.
     action: str | None
     prepare: Callable[[Mapping[str, object], HelperConfig, Peer], Task]
+    check: Check
+    # For an operation without polkit action: who may call it (None: anyone).
+    allowed: Callable[[Peer], bool] | None = None
+
+
+def keys_only(*keys: str) -> Check:
+    def check(params: Mapping[str, object]) -> None:
+        expect_keys(params, set(keys))
+
+    return check
 
 
 def expect_keys(params: Mapping[str, object], keys: set[str]) -> None:
@@ -47,15 +61,28 @@ def registry() -> dict[str, Operation]:
     )
 
     return {
-        "iso_acl": Operation(iso_acl.ACTION, iso_acl.prepare),
-        "add_iso_library": Operation(iso_library.ACTION, iso_library.prepare_add),
-        "remove_iso_library": Operation(iso_library.ACTION, iso_library.prepare_remove),
-        "clear_iso_libraries": Operation(iso_library.ACTION, iso_library.prepare_clear),
-        "list_iso_libraries": Operation(None, iso_library.prepare_list),
-        "join_libvirt": Operation(join_libvirt.ACTION, join_libvirt.prepare),
-        "clone_vm_state": Operation(clone_state.ACTION, clone_state.prepare),
-        "lan_port": Operation(lan_port.ACTION, lan_port.prepare),
-        "set_port_forwards": Operation(port_forward.ACTION, port_forward.prepare_set),
-        "list_port_forwards": Operation(None, port_forward.prepare_list),
-        "remove_package": Operation(remove_package.ACTION, remove_package.prepare),
+        "iso_acl": Operation(iso_acl.ACTION, iso_acl.prepare, iso_acl.check),
+        "add_iso_library": Operation(
+            iso_library.ACTION, iso_library.prepare_add, iso_library.check_path
+        ),
+        "remove_iso_library": Operation(
+            iso_library.ACTION, iso_library.prepare_remove, iso_library.check_path
+        ),
+        "clear_iso_libraries": Operation(
+            iso_library.ACTION, iso_library.prepare_clear, iso_library.check_clear
+        ),
+        "list_iso_libraries": Operation(None, iso_library.prepare_list, keys_only()),
+        "join_libvirt": Operation(join_libvirt.ACTION, join_libvirt.prepare, keys_only()),
+        "clone_vm_state": Operation(clone_state.ACTION, clone_state.prepare, clone_state.check),
+        "lan_port": Operation(lan_port.ACTION, lan_port.prepare, lan_port.check),
+        "close_lan_port": Operation(
+            lan_port.CLOSE_ACTION, lan_port.prepare_close, lan_port.check_close
+        ),
+        "set_port_forwards": Operation(
+            port_forward.ACTION, port_forward.prepare_set, port_forward.check_set
+        ),
+        "list_port_forwards": Operation(
+            None, port_forward.prepare_list, keys_only(), port_forward.may_list
+        ),
+        "remove_package": Operation(remove_package.ACTION, remove_package.prepare, keys_only()),
     }

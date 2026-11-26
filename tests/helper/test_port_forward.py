@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import grp
 import json
 import re
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -74,6 +76,15 @@ def call(config: HelperConfig, params: dict[str, Any], runner: Recorder | None =
     return answer
 
 
+LIBVIRT_GID = 990
+
+
+@pytest.fixture(autouse=True)
+def libvirt_group(monkeypatch: pytest.MonkeyPatch) -> None:
+    group = SimpleNamespace(gr_gid=LIBVIRT_GID)
+    monkeypatch.setattr(grp, "getgrnam", lambda name: group)
+
+
 def test_rules_are_written_to_our_own_table(config: HelperConfig, tmp_path: Path) -> None:
     (tmp_path / "sysctl" / "kvmnet8").mkdir(parents=True)
     runner = Recorder()
@@ -94,8 +105,9 @@ def test_rules_are_written_to_our_own_table(config: HelperConfig, tmp_path: Path
     # No other table is ever named.
     assert set(re.findall(r"table (\S+ \S+)", text)) == {"inet kvmstudio"}
 
+    member = Peer(4242, 1000, 1000, (10, LIBVIRT_GID))
     listing = server.handle(
-        b'{"op": "list_port_forwards", "params": {}}', PEER, config, authorizer=lambda a, p: False
+        b'{"op": "list_port_forwards", "params": {}}', member, config, authorizer=lambda a, p: False
     )
     assert listing["ok"]
     assert listing["result"]["networks"]["kvmnet8"][0]["host_port"] == 8080
@@ -118,9 +130,6 @@ def test_rules_are_written_to_our_own_table(config: HelperConfig, tmp_path: Path
         rule(host_address="localhost"),
         rule(host_address="::1"),
         rule(host_address="1.2.3.4 tcp dport 1 accept"),
-        rule(vm_ip="10.0.0.5"),  # outside the network's subnet
-        rule(vm_ip="192.168.108.255"),
-        rule(vm_ip="192.168.108.0"),
         rule(description="a\nflush ruleset"),
         rule(description="x" * 201),
         {**rule(), "extra": 1},
@@ -140,7 +149,6 @@ def test_bad_rules_are_refused_before_polkit(config: HelperConfig, bad: dict[str
     [
         {"network": "../etc", "rules": []},
         {"network": "kvmnet8; nft flush", "rules": []},
-        {"network": "other", "rules": [rule()]},
         {"network": "kvmnet8", "rules": "all"},
         {"network": "kvmnet8", "rules": [rule()] * 257},
         {"network": "kvmnet8"},
@@ -151,6 +159,26 @@ def test_bad_requests(config: HelperConfig, params: dict[str, Any]) -> None:
     answer = call(config, params)
     assert not answer["ok"]
     assert answer["asked"] == []
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"network": "other", "rules": [rule()]},
+        {"network": "kvmnet8", "rules": [rule(vm_ip="10.0.0.5")]},  # outside its subnet
+        {"network": "kvmnet8", "rules": [rule(vm_ip="192.168.108.255")]},
+        {"network": "kvmnet8", "rules": [rule(vm_ip="192.168.108.0")]},
+    ],
+)
+def test_refused_against_libvirt_once_authorized(
+    config: HelperConfig, params: dict[str, Any]
+) -> None:
+    runner = Recorder()
+    answer = call(config, params, runner)
+    assert not answer["ok"]
+    # libvirt is only asked about the network for an authorized caller.
+    assert answer["asked"] == ["org.kvmstudio.helper.port-forward"]
+    assert runner.calls == []
 
 
 def test_refused_by_polkit_changes_nothing(config: HelperConfig) -> None:
@@ -180,3 +208,21 @@ def test_a_tampered_state_file_is_checked_again(config: HelperConfig) -> None:
         )
     )
     assert "dnat" not in port_forward.ruleset(port_forward.load_state(config))
+
+
+@pytest.mark.parametrize(
+    ("peer", "ok"),
+    [
+        (Peer(4242, 1001, 1001), False),  # any local account
+        (Peer(4242, 1001, 1001, (10, 100)), False),
+        (Peer(4242, 1000, 1000, (LIBVIRT_GID,)), True),
+        (Peer(4242, 1000, LIBVIRT_GID), True),
+        (Peer(4242, 0, 0), True),
+    ],
+)
+def test_only_the_libvirt_group_reads_the_rules(config: HelperConfig, peer: Peer, ok: bool) -> None:
+    raw = b'{"op": "list_port_forwards", "params": {}}'
+    answer = server.handle(raw, peer, config, authorizer=lambda a, p: False)
+    assert answer["ok"] is ok
+    if not ok:
+        assert answer["error"] == "not_authorized"
