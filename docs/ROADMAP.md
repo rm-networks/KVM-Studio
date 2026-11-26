@@ -62,6 +62,15 @@ folder; Help > Documentation; Preferences fit their window; the native window
 closes instead of freezing when the KDE compositor restarts; python3-gobject
 and libosinfo are no longer required.
 
+## 1.1.2: done
+
+Security fixes, no new feature: disk formats never read from the content,
+local accounts kept away from the web mode, bounded web server with
+security headers and stricter TLS, polkit before any check in the helper,
+LAN sharing port opened at runtime only, launcher hardened, release
+checksums and pinned build inputs; My Computer shows Home when the VM tab
+bar is hidden.
+
 ## V2 (public release)
 
 Easy Install, virtiofs shared folders, network diagnostics, Bridged, USB

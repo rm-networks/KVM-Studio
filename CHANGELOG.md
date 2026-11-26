@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.1.2 (2026-11-26)
+
+Security fixes, no new feature. Updating is recommended, above all where LAN
+sharing is used.
+
+- Disks: the format of an existing disk is never read from its content; it
+  comes from the definition of the VM that uses it, or from the file name.
+  A guest may only use disks whose backing files are all in the library.
+- Web mode: connections from other accounts of the computer are refused,
+  and the browser is opened with a single-use code instead of the token.
+- Web server: login attempts counted before the check, request sizes and
+  connections bounded, WebSocket origins checked, security headers, TLS 1.2
+  or later with AEAD suites only.
+- LAN sharing certificate: two years, with the computer's addresses; made
+  again before it expires and when the addresses change. Guests compare the
+  new fingerprint (Preferences, Interface) once.
+- The LAN sharing port is opened until the next reboot or firewall reload
+  only, and closed when KVM Studio stops, even on a logout.
+- Root helper: polkit is asked before anything on the system is looked at,
+  connections are bounded, port forwarding rules are only listed for the
+  libvirt group, and its systemd units are more confined.
+- The launcher never imports code from the current folder.
+- Releases carry a SHA256SUMS file; build inputs are pinned.
+- With the VM tab bar hidden, My Computer in the library shows Home.
+
 ## 1.1.1 (2026-11-13)
 
 - The VM menu and the right click on a VM of the library are one list: same
