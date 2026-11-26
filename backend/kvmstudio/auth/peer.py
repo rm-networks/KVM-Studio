@@ -27,8 +27,10 @@ PROC_TABLES = (Path("/proc/net/tcp"), Path("/proc/net/tcp6"))
 _WARN_EVERY_S = 300.0
 
 
-def _hex_address(host: str, port: int) -> set[str] | None:
+def _hex_address(host: str, port: int | None) -> set[str] | None:
     """The forms the kernel prints for host:port, in tcp and in tcp6."""
+    if port is None:
+        return None
     try:
         ip = ipaddress.ip_address(host)
     except ValueError:

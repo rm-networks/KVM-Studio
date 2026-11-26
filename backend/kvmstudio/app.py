@@ -58,6 +58,8 @@ from .errors import (
 from .events import EventHub, events_socket
 from .frontend import find_frontend_dir
 from .libvirt_conn import LibvirtConnection
+from .limits import BodyLimit, SocketLimit, SocketOrigin
+from .security_headers import SecurityHeaders
 from .services import host_memory, vm_view
 from .services import options as vm_options
 from .services.tasks import TaskRegistry
@@ -84,6 +86,7 @@ def create_app(
     config_path: Path | None = None,
     on_restart: Callable[[], None] | None = None,
     sharing: LanSharing | None = None,
+    api_schema: bool = False,
 ) -> FastAPI:
     def describe(uuid: str) -> dict[str, object] | None:
         # Read the config at call time: Preferences may have replaced it.
@@ -122,7 +125,13 @@ def create_app(
         await hub.stop()
 
     app = FastAPI(
-        title=APP_NAME, version=__version__, docs_url=None, redoc_url=None, lifespan=lifespan
+        title=APP_NAME,
+        version=__version__,
+        docs_url=None,
+        redoc_url=None,
+        # The schema is served in development only (kvm-studio --reload).
+        openapi_url="/openapi.json" if api_schema else None,
+        lifespan=lifespan,
     )
     app.state.events = hub
     app.state.tasks = TaskRegistry()
@@ -141,9 +150,14 @@ def create_app(
         sharing=sharing,
     )
     app.state.link_codes = LinkCodes()
+    app.add_middleware(SocketLimit)
+    app.add_middleware(SocketOrigin)
+    app.add_middleware(BodyLimit)
     app.add_middleware(HostCheck)
-    # Outermost: another account of this computer gets nothing, token or not.
+    # Another account of this computer gets nothing, token or not.
     app.add_middleware(LocalUserCheck)
+    # Outermost, for every answer, refusals included.
+    app.add_middleware(SecurityHeaders)
     app.add_exception_handler(libvirt.libvirtError, libvirt_error_handler)
     app.add_exception_handler(ApiException, api_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)
@@ -210,4 +224,5 @@ def create_app_from_env() -> FastAPI:
         mode="web",
         frontend_dir=find_frontend_dir(),
         config_path=Path(config_path) if config_path else default_config_path(),
+        api_schema=True,
     )

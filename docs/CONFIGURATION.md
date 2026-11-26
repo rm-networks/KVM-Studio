@@ -29,7 +29,7 @@ faulty key. `kvm-studio --check` validates the file without starting anything.
 | `port` | `60080` | HTTP port of web mode (local access, 127.0.0.1), between 1024 and 65535. Window mode uses a random port. |
 | `https_port` | `60443` | HTTPS port for sharing on the local network, other than `port`. |
 | `share_on_lan` | `false` | Web mode: also listen on the local network in HTTPS, for the guest account. Needs the guest password (Preferences > Interface), otherwise KVM Studio refuses to start. The helper opens the port in firewalld (service `kvm-studio` on the default port) or ufw while KVM Studio runs. |
-| `tls` | `"auto"` | Self-signed certificate, made with openssl at the first start in `$XDG_CONFIG_HOME/kvm-studio/tls/` (EC P-256, ten years). Its fingerprint is shown in Preferences. |
+| `tls` | `"auto"` | Self-signed certificate, made with openssl at the first start in `$XDG_CONFIG_HOME/kvm-studio/tls/` (EC P-256, two years, the computer's host name and IPv4 addresses as subject names). It is made again before it expires and when the addresses change. Its fingerprint is shown in Preferences. |
 | `guest_enabled` | `true` | Guest account of LAN sharing; `false` keeps sharing off. |
 | `login_max_attempts` | `5` | Failed logins from one address before a five minute lockout. |
 

@@ -13,11 +13,26 @@ import uvicorn
 import uvicorn.config
 from fastapi import FastAPI
 
+from ..tls import CIPHERS, harden
+
 # Uvicorn 0.35 and later: the sans-I/O websockets implementation, the one that
 # does not warn with websockets 14. Debian 13 ships uvicorn 0.32, which lacks it.
 WS_PROTOCOL = (
     "websockets-sansio" if "websockets-sansio" in uvicorn.config.WS_PROTOCOLS else "websockets"
 )
+
+# Connections and requests served at once per listener (503 beyond), and the
+# largest WebSocket message a client may send (a pasted clipboard at most).
+MAX_CONCURRENCY = 128
+WS_MAX_MESSAGE = 4 * 1024 * 1024
+
+
+def _hardened(config: uvicorn.Config) -> uvicorn.Config:
+    """Uvicorn builds the TLS context in load(): set its minimum version after."""
+    config.load()
+    if config.ssl is not None:
+        harden(config.ssl)
+    return config
 
 
 class PortInUseError(Exception):
@@ -63,19 +78,34 @@ class BackgroundServer:
     def __init__(self, app: FastAPI, sock: socket.socket, lan: LanListener | None = None) -> None:
         self.port: int = sock.getsockname()[1]
         self._socks = [sock]
-        self._servers = [uvicorn.Server(uvicorn.Config(app, log_level="warning", ws=WS_PROTOCOL))]
+        self._servers = [
+            uvicorn.Server(
+                uvicorn.Config(
+                    app,
+                    log_level="warning",
+                    ws=WS_PROTOCOL,
+                    limit_concurrency=MAX_CONCURRENCY,
+                    ws_max_size=WS_MAX_MESSAGE,
+                )
+            )
+        ]
         if lan is not None:
             self._socks.append(lan.sock)
             self._servers.append(
                 uvicorn.Server(
-                    uvicorn.Config(
-                        app,
-                        log_level="warning",
-                        ws=WS_PROTOCOL,
-                        # The app starts and stops once, with the first listener.
-                        lifespan="off",
-                        ssl_certfile=str(lan.cert),
-                        ssl_keyfile=str(lan.key),
+                    _hardened(
+                        uvicorn.Config(
+                            app,
+                            log_level="warning",
+                            ws=WS_PROTOCOL,
+                            limit_concurrency=MAX_CONCURRENCY,
+                            ws_max_size=WS_MAX_MESSAGE,
+                            # The app starts and stops once, with the first listener.
+                            lifespan="off",
+                            ssl_certfile=str(lan.cert),
+                            ssl_keyfile=str(lan.key),
+                            ssl_ciphers=CIPHERS,
+                        )
                     )
                 )
             )

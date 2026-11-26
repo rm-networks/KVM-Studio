@@ -149,6 +149,18 @@ a command line: the window gets it inside its own process, and a browser is
 opened (or the tray icon copies a link) with a single-use code valid a few
 seconds, which the page trades for the token at once (`/api/auth/redeem`).
 
+Both listeners bound what a client can make the backend hold: 64 KiB of
+request body before signing in and 8 MiB after (`413` beyond, counted as
+it arrives), 128 requests and connections at once, 32 WebSockets per guest
+session or address, three password checks at a time (argon2id takes 64 MiB
+each), and login attempts counted before the password is checked. A
+WebSocket whose `Origin` is not the page's own address is refused. Every
+answer carries a Content Security Policy (scripts from the application only,
+no framing), `X-Content-Type-Options`, `Referrer-Policy` and, on HTTPS,
+`Strict-Transport-Security`; the API schema is only served by the
+development server. The HTTPS listener accepts TLS 1.2 or later, with
+ECDHE AEAD suites only.
+
 Turning sharing on or off opens or closes the port through the helper. The
 shared console uses `<graphics type='vnc' sharePolicy='allow-exclusive'>`:
 several noVNC clients can connect and the interface shows how many people are

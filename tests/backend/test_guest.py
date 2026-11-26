@@ -210,3 +210,48 @@ def test_events_socket_refused_without_a_cookie(lan: TestClient) -> None:
 def test_websocket_routes_check_the_role(app_with_sharing: FastAPI) -> None:
     sockets = [r.path for r in app_with_sharing.routes if isinstance(r, APIWebSocketRoute)]
     assert sorted(sockets) == ["/api/vms/{uuid}/console", "/api/vms/{uuid}/serial", "/ws/events"]
+
+
+@pytest.mark.parametrize(
+    "origin",
+    ["https://192.168.1.20:8443", "http://192.168.1.20:60443", "https://evil.example", "null"],
+)
+def test_events_socket_refused_from_another_origin(guest_client: TestClient, origin: str) -> None:
+    with (
+        pytest.raises(WebSocketDisconnect) as exc,
+        guest_client.websocket_connect(
+            "wss://192.168.1.20:60443/ws/events",
+            subprotocols=["kvmstudio.events"],
+            headers={"Origin": origin},
+        ),
+    ):
+        pass
+    assert exc.value.code == 1008
+
+
+def test_events_socket_from_our_own_page(guest_client: TestClient) -> None:
+    with guest_client.websocket_connect(
+        "wss://192.168.1.20:60443/ws/events",
+        subprotocols=["kvmstudio.events"],
+        headers={"Origin": "https://192.168.1.20:60443"},
+    ) as socket:
+        assert socket.accepted_subprotocol == "kvmstudio.events"
+
+
+def test_local_events_socket_checks_the_origin(client: TestClient) -> None:
+    protocols = ["kvmstudio.events", f"kvmstudio.{TOKEN}"]
+    for origin in ("http://127.0.0.1:80", "http://localhost:80"):
+        with client.websocket_connect(
+            "ws://127.0.0.1/ws/events", subprotocols=protocols, headers={"Origin": origin}
+        ) as socket:
+            assert socket.accepted_subprotocol == "kvmstudio.events"
+    with (
+        pytest.raises(WebSocketDisconnect) as exc,
+        client.websocket_connect(
+            "ws://127.0.0.1/ws/events",
+            subprotocols=protocols,
+            headers={"Origin": "http://127.0.0.1:8000"},
+        ),
+    ):
+        pass
+    assert exc.value.code == 1008

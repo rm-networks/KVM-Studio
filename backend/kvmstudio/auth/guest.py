@@ -13,6 +13,7 @@ import os
 import secrets
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -24,6 +25,9 @@ from ..config import config_dir
 COOKIE = "kvmstudio_session"
 SESSION_IDLE_S = 30 * 60
 LOCKOUT_S = 5 * 60
+MAX_ADDRESSES = 4096
+# argon2id takes 64 MiB per check: a few at a time, whatever comes in.
+MAX_CHECKS = 3
 MIN_PASSWORD = 8
 MAX_PASSWORD = 256
 
@@ -116,28 +120,54 @@ class GuestSessions:
 
 
 class LoginLimiter:
-    """Temporary lockout of an address after max_attempts failed logins."""
+    """Temporary lockout of an address after max_attempts logins without success.
 
-    def __init__(self, max_attempts: int, lockout: float = LOCKOUT_S) -> None:
+    An attempt is counted before its password is checked, under the lock, so
+    requests sent together cannot all pass before the first failure is noted.
+    Addresses not seen for a lockout period are forgotten, and at most
+    max_addresses are remembered.
+    """
+
+    def __init__(
+        self,
+        max_attempts: int,
+        lockout: float = LOCKOUT_S,
+        max_addresses: int = MAX_ADDRESSES,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
         self._max = max_attempts
         self._lockout = lockout
-        self._failures: dict[str, list[float]] = {}
+        self._max_addresses = max_addresses
+        self._clock = clock
+        self._attempts: dict[str, list[float]] = {}
         self._lock = threading.Lock()
 
-    def locked_for(self, address: str) -> int:
-        """Seconds left before this address may try again (0: it may)."""
-        now = time.monotonic()
+    def reserve(self, address: str) -> int:
+        """Counts an attempt: 0 if it may go on, else the seconds left to wait."""
+        now = self._clock()
         with self._lock:
-            recent = [t for t in self._failures.get(address, []) if now - t < self._lockout]
-            self._failures[address] = recent
-            if len(recent) < self._max:
-                return 0
-            return max(1, int(self._lockout - (now - recent[-self._max])))
-
-    def failed(self, address: str) -> None:
-        with self._lock:
-            self._failures.setdefault(address, []).append(time.monotonic())
+            self._purge(now)
+            recent = self._attempts.get(address, [])
+            if len(recent) >= self._max:
+                return max(1, int(self._lockout - (now - recent[-self._max])))
+            self._attempts.pop(address, None)  # most recent last, for the purge
+            self._attempts[address] = [*recent, now]
+            return 0
 
     def succeeded(self, address: str) -> None:
         with self._lock:
-            self._failures.pop(address, None)
+            self._attempts.pop(address, None)
+
+    def tracked(self) -> int:
+        with self._lock:
+            return len(self._attempts)
+
+    def _purge(self, now: float) -> None:
+        for address in list(self._attempts):
+            recent = [t for t in self._attempts[address] if now - t < self._lockout]
+            if recent:
+                self._attempts[address] = recent
+            else:
+                del self._attempts[address]
+        while len(self._attempts) >= self._max_addresses:
+            self._attempts.pop(next(iter(self._attempts)))

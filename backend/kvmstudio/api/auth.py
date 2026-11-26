@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Literal
 
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
-from ..auth.guest import COOKIE, MAX_PASSWORD, SESSION_IDLE_S, check_password
+from ..auth.guest import COOKIE, MAX_CHECKS, MAX_PASSWORD, SESSION_IDLE_S, check_password
 from ..auth.roles import bearer_ok, is_loopback, on_lan_listener, role_of
 from ..auth.token import LINK_COPY_S, LINK_OPEN_S, LinkCodes
 from ..context import Context
 from ..errors import ApiException
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+# Password checks running at once, for every address together.
+CHECK_SLOTS = asyncio.Semaphore(MAX_CHECKS)
 
 
 class Login(BaseModel):
@@ -76,10 +79,11 @@ async def login(ctx: Context, request: Request, body: Login) -> Response:
     if sharing is None or not on_lan_listener(request):
         raise ApiException(404, "auth.no_sharing", "LAN sharing is off")
     address = request.client.host if request.client else "?"
-    if wait := sharing.limiter.locked_for(address):
+    if wait := sharing.limiter.reserve(address):
         raise ApiException(429, "auth.locked", f"Too many attempts: try again in {wait} s")
-    if not await run_in_threadpool(check_password, body.password):
-        sharing.limiter.failed(address)
+    async with CHECK_SLOTS:
+        accepted = await run_in_threadpool(check_password, body.password)
+    if not accepted:
         raise ApiException(401, "auth.bad_password", "Wrong password")
     sharing.limiter.succeeded(address)
     response = Response(status_code=204)
