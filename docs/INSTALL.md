@@ -274,7 +274,9 @@ token; any API request without it is refused (401). The window receives it in
 the URL fragment (`#token=...`), which is never sent to the server nor written
 to its logs. A browser is opened with a single-use code valid a few seconds
 instead, traded at once for the token, since a browser's command line can be
-read by every account of the computer. Connections made by another account of
+read by every account of the computer. The link printed in the terminal in web
+mode carries such a code too, valid two minutes and usable once; the tray
+icon's Copy the Address gives a new one. Connections made by another account of
 the computer are refused (403), token or not; see
 [Architecture](ARCHITECTURE.md).
 

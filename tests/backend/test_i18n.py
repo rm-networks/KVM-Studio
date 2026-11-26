@@ -87,3 +87,47 @@ def test_messages_shown_to_the_user_come_from_the_catalog() -> None:
                 if text and text not in INTERNAL and re.search(r"[A-Za-z]{3,}", text):
                     problems.append(f"{path.relative_to(ROOT)}:{node.lineno} {text!r}")
     assert problems == []
+
+
+def _key_names(node: ast.expr) -> list[str]:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return [node.value]
+    if isinstance(node, ast.IfExp):
+        return _key_names(node.body) + _key_names(node.orelse)
+    return []
+
+
+def _calls() -> dict[str, list[tuple[str, set[str]]]]:
+    """Every t(key, ..., **fields) of the backend: key -> [(where, field names)]."""
+    calls: dict[str, list[tuple[str, set[str]]]] = {}
+    for path in (ROOT / "backend" / "kvmstudio").rglob("*.py"):
+        for node in ast.walk(ast.parse(path.read_text())):
+            if not (isinstance(node, ast.Call) and getattr(node.func, "id", None) == "t"):
+                continue
+            assert node.args, f"{path}:{node.lineno}"
+            names = {k.arg for k in node.keywords if k.arg}
+            assert all(k.arg for k in node.keywords), f"**fields at {path}:{node.lineno}"
+            for key in _key_names(node.args[0]):
+                where = f"{path.relative_to(ROOT)}:{node.lineno}"
+                calls.setdefault(key, []).append((where, names))
+    return calls
+
+
+@pytest.mark.parametrize("language", i18n.LANGUAGES)
+def test_every_message_formats_with_the_fields_its_callers_pass(language: str) -> None:
+    calls = _calls()
+    assert "close.why" in calls
+    problems = []
+    for key, message in json.loads((LOCALE / f"{language}.json").read_text()).items():
+        for where, names in calls.get(key, [("(catalog)", _fields(message) - {"app"})]):
+            if "app" in names:
+                problems.append(f"{where} passes app, which t() fills itself")
+            try:
+                i18n.t(key, language, **dict.fromkeys(names, 1))  # type: ignore[arg-type]
+            except (KeyError, IndexError, ValueError, TypeError) as exc:
+                problems.append(f"{where} {key}: {exc!r}")
+    assert problems == []
+
+
+def test_a_caller_passing_the_product_name_does_not_break_the_message() -> None:
+    assert i18n.t("close.why", "en", app=APP_NAME) == i18n.t("close.why", "en")

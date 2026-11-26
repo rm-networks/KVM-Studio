@@ -33,7 +33,7 @@
   "cli.no_window": "impossible de créer la fenêtre",
   "cli.web_dev": "{app} (développement) : {url}",
   "cli.web_listening": "{app} écoute sur 127.0.0.1:{port}",
-  "cli.web_link": "Ouvrez ce lien (il contient le jeton de session) : {url}",
+  "cli.web_link": "Ouvrez ce lien (usage unique, valable {minutes} minutes) : {url}",
   "cli.backend_failed": "le backend de {app} n'a pas démarré ; voir les messages ci-dessus",
   "cli.port_in_use": "{error}. Changez le port dans Préférences > Interface.",
   "tray.open": "Ouvrir dans le navigateur",
@@ -105,5 +105,7 @@
   "cli.share_no_certificate": "Impossible de créer le certificat du partage sur le réseau local : {error}",
   "cli.share_port_not_opened": "Le port du partage n'a pas été ouvert dans le pare-feu ({error}) ; les autres machines risquent de ne pas l'atteindre.",
   "cli.share_port_not_closed": "Le port du partage n'a pas été fermé dans le pare-feu ({error}).",
-  "cli.share_link": "Partagé sur le réseau local (compte invité) : {url}"
+  "cli.share_link": "Partagé sur le réseau local (compte invité) : {url}",
+  "error.title": "Erreur",
+  "error.text": "L'action n'a pas abouti. Le détail est dans le journal ; {app} reste ouvert."
 }

@@ -43,4 +43,6 @@ def current() -> Language:
 def t(key: str, language: Language | None = None, **fields: Any) -> str:
     lang = language or current()
     message = catalog(lang).get(key) or catalog("en")[key]
-    return message.format(app=APP_NAME, **fields)
+    # {app} is filled here; a caller passing it as well must not break the message.
+    fields.setdefault("app", APP_NAME)
+    return message.format(**fields)

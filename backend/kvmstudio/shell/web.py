@@ -11,7 +11,7 @@ from pathlib import Path
 import uvicorn
 
 from ..auth import guest
-from ..auth.token import new_token
+from ..auth.token import LINK_COPY_S, new_token
 from ..config import Config, default_config_path, load_config, save_config
 from ..frontend import find_frontend_dir
 from ..i18n import t
@@ -60,7 +60,9 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
         print(exc, file=sys.stderr)
         return 1
     print(t("cli.web_listening", port=port))
-    print(t("cli.web_link", url=url), flush=True)
+    # A single-use code, never the session token: the terminal may be logged or shared.
+    link = SessionClient(url).link("copy")
+    print(t("cli.web_link", url=link, minutes=int(LINK_COPY_S // 60)), flush=True)
     if config.web.share_on_lan:
         for address in host_addresses():
             print(

@@ -18,6 +18,7 @@ from typing import Any, Literal
 
 from .. import APP_NAME
 from ..i18n import Language, resolve, t
+from . import qt_guard
 from .session_client import SessionClient
 
 Outcome = Literal["quit", "desktop", "backend_exited"]
@@ -45,8 +46,10 @@ def confirm_close(
     title = t("close.title_quit" if reason == "quit" else "close.title_switch", lang)
     listing = "\n".join(f"  {n}" for n in names)
     text = t("close.still_running", lang, count=len(names)) + "\n\n" + listing
-    why = t("close.why", lang, app=APP_NAME)
+    why = t("close.why", lang)
     policy = workspace.get("on_close", "keep")
+    # Read while the dialog exists: Qt deletes the check box along with it.
+    checked: list[bool] = []
 
     def ask(buttons: list[tuple[str, Any]], info: str, checkbox: Any = None) -> int:
         dialog = box(box.Icon.Information, title, text)
@@ -56,6 +59,8 @@ def confirm_close(
             dialog.setCheckBox(checkbox)
         dialog.setDefaultButton(made[0])
         dialog.exec()
+        if checkbox is not None:
+            checked.append(checkbox.isChecked())
         clicked = dialog.clickedButton()
         return made.index(clicked) if clicked in made else len(made) - 1
 
@@ -67,7 +72,7 @@ def confirm_close(
         check = widgets.QCheckBox(t("close.dont_show", lang))
         if ask([(go, box.ButtonRole.AcceptRole), cancel], why, check) != 0:
             return False
-        if check.isChecked():
+        if any(checked):
             with contextlib.suppress(OSError, ValueError, KeyError):
                 client.hide_reminder()
         return True
@@ -161,6 +166,7 @@ def run_tray(
         return None
     app.setQuitOnLastWindowClosed(False)
     lang = resolve(language)
+    qt_guard.install(widgets, lang)
     outcome: list[Outcome] = []
 
     def finish(result: Outcome) -> None:

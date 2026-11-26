@@ -15,7 +15,8 @@ from .. import APP_NAME
 from ..auth.token import new_token
 from ..config import Config, default_config_path
 from ..frontend import find_frontend_dir
-from ..i18n import t
+from ..i18n import resolve, t
+from . import qt_guard
 from .backend_process import BackendError, BackendProcess
 from .clipboard import DesktopApi, make_clipboard
 from .restart import exec_restart
@@ -111,6 +112,7 @@ def run(config: Config, config_path: Path | None = None, page: str | None = None
                 window.destroy()
 
         threading.Thread(target=watch_backend, daemon=True).start()
+        qt_guard.install(importlib.import_module("qtpy.QtWidgets"), resolve(config.ui.language))
         webview.start(gui="qt", icon=str(icon) if icon and icon.is_file() else None)
     finally:
         backend.stop()
