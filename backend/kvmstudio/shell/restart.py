@@ -30,5 +30,5 @@ def exec_restart() -> None:
     """Replace the current process with a fresh KVM Studio (never returns)."""
     sys.stdout.flush()
     sys.stderr.flush()
-    args = [sys.executable, "-m", "kvmstudio", *restart_argv(sys.argv[1:])]
+    args = [sys.executable, "-P", "-m", "kvmstudio", *restart_argv(sys.argv[1:])]
     os.execv(sys.executable, args)  # noqa: S606

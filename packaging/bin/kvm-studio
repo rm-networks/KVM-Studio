@@ -1,7 +1,9 @@
 #!/bin/sh
 # Launcher installed by the kvm-studio package. The backend child process
-# inherits these variables.
+# inherits these variables. -P (PYTHONSAFEPATH): the current directory is
+# never searched for modules, whatever folder kvm-studio is started from.
 export PYTHONPATH=/opt/kvm-studio/lib:/opt/kvm-studio/vendor
 export PYTHONNOUSERSITE=1
 export PYTHONDONTWRITEBYTECODE=1
-exec /usr/bin/python3 -m kvmstudio "$@"
+export PYTHONSAFEPATH=1
+exec /usr/bin/python3 -P -m kvmstudio "$@"

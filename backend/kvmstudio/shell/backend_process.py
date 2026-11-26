@@ -46,6 +46,7 @@ class BackendProcess:
     ) -> None:
         self._args = [
             sys.executable,
+            "-P",  # never the current directory on sys.path
             "-m",
             "kvmstudio.shell.backend_process",
             "--config",

@@ -106,3 +106,17 @@ def test_tray_falls_back_without_a_notification_area(monkeypatch: pytest.MonkeyP
 def test_tray_labels() -> None:
     assert i18n.t("tray.desktop", i18n.resolve("fr")) == "Passer en mode fenêtre"
     assert i18n.t("tray.desktop", i18n.resolve("en")) == "Switch to Window Mode"
+
+
+def test_children_never_import_from_the_current_directory(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from kvmstudio.shell import restart
+    from kvmstudio.shell.backend_process import BackendProcess
+
+    backend = BackendProcess(tmp_path / "config.toml", "web", "tok", 60080)
+    assert backend._args[1:3] == ["-P", "-m"]
+    seen: list[list[str]] = []
+    monkeypatch.setattr(os, "execv", lambda _exe, args: seen.append(args))
+    restart.exec_restart()
+    assert seen[0][1:3] == ["-P", "-m"]

@@ -7,6 +7,12 @@ export HOME="$dir" XDG_CONFIG_HOME="$dir/config"
 printf '[libvirt]\nuri = "test:///default"\n\n[web]\nport = 60080\n' > "$dir/config.toml"
 
 kvm-studio --version
+# Python 3.11 or later (-P), and nothing imported from the current directory.
+python3 -c 'import sys; assert sys.version_info >= (3, 11), sys.version'
+mkdir -p "$dir/cwd/kvmstudio"
+: > "$dir/cwd/kvmstudio/__init__.py"
+echo 'raise SystemExit("imported from the current directory")' > "$dir/cwd/kvmstudio/__main__.py"
+(cd "$dir/cwd" && kvm-studio --version)
 kvm-studio --config "$dir/config.toml" --check
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/opt/kvm-studio/lib:/opt/kvm-studio/vendor python3 -c \
     "import kvmstudio.app, kvmstudio.auth.guest, kvmstudio.shell.web, kvmstudio.shell.desktop"
