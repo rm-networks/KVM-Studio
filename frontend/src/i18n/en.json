@@ -49,7 +49,8 @@
     "snapshotManager": "Snapshot Manager…",
     "logout": "Log Out",
     "documentation": "Documentation",
-    "sendKey": "Send Key"
+    "sendKey": "Send Key",
+    "autofitShared": "Off while the console is shared"
   },
   "toolbar": {
     "start": "Start",
@@ -390,7 +391,8 @@
     "fullscreenBrowserLocked": "The keyboard is locked for the VM: Escape reaches it, and holding Escape down leaves full screen (imposed by the browser). Ctrl+Alt+Enter also leaves full screen.",
     "fullscreenKeys": "Ctrl+Alt+Enter",
     "viewers_one": "{{count}} person connected",
-    "viewers_other": "{{count}} people connected"
+    "viewers_other": "{{count}} people connected",
+    "sharedSize": "Guest resolution kept, scaled locally"
   },
   "tabs": {
     "close": "Close tab",

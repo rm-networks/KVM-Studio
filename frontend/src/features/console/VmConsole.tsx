@@ -19,7 +19,7 @@ import {
   updateConsole,
 } from "./consoleRegistry";
 import { pressCombo } from "./keys";
-import { useViewers } from "./viewers";
+import { isShared, subscribeViewers, useViewers } from "./viewers";
 import "./VmConsole.css";
 
 type Status = "connecting" | "connected" | "disconnected" | "timeout";
@@ -272,7 +272,7 @@ function VncScreen({
     }, CONNECT_TIMEOUT_MS);
     // noVNC asks the server for the console's size when resizeSession is set.
     const fitGuest = () => {
-      if (!getAutofit() || rfb.viewOnly) return;
+      if (!getAutofit() || rfb.viewOnly || isShared(uuid)) return;
       rfb.resizeSession = true;
       rfb.resizeSession = false;
     };
@@ -283,6 +283,17 @@ function VncScreen({
     };
     const resizes = new ResizeObserver(scheduleFit);
     const stopAutofit = subscribeAutofit(scheduleFit);
+    // Back to one person: the guest follows this window again. A request the
+    // server held back while shared got no answer: noVNC must not wait for it.
+    let wasShared = isShared(uuid);
+    const stopViewers = subscribeViewers(() => {
+      const shared = isShared(uuid);
+      if (wasShared && !shared) {
+        (rfb as unknown as { _pendingRemoteResize: boolean })._pendingRemoteResize = false;
+        scheduleFit();
+      }
+      wasShared = shared;
+    });
     const onConnect = () => {
       clearTimeout(timer);
       setStatus("connected");
@@ -351,6 +362,7 @@ function VncScreen({
       clearTimeout(fitTimer);
       resizes.disconnect();
       stopAutofit();
+      stopViewers();
       unregisterConsole(uuid);
       screen.removeEventListener("focusin", onFocus);
       screen.removeEventListener("focusout", onBlur);
@@ -375,6 +387,7 @@ function VncScreen({
         <span className="console-viewers" role="status">
           <Users aria-hidden />
           {t("console.viewers", { count: viewers })}
+          <span className="console-viewers-note">{t("console.sharedSize")}</span>
         </span>
       )}
       {splash && <BootSplash />}

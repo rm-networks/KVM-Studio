@@ -8,6 +8,7 @@ import { DOCS_URL } from "../brand";
 import { openLink } from "../platform/links";
 import { LANGUAGE_NAMES, languages, type Language } from "../i18n";
 import { setAutofit, useAutofit } from "../features/console/consoleRegistry";
+import { useViewers } from "../features/console/viewers";
 import { useVmMenu } from "../features/vm/vmMenu";
 import type { Layout } from "./App";
 import "./MenuBar.css";
@@ -78,6 +79,7 @@ export function MenuBar({
 }: Props) {
   const { t } = useTranslation();
   const autofit = useAutofit();
+  const shared = useViewers(vm?.uuid ?? "") >= 2;
   const m = (key: string) => t(`menu.${key}`);
   const vmEntries = useVmMenu(vm, drives, usb);
   const check = (key: keyof Layout): Entry => ({
@@ -137,6 +139,8 @@ export function MenuBar({
           checked: autofit,
           onChange: () => setAutofit(!autofit),
           keepOpen: true,
+          disabled: shared,
+          hint: m("autofitShared"),
         },
         sep,
         sub(m("customize"), [check("library"), check("toolbar"), check("statusBar")]),

@@ -42,7 +42,9 @@ window.
   long tasks under way (a snapshot of a running VM) with a Cancel button.
 - A running VM with a serial console shows Screen and Serial Console views
   above its console; the console shows how many people are on it when the
-  VMs are shared on the local network.
+  VMs are shared on the local network. While two people or more are on it,
+  the mention "Guest resolution kept, scaled locally" follows, and View >
+  Autofit Guest is greyed out with "Off while the console is shared".
 
 A guest of LAN sharing has no Edit menu (Preferences, virtual network editor)
 and no first-run assistant; File > Log Out ends the session.

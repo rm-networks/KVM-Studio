@@ -49,7 +49,8 @@
     "snapshotManager": "Gestionnaire d'instantanés…",
     "logout": "Se déconnecter",
     "documentation": "Documentation",
-    "sendKey": "Envoyer une touche"
+    "sendKey": "Envoyer une touche",
+    "autofitShared": "Désactivé : console partagée"
   },
   "toolbar": {
     "start": "Démarrer",
@@ -390,7 +391,8 @@
     "fullscreenBrowserLocked": "Le clavier est verrouillé pour la VM : Échap lui parvient, et la maintenir enfoncée quitte le plein écran (imposé par le navigateur). Ctrl+Alt+Entrée quitte aussi le plein écran.",
     "fullscreenKeys": "Ctrl+Alt+Entrée",
     "viewers_one": "{{count}} personne connectée",
-    "viewers_other": "{{count}} personnes connectées"
+    "viewers_other": "{{count}} personnes connectées",
+    "sharedSize": "Résolution de l'invité conservée, mise à l'échelle locale"
   },
   "tabs": {
     "close": "Fermer l'onglet",

@@ -20,6 +20,7 @@ from ..auth.roles import socket_role
 from ..context import get_context
 from ..errors import ApiException, classify
 from ..libvirt_conn import LibvirtConnection
+from .rfb_filter import ClientStream
 
 ACCEPTED_PROTOCOL = "binary"
 
@@ -44,9 +45,15 @@ def open_vnc_socket(conn: LibvirtConnection, uuid: str) -> socket.socket:
     return socket.socket(fileno=conn.run(op))
 
 
-async def _pump(websocket: WebSocket, sock: socket.socket) -> None:
+# Shared console (F-104): from this many people on, the guest is not resized.
+SHARED_FROM = 2
+
+
+async def _pump(websocket: WebSocket, sock: socket.socket, uuid: str) -> None:
     sock.setblocking(False)
     reader, writer = await asyncio.open_connection(sock=sock)
+    viewers: dict[str, int] = websocket.app.state.viewers
+    stream = ClientStream(lambda: viewers.get(uuid, 0) >= SHARED_FROM)
 
     async def to_vm() -> None:
         while True:
@@ -54,7 +61,7 @@ async def _pump(websocket: WebSocket, sock: socket.socket) -> None:
             if message["type"] == "websocket.disconnect":
                 return
             data = message.get("bytes") or message.get("text", "").encode()
-            writer.write(data)
+            writer.write(stream.feed(data))
             await writer.drain()
 
     async def to_browser() -> None:
@@ -96,7 +103,7 @@ async def vnc_console(websocket: WebSocket, uuid: str) -> None:
     await websocket.accept(subprotocol=ACCEPTED_PROTOCOL)
     _viewers(websocket, uuid, +1)
     try:
-        await _pump(websocket, sock)
+        await _pump(websocket, sock, uuid)
     finally:
         sock.close()
         _viewers(websocket, uuid, -1)

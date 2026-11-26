@@ -1,10 +1,11 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { api, type UsbDevice, type VmSummary } from "../api/client";
 import { NotificationProvider } from "../components/Notifications";
 import { LibraryActionsProvider } from "../features/library/LibraryActions";
+import { setViewers } from "../features/console/viewers";
 import { VmContextMenu } from "../features/library/VmContextMenu";
 import { VmActionsProvider } from "../features/vm/VmActions";
 import { type VmCommands, VmCommandsContext } from "../features/vm/vmMenu";
@@ -174,5 +175,22 @@ describe("Help menu", () => {
     fireEvent.click(await screen.findByRole("menuitem", { name: "Documentation" }));
     expect(opened).toEqual(["https://github.com/rm-networks/KVM-Studio"]);
     delete window.pywebview;
+  });
+
+  it("greys out Autofit Guest while the console of the VM is shared", async () => {
+    render(
+      <Providers>
+        <Bar vm={makeVm({ uuid: "u1", name: "test-vm" })} />
+      </Providers>,
+    );
+    act(() => setViewers("u1", 2));
+    open("Affichage");
+    const fit = await screen.findByRole("menuitemcheckbox", { name: /Ajuster l'invité/ });
+    expect(fit.hasAttribute("data-disabled")).toBe(true);
+    expect(fit.textContent).toContain("Désactivé : console partagée");
+    act(() => setViewers("u1", 1));
+    expect(fit.hasAttribute("data-disabled")).toBe(false);
+    expect(fit.textContent).not.toContain("console partagée");
+    setViewers("u1", 0);
   });
 });

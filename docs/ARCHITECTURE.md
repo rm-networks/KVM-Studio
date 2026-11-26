@@ -187,7 +187,12 @@ ECDHE AEAD suites only.
 Turning sharing on or off opens or closes the port through the helper. The
 shared console uses `<graphics type='vnc' sharePolicy='allow-exclusive'>`:
 several noVNC clients can connect and the interface shows how many people are
-connected (event `console.viewers`).
+connected (event `console.viewers`). Each client has its own VNC connection
+through libvirt. From two people on, the guest keeps its resolution: the relay
+reads the client to server RFB stream message by message and drops
+SetDesktopSize (owner and guests alike), the interface stops asking and greys
+out View > Autofit Guest, and each client scales the picture to its window.
+With one person left, Autofit Guest applies that person's window size again.
 
 ## Guest integration
 

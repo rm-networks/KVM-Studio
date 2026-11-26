@@ -5,6 +5,7 @@ import { noteStart } from "./bootSplash";
 import { FakeResizeObserver } from "../../test/fakeResizeObserver";
 import { type ConsoleHandle, setAutofit, useConsole } from "./consoleRegistry";
 import { DEFAULT_HOTKEYS, hotkeyKeys } from "./hotkeys";
+import { setViewers } from "./viewers";
 import { VmConsole } from "./VmConsole";
 
 function Probe() {
@@ -27,6 +28,7 @@ const { FakeRfb, instances } = vi.hoisted(() => {
     scaleViewport = false;
     viewOnly = false;
     sizeRequests = 0;
+    _pendingRemoteResize = false;
     set resizeSession(on: boolean) {
       // noVNC sends the size request when the option is switched on.
       if (on) this.sizeRequests += 1;
@@ -167,6 +169,33 @@ describe("VmConsole", () => {
       expect(rfb.sizeRequests).toBe(2);
     } finally {
       setAutofit(true);
+      vi.useRealTimers();
+    }
+  });
+
+  it("leaves the guest size alone while the console is shared", async () => {
+    render(<VmConsole uuid="abc" />);
+    const rfb = await connected();
+    vi.useFakeTimers();
+    try {
+      act(() => void rfb.dispatchEvent(new Event("connect")));
+      act(() => vi.advanceTimersByTime(400));
+      expect(rfb.sizeRequests).toBe(1);
+      act(() => setViewers("abc", 2));
+      expect(screen.getByRole("status").textContent).toContain("Résolution de l'invité conservée");
+      const observer = FakeResizeObserver.instances.at(-1) as FakeResizeObserver;
+      act(() => observer.resize());
+      act(() => vi.advanceTimersByTime(1000));
+      expect(rfb.sizeRequests).toBe(1);
+      expect(rfb.scaleViewport).toBe(true); // scaled locally instead
+      // A request held back by the server while shared got no answer.
+      rfb._pendingRemoteResize = true;
+      act(() => setViewers("abc", 1));
+      expect(rfb._pendingRemoteResize).toBe(false);
+      act(() => vi.advanceTimersByTime(400));
+      expect(rfb.sizeRequests).toBe(2);
+    } finally {
+      setViewers("abc", 0);
       vi.useRealTimers();
     }
   });

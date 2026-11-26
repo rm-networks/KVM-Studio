@@ -9,6 +9,8 @@ export type MenuEntry =
       onChange: () => void;
       keepOpen?: boolean;
       disabled?: boolean;
+      /** Why it is greyed out, shown next to the label. */
+      hint?: string;
     }
   | { kind: "sep" };
 

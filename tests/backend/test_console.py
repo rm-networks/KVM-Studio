@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import socket
 import threading
+import time
 from pathlib import Path
 
 import libvirt
@@ -245,3 +246,45 @@ def test_enable_clipboard_on_a_vm_that_has_vnc(
         assert info["config"] == ["spice", "vnc"]
     finally:
         dom.undefine()
+
+
+def test_a_shared_console_does_not_resize_the_guest(
+    config: Config, conn: LibvirtConnection, frontend_dir: Path
+) -> None:
+    """Option C of F-104: two people or more, SetDesktopSize never reaches QEMU."""
+    from .test_rfb_filter import HANDSHAKE, POINTER, RESIZE
+
+    received: list[bytes] = []
+
+    def recording_opener(_conn: LibvirtConnection, _uuid: str) -> socket.socket:
+        ours, theirs = socket.socketpair()
+
+        def serve() -> None:
+            with theirs:
+                while data := theirs.recv(4096):
+                    received.append(data)
+                    theirs.sendall(b"k")
+
+        threading.Thread(target=serve, daemon=True).start()
+        return ours
+
+    client = make_client(config, conn, frontend_dir, recording_opener)
+    url = "ws://127.0.0.1/api/vms/u1/console"
+    with client.websocket_connect(url, subprotocols=PROTOCOLS) as first:
+        first.send_bytes(HANDSHAKE)
+        first.receive_bytes()
+        first.send_bytes(RESIZE + POINTER)  # alone: passed on
+        first.receive_bytes()
+        with client.websocket_connect(url, subprotocols=PROTOCOLS) as second:
+            second.send_bytes(HANDSHAKE)
+            second.receive_bytes()
+            for ws in (first, second):  # owner and guest alike
+                ws.send_bytes(RESIZE + POINTER)
+                ws.receive_bytes()
+        for _ in range(100):  # the second session is counted out after it closed
+            if client.app.state.viewers == {"u1": 1}:  # type: ignore[attr-defined]
+                break
+            time.sleep(0.02)
+        first.send_bytes(RESIZE)  # alone again: passed on
+        first.receive_bytes()
+    assert b"".join(received).count(RESIZE) == 2

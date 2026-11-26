@@ -345,7 +345,7 @@ The library folders are real folders on disk: what the user sees in the tree mat
 - **F-101** The guest manages VMs like the owner: create, delete, change the settings, start/stop, console, snapshots, clones.
 - **F-102** The guest does not touch the host: no access to Preferences, the network editor, the ISO libraries or LAN sharing; no raw XML editor; no passthrough (physical disk, PCI), and no listing, connecting or disconnecting of host USB devices (a device the owner connected stays usable in the guest system); no import of a VM's disks from outside the root; VM cards on `kvmnet` networks only. Their Edit menu shows these entries greyed out, and Language, whose choice stays in their browser and never changes the host's language.
 - **F-103** Path confinement: a guest can only attach disks from the `KVM-Studio` root and ISO images from the declared libraries. Checked by the backend, not only in the interface.
-- **F-104** Shared console: several people on the same VM see the same screen and share keyboard and mouse; "N people connected" indicator.
+- **F-104** Shared console: several people on the same VM see the same screen and share keyboard and mouse; "N people connected" indicator. From two people on, the guest resolution is not changed (Autofit Guest greyed out, resize requests dropped by the server); each one sees the picture scaled to the window. With one person left, Autofit Guest applies again.
 - **F-105** Login security: self-signed HTTPS (TLS 1.2 or later, AEAD suites), hashed password, temporary lockout after 5 attempts counted before the check, sessions expired after inactivity.
 - **F-106** Port opened and closed automatically in the firewall (firewalld or ufw) when LAN sharing is turned on or off.
 

@@ -53,6 +53,7 @@ export function MenuEntries({ entries, kind }: Props) {
                 </M.ItemIndicator>
               </span>
               <span className="menu-label">{entry.label}</span>
+              {entry.disabled && entry.hint && <span className="menu-keys">{entry.hint}</span>}
             </M.CheckboxItem>
           );
         case "sub":

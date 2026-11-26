@@ -75,3 +75,12 @@
   width: 14px;
   height: 14px;
 }
+
+.console-viewers-note {
+  opacity: 0.75;
+}
+
+.console-viewers-note::before {
+  content: "·";
+  margin-right: var(--space-1);
+}
