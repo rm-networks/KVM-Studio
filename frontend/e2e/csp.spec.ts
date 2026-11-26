@@ -3,8 +3,10 @@ import { type Page, expect, test } from "@playwright/test";
 // Every screen reached from the menus must work under the Content Security
 // Policy the backend sends: any violation fails the test.
 
+// Left out: actions that end or change something, and the View settings that
+// are saved and would reach the other tests running at the same time.
 const SKIP =
-  /Quit|Exit|Close|Power|Shut|Restart|Suspend|Reset|Delete|Remove|Documentation|Uninstall|Window Mode|Desktop|Log ?out|Revert|Take Snapshot|Send|Full Screen|Unity|Pause|Resume|Ctrl|Grab/i;
+  /Quit|Exit|Close|Power|Shut|Restart|Suspend|Reset|Delete|Remove|Documentation|Uninstall|Window Mode|Desktop|Log ?out|Revert|Take Snapshot|Send|Full Screen|Unity|Pause|Resume|Ctrl|Grab|Language|English|Français|Library|Toolbar|Status Bar|Customize|Autofit/i;
 
 async function watchPolicy(page: Page): Promise<string[]> {
   const violations: string[] = [];
