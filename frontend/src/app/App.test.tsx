@@ -56,7 +56,7 @@ function eventSocket(): FakeWebSocket {
 describe("App", () => {
   it("sends the token from the URL and lists the VMs", async () => {
     window.history.replaceState(null, "", "/#token=abc123");
-    captureToken();
+    await captureToken();
     expect(window.location.hash).toBe("");
 
     const fetchMock = mockFetch((path) => [200, apiResponse(path)]);

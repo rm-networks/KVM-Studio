@@ -171,13 +171,14 @@ def run_tray(
     if icon is not None and icon.is_file():
         tray.setIcon(gui.QIcon(str(icon)))
     tray.setToolTip(t("tray.tooltip", lang, url=url.split("#", 1)[0]))
+    client = SessionClient(url)
     menu = widgets.QMenu()
-    menu.addAction(t("tray.open", lang)).triggered.connect(lambda: webbrowser.open(url))
+    # Links with a single-use code: the token never reaches a command line.
+    menu.addAction(t("tray.open", lang)).triggered.connect(lambda: webbrowser.open(client.link()))
     menu.addAction(t("tray.copy", lang)).triggered.connect(
-        lambda: widgets.QApplication.clipboard().setText(url)
+        lambda: widgets.QApplication.clipboard().setText(client.link("copy"))
     )
     menu.addSeparator()
-    client = SessionClient(url)
 
     def leave(result: Outcome) -> None:
         reason = "quit" if result == "quit" else "switch"
@@ -190,7 +191,7 @@ def run_tray(
     # A left click opens the page, like most tray icons.
     tray.activated.connect(
         lambda reason: (
-            webbrowser.open(url)
+            webbrowser.open(client.link())
             if reason == widgets.QSystemTrayIcon.ActivationReason.Trigger
             else None
         )

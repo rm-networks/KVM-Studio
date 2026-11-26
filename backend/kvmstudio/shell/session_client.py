@@ -40,6 +40,19 @@ class SessionClient:
         config = self._call("GET", "/preferences")["config"]
         return dict(config.get("workspace", {}))
 
+    def link(self, purpose: str = "open") -> str:
+        """The page's address with a fresh single-use code (without, if the backend is silent).
+
+        A browser is started with this link on its command line, which other
+        accounts can read: it never carries the token.
+        """
+        page = self._base.removesuffix("/api") + "/"
+        try:
+            code = self._call("POST", "/auth/link", {"purpose": purpose})["code"]
+        except (OSError, ValueError, KeyError, TypeError):
+            return page
+        return f"{page}#code={code}"
+
     def hide_reminder(self) -> None:
         config = self._call("GET", "/preferences")["config"]
         config.setdefault("workspace", {})["close_reminder"] = False

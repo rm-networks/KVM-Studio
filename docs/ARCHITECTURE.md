@@ -139,6 +139,16 @@ cookie (HttpOnly, Secure, SameSite=Strict) only on the HTTPS listener. Both
 listeners run in the backend process, on one event loop. The loopback one only
 answers to `127.0.0.1` and `localhost` as host name (DNS rebinding).
 
+Other accounts of the same computer reach the loopback address too. Every
+loopback connection is checked against the account that runs the backend:
+the kernel lists the owner of each TCP socket in `/proc/net/tcp` and
+`/proc/net/tcp6`, and a client of another account gets 403, token or not. When
+the client's socket is not listed (another network namespace, no `/proc`), the
+token alone is checked and a warning is logged. The token itself never reaches
+a command line: the window gets it inside its own process, and a browser is
+opened (or the tray icon copies a link) with a single-use code valid a few
+seconds, which the page trades for the token at once (`/api/auth/redeem`).
+
 Turning sharing on or off opens or closes the port through the helper. The
 shared console uses `<graphics type='vnc' sharePolicy='allow-exclusive'>`:
 several noVNC clients can connect and the interface shows how many people are

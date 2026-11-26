@@ -40,8 +40,10 @@ from .api import (
     vms,
 )
 from .api import sharing as sharing_api
+from .auth.peer import LocalUserCheck
 from .auth.roles import HostCheck, require_access
 from .auth.roles import Sharing as LanSharing
+from .auth.token import LinkCodes
 from .config import Config, default_config_path, load_config
 from .console.serial import SerialOpener, open_libvirt_serial, serial_console
 from .console.vnc import ConsoleOpener, open_vnc_socket, vnc_console
@@ -138,7 +140,10 @@ def create_app(
         config_path=config_path,
         sharing=sharing,
     )
+    app.state.link_codes = LinkCodes()
     app.add_middleware(HostCheck)
+    # Outermost: another account of this computer gets nothing, token or not.
+    app.add_middleware(LocalUserCheck)
     app.add_exception_handler(libvirt.libvirtError, libvirt_error_handler)
     app.add_exception_handler(ApiException, api_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)

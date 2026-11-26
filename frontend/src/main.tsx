@@ -11,16 +11,15 @@ import { NotificationProvider } from "./components/Notifications";
 import { UninstallWizard } from "./features/uninstall/UninstallWizard";
 import "./i18n";
 
-captureToken();
-
 // A desktop application: no browser context menu, except where text is edited.
 document.addEventListener("contextmenu", (e) => {
   const target = e.target as HTMLElement | null;
   if (!target?.closest("input, textarea, [contenteditable='true']")) e.preventDefault();
 });
 
-const root = document.getElementById("root");
-if (root) {
+function render(): void {
+  const root = document.getElementById("root");
+  if (!root) return;
   createRoot(root).render(
     <StrictMode>
       {/* "Uninstall KVM Studio" opens a window on this page alone. */}
@@ -34,3 +33,6 @@ if (root) {
     </StrictMode>,
   );
 }
+
+// A browser link carries a single-use code, traded for the token first.
+void captureToken().finally(render);

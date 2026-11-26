@@ -19,6 +19,7 @@ from ..services.networks import host_addresses
 from .backend_process import BackendError, BackendProcess
 from .restart import exec_restart
 from .server import WS_PROTOCOL
+from .session_client import SessionClient
 from .tray import run_tray
 
 
@@ -67,7 +68,7 @@ def run(config: Config, config_path: Path | None, *, open_browser: bool, reload:
             )
     if open_browser:
         # The default browser (xdg-open on Linux desktops), as if a link was clicked.
-        webbrowser.open(url)
+        webbrowser.open(SessionClient(url).link())
 
     frontend = find_frontend_dir()
     icon = frontend / "logo.png" if frontend else None

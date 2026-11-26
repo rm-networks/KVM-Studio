@@ -73,7 +73,7 @@ class Sharing:
     firewall: str | None = None
 
 
-def _loopback(conn: HTTPConnection) -> bool:
+def is_loopback(conn: HTTPConnection) -> bool:
     host = conn.client.host if conn.client else ""
     try:
         return ipaddress.ip_address(host).is_loopback
@@ -104,7 +104,7 @@ def guest_ok(conn: HTTPConnection) -> bool:
 
 def role_of(conn: HTTPConnection, *, token_ok: bool) -> Role | None:
     # The owner's token is only good from this computer.
-    if token_ok and _loopback(conn):
+    if token_ok and is_loopback(conn):
         return "owner"
     if guest_ok(conn):
         return "guest"

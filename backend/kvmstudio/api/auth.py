@@ -9,7 +9,8 @@ from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 from ..auth.guest import COOKIE, MAX_PASSWORD, SESSION_IDLE_S, check_password
-from ..auth.roles import bearer_ok, on_lan_listener, role_of
+from ..auth.roles import bearer_ok, is_loopback, on_lan_listener, role_of
+from ..auth.token import LINK_COPY_S, LINK_OPEN_S, LinkCodes
 from ..context import Context
 from ..errors import ApiException
 
@@ -18,6 +19,22 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 class Login(BaseModel):
     password: str = Field(max_length=MAX_PASSWORD)
+
+
+class LinkRequest(BaseModel):
+    purpose: Literal["open", "copy"] = "open"
+
+
+class LinkCode(BaseModel):
+    code: str
+
+
+class Redeem(BaseModel):
+    code: str = Field(max_length=64)
+
+
+class Token(BaseModel):
+    token: str
 
 
 class Me(BaseModel):
@@ -29,6 +46,28 @@ class Me(BaseModel):
 async def me(ctx: Context, request: Request) -> Me:
     role = role_of(request, token_ok=bearer_ok(request))
     return Me(role=role, sharing=ctx.sharing is not None)
+
+
+def _codes(request: Request) -> LinkCodes:
+    codes: LinkCodes = request.app.state.link_codes
+    return codes
+
+
+@router.post("/link")
+async def new_link(request: Request, body: LinkRequest) -> LinkCode:
+    """A single-use code for a link to this page (the owner only)."""
+    if role_of(request, token_ok=bearer_ok(request)) != "owner":
+        raise ApiException(401, "auth.invalid_token", "Missing or invalid session token")
+    ttl = LINK_COPY_S if body.purpose == "copy" else LINK_OPEN_S
+    return LinkCode(code=_codes(request).new(ttl))
+
+
+@router.post("/redeem")
+async def redeem(ctx: Context, request: Request, body: Redeem) -> Token:
+    """The token, for a code of a link opened on this computer, once."""
+    if not is_loopback(request) or not _codes(request).redeem(body.code):
+        raise ApiException(401, "auth.invalid_token", "Unknown or expired link")
+    return Token(token=ctx.token)
 
 
 @router.post("/login", status_code=204)
