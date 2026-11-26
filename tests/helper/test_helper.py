@@ -266,7 +266,10 @@ def test_socket_identifies_the_caller_by_kernel_credentials(
         client.sendall(json.dumps(iso_acl(str(lib / "linux" / "fedora.iso"))).encode() + b"\n")
         answer = json.loads(client.makefile().readline())
     assert answer["error"] == "not_authorized"
-    assert running == [Peer(os.getpid(), os.getuid(), os.getgid())]
+    assert len(running) == 1
+    peer = running[0]
+    assert (peer.pid, peer.uid, peer.gid) == (os.getpid(), os.getuid(), os.getgid())
+    assert set(peer.groups) == set(os.getgroups())
 
 
 def test_an_unauthorized_caller_learns_nothing_about_paths(
