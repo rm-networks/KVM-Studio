@@ -157,7 +157,7 @@ def create_app(
     # Another account of this computer gets nothing, token or not.
     app.add_middleware(LocalUserCheck)
     # Outermost, for every answer, refusals included.
-    app.add_middleware(SecurityHeaders)
+    app.add_middleware(SecurityHeaders, window=mode == "desktop")
     app.add_exception_handler(libvirt.libvirtError, libvirt_error_handler)
     app.add_exception_handler(ApiException, api_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)

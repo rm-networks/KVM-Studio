@@ -203,3 +203,18 @@ def test_security_headers_and_no_public_schema(lan_app: FastAPI, client_app: Fas
     assert "content-security-policy" in local.headers
     assert "strict-transport-security" not in local.headers
     assert asyncio.run(get(lan_app, LAN, "/openapi.json")).status_code in (404, 405)
+
+
+def test_only_the_window_may_evaluate_strings(
+    config: Config, conn: LibvirtConnection, frontend_dir: Path, client_app: FastAPI
+) -> None:
+    window = create_app(config, conn, TOKEN, mode="desktop", frontend_dir=frontend_dir)
+
+    async def csp(app: FastAPI) -> str:
+        transport = httpx.ASGITransport(app=app, client=("192.168.1.30", 1))
+        async with httpx.AsyncClient(transport=transport, base_url="http://127.0.0.1") as c:
+            return (await c.get("/")).headers["content-security-policy"]
+
+    # pywebview's bridge is built with new Function(): the window needs it.
+    assert "script-src 'self' 'unsafe-eval'" in asyncio.run(csp(window))
+    assert "unsafe-eval" not in asyncio.run(csp(client_app))
