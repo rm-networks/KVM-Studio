@@ -27,7 +27,12 @@ test("menus and dialogs run under the Content Security Policy", async ({ page })
   const violations = await watchPolicy(page);
   const answer = await page.goto("/#token=e2e");
   expect(answer?.headers()["content-security-policy"]).toContain("script-src 'self'");
-  await page.getByText("test", { exact: true }).first().click();
+  // The VM of the test driver, wherever another test filed it.
+  await page.getByPlaceholder("Search").fill("test");
+  await page
+    .getByRole("treeitem", { name: /\btest\b/ })
+    .first()
+    .click();
 
   const menus = await page.getByRole("menubar").getByRole("menuitem").allInnerTexts();
   expect(menus.length).toBeGreaterThan(3);
