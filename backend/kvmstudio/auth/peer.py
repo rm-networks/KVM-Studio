@@ -87,7 +87,7 @@ class LocalUserCheck:
     def __init__(self, app: ASGIApp, uid: int | None = None) -> None:
         self.app = app
         self.uid = os.getuid() if uid is None else uid
-        self._warned = 0.0
+        self._warned: float | None = None
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] in ("http", "websocket"):
@@ -104,7 +104,7 @@ class LocalUserCheck:
 
     def _warn(self) -> None:
         now = time.monotonic()
-        if now - self._warned > _WARN_EVERY_S:
+        if self._warned is None or now - self._warned > _WARN_EVERY_S:
             self._warned = now
             log.warning("the account of a local client is unknown: the token alone is checked")
 
