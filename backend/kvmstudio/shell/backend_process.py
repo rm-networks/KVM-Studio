@@ -15,6 +15,7 @@ import argparse
 import contextlib
 import os
 import select
+import signal
 import subprocess
 import sys
 import threading
@@ -176,10 +177,11 @@ def _serve(config_path: Path, mode: Literal["desktop", "web"], port: int) -> int
     )
     server = BackgroundServer(app, sock, lan)
     server.start()
-    print(f"{READY_PREFIX}{server.port}", flush=True)
-
-    # Exit when the parent closes our stdin (or dies).
+    # Exit when the parent closes our stdin (or dies). A logout or a kill sends
+    # SIGTERM: the same clean stop, the sharing port closed.
     stop = threading.Event()
+    signal.signal(signal.SIGTERM, lambda *_: stop.set())
+    print(f"{READY_PREFIX}{server.port}", flush=True)
 
     def watch_stdin() -> None:
         try:

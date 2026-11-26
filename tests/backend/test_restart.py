@@ -120,3 +120,18 @@ def test_children_never_import_from_the_current_directory(
     monkeypatch.setattr(os, "execv", lambda _exe, args: seen.append(args))
     restart.exec_restart()
     assert seen[0][1:3] == ["-P", "-m"]
+
+
+def test_sigterm_stops_the_backend_cleanly(tmp_path: Path) -> None:
+    """A logout sends SIGTERM: the backend still runs its cleanup (sharing port)."""
+    import signal
+
+    config = tmp_path / "config.toml"
+    config.write_text('[libvirt]\nuri = "test:///default"\n')
+    backend = BackendProcess(config, "desktop", "tok")
+    backend.start()
+    proc = backend._proc
+    assert proc is not None
+    proc.send_signal(signal.SIGTERM)
+    assert proc.wait(timeout=10) == 0  # the default handler would give -SIGTERM
+    backend.stop()
