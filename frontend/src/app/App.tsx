@@ -9,6 +9,7 @@ import { TaskTrackerProvider } from "../components/TaskTracker";
 import { HomeTab } from "../features/home/HomeTab";
 import { LibraryActionsProvider } from "../features/library/LibraryActions";
 import { LibraryPanel } from "../features/library/LibraryPanel";
+import { ROOT_ID } from "../features/library/tree";
 import { VmActionsProvider } from "../features/vm/VmActions";
 import { NetworkEditor } from "../features/network-editor/NetworkEditor";
 import { PreferencesDialog } from "../features/preferences/PreferencesDialog";
@@ -398,7 +399,11 @@ function MainWindow() {
                   loading={loading}
                   error={error}
                   selected={selectedNode}
-                  onSelect={setSelectedNode}
+                  onSelect={(id) => {
+                    setSelectedNode(id);
+                    // Without a tab bar, My Computer is the way back to Home.
+                    if (id === ROOT_ID && !(info?.ui.vm_tabs ?? true)) setActiveTab(HOME_TAB);
+                  }}
                   onOpen={(uuid) => openVm(uuid, vmByUuid.get(uuid)?.name)}
                   onRefresh={refresh}
                   onClose={() => toggle("library")}

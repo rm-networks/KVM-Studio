@@ -223,4 +223,29 @@ describe("App", () => {
     const row = screen.getByRole("treeitem", { name: /CLT-DEB13/ });
     expect(row.getAttribute("aria-selected")).toBe("true");
   });
+
+  it("shows Home from My Computer when the VM tab bar is hidden", async () => {
+    mockFetch((path) => [
+      200,
+      path === "/api/info" ? { ...info, ui: { ...info.ui, vm_tabs: false } } : apiResponse(path),
+    ]);
+    render(<App />);
+    fireEvent.click(await screen.findByText("CLT-DEB13"));
+    const home = () =>
+      screen.getByText("Créer une machine virtuelle").closest(".workspace-content");
+    await vi.waitFor(() => expect(home()?.hasAttribute("hidden")).toBe(true));
+    fireEvent.click(screen.getByText("Mon ordinateur"));
+    expect(home()?.hasAttribute("hidden")).toBe(false);
+  });
+
+  it("keeps the VM tab when My Computer is clicked with the tab bar shown", async () => {
+    mockFetch((path) => [200, apiResponse(path)]);
+    render(<App />);
+    fireEvent.click(await screen.findByText("CLT-DEB13"));
+    const home = () =>
+      screen.getByText("Créer une machine virtuelle").closest(".workspace-content");
+    await vi.waitFor(() => expect(home()?.hasAttribute("hidden")).toBe(true));
+    fireEvent.click(screen.getByText("Mon ordinateur"));
+    expect(home()?.hasAttribute("hidden")).toBe(true);
+  });
 });

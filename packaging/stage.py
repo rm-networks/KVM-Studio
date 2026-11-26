@@ -29,8 +29,10 @@ TEMPLATES = [
     "systemd/kvmstudio-forwards.service",
     "systemd/kvmstudio-bridge@.service",
 ]
-# Not packaged by Fedora: shipped in /opt/kvm-studio/vendor.
-VENDOR = ["pywebview==6.2.1", "proxy_tools==0.1.0"]
+# Not packaged by Fedora: shipped in /opt/kvm-studio/vendor, checked by hash.
+VENDOR = ROOT / "packaging" / "vendor-requirements.txt"
+# Parts of the vendored packages that never run on a Linux desktop.
+VENDOR_UNUSED = ["bin", "webview/lib/pywebview-android.jar"]
 
 
 def app_name() -> str:
@@ -63,8 +65,14 @@ def main() -> int:
     shutil.copytree(dist, lib / "kvmstudio" / "static")
     vendor = STAGE / "vendor"
     pip = [sys.executable, "-m", "pip", "install", "--quiet", "--no-deps", "--no-compile"]
-    subprocess.run([*pip, "--target", str(vendor), *VENDOR], check=True)  # noqa: S603
-    shutil.rmtree(vendor / "bin", ignore_errors=True)
+    pip += ["--require-hashes", "--only-binary", "pywebview", "-r", str(VENDOR)]
+    subprocess.run([*pip, "--target", str(vendor)], check=True)  # noqa: S603
+    for rel in VENDOR_UNUSED:
+        path = vendor / rel
+        if path.is_dir():
+            shutil.rmtree(path)
+        else:
+            path.unlink(missing_ok=True)
     # Bytecode owned by the package: nothing is written under /opt at run time.
     # Hash based, so it stays valid whatever mtime the package gives the files.
     for tree in (lib, vendor):

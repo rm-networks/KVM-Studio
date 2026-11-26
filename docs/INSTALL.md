@@ -6,6 +6,14 @@ Each release (tag `vX.Y.Z`) has its .rpm in the GitHub Releases; the CI also
 builds a development package on every build (artifact `kvm-studio-rpm`). It
 installs or pulls all its dependencies from the Fedora repositories.
 
+Each release also carries a `SHA256SUMS` file. Download it next to the
+package and check the package before installing it (the command must print
+`OK` for the file you downloaded):
+
+```bash
+sha256sum --check --ignore-missing SHA256SUMS
+```
+
 ```bash
 sudo dnf install ./kvm-studio-*.rpm
 ```
@@ -262,6 +270,17 @@ KVMSTUDIO_QEMU_TESTS=1 pytest tests/backend/test_qemu_clipboard.py tests/backend
 ## Security of the internal server
 
 In both modes, the server only listens on 127.0.0.1. Each start generates a
-token; any API request without it is refused (401). The token travels in the
-URL fragment (`#token=...`), which is never sent to the server nor written to
-its logs.
+token; any API request without it is refused (401). The window receives it in
+the URL fragment (`#token=...`), which is never sent to the server nor written
+to its logs. A browser is opened with a single-use code valid a few seconds
+instead, traded at once for the token, since a browser's command line can be
+read by every account of the computer. Connections made by another account of
+the computer are refused (403), token or not; see
+[Architecture](ARCHITECTURE.md).
+
+With LAN sharing, guests connect over HTTPS with a self-signed certificate,
+valid two years, that names the computer's addresses. It is made again before
+it expires and when those addresses change: guests then compare the new
+fingerprint, shown in Edit > Preferences > Interface, with the one their
+browser shows, once. Version 1.1.2 replaces the certificate made by earlier
+versions in the same way.

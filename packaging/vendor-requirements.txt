@@ -1,0 +1,7 @@
+# Not packaged by the distributions: shipped in /opt/kvm-studio/vendor.
+# Installed with --require-hashes (packaging/stage.py and CI).
+pywebview==6.2.1 \
+    --hash=sha256:9d07275f53894ab4d5e2e0e996227193e7187dec276d9b624dccbce029216b46 \
+    --hash=sha256:71b7136752e40824655304d938efb62014218d1a90bd8e87e1cbdb1ce9c466af
+proxy_tools==0.1.0 \
+    --hash=sha256:ccb3751f529c047e2d8a58440d86b205303cf0fe8146f784d1cbcd94f0a28010

@@ -5,6 +5,9 @@ on:
     branches: ["**"]
     tags: ["v*"]
 
+# Actions are pinned by commit and container images by digest (the tag in
+# the comment next to them): update them on purpose, never implicitly.
+
 permissions:
   contents: read
 
@@ -12,12 +15,12 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     # Same distribution packages as the development machine (python3-libvirt).
-    container: fedora:44
+    container: fedora@sha256:15da97ed9aa94dd3d92c3925eb89520f6c80e07ea7ee24cba848d1f8b6912b3e # fedora:44
     steps:
       - name: Install system packages
         run: dnf install -y --setopt=install_weak_deps=False git python3 python3-pip python3-libvirt qemu-img xorriso libvirt-client python3-pyqt6-webengine python3-QtPy
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Install the backend
         run: |
@@ -39,7 +42,7 @@ jobs:
     # The oldest Python packages among the supported distributions (Debian 13):
     # the tests run against them, nothing from PyPI but pywebview.
     runs-on: ubuntu-latest
-    container: debian:13
+    container: debian@sha256:3cda3ca472ce45507a5109c6a3907093e24d9ae67d55954c9a07a45665dafba2 # debian:13
     steps:
       - name: Install system packages
         env:
@@ -48,11 +51,11 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends git ca-certificates python3 python3-pip python3-fastapi python3-uvicorn python3-pydantic python3-websockets python3-lxml python3-tomli-w python3-argon2 python3-libvirt python3-pytest python3-httpx python3-bottle python3-typing-extensions qemu-utils xorriso libvirt-clients
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Tests with the distribution packages
         run: |
-          pip install --break-system-packages --no-deps --target /tmp/vendor pywebview==6.2.1 proxy_tools==0.1.0
+          pip install --break-system-packages --no-deps --require-hashes --target /tmp/vendor -r packaging/vendor-requirements.txt
           PYTHONPATH=backend:helper:/tmp/vendor python3 -m pytest -p no:cacheprovider
 
   frontend:
@@ -61,9 +64,9 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 24
           cache: npm
@@ -81,9 +84,9 @@ jobs:
       - name: Install system packages
         run: sudo apt-get update && sudo apt-get install -y python3-libvirt python3-venv
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 24
           cache: npm
@@ -105,14 +108,14 @@ jobs:
   package:
     needs: [backend, backend-debian, frontend, e2e]
     runs-on: ubuntu-latest
-    container: fedora:44
+    container: fedora@sha256:15da97ed9aa94dd3d92c3925eb89520f6c80e07ea7ee24cba848d1f8b6912b3e # fedora:44
     env:
       NFPM_VERSION: 2.48.0
     steps:
       - name: Install build tools
         run: dnf install -y --setopt=install_weak_deps=False git python3 python3-pip nodejs npm
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Build the frontend
         working-directory: frontend
@@ -154,17 +157,17 @@ jobs:
           test ! -e /etc/kvm-studio
           test ! -e /var/lib/kvm-studio
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: kvm-studio-rpm
           path: dist/*.rpm
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: kvm-studio-deb
           path: dist/*.deb
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: kvm-studio-deb-older
           path: dist-upgrade/*.deb
@@ -175,16 +178,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ["debian:13", "ubuntu:26.04"]
+        image:
+          - debian@sha256:3cda3ca472ce45507a5109c6a3907093e24d9ae67d55954c9a07a45665dafba2 # debian:13
+          - ubuntu@sha256:d66b366dac61b575bee2aef07e9c26e8070096fbe84a3d4d3eb0da069b5d76db # ubuntu:26.04
     container: ${{ matrix.image }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: kvm-studio-deb
           path: new
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: kvm-studio-deb-older
           path: old
@@ -232,15 +237,19 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: kvm-studio-rpm
           path: dist
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: kvm-studio-deb
           path: dist
+
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum *.rpm *.deb > SHA256SUMS && cat SHA256SUMS
 
       - name: Publish the release
         env:
@@ -249,7 +258,7 @@ jobs:
         run: |
           sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME" --jq .object.sha)
           gh api "repos/$GITHUB_REPOSITORY/git/tags/$sha" --jq .message > notes.md
-          gh release create "$GITHUB_REF_NAME" dist/*.rpm dist/*.deb \
+          gh release create "$GITHUB_REF_NAME" dist/*.rpm dist/*.deb dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" \
             --title "KVM Studio ${GITHUB_REF_NAME#v}" \
             --notes-file notes.md
