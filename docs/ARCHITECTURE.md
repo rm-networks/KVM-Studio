@@ -205,7 +205,10 @@ updates and resolution changes made by the guest itself are not affected.
   `<channel type='qemu-vdagent'>` with `<clipboard copypaste='yes'/>`, unless
   Options > Isolation turns it off. The host clipboard is linked to noVNC by the
   pywebview API in window mode and by `navigator.clipboard` in web mode (secure
-  context: 127.0.0.1 or HTTPS).
+  context: 127.0.0.1 or HTTPS). Text pasted from the host reaches QEMU
+  NUL-terminated, as the VNC extended clipboard asks; the console relay removes
+  that NUL, which QEMU would otherwise hand to the guest. See
+  [Copy and paste](#copy-and-paste) for what the guest side needs.
 - **Guest tools installation.** KVM Studio builds with `xorriso` a small
   `KS_TOOLS` CD in `<location>/KVM-Studio/Tools` and inserts it in one drive of
   the VM. For Windows the CD also carries `virtio-win-guest-tools.exe`, copied
@@ -218,6 +221,59 @@ updates and resolution changes made by the guest itself are not affected.
   and an optional product key, then generates the answer file (autounattend.xml,
   kickstart, preseed, autoinstall) on a small separate ISO. The source ISO is
   never changed. Targets: Windows 10/11/Server, Fedora/RHEL, Debian, Ubuntu.
+
+## Copy and paste
+
+The chain is: guest application, guest clipboard, `spice-vdagent` in the guest
+session, the virtio port `com.redhat.spice.0`, QEMU's `qemu-vdagent`, the VNC
+extended clipboard, the console relay, noVNC, then the host clipboard (Qt in
+window mode, the browser in web mode). Host to guest works as soon as the agent
+runs. Guest to host depends on the agent seeing the copy:
+
+| Guest session | Host to guest | Guest to host |
+|---|---|---|
+| Linux, X11 (Plasma X11, GNOME on Xorg, Xfce...) | Yes | Yes |
+| Linux, Wayland (Plasma, GNOME) | Yes | Only text copied from an X11 (XWayland) application |
+| Windows, with the guest tools | Yes | Yes |
+
+Why Wayland differs: `spice-vdagent` (0.22 in Debian 13) is an X11 client. It
+writes the X11 clipboard, which the compositor passes on to Wayland
+applications, but it never sees what Wayland applications copy, since the
+compositor does not hand the Wayland clipboard to an X11 client that has no
+focused window. QEMU then has nothing to send. Workarounds: log in to an X11
+session (on Plasma: "Plasma (X11)" at the login screen), or copy from an X11
+application (a terminal started with `QT_QPA_PLATFORM=xcb`, for example). A
+script that copies the Wayland clipboard into the X11 one (`wl-paste --watch`)
+was tried and works only some of the time, so it is not provided.
+
+The Linux guest tools install `spice-vdagent` and `qemu-guest-agent`; the
+agent starts with the next graphical session. On Windows, the virtio-win guest
+tools installer (`virtio-win-guest-tools.exe`, on the `KS_TOOLS` CD) installs
+the SPICE agent service along with the drivers and the QEMU guest agent.
+
+In a shared console the VM has one clipboard: a copy in the guest is offered to
+every session on the console (owner and LAN guests), and text pasted by any of
+them replaces it.
+
+Line ends: noVNC sends CRLF line ends, as the VNC extended clipboard defines,
+and QEMU passes them on to the guest as they are.
+
+### Checking copy and paste in a Windows guest
+
+1. The VM was made by KVM Studio, or Settings > Options > Isolation shows copy
+   and paste allowed; `virsh dumpxml <vm>` lists
+   `<channel type='qemu-vdagent'>` with `<clipboard copypaste='yes'/>`.
+2. VM > Install Guest Tools, then run `Install-Tools.bat` from the `KS_TOOLS`
+   CD inside Windows; sign out and in again.
+3. In Windows, `services.msc` shows "Spice Agent" running (vdservice), and
+   Task Manager shows `vdagent.exe` in the session.
+4. Host to guest: copy `Grüße, été 2026` on the host, click in the console,
+   paste in Notepad: the text appears with no extra character at the end.
+5. Guest to host: copy a line in Notepad, paste on the host (text editor):
+   same text. Repeat with two lines.
+6. Repeat 4 and 5 in window mode and in web mode (Firefox and a Chromium-based
+   browser). If 5 fails only in a browser, check that the console had the
+   focus when copying.
 
 ## Disks
 

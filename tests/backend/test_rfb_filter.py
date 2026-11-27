@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import struct
+import zlib
 
 import pytest
 
@@ -68,3 +69,32 @@ def test_the_decision_is_taken_per_message() -> None:
     assert stream.feed(RESIZE + POINTER) == POINTER
     people[0] = 1
     assert stream.feed(RESIZE) == RESIZE
+
+
+def provide(text: bytes, flags: int = (1 << 28) | 1) -> bytes:
+    payload = struct.pack(">I", flags) + zlib.compress(struct.pack(">I", len(text)) + text)
+    return struct.pack(">Bxxxi", 6, -len(payload)) + payload
+
+
+def provided_text(message: bytes) -> bytes:
+    data = zlib.decompress(message[12:])
+    return data[4 : 4 + struct.unpack(">I", data[:4])[0]]
+
+
+def test_pasted_text_loses_its_trailing_nul() -> None:
+    """noVNC ends the text with NUL; QEMU would give it to the guest as it is."""
+    text = "Grüße, été 2026\r\nmot de passe".encode()
+    out = run([HANDSHAKE + provide(text + b"\0") + POINTER], hold=False)
+    assert out.startswith(HANDSHAKE)
+    message = out[len(HANDSHAKE) : -len(POINTER)]
+    assert provided_text(message) == text
+    assert out.endswith(POINTER)
+
+
+def test_other_clipboard_messages_are_left_alone() -> None:
+    caps = provide(b"", flags=(1 << 24) | 1)
+    legacy = struct.pack(">BxxxI", 6, 4) + b"abc\0"
+    no_nul = provide(b"abc")
+    zip_bomb = provide(b"a" * (3 << 20) + b"\0")
+    for message in (caps, legacy, no_nul, zip_bomb):
+        assert run([HANDSHAKE + message], hold=False) == HANDSHAKE + message

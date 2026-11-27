@@ -1,9 +1,15 @@
-"""Reads what a VNC client sends, message by message, to hold back resize requests.
+"""Reads what a VNC client sends, message by message, to hold back resize requests
+and to clean the text a client pastes.
 
 When several people share the console of a VM, one of them asking the guest
 for a new resolution would change the picture of all the others. The relay
 then drops SetDesktopSize: the guest keeps its resolution and each client
 scales the picture locally.
+
+Pasted text comes in extended clipboard Provide messages, NUL-terminated as
+the protocol asks. QEMU hands it to the guest agent as it is, so the guest
+clipboard would end with a NUL character (a pasted password then fails): the
+relay removes it.
 
 Only the client to server direction is read. Anything not understood turns the
 filter off for the rest of the connection: bytes are then passed on unchanged.
@@ -12,11 +18,17 @@ filter off for the rest of the connection: bytes are then passed on unchanged.
 from __future__ import annotations
 
 import logging
+import struct
+import zlib
 from collections.abc import Callable
 
 log = logging.getLogger(__name__)
 
 SET_DESKTOP_SIZE = 251
+CLIENT_CUT_TEXT = 6
+# Extended clipboard flags (community extension of RFB).
+CLIPBOARD_TEXT = 1 << 0
+CLIPBOARD_PROVIDE = 1 << 28
 # Longer messages are not held in memory but passed on (QEMU refuses a
 # clipboard over 1 MiB and drops the connection anyway).
 MAX_HELD = (1 << 20) + 16
@@ -103,9 +115,39 @@ class ClientStream:
                 break
             if length == 0 or len(self._buffer) < length:
                 break
-            message = self._buffer[:length]
+            message = bytes(self._buffer[:length])
             del self._buffer[:length]
             if message[0] == SET_DESKTOP_SIZE and self._hold_resize():
                 continue
+            if message[0] == CLIENT_CUT_TEXT:
+                message = provide_without_nul(message)
             out += message
         return bytes(out)
+
+
+def provide_without_nul(message: bytes) -> bytes:
+    """An extended clipboard Provide with the trailing NUL of its text removed.
+
+    Anything else (legacy cut text, other actions, data that does not unpack)
+    is returned unchanged.
+    """
+    (length,) = struct.unpack(">i", message[4:8])
+    if length >= 0 or len(message) < 12:
+        return message
+    (flags,) = struct.unpack(">I", message[8:12])
+    if not flags & CLIPBOARD_PROVIDE or flags & 0xFFFF != CLIPBOARD_TEXT:
+        return message
+    inflate = zlib.decompressobj()
+    try:
+        data = inflate.decompress(message[12:], MAX_HELD)
+    except zlib.error:
+        return message
+    if inflate.unconsumed_tail or len(data) < 4:
+        return message  # larger than anything held here: passed on as it is
+    (size,) = struct.unpack(">I", data[:4])
+    text = data[4 : 4 + size]
+    if len(text) != size or not text.endswith(b"\0"):
+        return message
+    text = text.rstrip(b"\0")
+    payload = struct.pack(">I", flags) + zlib.compress(struct.pack(">I", len(text)) + text)
+    return message[:4] + struct.pack(">i", -len(payload)) + payload
