@@ -62,7 +62,12 @@ def test_windows11_xml(tmp_path: Path) -> None:
     assert os_el.find("loader").get("secure") == "yes"  # type: ignore[union-attr]
     assert os_el.findtext("nvram") == str(tmp_path / "WIN11_VARS.fd")
     assert root.find("features/smm").get("state") == "on"  # type: ignore[union-attr]
-    assert root.find("features/hyperv") is not None
+    hyperv = root.find("features/hyperv")
+    assert hyperv is not None
+    on = {el.tag for el in hyperv if el.get("state") == "on"}
+    # What virt-install sets for Windows (tlbflush and ipi since 1.1.3).
+    assert {"relaxed", "vapic", "spinlocks", "vpindex", "runtime", "synic", "stimer"} <= on
+    assert {"frequencies", "tlbflush", "ipi"} <= on
     assert root.find("devices/tpm/backend").get("version") == "2.0"  # type: ignore[union-attr]
     assert root.find("clock").get("offset") == "localtime"  # type: ignore[union-attr]
     disk, cdrom = root.findall("devices/disk")

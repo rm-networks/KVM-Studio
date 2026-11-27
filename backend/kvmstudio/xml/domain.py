@@ -124,6 +124,10 @@ def build_domain(spec: DomainSpec) -> str:
             _sub(hyperv, name, state="on")
         _sub(hyperv, "spinlocks", state="on", retries="8191")
         _sub(hyperv, "stimer", state="on")
+        # Paravirtual TLB flush and IPI, as virt-install sets for Windows: fewer
+        # VM exits when the vCPUs signal each other.
+        _sub(hyperv, "tlbflush", state="on")
+        _sub(hyperv, "ipi", state="on")
     _sub(features, "vmport", state="off")
 
     cpu = _sub(root, "cpu", mode="host-passthrough", check="none", migratable="on")
