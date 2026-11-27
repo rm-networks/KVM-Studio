@@ -71,6 +71,15 @@ LAN sharing port opened at runtime only, launcher hardened, release
 checksums and pinned build inputs; My Computer shows Home when the VM tab
 bar is hidden.
 
+## 1.1.3: done
+
+Fixes, no new feature: the notification area icon no longer closes KVM
+Studio when switching mode or quitting with VMs running, and errors in the
+icon or the window are shown instead of ending it; no session token printed
+in the terminal; a shared console keeps the guest resolution; pasted text
+without a trailing NUL; tlbflush and ipi for new Windows VMs, and a Windows
+guests page.
+
 ## V2 (public release)
 
 Easy Install, virtiofs shared folders, network diagnostics, Bridged, USB

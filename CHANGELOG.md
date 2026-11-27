@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.1.3 (2026-11-27)
+
+Fixes, no new feature.
+
+- Notification area icon (web mode): Switch to Window Mode and Quit no longer
+  end KVM Studio when VMs are running, and "Do not show this again" is taken
+  into account. An error in the icon or the window is now logged and shown
+  instead of closing the application.
+- The link printed in the terminal in web mode carries a single-use code,
+  valid two minutes, never the session token.
+- Shared console: from two people on, the guest keeps its resolution and
+  each one sees the picture scaled to the window (View > Autofit Guest is
+  greyed out meanwhile). This also ends the stale areas other people saw
+  when one of them resized the guest.
+- Copy and paste: text pasted into a guest no longer ends with a NUL
+  character. The documentation explains why copying from a guest to the
+  host needs an X11 session in Linux guests.
+- New Windows VMs get the paravirtual TLB flush and IPI Hyper-V
+  enlightenments, as virt-install sets them (not validated on a Windows
+  guest). docs/WINDOWS.md lists the settings to check on an existing VM.
+
 ## 1.1.2 (2026-11-26)
 
 Security fixes, no new feature. Updating is recommended, above all where LAN
