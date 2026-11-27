@@ -193,6 +193,11 @@ reads the client to server RFB stream message by message and drops
 SetDesktopSize (owner and guests alike), the interface stops asking and greys
 out View > Autofit Guest, and each client scales the picture to its window.
 With one person left, Autofit Guest applies that person's window size again.
+Besides keeping each picture steady, this avoids a QEMU VNC server defect seen
+with QEMU 11.1: when one client resizes the guest while another is connected,
+the other client can miss parts of the following updates with the compressing
+encodings (Tight, ZRLE), leaving stale areas until they change again. Raw
+updates and resolution changes made by the guest itself are not affected.
 
 ## Guest integration
 
